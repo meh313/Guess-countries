@@ -1,0 +1,6 @@
+{
+  "name": "World Flags & Continents",
+  "description": "Master world geography, countries, flags, capitals, and continents through interactive flashcards and quizzes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
