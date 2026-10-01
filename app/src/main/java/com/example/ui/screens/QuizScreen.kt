@@ -1,5 +1,6 @@
 package com.example.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -22,6 +23,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.LocalFireDepartment
@@ -34,10 +36,12 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -81,6 +85,7 @@ fun QuizScreen(
     var selectedMode by rememberSaveable { mutableStateOf(QuizMode.FLAG_NAME) }
     var selectedContinentScope by rememberSaveable { mutableStateOf("Global") }
     val quizScrollState = rememberScrollState()
+    var showQuitConfirm by rememberSaveable { mutableStateOf(false) }
 
     val active = session
 
@@ -220,6 +225,9 @@ fun QuizScreen(
     } else {
         // ACTIVE QUIZ SCREEN
         val q = active.current
+
+        // The quiz now outlives the screen, so offer a way out (Back asks first).
+        BackHandler(enabled = !active.isFinished) { showQuitConfirm = true }
         val questionCount = active.questions.size
 
         // Each new question starts at the top so the flag is visible.
@@ -260,27 +268,36 @@ fun QuizScreen(
                     )
                 }
 
-                Surface(
-                    shape = RoundedCornerShape(20.dp),
-                    color = Color(0xFFE67E22)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Surface(
+                        shape = RoundedCornerShape(20.dp),
+                        color = Color(0xFFE67E22)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.LocalFireDepartment,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "Streak ${active.streak}",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp
-                        )
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.LocalFireDepartment,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Streak ${active.streak}",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+
+                    IconButton(
+                        onClick = { showQuitConfirm = true },
+                        modifier = Modifier.testTag("quiz_quit_btn")
+                    ) {
+                        Icon(imageVector = Icons.Default.Close, contentDescription = "Quit quiz")
                     }
                 }
             }
@@ -406,6 +423,33 @@ fun QuizScreen(
                 }
             }
         }
+    }
+
+    if (showQuitConfirm && active != null && !active.isFinished) {
+        AlertDialog(
+            onDismissRequest = { showQuitConfirm = false },
+            title = { Text("Quit this quiz?") },
+            text = { Text("Your progress in this quiz will be lost.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showQuitConfirm = false
+                        viewModel.endQuiz()
+                    },
+                    modifier = Modifier.testTag("quiz_quit_confirm_btn")
+                ) {
+                    Text("Quit")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showQuitConfirm = false },
+                    modifier = Modifier.testTag("quiz_quit_cancel_btn")
+                ) {
+                    Text("Keep playing")
+                }
+            }
+        )
     }
 
     // Finish Celebration Dialog

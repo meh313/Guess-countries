@@ -112,10 +112,12 @@ class CountryViewModel(application: Application) : AndroidViewModel(application)
         showOnlyBookmarks.value = !showOnlyBookmarks.value
     }
 
+    /** Resets everything that shapes the list: search, continent, Saved-only and the sort order. */
     fun clearFilters() {
         searchQuery.value = ""
         selectedContinent.value = "All"
         showOnlyBookmarks.value = false
+        sortBy.value = SortOption.NAME
     }
 
     fun selectCountry(country: Country?) {

@@ -16,6 +16,7 @@ import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
@@ -110,19 +111,74 @@ class LayoutAndSemanticsUiTest {
 
   @Test
   @Config(sdk = [36], qualifiers = "w800dp-h360dp-xxhdpi")
-  fun landscapePhone_flashcardShowsChipFlagAndHintInsideTheCard() {
+  fun landscapePhone_flashcardShowsChipFlagAndHintInsideTheCardInOrder() {
     tab("flashcards")
 
-    val card = bounds("flashcard_flip_card")
-    val flag = bounds("flashcard_flag")
-    assertTrue("flag inside card: $flag in $card", flag.top >= card.top && flag.bottom <= card.bottom)
-    assertEquals("flag keeps its 3:2 shape", 1.5f, flag.width / flag.height, 0.05f)
-    assertTrue("flag is at least 72dp tall but at most 200dp", flag.height / density in 72f..200.5f)
-
-    // The hint pill must sit below the flag rather than on top of it, and the grade buttons stay on screen.
+    assertFrontFaceFits(minFlagDp = 72f)
     rule.onNodeWithTag("grade_hard_btn").assertIsDisplayed()
     rule.onNodeWithTag("grade_mastered_btn").assertIsDisplayed()
+  }
+
+  /** Chip above flag above hint, all inside the card, and the flag is a 3:2 rectangle of sensible size. */
+  private fun assertFrontFaceFits(minFlagDp: Float) {
+    val card = bounds("flashcard_flip_card")
+    val chip = bounds("flashcard_continent_chip")
+    val flag = bounds("flashcard_flag")
+    val hint = bounds("flashcard_hint")
+    val where = "card=$card chip=$chip flag=$flag hint=$hint"
+
+    assertTrue("chip inside card: $where", chip.top >= card.top && chip.bottom <= card.bottom)
+    assertTrue("chip is above the flag: $where", chip.bottom <= flag.top + 1f)
+    assertTrue("hint is below the flag: $where", flag.bottom <= hint.top + 1f)
+    assertTrue("hint inside card: $where", hint.bottom <= card.bottom + 1f)
+    assertEquals("flag keeps its 3:2 shape: $where", 1.5f, flag.width / flag.height, 0.05f)
+    assertTrue("flag at least ${minFlagDp}dp tall but at most 200dp: $where", flag.height / density in minFlagDp..200.5f)
+  }
+
+  @Test
+  @Config(sdk = [36], qualifiers = "w360dp-h480dp-xxhdpi")
+  fun shortPortraitWindow_flagKeepsItsMinimumHeight() {
+    // About 210dp for the card: the flag used to be squeezed to roughly 34dp (or vanish).
+    tab("flashcards")
+
+    val flag = bounds("flashcard_flag")
+    assertTrue("flag height ${flag.height / density}dp", flag.height / density >= 71.5f)
     rule.onNodeWithTag("flashcard_flip_card").assertIsDisplayed()
+  }
+
+  @Test
+  @Config(sdk = [36], qualifiers = "w360dp-h640dp-xxhdpi", fontScale = 1.5f)
+  fun largeFonts_flagKeepsItsMinimumHeightAndTheCardStaysUsable() {
+    tab("flashcards")
+
+    val flag = bounds("flashcard_flag")
+    assertTrue("flag height ${flag.height / density}dp", flag.height / density >= 71.5f)
+    rule.onNodeWithTag("grade_mastered_btn").assertIsDisplayed()
+  }
+
+  @Test
+  @Config(sdk = [36], qualifiers = "w800dp-h360dp-xxhdpi")
+  fun landscapePhone_deckHeaderActionsKeepTheirFullSize() {
+    tab("flashcards")
+
+    assertActionsAreTouchTargets()
+  }
+
+  @Test
+  @Config(sdk = [36], qualifiers = "w800dp-h360dp-xxhdpi", fontScale = 1.5f)
+  fun landscapePhone_deckHeaderActionsSurviveLargeFonts() {
+    tab("flashcards")
+
+    assertActionsAreTouchTargets()
+  }
+
+  private fun assertActionsAreTouchTargets() {
+    for (label in listOf("Shuffle Cards", "Reset Deck")) {
+      // The merged node is the IconButton: a 40dp container with a 48dp minimum touch target.
+      val r = rule.onNodeWithContentDescription(label).fetchSemanticsNode().touchBoundsInRoot
+      assertTrue("$label touch target is ${r.width / density}dp wide", r.width / density >= 47.5f)
+      assertTrue("$label touch target is ${r.height / density}dp tall", r.height / density >= 47.5f)
+    }
   }
 
   @Test

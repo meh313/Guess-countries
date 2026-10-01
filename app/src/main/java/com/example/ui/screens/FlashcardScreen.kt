@@ -49,8 +49,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -68,6 +71,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.Country
+import com.example.data.model.SortOption
+import com.example.flashcards.FlashcardDeck
 import com.example.ui.components.FlagView
 import com.example.ui.components.getContinentColor
 import com.example.ui.viewmodel.CountryViewModel
@@ -89,22 +94,21 @@ fun FlashcardScreen(
     val searchQuery by viewModel.searchQuery.collectAsState()
     val selectedContinent by viewModel.selectedContinent.collectAsState()
     val showOnlyBookmarks by viewModel.showOnlyBookmarks.collectAsState()
-    var currentIndex by rememberSaveable { mutableIntStateOf(0) }
-    var isFlipped by rememberSaveable { mutableStateOf(false) }
+    val sortBy by viewModel.sortBy.collectAsState()
+    // Position and flip state are keyed to a country rather than an index, so changing Explore's
+    // filters while this tab is away cannot leave a different country showing already flipped.
+    var currentCode by rememberSaveable { mutableStateOf<String?>(null) }
+    var flippedCode by rememberSaveable { mutableStateOf<String?>(null) }
+    var shuffleSeed by rememberSaveable { mutableStateOf<Long?>(null) }
 
-    // The deck is shared with the Explore tab's filters, so say so and offer a way out.
+    // The deck is shared with Explore's filters and sort order, so say so and offer a way out.
     val filterSummary = listOfNotNull(
         selectedContinent.takeIf { it != "All" },
         "Saved only".takeIf { showOnlyBookmarks },
-        searchQuery.takeIf { it.isNotBlank() }?.let { "\"$it\"" }
+        searchQuery.takeIf { it.isNotBlank() }?.let { "\"$it\"" },
+        "Sorted by ${sortBy.name.lowercase()}".takeIf { sortBy != SortOption.NAME }
     ).joinToString(" · ")
     val filtersActive = filterSummary.isNotEmpty()
-
-    val rotation by animateFloatAsState(
-        targetValue = if (isFlipped) 180f else 0f,
-        animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing),
-        label = "flashcard_rotation"
-    )
 
     if (countries.isEmpty()) {
         Column(
@@ -133,25 +137,38 @@ fun FlashcardScreen(
         return
     }
 
-    // The deck can shrink while this screen is away (filters), so never trust the raw index.
-    val safeIndex = currentIndex.coerceIn(0, countries.size - 1)
-    val currentCountry = countries[safeIndex]
+    val deck = remember(countries, shuffleSeed) { FlashcardDeck.order(countries, shuffleSeed) }
+    val index = FlashcardDeck.indexOf(deck, currentCode)
+    val currentCountry = deck[index]
+    val isFlipped = flippedCode == currentCountry.code
+
+    // One animation per card: moving to the next card must not play a flip-back that briefly shows
+    // the next country's answer.
+    val rotation = key(currentCountry.code) {
+        animateFloatAsState(
+            targetValue = if (isFlipped) 180f else 0f,
+            animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing),
+            label = "flashcard_rotation"
+        )
+    }
 
     val onShuffle = {
         viewModel.stopSpeaking()
-        currentIndex = (0 until countries.size).random()
-        isFlipped = false
+        shuffleSeed = kotlin.random.Random.nextLong()
+        currentCode = null
+        flippedCode = null
     }
     val onReset = {
         viewModel.stopSpeaking()
-        currentIndex = 0
-        isFlipped = false
+        shuffleSeed = null
+        currentCode = null
+        flippedCode = null
     }
     val onGrade: (Boolean) -> Unit = { mastered ->
         viewModel.stopSpeaking()
         viewModel.updateMastery(currentCountry.code, mastered)
-        isFlipped = false
-        currentIndex = (safeIndex + 1) % countries.size
+        currentCode = FlashcardDeck.nextCode(deck, index)
+        flippedCode = null
     }
     val flipCard: @Composable (Modifier, Boolean) -> Unit = { cardModifier, compact ->
         FlipCard(
@@ -160,7 +177,7 @@ fun FlashcardScreen(
             rotation = rotation,
             compact = compact,
             speechAvailable = speechAvailable,
-            onFlip = { isFlipped = !isFlipped },
+            onFlip = { flippedCode = if (isFlipped) null else currentCountry.code },
             onSpeak = { viewModel.speakCountryDetails(currentCountry) },
             modifier = cardModifier
         )
@@ -190,9 +207,9 @@ fun FlashcardScreen(
                         .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    DeckHeader(safeIndex, countries.size, onShuffle, onReset)
+                    DeckHeader(index, deck.size, onShuffle, onReset)
                     if (filtersActive) FilterNotice(filterSummary) { viewModel.clearFilters() }
-                    DeckProgress((safeIndex + 1).toFloat() / countries.size)
+                    DeckProgress((index + 1).toFloat() / deck.size)
                     GradeButtons(stacked = true, onGrade = onGrade)
                 }
             }
@@ -203,7 +220,7 @@ fun FlashcardScreen(
                     .padding(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                DeckHeader(safeIndex, countries.size, onShuffle, onReset)
+                DeckHeader(index, deck.size, onShuffle, onReset)
 
                 if (filtersActive) {
                     Spacer(modifier = Modifier.height(8.dp))
@@ -211,7 +228,7 @@ fun FlashcardScreen(
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
-                DeckProgress((safeIndex + 1).toFloat() / countries.size)
+                DeckProgress((index + 1).toFloat() / deck.size)
                 Spacer(modifier = Modifier.height(24.dp))
 
                 flipCard(Modifier.fillMaxWidth().weight(1f), false)
@@ -236,7 +253,7 @@ private fun DeckHeader(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column {
+        Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = "Flashcard Study",
                 style = MaterialTheme.typography.titleLarge,
@@ -363,7 +380,7 @@ private fun MasteredButton(onClick: () -> Unit, modifier: Modifier) {
 private fun FlipCard(
     country: Country,
     isFlipped: Boolean,
-    rotation: Float,
+    rotation: State<Float>,
     compact: Boolean,
     speechAvailable: Boolean,
     onFlip: () -> Unit,
@@ -371,11 +388,13 @@ private fun FlipCard(
     modifier: Modifier = Modifier
 ) {
     val continentColor = getContinentColor(country.continent)
+    // Read lazily: the animation only invalidates the graphics layer, and this flips once at 90 degrees.
+    val showBack by remember(rotation) { derivedStateOf { rotation.value > 90f } }
 
     Card(
         modifier = modifier
             .graphicsLayer {
-                rotationY = rotation
+                rotationY = rotation.value
                 cameraDistance = 12 * density
             }
             .clickable(
@@ -390,71 +409,72 @@ private fun FlipCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            if (rotation <= 90f) {
+            if (!showBack) {
                 // FRONT OF CARD: Flag & Continent Clue
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        // Very short windows scroll instead of clipping the chip or the hint.
-                        .verticalScroll(rememberScrollState())
-                        .padding(if (compact) 12.dp else 24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Surface(
-                        shape = RoundedCornerShape(16.dp),
-                        color = continentColor
-                    ) {
-                        Text(
-                            text = "${country.continent} • ${country.subregion}",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp,
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
-                        )
-                    }
+                BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                    val padding = if (compact) 12.dp else 24.dp
+                    val gap = if (compact) 8.dp else 12.dp
+                    // The chip, hint, gaps and padding take their share; the flag gets the rest, never
+                    // less than 72dp. If that does not fit (large fonts) the face scrolls.
+                    val flagHeight = (maxHeight - (32.dp + 44.dp + gap * 2 + padding * 2)).coerceIn(72.dp, 200.dp)
+                    val flagWidth = minOf(flagHeight * 1.5f, maxWidth - padding * 2)
 
-                    Spacer(modifier = Modifier.height(if (compact) 8.dp else 12.dp))
-
-                    // Big flag: the largest 3:2 flag that fits the space left between the chip and the hint.
-                    BoxWithConstraints(
+                    Column(
                         modifier = Modifier
-                            .weight(1f, fill = false)
-                            .fillMaxWidth()
-                            .heightIn(min = 72.dp, max = 200.dp),
-                        contentAlignment = Alignment.Center
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                            .padding(padding),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.SpaceBetween
                     ) {
+                        Surface(
+                            shape = RoundedCornerShape(16.dp),
+                            color = continentColor,
+                            modifier = Modifier.testTag("flashcard_continent_chip")
+                        ) {
+                            Text(
+                                text = "${country.continent} • ${country.subregion}",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp,
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(gap))
+
                         FlagView(
                             country = country,
                             modifier = Modifier
-                                .width(minOf(maxWidth, maxHeight * 1.5f))
+                                .width(flagWidth)
                                 .testTag("flashcard_flag")
                         )
-                    }
 
-                    Spacer(modifier = Modifier.height(if (compact) 8.dp else 12.dp))
+                        Spacer(modifier = Modifier.height(gap))
 
-                    Surface(
-                        shape = RoundedCornerShape(20.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                        Surface(
+                            shape = RoundedCornerShape(20.dp),
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            modifier = Modifier.testTag("flashcard_hint")
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Flip,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "Tap to reveal Country Name & Capital",
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
+                            Row(
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Flip,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Tap to reveal Country Name & Capital",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
                         }
                     }
                 }
@@ -484,7 +504,11 @@ private fun FlipCard(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.VolumeUp,
-                                contentDescription = "Read country summary aloud",
+                                contentDescription = if (speechAvailable) {
+                                    "Read country summary aloud"
+                                } else {
+                                    "Reading aloud is unavailable on this device"
+                                },
                                 tint = if (speechAvailable) {
                                     MaterialTheme.colorScheme.primary
                                 } else {

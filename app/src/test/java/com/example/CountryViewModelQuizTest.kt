@@ -5,6 +5,7 @@ import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
 import com.example.data.local.AppDatabase
 import com.example.data.local.QuizScoreEntity
+import com.example.data.model.SortOption
 import com.example.quiz.QuizEngine
 import com.example.quiz.QuizMode
 import com.example.ui.viewmodel.CountryViewModel
@@ -167,7 +168,8 @@ class CountryViewModelQuizTest {
     vm.startQuiz(QuizMode.CAPITAL, "Africa")
     vm.playToTheEnd()
 
-    val saved = awaitQuizHistory { it.isNotEmpty() }
+    // Wait for this quiz's own row, not merely for any row left behind by another test.
+    val saved = awaitQuizHistory { rows -> rows.any { it.mode == QuizMode.CAPITAL.name && it.continentFilter == "Africa" } }
 
     val entry = saved.first { it.mode == QuizMode.CAPITAL.name && it.continentFilter == "Africa" }
     assertEquals(QuizEngine.maxScore(6), entry.score)
@@ -180,6 +182,7 @@ class CountryViewModelQuizTest {
     vm.onSearchQueryChange("fra")
     vm.onContinentSelect("Europe")
     vm.toggleBookmarksOnlyFilter()
+    vm.onSortSelect(SortOption.POPULATION)
     assertTrue(vm.showOnlyBookmarks.value)
 
     vm.clearFilters()
@@ -187,6 +190,7 @@ class CountryViewModelQuizTest {
     assertEquals("", vm.searchQuery.value)
     assertEquals("All", vm.selectedContinent.value)
     assertFalse(vm.showOnlyBookmarks.value)
+    assertEquals(SortOption.NAME, vm.sortBy.value)
   }
 
   /** Polls [condition] while pumping the main looper, since Room and flows deliver results asynchronously. */

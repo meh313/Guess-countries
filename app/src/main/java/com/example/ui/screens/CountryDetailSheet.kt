@@ -120,7 +120,11 @@ fun CountryDetailSheet(
                     ) {
                         Icon(
                             imageVector = Icons.Default.VolumeUp,
-                            contentDescription = "Read country summary aloud",
+                            contentDescription = if (speechAvailable) {
+                                "Read country summary aloud"
+                            } else {
+                                "Reading aloud is unavailable on this device"
+                            },
                             tint = if (speechAvailable) {
                                 MaterialTheme.colorScheme.primary
                             } else {

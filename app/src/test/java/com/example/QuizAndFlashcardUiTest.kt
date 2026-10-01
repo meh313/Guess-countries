@@ -12,6 +12,15 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.rules.ActivityScenarioRule
+import android.speech.tts.TextToSpeech
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.lifecycle.ViewModelProvider
+import com.example.ui.viewmodel.CountryViewModel
+import java.util.Locale
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.robolectric.Shadows.shadowOf
+import org.robolectric.shadows.ShadowTextToSpeech
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -164,6 +173,154 @@ class QuizAndFlashcardUiTest {
 
     rule.onNodeWithText("Quiz Complete!").assertDoesNotExist()
     rule.onNodeWithTag("start_quiz_btn").assertIsDisplayed()
+  }
+
+  @Test
+  fun activeQuiz_canBeQuitAfterConfirming() {
+    startQuiz("Africa")
+    answerFirstOption()
+
+    // Answering scrolls the explanation into view, so scroll back up to the status row.
+    rule.onNodeWithTag("quiz_quit_btn").performScrollTo().performClick()
+    rule.onNodeWithText("Quit this quiz?").assertIsDisplayed()
+    rule.onNodeWithTag("quiz_quit_cancel_btn").performClick()
+    rule.waitForIdle()
+    rule.onNodeWithText("Question 1 of 6").assertIsDisplayed()
+
+    rule.onNodeWithTag("quiz_quit_btn").performScrollTo().performClick()
+    rule.onNodeWithTag("quiz_quit_confirm_btn").performClick()
+    rule.waitForIdle()
+
+    rule.onNodeWithTag("start_quiz_btn").assertIsDisplayed()
+    // Free to choose something else again.
+    rule.onNodeWithTag("quiz_scope_europe").performClick()
+    rule.onNodeWithText("Start 9-Question Quiz").assertIsDisplayed()
+  }
+
+  @Test
+  fun backDuringAQuiz_asksBeforeQuitting() {
+    startQuiz("Africa")
+
+    rule.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
+    rule.waitForIdle()
+
+    rule.onNodeWithText("Quit this quiz?").assertIsDisplayed()
+    rule.onNodeWithText("Question 1 of 6").assertIsDisplayed()
+  }
+
+  @Test
+  fun flippedCard_doesNotCarryOverToAnotherCountryWhenExploreFiltersChange() {
+    tab("flashcards")
+    rule.onNodeWithTag("flashcard_flip_card").performClick()
+    rule.waitForIdle()
+    rule.onNodeWithText("Flag Meaning").assertIsDisplayed()
+
+    tab("explore")
+    rule.onNodeWithTag("continent_chip_asia").performClick()
+    rule.waitForIdle()
+    tab("flashcards")
+
+    rule.onNodeWithText("Card 1 of 7").assertIsDisplayed()
+    rule.onNodeWithText("Flag Meaning").assertDoesNotExist()
+    rule.onNodeWithText("Tap to reveal Country Name & Capital").assertIsDisplayed()
+  }
+
+  @Test
+  fun clearingTheFilterNotice_showsTheNewDeckUnflipped() {
+    tab("explore")
+    rule.onNodeWithTag("continent_chip_europe").performClick()
+    rule.waitForIdle()
+    tab("flashcards")
+    rule.onNodeWithTag("flashcard_flip_card").performClick()
+    rule.waitForIdle()
+    rule.onNodeWithText("Flag Meaning").assertIsDisplayed()
+
+    rule.onNodeWithTag("flashcard_clear_filters_btn").performClick()
+    rule.waitForIdle()
+
+    rule.onNodeWithText("Card 1 of 33").assertIsDisplayed()
+    rule.onNodeWithText("Flag Meaning").assertDoesNotExist()
+  }
+
+  @Test
+  fun deckPosition_followsTheCountryWhenTheFilterChanges() {
+    tab("flashcards")
+    repeat(3) {
+      rule.onNodeWithTag("grade_mastered_btn").performClick()
+      rule.waitForIdle()
+    }
+    // Sorted by name: Antarctica, Argentina, Australia, then Brazil.
+    rule.onNodeWithText("Card 4 of 33").assertIsDisplayed()
+
+    tab("explore")
+    rule.onNodeWithTag("continent_chip_americas").performClick()
+    rule.waitForIdle()
+    tab("flashcards")
+
+    // Brazil is the second of the seven American countries, not a clamped index.
+    rule.onNodeWithText("Card 2 of 7").assertIsDisplayed()
+  }
+
+  @Test
+  fun shuffle_startsAFreshDeckAtTheFirstCard() {
+    tab("flashcards")
+    repeat(2) {
+      rule.onNodeWithTag("grade_mastered_btn").performClick()
+      rule.waitForIdle()
+    }
+    rule.onNodeWithText("Card 3 of 33").assertIsDisplayed()
+
+    rule.onNodeWithContentDescription("Shuffle Cards").performClick()
+    rule.waitForIdle()
+
+    rule.onNodeWithText("Card 1 of 33").assertIsDisplayed()
+  }
+
+  @Test
+  fun resetDeck_returnsToTheFirstCard() {
+    tab("flashcards")
+    rule.onNodeWithTag("grade_mastered_btn").performClick()
+    rule.waitForIdle()
+    rule.onNodeWithContentDescription("Shuffle Cards").performClick()
+    rule.waitForIdle()
+
+    rule.onNodeWithContentDescription("Reset Deck").performClick()
+    rule.waitForIdle()
+
+    rule.onNodeWithText("Card 1 of 33").assertIsDisplayed()
+  }
+
+  @Test
+  fun sortOrder_isShownInTheFilterNoticeAndClearedByClear() {
+    tab("explore")
+    rule.onNodeWithTag("sort_menu_btn").performClick()
+    rule.onNodeWithText("Sort by Population").performClick()
+    rule.waitForIdle()
+
+    tab("flashcards")
+    rule.onNodeWithTag("flashcard_filter_notice").assertIsDisplayed()
+    rule.onNodeWithText("Deck filtered by Explore: Sorted by population").assertIsDisplayed()
+
+    rule.onNodeWithTag("flashcard_clear_filters_btn").performClick()
+    rule.waitForIdle()
+    rule.onNodeWithTag("flashcard_filter_notice").assertDoesNotExist()
+  }
+
+  @Test
+  fun speech_keepsGoingAcrossRotationButStopsWhenTheTabChanges() {
+    ShadowTextToSpeech.addLanguageAvailability(Locale.US)
+    val engine = shadowOf(ShadowTextToSpeech.getLastTextToSpeechInstance())
+    engine.onInitListener.onInit(TextToSpeech.SUCCESS)
+    rule.waitForIdle()
+    val vm = ViewModelProvider(rule.activity)[CountryViewModel::class.java]
+    vm.speakCountryDetails(vm.repository.allCountries.first())
+    assertFalse("speech should be running", engine.isStopped)
+
+    rotate()
+    assertFalse("rotating must not cut the speech off", engine.isStopped)
+
+    tab("quiz")
+    assertTrue("changing tab stops the speech", engine.isStopped)
   }
 
   @Test
