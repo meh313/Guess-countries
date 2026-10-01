@@ -71,6 +71,7 @@ fun FlashcardScreen(
     modifier: Modifier = Modifier
 ) {
     val countries by viewModel.filteredCountries.collectAsState()
+    val speechAvailable by viewModel.speechAvailable.collectAsState()
     var currentIndex by remember { mutableIntStateOf(0) }
     var isFlipped by remember { mutableStateOf(false) }
 
@@ -125,12 +126,14 @@ fun FlashcardScreen(
 
             Row {
                 IconButton(onClick = {
+                    viewModel.stopSpeaking()
                     currentIndex = (0 until countries.size).random()
                     isFlipped = false
                 }) {
                     Icon(imageVector = Icons.Default.Shuffle, contentDescription = "Shuffle Cards")
                 }
                 IconButton(onClick = {
+                    viewModel.stopSpeaking()
                     currentIndex = 0
                     isFlipped = false
                 }) {
@@ -248,11 +251,18 @@ fun FlashcardScreen(
                                 fontSize = 36.sp
                             )
 
-                            IconButton(onClick = { viewModel.speakCountryDetails(currentCountry) }) {
+                            IconButton(
+                                onClick = { viewModel.speakCountryDetails(currentCountry) },
+                                enabled = speechAvailable
+                            ) {
                                 Icon(
                                     imageVector = Icons.Default.VolumeUp,
-                                    contentDescription = "Speak",
-                                    tint = MaterialTheme.colorScheme.primary
+                                    contentDescription = "Read country summary aloud",
+                                    tint = if (speechAvailable) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                                    }
                                 )
                             }
                         }
@@ -345,6 +355,7 @@ fun FlashcardScreen(
         ) {
             Button(
                 onClick = {
+                    viewModel.stopSpeaking()
                     viewModel.updateMastery(currentCountry.code, false)
                     isFlipped = false
                     currentIndex = (currentIndex + 1) % countries.size
@@ -362,6 +373,7 @@ fun FlashcardScreen(
 
             Button(
                 onClick = {
+                    viewModel.stopSpeaking()
                     viewModel.updateMastery(currentCountry.code, true)
                     isFlipped = false
                     currentIndex = (currentIndex + 1) % countries.size

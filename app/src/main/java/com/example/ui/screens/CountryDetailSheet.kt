@@ -65,6 +65,7 @@ fun CountryDetailSheet(
     progress: UserProgressEntity?,
     onDismiss: () -> Unit,
     onSpeak: () -> Unit,
+    speechAvailable: Boolean,
     onToggleFavorite: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -113,12 +114,17 @@ fun CountryDetailSheet(
                 Row {
                     IconButton(
                         onClick = onSpeak,
+                        enabled = speechAvailable,
                         modifier = Modifier.testTag("speak_country_btn")
                     ) {
                         Icon(
                             imageVector = Icons.Default.VolumeUp,
-                            contentDescription = "Pronounce Country Name",
-                            tint = MaterialTheme.colorScheme.primary
+                            contentDescription = "Read country summary aloud",
+                            tint = if (speechAvailable) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                            }
                         )
                     }
                     IconButton(onClick = onDismiss) {

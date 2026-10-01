@@ -61,19 +61,28 @@ class CountryViewModel(application: Application) : AndroidViewModel(application)
 
     // Android Text-to-Speech Engine
     private var tts: TextToSpeech? = null
-    private var isTtsInitialized = false
+    private val _speechAvailable = MutableStateFlow(false)
+
+    /** True once the engine is ready and can speak English; the UI disables speak buttons until then. */
+    val speechAvailable: StateFlow<Boolean> = _speechAvailable
 
     init {
         tts = TextToSpeech(application) { status ->
             if (status == TextToSpeech.SUCCESS) {
-                tts?.language = Locale.US
-                isTtsInitialized = true
+                val result = tts?.setLanguage(Locale.US)
+                _speechAvailable.value = result != null &&
+                    result != TextToSpeech.LANG_MISSING_DATA &&
+                    result != TextToSpeech.LANG_NOT_SUPPORTED
             }
         }
     }
 
+    fun stopSpeaking() {
+        tts?.stop()
+    }
+
     fun speakCountryDetails(country: Country) {
-        if (isTtsInitialized) {
+        if (_speechAvailable.value) {
             val textToSpeak = "${country.name}. Capital is ${country.capital}, located in ${country.continent}. ${country.funFact}"
             tts?.speak(textToSpeak, TextToSpeech.QUEUE_FLUSH, null, "country_tts_${country.code}")
         }
@@ -96,6 +105,7 @@ class CountryViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun selectCountry(country: Country?) {
+        if (country == null) stopSpeaking()
         selectedCountry.value = country
     }
 

@@ -74,6 +74,7 @@ fun ExploreScreen(
     val countries by viewModel.filteredCountries.collectAsState()
     val userProgressMap by viewModel.userProgressMap.collectAsState()
     val selectedCountry by viewModel.selectedCountry.collectAsState()
+    val speechAvailable by viewModel.speechAvailable.collectAsState()
 
     val continents = listOf("All", "Africa", "Americas", "Asia", "Europe", "Oceania", "Antarctica")
     var showSortMenu by remember { mutableStateOf(false) }
@@ -315,6 +316,7 @@ fun ExploreScreen(
             progress = userProgressMap[country.code],
             onDismiss = { viewModel.selectCountry(null) },
             onSpeak = { viewModel.speakCountryDetails(country) },
+            speechAvailable = speechAvailable,
             onToggleFavorite = { viewModel.toggleFavorite(country.code) }
         )
     }
