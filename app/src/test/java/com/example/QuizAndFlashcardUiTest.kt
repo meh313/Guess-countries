@@ -35,6 +35,8 @@ import org.junit.Assert.assertTrue
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.shadows.ShadowTextToSpeech
 import com.example.support.FreshDatabaseRule
+import com.example.support.boundsOf
+import com.example.ui.components.FlagAspectRatio
 import com.example.support.stateDescriptionIs
 import org.junit.Rule
 import org.junit.rules.RuleChain
@@ -283,6 +285,17 @@ class QuizAndFlashcardUiTest {
 
         assertTrue(q.options.none { it.contains("McMurdo") || it.contains("Antarctic") })
         assertEquals(q.targetCountry.quizCapital, q.options[q.correctAnswerIndex])
+    }
+
+    @Test
+    fun quizFlag_keepsItsShapeAndStaysAboveTheQuestion() {
+        startQuizIn(QuizMode.FLAG_NAME)
+
+        val flag = rule.boundsOf("quiz_flag")
+        val question = rule.onNodeWithText("Which country does this flag belong to?").fetchSemanticsNode().boundsInRoot
+        assertEquals("the flag was stretched: $flag", FlagAspectRatio, flag.width / flag.height, 0.02f)
+        assertTrue("flag $flag overlaps the question $question", flag.bottom <= question.top)
+        assertTrue("flag is ${flag.height / rule.density.density}dp tall", flag.height / rule.density.density <= 160.5f)
     }
 
     @Test

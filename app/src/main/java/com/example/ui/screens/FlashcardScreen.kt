@@ -440,7 +440,7 @@ private fun FlipCard(
                             modifier = Modifier.testTag("flashcard_continent_chip")
                         ) {
                             Text(
-                                text = "${country.continent} • ${country.subregion}",
+                                text = country.regionLabel,
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 13.sp,

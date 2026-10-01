@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -150,49 +151,52 @@ fun CountryDetailSheet(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Large Flag Card
-            Box(modifier = Modifier.fillMaxWidth()) {
-                FlagView(
-                    country = country,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(180.dp),
-                    contentDescription = "Flag of ${country.name}"
-                )
-
-                // Continent Pill
-                Surface(
-                    modifier = Modifier
-                        .padding(12.dp)
-                        .align(Alignment.TopStart),
-                    shape = RoundedCornerShape(12.dp),
-                    color = continentColor
-                ) {
-                    Text(
-                        text = "${country.continent} • ${country.subregion}",
-                        color = Color.White,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+            // Large Flag Card: as big as fits the width and 180dp of height without changing the flag's
+            // shape. The pills sit on the flag itself, so they live in a box that is exactly as big as it.
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Box {
+                    FlagView(
+                        country = country,
+                        modifier = Modifier
+                            .heightIn(max = 180.dp)
+                            .testTag("sheet_flag"),
+                        contentDescription = "Flag of ${country.name}"
                     )
-                }
 
-                // Bookmark Favorite Floating Action Button
-                IconToggleButton(
-                    checked = isFavorite,
-                    onCheckedChange = { onToggleFavorite() },
-                    modifier = Modifier
-                        .padding(12.dp)
-                        .align(Alignment.TopEnd)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surface)
-                        .testTag("sheet_favorite_btn")
-                ) {
-                    Icon(
-                        imageVector = if (isFavorite) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                        contentDescription = "Bookmark ${country.name}",
-                        tint = if (isFavorite) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface
-                    )
+                    // Continent Pill
+                    Surface(
+                        modifier = Modifier
+                            .padding(12.dp)
+                            .align(Alignment.TopStart),
+                        shape = RoundedCornerShape(12.dp),
+                        color = continentColor
+                    ) {
+                        Text(
+                            text = country.regionLabel,
+                            color = Color.White,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                        )
+                    }
+
+                    // Bookmark Favorite Floating Action Button
+                    IconToggleButton(
+                        checked = isFavorite,
+                        onCheckedChange = { onToggleFavorite() },
+                        modifier = Modifier
+                            .padding(12.dp)
+                            .align(Alignment.TopEnd)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surface)
+                            .testTag("sheet_favorite_btn")
+                    ) {
+                        Icon(
+                            imageVector = if (isFavorite) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                            contentDescription = "Bookmark ${country.name}",
+                            tint = if (isFavorite) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                 }
             }
 

@@ -288,6 +288,25 @@ class LayoutAndSemanticsUiTest {
 
     @Test
     @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
+    fun detailSheet_flagKeepsItsShape_andTheControlsSitOnIt() {
+        rule.onNodeWithTag("search_country_input").performTextInput("South Africa")
+        rule.eventually("the South Africa card") { rule.onNodeWithTag("country_card_za").assertIsDisplayed() }
+        rule.onNodeWithTag("country_card_za").performClick()
+        rule.waitForIdle()
+
+        val flag = rule.boundsOf("sheet_flag")
+        val header = rule.boundsOf("speak_country_btn")
+        val facts = rule.onNodeWithText("Country Facts").fetchSemanticsNode().boundsInRoot
+        val bookmark = rule.boundsOf("sheet_favorite_btn")
+        assertEquals("the flag was stretched: $flag", FlagAspectRatio, flag.width / flag.height, 0.02f)
+        assertTrue("flag $flag runs into the header $header", flag.top >= header.bottom)
+        assertTrue("flag $flag runs into the facts title $facts", flag.bottom <= facts.top)
+        assertTrue("bookmark $bookmark is not on the flag $flag",
+            bookmark.left >= flag.left && bookmark.right <= flag.right && bookmark.top >= flag.top && bookmark.bottom <= flag.bottom)
+    }
+
+    @Test
+    @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
     fun countryCount_usesTheSingularForExactlyOne() {
         rule.onNodeWithText("33 Countries").assertIsDisplayed()
 

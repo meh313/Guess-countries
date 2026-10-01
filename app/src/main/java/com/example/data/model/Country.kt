@@ -28,7 +28,11 @@ data class Country(
      * browsable but is left out of quizzes and mastery totals.
      */
     val isSovereign: Boolean = true
-)
+) {
+    /** "Africa • Southern Africa", or just "Antarctica" where the subregion repeats the continent. */
+    val regionLabel: String
+        get() = if (subregion.equals(continent, ignoreCase = true)) continent else "$continent • $subregion"
+}
 
 enum class FlagStyle {
     VERTICAL_STRIPES_3,

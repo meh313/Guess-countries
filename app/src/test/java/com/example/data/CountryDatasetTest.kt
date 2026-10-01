@@ -177,4 +177,11 @@ class CountryDatasetTest {
         // Figures are UN World Population Prospects 2024 estimates; the label shown to users says so.
         assertEquals(2024, CountryCatalog.DATA_YEAR)
     }
+
+    @Test
+    fun regionLabelNeverRepeatsAWord() {
+        assertEquals("Antarctica", allCountries.single { it.code == "AQ" }.regionLabel)
+        assertEquals("Africa • Southern Africa", allCountries.single { it.code == "ZA" }.regionLabel)
+        allCountries.forEach { assertTrue(it.regionLabel, it.regionLabel.split(" • ").distinct().size == it.regionLabel.split(" • ").size) }
+    }
 }
