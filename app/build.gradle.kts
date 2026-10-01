@@ -5,6 +5,26 @@ plugins {
   alias(libs.plugins.roborazzi)
 }
 
+// Release signing is optional. It is applied only when the keystore file and both passwords are
+// available (KEYSTORE_PATH or ./my-upload-key.jks, STORE_PASSWORD, KEY_PASSWORD). Without them
+// assembleRelease still works and produces an unsigned APK, so fresh clones and CI can build it.
+val releaseKeystore = file(System.getenv("KEYSTORE_PATH") ?: "${rootDir}/my-upload-key.jks")
+val releaseStorePassword: String? = System.getenv("STORE_PASSWORD")
+val releaseKeyPassword: String? = System.getenv("KEY_PASSWORD")
+val canSignRelease =
+  releaseKeystore.exists() && releaseStorePassword != null && releaseKeyPassword != null
+if (!canSignRelease && (releaseStorePassword != null || releaseKeyPassword != null)) {
+  logger.warn("Release signing skipped: set KEYSTORE_PATH (or add my-upload-key.jks) together with STORE_PASSWORD and KEY_PASSWORD.")
+}
+
+// CI can pass VERSION_CODE (for example the build number) so every upload is unique. A bad value
+// fails the build instead of silently falling back to 1.
+val versionCodeFromEnv: Int? =
+  System.getenv("VERSION_CODE")?.takeIf { it.isNotBlank() }?.let { raw ->
+    raw.trim().toIntOrNull()?.takeIf { it in 1..2_100_000_000 }
+      ?: error("VERSION_CODE must be an integer in 1..2100000000, got '$raw'")
+  }
+
 android {
   namespace = "com.example"
   compileSdk { version = release(36) { minorApiLevel = 1 } }
@@ -13,20 +33,20 @@ android {
     applicationId = "com.aistudio.worldexplorer.flags"
     minSdk = 24
     targetSdk = 36
-    // CI can pass VERSION_CODE (for example the build number) so every upload is unique.
-    versionCode = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 1
+    versionCode = versionCodeFromEnv ?: 1
     versionName = "1.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
   signingConfigs {
-    create("release") {
-      val keystorePath = System.getenv("KEYSTORE_PATH") ?: "${rootDir}/my-upload-key.jks"
-      storeFile = file(keystorePath)
-      storePassword = System.getenv("STORE_PASSWORD")
-      keyAlias = "upload"
-      keyPassword = System.getenv("KEY_PASSWORD")
+    if (canSignRelease) {
+      create("release") {
+        storeFile = releaseKeystore
+        storePassword = releaseStorePassword
+        keyAlias = "upload"
+        keyPassword = releaseKeyPassword
+      }
     }
     create("debugConfig") {
       storeFile = file("${rootDir}/debug.keystore")
@@ -42,7 +62,7 @@ android {
       isMinifyEnabled = true
       isShrinkResources = true
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-      signingConfig = signingConfigs.getByName("release")
+      if (canSignRelease) signingConfig = signingConfigs.getByName("release")
     }
     debug {
       // debug.keystore is gitignored, so only use it when present. Fresh clones fall back to
@@ -60,7 +80,12 @@ android {
     compose = true
   }
   testOptions { unitTests { isIncludeAndroidResources = true } }
+  // Exported Room schemas double as fixtures for migration tests.
+  sourceSets { getByName("androidTest").assets.directories.add("$projectDir/schemas") }
 }
+
+// Room writes one JSON per database version here; commit them so migrations can be tested.
+ksp { arg("room.schemaLocation", "$projectDir/schemas") }
 
 // Some unused dependencies are commented out below instead of being removed.
 // This makes it easy to add them back in the future if needed.
@@ -86,7 +111,8 @@ dependencies {
   implementation(libs.androidx.navigation.compose)
   implementation(libs.androidx.room.ktx)
   implementation(libs.androidx.room.runtime)
-  // Firebase (also re-add the google-services plugin and a google-services.json):
+  // Firebase: re-add the BOM below, apply the com.google.gms.google-services plugin and add a
+  // google-services.json.
   // implementation(platform(libs.firebase.bom))
   // Uncomment to use Firestore:
   // implementation(libs.firebase.firestore)
