@@ -17,8 +17,22 @@ data class Country(
     val currency: String,
     val landmarks: List<String>,
     val funFact: String,
-    val driveSide: String = "Right"
-)
+    val driveSide: String = "Right",
+    /**
+     * One city, for places that have room for only one: the capital quiz and the country cards. It differs
+     * from [capital] where several cities share the role.
+     */
+    val quizCapital: String = capital,
+    /**
+     * False for Antarctica: a continent with no government, capital, currency or official flag. It stays
+     * browsable but is left out of quizzes and mastery totals.
+     */
+    val isSovereign: Boolean = true
+) {
+    /** "Africa • Southern Africa", or just "Antarctica" where the subregion repeats the continent. */
+    val regionLabel: String
+        get() = if (subregion.equals(continent, ignoreCase = true)) continent else "$continent • $subregion"
+}
 
 enum class FlagStyle {
     VERTICAL_STRIPES_3,

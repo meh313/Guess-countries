@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -28,7 +29,7 @@ import androidx.compose.material.icons.filled.LocationCity
 import androidx.compose.material.icons.filled.MonetizationOn
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Public
-import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -36,6 +37,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
@@ -53,10 +55,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.local.UserProgressEntity
 import com.example.data.model.Country
+import com.example.ui.components.formatArea
+import com.example.ui.components.formatPopulation
+import com.example.ui.components.rememberCompactNumberFormat
+import androidx.compose.ui.text.style.TextOverflow
 import com.example.ui.components.FlagView
 import com.example.ui.components.getContinentColor
-import java.text.NumberFormat
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -65,10 +69,12 @@ fun CountryDetailSheet(
     progress: UserProgressEntity?,
     onDismiss: () -> Unit,
     onSpeak: () -> Unit,
+    speechAvailable: Boolean,
     onToggleFavorite: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val isFavorite = progress?.isFavorite == true
+    val compactNumbers = rememberCompactNumberFormat()
     val continentColor = getContinentColor(country.continent)
 
     ModalBottomSheet(
@@ -90,13 +96,18 @@ fun CountryDetailSheet(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                // The title takes the leftover width and may wrap, so long official names such as
+                // "United Kingdom of Great Britain and Northern Ireland" cannot push the buttons away.
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Text(
                         text = country.flagEmoji,
                         fontSize = 32.sp,
                         modifier = Modifier.padding(end = 8.dp)
                     )
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = country.name,
                             style = MaterialTheme.typography.headlineSmall,
@@ -105,7 +116,9 @@ fun CountryDetailSheet(
                         Text(
                             text = country.officialName,
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -113,12 +126,21 @@ fun CountryDetailSheet(
                 Row {
                     IconButton(
                         onClick = onSpeak,
+                        enabled = speechAvailable,
                         modifier = Modifier.testTag("speak_country_btn")
                     ) {
                         Icon(
-                            imageVector = Icons.Default.VolumeUp,
-                            contentDescription = "Pronounce Country Name",
-                            tint = MaterialTheme.colorScheme.primary
+                            imageVector = Icons.AutoMirrored.Filled.VolumeUp,
+                            contentDescription = if (speechAvailable) {
+                                "Read country summary aloud"
+                            } else {
+                                "Reading aloud is unavailable on this device"
+                            },
+                            tint = if (speechAvailable) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                            }
                         )
                     }
                     IconButton(onClick = onDismiss) {
@@ -129,47 +151,62 @@ fun CountryDetailSheet(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Large Flag Card
-            Box(modifier = Modifier.fillMaxWidth()) {
-                FlagView(
-                    country = country,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(180.dp)
-                )
-
-                // Continent Pill
-                Surface(
-                    modifier = Modifier
-                        .padding(12.dp)
-                        .align(Alignment.TopStart),
-                    shape = RoundedCornerShape(12.dp),
-                    color = continentColor
-                ) {
-                    Text(
-                        text = "${country.continent} • ${country.subregion}",
-                        color = Color.White,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+            // Large Flag Card: as big as fits the width and 180dp of height without changing the flag's
+            // shape. The pills sit on the flag itself, so they live in a box that is exactly as big as it.
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Box {
+                    FlagView(
+                        country = country,
+                        modifier = Modifier
+                            .heightIn(max = 180.dp)
+                            .testTag("sheet_flag"),
+                        contentDescription = "Flag of ${country.name}"
                     )
-                }
 
-                // Bookmark Favorite Floating Action Button
-                IconButton(
-                    onClick = onToggleFavorite,
-                    modifier = Modifier
-                        .padding(12.dp)
-                        .align(Alignment.TopEnd)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surface)
-                        .testTag("sheet_favorite_btn")
-                ) {
-                    Icon(
-                        imageVector = if (isFavorite) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                        contentDescription = "Bookmark",
-                        tint = if (isFavorite) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface
-                    )
+                    // The region pill and the bookmark share the flag's width, so they sit in one row that is
+                    // exactly as big as the flag: a long label wraps instead of running under the bookmark.
+                    Row(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .padding(12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Surface(
+                            modifier = Modifier
+                                .weight(1f, fill = false)
+                                .padding(end = 8.dp)
+                                .testTag("sheet_region_pill"),
+                            shape = RoundedCornerShape(12.dp),
+                            color = continentColor
+                        ) {
+                            Text(
+                                text = country.regionLabel,
+                                color = Color.White,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                            )
+                        }
+
+                        // Bookmark Favorite Floating Action Button
+                        IconToggleButton(
+                            checked = isFavorite,
+                            onCheckedChange = { onToggleFavorite() },
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.surface)
+                                .testTag("sheet_favorite_btn")
+                        ) {
+                            Icon(
+                                imageVector = if (isFavorite) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                                contentDescription = "Bookmark ${country.name}",
+                                tint = if (isFavorite) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
                 }
             }
 
@@ -195,7 +232,7 @@ fun CountryDetailSheet(
                 DetailMetricCard(
                     icon = Icons.Default.People,
                     label = "Population",
-                    value = NumberFormat.getNumberInstance(Locale.US).format(country.population),
+                    value = formatPopulation(compactNumbers, country.population),
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -205,8 +242,8 @@ fun CountryDetailSheet(
             Row(modifier = Modifier.fillMaxWidth()) {
                 DetailMetricCard(
                     icon = Icons.Default.Public,
-                    label = "Land Area",
-                    value = "${NumberFormat.getNumberInstance(Locale.US).format(country.areaSqKm)} km²",
+                    label = "Total Area",
+                    value = formatArea(compactNumbers, country.areaSqKm),
                     modifier = Modifier.weight(1f)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
@@ -223,7 +260,7 @@ fun CountryDetailSheet(
             Row(modifier = Modifier.fillMaxWidth()) {
                 DetailMetricCard(
                     icon = Icons.Default.Language,
-                    label = "Official Languages",
+                    label = "Languages",
                     value = country.languages.joinToString(", "),
                     modifier = Modifier.weight(1f)
                 )
@@ -231,7 +268,7 @@ fun CountryDetailSheet(
                 DetailMetricCard(
                     icon = Icons.Default.DirectionsCar,
                     label = "Driving Side",
-                    value = "${country.driveSide} side",
+                    value = if (country.driveSide == "N/A") "No public roads" else "${country.driveSide} side",
                     modifier = Modifier.weight(1f)
                 )
             }

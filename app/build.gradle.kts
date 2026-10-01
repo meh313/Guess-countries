@@ -1,13 +1,28 @@
-import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy
-
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.kotlin.compose)
   alias(libs.plugins.google.devtools.ksp)
-  alias(libs.plugins.roborazzi)
-  alias(libs.plugins.secrets)
-  alias(libs.plugins.google.services)
 }
+
+// Release signing is optional. It is applied only when the keystore file and both passwords are
+// available (KEYSTORE_PATH or ./my-upload-key.jks, STORE_PASSWORD, KEY_PASSWORD). Without them
+// assembleRelease still works and produces an unsigned APK, so fresh clones and CI can build it.
+val releaseKeystore = file(System.getenv("KEYSTORE_PATH") ?: "${rootDir}/my-upload-key.jks")
+val releaseStorePassword: String? = System.getenv("STORE_PASSWORD")
+val releaseKeyPassword: String? = System.getenv("KEY_PASSWORD")
+val canSignRelease =
+  releaseKeystore.exists() && releaseStorePassword != null && releaseKeyPassword != null
+if (!canSignRelease && (releaseStorePassword != null || releaseKeyPassword != null)) {
+  logger.warn("Release signing skipped: set KEYSTORE_PATH (or add my-upload-key.jks) together with STORE_PASSWORD and KEY_PASSWORD.")
+}
+
+// CI can pass VERSION_CODE (for example the build number) so every upload is unique. A bad value
+// fails the build instead of silently falling back to 1.
+val versionCodeFromEnv: Int? =
+  System.getenv("VERSION_CODE")?.takeIf { it.isNotBlank() }?.let { raw ->
+    raw.trim().toIntOrNull()?.takeIf { it in 1..2_100_000_000 }
+      ?: error("VERSION_CODE must be an integer in 1..2100000000, got '$raw'")
+  }
 
 android {
   namespace = "com.example"
@@ -17,19 +32,20 @@ android {
     applicationId = "com.aistudio.worldexplorer.flags"
     minSdk = 24
     targetSdk = 36
-    versionCode = 1
+    versionCode = versionCodeFromEnv ?: 1
     versionName = "1.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
   signingConfigs {
-    create("release") {
-      val keystorePath = System.getenv("KEYSTORE_PATH") ?: "${rootDir}/my-upload-key.jks"
-      storeFile = file(keystorePath)
-      storePassword = System.getenv("STORE_PASSWORD")
-      keyAlias = "upload"
-      keyPassword = System.getenv("KEY_PASSWORD")
+    if (canSignRelease) {
+      create("release") {
+        storeFile = releaseKeystore
+        storePassword = releaseStorePassword
+        keyAlias = "upload"
+        keyPassword = releaseKeyPassword
+      }
     }
     create("debugConfig") {
       storeFile = file("${rootDir}/debug.keystore")
@@ -42,11 +58,18 @@ android {
   buildTypes {
     release {
       isCrunchPngs = false
-      isMinifyEnabled = false
+      isMinifyEnabled = true
+      isShrinkResources = true
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-      signingConfig = signingConfigs.getByName("release")
+      if (canSignRelease) signingConfig = signingConfigs.getByName("release")
     }
-    debug { signingConfig = signingConfigs.getByName("debugConfig") }
+    debug {
+      // debug.keystore is gitignored, so only use it when present. Fresh clones fall back to
+      // AGP's auto-generated debug key instead of failing at the signing step.
+      if (file("${rootDir}/debug.keystore").exists()) {
+        signingConfig = signingConfigs.getByName("debugConfig")
+      }
+    }
   }
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_11
@@ -54,25 +77,23 @@ android {
   }
   buildFeatures {
     compose = true
-    buildConfig = true
   }
   testOptions { unitTests { isIncludeAndroidResources = true } }
+  // Exported Room schemas double as fixtures for migration tests.
+  sourceSets {
+    getByName("androidTest").assets.directories.add("$projectDir/schemas")
+    // The third-party licence text ships inside the APK next to the artwork it covers.
+    getByName("main").assets.directories.add("$rootDir/licenses")
+  }
 }
 
-// Configure the Secrets Gradle Plugin to use .env and .env.example files
-// to match the convention used in Web projects.
-secrets {
-  propertiesFileName = ".env"
-  defaultPropertiesFileName = ".env.example"
-}
-
-googleServices { missingGoogleServicesStrategy = MissingGoogleServicesStrategy.WARN }
+// Room writes one JSON per database version here; commit them so migrations can be tested.
+ksp { arg("room.schemaLocation", "$projectDir/schemas") }
 
 // Some unused dependencies are commented out below instead of being removed.
 // This makes it easy to add them back in the future if needed.
 dependencies {
   implementation(platform(libs.androidx.compose.bom))
-  implementation(platform(libs.firebase.bom))
   // implementation(libs.accompanist.permissions)
   implementation(libs.androidx.activity.compose)
   // implementation(libs.androidx.camera.camera2)
@@ -93,9 +114,9 @@ dependencies {
   implementation(libs.androidx.navigation.compose)
   implementation(libs.androidx.room.ktx)
   implementation(libs.androidx.room.runtime)
-  implementation(libs.coil.compose)
-  implementation(libs.converter.moshi)
-  implementation(libs.firebase.ai)
+  // Firebase: re-add the BOM below, apply the com.google.gms.google-services plugin and add a
+  // google-services.json.
+  // implementation(platform(libs.firebase.bom))
   // Uncomment to use Firestore:
   // implementation(libs.firebase.firestore)
 
@@ -106,23 +127,15 @@ dependencies {
   // implementation(libs.androidx.credentials)
   // implementation(libs.androidx.credentials.play.services)
   // implementation(libs.googleid)
-  implementation(libs.firebase.appcheck.recaptcha)
   implementation(libs.kotlinx.coroutines.android)
   implementation(libs.kotlinx.coroutines.core)
-  implementation(libs.logging.interceptor)
-  implementation(libs.moshi.kotlin)
-  implementation(libs.okhttp)
   // implementation(libs.play.services.location)
-  implementation(libs.retrofit)
   testImplementation(libs.androidx.compose.ui.test.junit4)
   testImplementation(libs.androidx.core)
   testImplementation(libs.androidx.junit)
   testImplementation(libs.junit)
   testImplementation(libs.kotlinx.coroutines.test)
   testImplementation(libs.robolectric)
-  testImplementation(libs.roborazzi)
-  testImplementation(libs.roborazzi.compose)
-  testImplementation(libs.roborazzi.junit.rule)
   androidTestImplementation(platform(libs.androidx.compose.bom))
   androidTestImplementation(libs.androidx.compose.ui.test.junit4)
   androidTestImplementation(libs.androidx.espresso.core)
@@ -131,5 +144,4 @@ dependencies {
   debugImplementation(libs.androidx.compose.ui.test.manifest)
   debugImplementation(libs.androidx.compose.ui.tooling)
   "ksp"(libs.androidx.room.compiler)
-  "ksp"(libs.moshi.kotlin.codegen)
 }

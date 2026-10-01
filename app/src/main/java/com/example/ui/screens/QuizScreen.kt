@@ -1,38 +1,38 @@
 package com.example.ui.screens
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
+import android.os.Build
+import android.view.HapticFeedbackConstants
+import android.view.View
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.LocationCity
 import androidx.compose.material.icons.filled.Public
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -40,129 +40,72 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.data.model.Country
+import com.example.quiz.QuizEngine
+import com.example.quiz.QuizMode
 import com.example.ui.components.FlagView
+import com.example.ui.theme.StreakColor
 import com.example.ui.viewmodel.CountryViewModel
+import kotlinx.coroutines.delay
 
-enum class QuizMode(val title: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
-    FLAG_NAME("Flag -> Country", Icons.Default.Flag),
-    CAPITAL("Country -> Capital", Icons.Default.LocationCity),
-    CONTINENT("Flag -> Continent", Icons.Default.Public),
-    SPEED_MATCH("Speed Round", Icons.Default.Speed)
-}
-
-data class QuizQuestion(
-    val targetCountry: Country,
-    val questionText: String,
-    val options: List<String>,
-    val correctAnswerIndex: Int
-)
+private val QuizMode.icon: ImageVector
+    get() = when (this) {
+        QuizMode.FLAG_NAME -> Icons.Default.Flag
+        QuizMode.CAPITAL -> Icons.Default.LocationCity
+        QuizMode.CONTINENT -> Icons.Default.Public
+        QuizMode.SPEED_MATCH -> Icons.Default.Speed
+    }
 
 @Composable
 fun QuizScreen(
     viewModel: CountryViewModel,
     modifier: Modifier = Modifier
 ) {
-    val countries by viewModel.filteredCountries.collectAsState()
-    var selectedMode by remember { mutableStateOf(QuizMode.FLAG_NAME) }
-    var selectedContinentScope by remember { mutableStateOf("Global") }
+    val allCountries = viewModel.repository.allCountries
+    // The running quiz lives in the ViewModel; the setup choices survive rotation via rememberSaveable.
+    val session by viewModel.quizSession.collectAsState()
+    var selectedMode by rememberSaveable { mutableStateOf(QuizMode.FLAG_NAME) }
+    var selectedContinentScope by rememberSaveable { mutableStateOf("Global") }
+    val quizScrollState = rememberScrollState()
+    var showQuitConfirm by rememberSaveable { mutableStateOf(false) }
 
-    var isQuizActive by remember { mutableStateOf(false) }
-    var currentQuestionIndex by remember { mutableIntStateOf(0) }
-    var score by remember { mutableIntStateOf(0) }
-    var streak by remember { mutableIntStateOf(0) }
-    var questions by remember { mutableStateOf<List<QuizQuestion>>(emptyList()) }
+    val active = session
 
-    var selectedAnswerIndex by remember { mutableStateOf<Int?>(null) }
-    var showExplanation by remember { mutableStateOf(false) }
-    var isQuizFinished by remember { mutableStateOf(false) }
-
-    fun startNewQuiz() {
-        val pool = if (selectedContinentScope == "Global") {
-            countries
-        } else {
-            countries.filter { it.continent.equals(selectedContinentScope, ignoreCase = true) }
-        }
-
-        if (pool.size < 4) return
-
-        val generatedQuestions = pool.shuffled().take(10).map { target ->
-            when (selectedMode) {
-                QuizMode.FLAG_NAME -> {
-                    val wrongOptions = (pool - target).shuffled().take(3).map { it.name }
-                    val options = (wrongOptions + target.name).shuffled()
-                    QuizQuestion(
-                        targetCountry = target,
-                        questionText = "Which country does this flag belong to?",
-                        options = options,
-                        correctAnswerIndex = options.indexOf(target.name)
-                    )
-                }
-                QuizMode.CAPITAL -> {
-                    val wrongOptions = (pool - target).shuffled().take(3).map { it.capital }
-                    val options = (wrongOptions + target.capital).shuffled()
-                    QuizQuestion(
-                        targetCountry = target,
-                        questionText = "What is the capital city of ${target.name}?",
-                        options = options,
-                        correctAnswerIndex = options.indexOf(target.capital)
-                    )
-                }
-                QuizMode.CONTINENT -> {
-                    val allContinents = listOf("Africa", "Americas", "Asia", "Europe", "Oceania")
-                    val wrongContinents = (allContinents - target.continent).shuffled().take(3)
-                    val options = (wrongContinents + target.continent).shuffled()
-                    QuizQuestion(
-                        targetCountry = target,
-                        questionText = "Which continent is ${target.name} located in?",
-                        options = options,
-                        correctAnswerIndex = options.indexOf(target.continent)
-                    )
-                }
-                QuizMode.SPEED_MATCH -> {
-                    val wrongOptions = (pool - target).shuffled().take(3).map { it.name }
-                    val options = (wrongOptions + target.name).shuffled()
-                    QuizQuestion(
-                        targetCountry = target,
-                        questionText = "Identify the country for this flag:",
-                        options = options,
-                        correctAnswerIndex = options.indexOf(target.name)
-                    )
-                }
-            }
-        }
-
-        questions = generatedQuestions
-        currentQuestionIndex = 0
-        score = 0
-        streak = 0
-        selectedAnswerIndex = null
-        showExplanation = false
-        isQuizFinished = false
-        isQuizActive = true
-    }
-
-    if (!isQuizActive) {
+    if (active == null) {
         // QUIZ CONFIGURATION SCREEN
         Column(
             modifier = modifier
@@ -195,12 +138,16 @@ fun QuizScreen(
             Spacer(modifier = Modifier.height(10.dp))
 
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                QuizMode.values().forEach { mode ->
+                QuizMode.entries.forEach { mode ->
                     val isSelected = selectedMode == mode
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { selectedMode = mode }
+                            .selectable(
+                                selected = isSelected,
+                                role = Role.RadioButton,
+                                onClick = { selectedMode = mode }
+                            )
                             .testTag("quiz_mode_${mode.name.lowercase()}"),
                         shape = RoundedCornerShape(16.dp),
                         colors = CardDefaults.cardColors(
@@ -219,12 +166,21 @@ fun QuizScreen(
                                 modifier = Modifier.size(28.dp)
                             )
                             Spacer(modifier = Modifier.width(16.dp))
-                            Text(
-                                text = mode.title,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
-                            )
+                            Column {
+                                Text(
+                                    text = mode.title,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                                )
+                                mode.hint?.let { hint ->
+                                    Text(
+                                        text = hint,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -241,15 +197,33 @@ fun QuizScreen(
             )
             Spacer(modifier = Modifier.height(10.dp))
 
-            val scopes = listOf("Global", "Africa", "Americas", "Asia", "Europe", "Oceania")
+            // Some modes always cover the whole world; their scope chips show "Global" and are inactive.
+            val scopeApplies = !selectedMode.usesWholeWorld
+            val shownScope = QuizEngine.effectiveScope(selectedMode, selectedContinentScope)
+            if (!scopeApplies) {
+                Text(
+                    text = "The continent quiz always covers the whole world",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .align(Alignment.Start)
+                        .padding(bottom = 8.dp)
+                )
+            }
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(scopes) { scope ->
-                    val isSelected = selectedContinentScope == scope
+                items(QuizEngine.SCOPES) { scope ->
+                    val isSelected = shownScope == scope
                     Surface(
                         shape = RoundedCornerShape(16.dp),
                         color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
                         modifier = Modifier
-                            .clickable { selectedContinentScope = scope }
+                            .alpha(if (scopeApplies) 1f else 0.5f)
+                            .selectable(
+                                selected = isSelected,
+                                enabled = scopeApplies,
+                                role = Role.RadioButton,
+                                onClick = { selectedContinentScope = scope }
+                            )
                             .testTag("quiz_scope_${scope.lowercase()}")
                     ) {
                         Text(
@@ -265,8 +239,11 @@ fun QuizScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             // Start Quiz Button
+            val scopePoolSize = QuizEngine.poolFor(shownScope, allCountries).size
+            val canStart = scopePoolSize >= QuizEngine.MIN_POOL
             Button(
-                onClick = { startNewQuiz() },
+                onClick = { viewModel.startQuiz(selectedMode, selectedContinentScope) },
+                enabled = canStart,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
@@ -274,19 +251,61 @@ fun QuizScreen(
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
-                Text("Start 10-Question Quiz", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    text = if (canStart) {
+                        "Start ${QuizEngine.questionCount(scopePoolSize)}-Question Quiz"
+                    } else {
+                        "Needs at least ${QuizEngine.MIN_POOL} countries"
+                    },
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     } else {
         // ACTIVE QUIZ SCREEN
-        if (questions.isEmpty()) return
-        val q = questions[currentQuestionIndex]
+        val q = active.current
+
+        // The quiz now outlives the screen, so offer a way out (Back asks first).
+        BackHandler(enabled = !active.isFinished) { showQuitConfirm = true }
+
+        val view = LocalView.current
+        val limitMs = active.mode.timeLimitSeconds?.let { it * 1000L }
+        var remainingMs by remember(active.currentIndex, active.questionStartedAt) { mutableLongStateOf(limitMs ?: 0L) }
+        if (limitMs != null) {
+            // Time is measured from when the question was shown, so rotating or switching tabs neither
+            // pauses nor restarts it.
+            LaunchedEffect(active.currentIndex, active.questionStartedAt, active.hasAnswered) {
+                while (!active.hasAnswered) {
+                    val left = limitMs - (viewModel.clockMillis() - active.questionStartedAt)
+                    remainingMs = left.coerceIn(0L, limitMs)
+                    if (left <= 0L) {
+                        view.performAnswerHaptic(correct = false)
+                        viewModel.timeOutQuiz()
+                        break
+                    }
+                    delay(100)
+                }
+            }
+        }
+        val questionCount = active.questions.size
+
+        // Each new question starts at the top so the flag is visible.
+        LaunchedEffect(active.currentIndex) { quizScrollState.scrollTo(0) }
+        // After answering, bring the explanation and Next button into view on small screens.
+        LaunchedEffect(active.hasAnswered) {
+            if (active.hasAnswered) {
+                withFrameNanos { } // wait one frame so the explanation card has been measured
+                quizScrollState.animateScrollTo(quizScrollState.maxValue)
+            }
+        }
 
         Column(
             modifier = modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
-                .padding(20.dp),
+                .padding(20.dp)
+                .verticalScroll(quizScrollState),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Top Status Bar: Score & Streak
@@ -297,39 +316,48 @@ fun QuizScreen(
             ) {
                 Column {
                     Text(
-                        text = "Question ${currentQuestionIndex + 1} of 10",
+                        text = "Question ${active.currentIndex + 1} of $questionCount",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "Score: $score",
+                        text = "Score: ${active.score}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
                     )
                 }
 
-                Surface(
-                    shape = RoundedCornerShape(20.dp),
-                    color = Color(0xFFE67E22)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Surface(
+                        shape = RoundedCornerShape(20.dp),
+                        color = StreakColor
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.LocalFireDepartment,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "Streak $streak",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp
-                        )
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.LocalFireDepartment,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Streak ${active.streak}",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+
+                    IconButton(
+                        onClick = { showQuitConfirm = true },
+                        modifier = Modifier.testTag("quiz_quit_btn")
+                    ) {
+                        Icon(imageVector = Icons.Default.Close, contentDescription = "Quit quiz")
                     }
                 }
             }
@@ -337,13 +365,38 @@ fun QuizScreen(
             Spacer(modifier = Modifier.height(10.dp))
 
             LinearProgressIndicator(
-                progress = { (currentQuestionIndex + 1) / 10f },
+                progress = { (active.currentIndex + 1).toFloat() / questionCount },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(8.dp)
                     .clip(RoundedCornerShape(4.dp)),
                 color = MaterialTheme.colorScheme.primary
             )
+
+            if (limitMs != null && !active.hasAnswered) {
+                // One quiet description for TalkBack; a ticking bar would be announced constantly.
+                Column(
+                    modifier = Modifier
+                        .padding(top = 8.dp)
+                        .testTag("quiz_timer")
+                        .clearAndSetSemantics { contentDescription = "${limitMs / 1000} seconds per question" }
+                ) {
+                    val urgent = remainingMs <= 3_000L
+                    LinearProgressIndicator(
+                        progress = { remainingMs / limitMs.toFloat() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(6.dp)
+                            .clip(RoundedCornerShape(3.dp)),
+                        color = if (urgent) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary
+                    )
+                    Text(
+                        text = "${(remainingMs + 999) / 1000}s left",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (urgent) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -358,12 +411,13 @@ fun QuizScreen(
                     modifier = Modifier.padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    if (selectedMode == QuizMode.FLAG_NAME || selectedMode == QuizMode.CONTINENT || selectedMode == QuizMode.SPEED_MATCH) {
+                    if (active.mode.showsFlag) {
                         FlagView(
                             country = q.targetCountry,
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .height(160.dp)
+                                .heightIn(max = 160.dp)
+                                .testTag("quiz_flag"),
+                            contentDescription = "Flag to identify"
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                     }
@@ -382,33 +436,32 @@ fun QuizScreen(
             // 4 Options Grid
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 q.options.forEachIndexed { index, optionText ->
-                    val isSelected = selectedAnswerIndex == index
+                    val isSelected = active.selectedAnswerIndex == index
                     val isCorrect = index == q.correctAnswerIndex
 
                     val containerColor = when {
-                        selectedAnswerIndex == null -> MaterialTheme.colorScheme.surface
+                        !active.hasAnswered -> MaterialTheme.colorScheme.surface
                         isCorrect -> Color(0xFF2E7D32) // Green
                         isSelected && !isCorrect -> Color(0xFFC62828) // Red
                         else -> MaterialTheme.colorScheme.surface
                     }
 
-                    val textColor = if (selectedAnswerIndex != null && (isCorrect || isSelected)) Color.White else MaterialTheme.colorScheme.onSurface
+                    val textColor = if (active.hasAnswered && (isCorrect || isSelected)) Color.White else MaterialTheme.colorScheme.onSurface
 
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable(enabled = selectedAnswerIndex == null) {
-                                selectedAnswerIndex = index
-                                val correct = index == q.correctAnswerIndex
-                                if (correct) {
-                                    score += 10 + (streak * 2)
-                                    streak += 1
-                                    viewModel.updateMastery(q.targetCountry.code, true)
-                                } else {
-                                    streak = 0
-                                    viewModel.updateMastery(q.targetCountry.code, false)
+                            .clickable(enabled = !active.hasAnswered) {
+                                viewModel.answerQuiz(index)
+                                view.performAnswerHaptic(correct = isCorrect)
+                            }
+                            .semantics {
+                                // Not only colour: say which option was right and which one was picked.
+                                if (active.hasAnswered && isCorrect) {
+                                    stateDescription = "Correct answer"
+                                } else if (active.hasAnswered && isSelected) {
+                                    stateDescription = "Your answer, incorrect"
                                 }
-                                showExplanation = true
                             }
                             .testTag("quiz_option_$index"),
                         shape = RoundedCornerShape(14.dp),
@@ -427,9 +480,9 @@ fun QuizScreen(
                                 color = textColor
                             )
 
-                            if (selectedAnswerIndex != null && isCorrect) {
+                            if (active.hasAnswered && isCorrect) {
                                 Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = Color.White)
-                            } else if (selectedAnswerIndex != null && isSelected && !isCorrect) {
+                            } else if (active.hasAnswered && isSelected && !isCorrect) {
                                 Icon(imageVector = Icons.Default.Cancel, contentDescription = null, tint = Color.White)
                             }
                         }
@@ -440,14 +493,31 @@ fun QuizScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Post-Answer Explanation & Next Button
-            if (showExplanation) {
+            if (active.hasAnswered) {
+                val answerText = q.options[q.correctAnswerIndex]
+                val result = when {
+                    active.timedOut -> "Time's up! The answer is $answerText"
+                    active.selectedAnswerIndex == q.correctAnswerIndex ->
+                        "Correct! +${QuizEngine.pointsForCorrectAnswer(active.streak - 1)} points"
+                    else -> "Not quite. The answer is $answerText"
+                }
                 Card(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                    shape = RoundedCornerShape(16.dp)
+                    shape = RoundedCornerShape(16.dp),
+                    // Announced as soon as it appears, so TalkBack users hear the outcome.
+                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
                         Text(
-                            text = "💡 ${q.targetCountry.name} (${q.targetCountry.capital})",
+                            text = result,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier
+                                .padding(bottom = 6.dp)
+                                .testTag("quiz_result")
+                        )
+                        Text(
+                            text = "💡 ${q.targetCountry.name}: ${q.targetCountry.capital}",
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
@@ -458,19 +528,10 @@ fun QuizScreen(
                         )
                         Spacer(modifier = Modifier.height(10.dp))
                         Button(
-                            onClick = {
-                                if (currentQuestionIndex < 9) {
-                                    currentQuestionIndex++
-                                    selectedAnswerIndex = null
-                                    showExplanation = false
-                                } else {
-                                    isQuizFinished = true
-                                    viewModel.saveQuizResult(selectedMode.name, score, 100, selectedContinentScope)
-                                }
-                            },
+                            onClick = { viewModel.nextQuizQuestion() },
                             modifier = Modifier.fillMaxWidth().testTag("next_question_btn")
                         ) {
-                            Text(if (currentQuestionIndex < 9) "Next Question" else "Finish & View Score")
+                            Text(if (active.isLastQuestion) "Finish & View Score" else "Next Question")
                         }
                     }
                 }
@@ -478,10 +539,37 @@ fun QuizScreen(
         }
     }
 
-    // Finish Celebration Dialog
-    if (isQuizFinished) {
+    if (showQuitConfirm && active != null && !active.isFinished) {
         AlertDialog(
-            onDismissRequest = { isQuizActive = false },
+            onDismissRequest = { showQuitConfirm = false },
+            title = { Text("Quit this quiz?") },
+            text = { Text("Your progress in this quiz will be lost.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showQuitConfirm = false
+                        viewModel.endQuiz()
+                    },
+                    modifier = Modifier.testTag("quiz_quit_confirm_btn")
+                ) {
+                    Text("Quit")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showQuitConfirm = false },
+                    modifier = Modifier.testTag("quiz_quit_cancel_btn")
+                ) {
+                    Text("Keep playing")
+                }
+            }
+        )
+    }
+
+    // Finish Celebration Dialog
+    if (active?.isFinished == true) {
+        AlertDialog(
+            onDismissRequest = { viewModel.endQuiz() },
             title = {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                     Icon(
@@ -497,7 +585,7 @@ fun QuizScreen(
             text = {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                     Text(
-                        text = "Your Score: $score Points",
+                        text = "Your Score: ${active.score} Points",
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -511,10 +599,7 @@ fun QuizScreen(
             },
             confirmButton = {
                 Button(
-                    onClick = {
-                        isQuizActive = false
-                        isQuizFinished = false
-                    },
+                    onClick = { viewModel.endQuiz() },
                     modifier = Modifier.testTag("quiz_finish_done_btn")
                 ) {
                     Text("Done")
@@ -522,4 +607,14 @@ fun QuizScreen(
             }
         )
     }
+}
+
+/** A short confirm or reject buzz for an answer (a plain key tap before Android 11). */
+private fun View.performAnswerHaptic(correct: Boolean) {
+    val effect = when {
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.R ->
+            if (correct) HapticFeedbackConstants.CONFIRM else HapticFeedbackConstants.REJECT
+        else -> HapticFeedbackConstants.VIRTUAL_KEY
+    }
+    performHapticFeedback(effect)
 }

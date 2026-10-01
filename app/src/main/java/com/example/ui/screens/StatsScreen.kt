@@ -31,20 +31,22 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.quiz.QuizMode
 import com.example.ui.components.StatBadge
 import com.example.ui.components.getContinentColor
 import com.example.ui.viewmodel.CountryViewModel
-import java.text.SimpleDateFormat
+import java.text.DateFormat
 import java.util.Date
-import java.util.Locale
 
 @Composable
 fun StatsScreen(
@@ -53,14 +55,19 @@ fun StatsScreen(
 ) {
     val progressMap by viewModel.userProgressMap.collectAsState()
     val quizHistory by viewModel.quizHistory.collectAsState()
-    val allCountries = viewModel.repository.allCountries
+    // Antarctica cannot be quizzed, so it is not part of the mastery totals.
+    val allCountries = viewModel.repository.allCountries.filter { it.isSovereign }
+    // Follows the user's locale (and updates if it changes) instead of a fixed US-style pattern.
+    val locale = LocalLocale.current.platformLocale
+    val dateFormat = remember(locale) { DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT, locale) }
 
     val bookmarkedCount = progressMap.values.count { it.isFavorite }
-    val masteredCount = progressMap.values.count { it.masteryScore >= 75 }
+    val sovereignCodes = allCountries.map { it.code }.toSet()
+    val masteredCount = progressMap.values.count { it.countryCode in sovereignCodes && it.masteryScore >= 75 }
     val totalQuizzes = quizHistory.size
     val maxScore = quizHistory.maxOfOrNull { it.score } ?: 0
 
-    val continents = listOf("Africa", "Americas", "Asia", "Europe", "Oceania", "Antarctica")
+    val continents = listOf("Africa", "Americas", "Asia", "Europe", "Oceania")
 
     LazyColumn(
         modifier = modifier
@@ -218,7 +225,7 @@ fun StatsScreen(
                 }
             }
         } else {
-            items(quizHistory) { entry ->
+            items(quizHistory, key = { it.id }) { entry ->
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(14.dp),
@@ -233,12 +240,12 @@ fun StatsScreen(
                     ) {
                         Column {
                             Text(
-                                text = "${entry.mode} • ${entry.continentFilter}",
+                                text = "${QuizMode.entries.firstOrNull { it.name == entry.mode }?.title ?: entry.mode} • ${entry.continentFilter}",
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = SimpleDateFormat("MMM dd, yyyy • HH:mm", Locale.getDefault()).format(Date(entry.timestamp)),
+                                text = dateFormat.format(Date(entry.timestamp)),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.outline
                             )

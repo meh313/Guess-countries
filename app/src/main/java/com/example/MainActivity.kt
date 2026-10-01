@@ -19,7 +19,11 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
@@ -58,7 +62,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainAppScreen(
-    viewModel: CountryViewModel = viewModel()
+    viewModel: CountryViewModel = viewModel(factory = CountryViewModel.Factory)
 ) {
     val navController = rememberNavController()
     val items = listOf(
@@ -71,6 +75,16 @@ fun MainAppScreen(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    // Don't keep talking after the user moves to another tab. The route is null while the back stack
+    // is restored after a rotation, so only a change between two known routes counts.
+    var lastRoute by rememberSaveable { mutableStateOf<String?>(null) }
+    LaunchedEffect(currentRoute) {
+        if (currentRoute != null) {
+            if (lastRoute != null && lastRoute != currentRoute) viewModel.stopSpeaking()
+            lastRoute = currentRoute
+        }
+    }
+
     Scaffold(
         bottomBar = {
             NavigationBar(
@@ -82,7 +96,7 @@ fun MainAppScreen(
                         icon = {
                             Icon(
                                 imageVector = screen.icon,
-                                contentDescription = screen.title
+                                contentDescription = null // the label below already names the tab
                             )
                         },
                         label = {
