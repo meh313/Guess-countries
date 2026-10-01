@@ -1,0 +1,25 @@
+version: 2
+updates:
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      androidx:
+        patterns:
+          - "androidx.*"
+    ignore:
+      # androidx.test 1.7.x breaks Robolectric 4.16.1's setup ("Failed to interact with raw
+      # FileDescriptor internals"). Revisit when Robolectric supports it.
+      - dependency-name: "androidx.test:core"
+        versions: [">= 1.7.0"]
+      - dependency-name: "androidx.test:runner"
+        versions: [">= 1.7.0"]
+    # Note: Compose BOM 2026.08+, navigation 2.10+, lifecycle 2.11+ and core 1.19+ need compileSdk 37.
+    # Updates to them will fail the build until compileSdk (and likely AGP) is raised on purpose.
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
