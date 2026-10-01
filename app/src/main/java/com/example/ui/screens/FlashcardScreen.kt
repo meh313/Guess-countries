@@ -24,6 +24,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Flip
 import androidx.compose.material.icons.filled.LocationCity
@@ -42,12 +43,13 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,6 +59,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.components.FlagView
@@ -72,8 +75,19 @@ fun FlashcardScreen(
 ) {
     val countries by viewModel.filteredCountries.collectAsState()
     val speechAvailable by viewModel.speechAvailable.collectAsState()
-    var currentIndex by remember { mutableIntStateOf(0) }
-    var isFlipped by remember { mutableStateOf(false) }
+    val searchQuery by viewModel.searchQuery.collectAsState()
+    val selectedContinent by viewModel.selectedContinent.collectAsState()
+    val showOnlyBookmarks by viewModel.showOnlyBookmarks.collectAsState()
+    var currentIndex by rememberSaveable { mutableIntStateOf(0) }
+    var isFlipped by rememberSaveable { mutableStateOf(false) }
+
+    // The deck is shared with the Explore tab's filters, so say so and offer a way out.
+    val filterSummary = listOfNotNull(
+        selectedContinent.takeIf { it != "All" },
+        "Saved only".takeIf { showOnlyBookmarks },
+        searchQuery.takeIf { it.isNotBlank() }?.let { "\"$it\"" }
+    ).joinToString(" · ")
+    val filtersActive = filterSummary.isNotEmpty()
 
     val rotation by animateFloatAsState(
         targetValue = if (isFlipped) 180f else 0f,
@@ -82,20 +96,35 @@ fun FlashcardScreen(
     )
 
     if (countries.isEmpty()) {
-        Box(
-            modifier = modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
             Text(
                 text = "No flashcards available for current filters.",
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.outline
+                color = MaterialTheme.colorScheme.outline,
+                textAlign = TextAlign.Center
             )
+            if (filtersActive) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = { viewModel.clearFilters() },
+                    modifier = Modifier.testTag("flashcard_empty_clear_filters_btn")
+                ) {
+                    Text("Clear filters")
+                }
+            }
         }
         return
     }
 
-    val currentCountry = countries[currentIndex.coerceIn(0, countries.size - 1)]
+    // The deck can shrink while this screen is away (filters), so never trust the raw index.
+    val safeIndex = currentIndex.coerceIn(0, countries.size - 1)
+    val currentCountry = countries[safeIndex]
     val continentColor = getContinentColor(currentCountry.continent)
 
     Column(
@@ -118,7 +147,7 @@ fun FlashcardScreen(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "Card ${currentIndex + 1} of ${countries.size}",
+                    text = "Card ${safeIndex + 1} of ${countries.size}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
                 )
@@ -142,11 +171,49 @@ fun FlashcardScreen(
             }
         }
 
+        if (filtersActive) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.secondaryContainer,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("flashcard_filter_notice")
+            ) {
+                Row(
+                    modifier = Modifier.padding(start = 12.dp, end = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.FilterList,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Deck filtered by Explore: $filterSummary",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+                    TextButton(
+                        onClick = { viewModel.clearFilters() },
+                        modifier = Modifier.testTag("flashcard_clear_filters_btn")
+                    ) {
+                        Text("Clear")
+                    }
+                }
+            }
+        }
+
         Spacer(modifier = Modifier.height(10.dp))
 
         // Progress Bar
         LinearProgressIndicator(
-            progress = { (currentIndex + 1).toFloat() / countries.size },
+            progress = { (safeIndex + 1).toFloat() / countries.size },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(8.dp)
@@ -358,7 +425,7 @@ fun FlashcardScreen(
                     viewModel.stopSpeaking()
                     viewModel.updateMastery(currentCountry.code, false)
                     isFlipped = false
-                    currentIndex = (currentIndex + 1) % countries.size
+                    currentIndex = (safeIndex + 1) % countries.size
                 },
                 modifier = Modifier
                     .weight(1f)
@@ -376,7 +443,7 @@ fun FlashcardScreen(
                     viewModel.stopSpeaking()
                     viewModel.updateMastery(currentCountry.code, true)
                     isFlipped = false
-                    currentIndex = (currentIndex + 1) % countries.size
+                    currentIndex = (safeIndex + 1) % countries.size
                 },
                 modifier = Modifier
                     .weight(1f)

@@ -10,6 +10,9 @@ import com.example.data.local.UserProgressEntity
 import com.example.data.model.Country
 import com.example.data.model.CountryRepository
 import com.example.data.model.SortOption
+import com.example.quiz.QuizEngine
+import com.example.quiz.QuizMode
+import com.example.quiz.QuizSession
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -28,6 +31,11 @@ class CountryViewModel(application: Application) : AndroidViewModel(application)
     val sortBy = MutableStateFlow(SortOption.NAME)
     val showOnlyBookmarks = MutableStateFlow(false)
     val selectedCountry = MutableStateFlow<Country?>(null)
+
+    private val _quizSession = MutableStateFlow<QuizSession?>(null)
+
+    /** The quiz in progress, or null on the setup screen. Lives here so it survives rotation and tab switches. */
+    val quizSession: StateFlow<QuizSession?> = _quizSession
 
     val userProgressList: StateFlow<List<UserProgressEntity>> = db.userProgressDao()
         .getAllProgress()
@@ -104,6 +112,12 @@ class CountryViewModel(application: Application) : AndroidViewModel(application)
         showOnlyBookmarks.value = !showOnlyBookmarks.value
     }
 
+    fun clearFilters() {
+        searchQuery.value = ""
+        selectedContinent.value = "All"
+        showOnlyBookmarks.value = false
+    }
+
     fun selectCountry(country: Country?) {
         if (country == null) stopSpeaking()
         selectedCountry.value = country
@@ -128,6 +142,36 @@ class CountryViewModel(application: Application) : AndroidViewModel(application)
             )
             db.userProgressDao().upsertProgress(updated)
         }
+    }
+
+    /** Starts a quiz over the full country list; does nothing if [scope] has too few countries. */
+    fun startQuiz(mode: QuizMode, scope: String) {
+        val pool = QuizEngine.poolFor(scope, repository.allCountries)
+        val questions = QuizEngine.generate(pool, mode)
+        if (questions.isEmpty()) return
+        _quizSession.value = QuizSession(mode = mode, scope = scope, questions = questions)
+    }
+
+    fun answerQuiz(index: Int) {
+        val session = _quizSession.value ?: return
+        val updated = session.answer(index)
+        if (updated === session) return
+        _quizSession.value = updated
+        updateMastery(session.current.targetCountry.code, index == session.current.correctAnswerIndex)
+    }
+
+    fun nextQuizQuestion() {
+        val session = _quizSession.value ?: return
+        val updated = session.next()
+        if (updated === session) return
+        _quizSession.value = updated
+        if (updated.isFinished) {
+            saveQuizResult(updated.mode.name, updated.score, updated.maxScore, updated.scope)
+        }
+    }
+
+    fun endQuiz() {
+        _quizSession.value = null
     }
 
     fun saveQuizResult(mode: String, score: Int, total: Int, continent: String) {
