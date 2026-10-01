@@ -23,7 +23,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -95,8 +95,9 @@ fun CountryCard(
                 }
 
                 // Bookmark Favorite Icon on top right
-                IconButton(
-                    onClick = onFavoriteClick,
+                IconToggleButton(
+                    checked = isFavorite,
+                    onCheckedChange = { onFavoriteClick() },
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(2.dp)
@@ -107,7 +108,7 @@ fun CountryCard(
                 ) {
                     Icon(
                         imageVector = if (isFavorite) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                        contentDescription = "Bookmark country",
+                        contentDescription = "Bookmark ${country.name}",
                         tint = if (isFavorite) MaterialTheme.colorScheme.secondary else Color.White,
                         modifier = Modifier.size(20.dp)
                     )

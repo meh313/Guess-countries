@@ -36,6 +36,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
@@ -162,8 +163,9 @@ fun CountryDetailSheet(
                 }
 
                 // Bookmark Favorite Floating Action Button
-                IconButton(
-                    onClick = onToggleFavorite,
+                IconToggleButton(
+                    checked = isFavorite,
+                    onCheckedChange = { onToggleFavorite() },
                     modifier = Modifier
                         .padding(12.dp)
                         .align(Alignment.TopEnd)
@@ -173,7 +175,7 @@ fun CountryDetailSheet(
                 ) {
                     Icon(
                         imageVector = if (isFavorite) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                        contentDescription = "Bookmark",
+                        contentDescription = "Bookmark ${country.name}",
                         tint = if (isFavorite) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface
                     )
                 }
