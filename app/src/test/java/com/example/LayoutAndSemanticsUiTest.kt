@@ -6,12 +6,15 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertIsToggleable
 import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -85,6 +88,22 @@ class LayoutAndSemanticsUiTest {
     // Used to be impossible: a fixed header filled the whole 360dp-tall window and the grid had no height.
     rule.onNodeWithTag("explore_grid").performScrollToNode(hasTestTag("country_card_fr"))
     rule.onNodeWithTag("country_card_fr").assertIsDisplayed()
+  }
+
+  @Test
+  @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
+  fun searchField_keepsFocusWhileTheListFiltersAsYouType() {
+    // The field now lives inside the scrolling grid; the grid below it changes on every keystroke.
+    rule.onNodeWithTag("search_country_input").performClick()
+    rule.onNodeWithTag("search_country_input").performTextInput("fr")
+    eventually("the list to filter") { rule.onNodeWithTag("country_card_fr").assertIsDisplayed() }
+    rule.onNodeWithTag("search_country_input").assertIsFocused()
+
+    rule.onNodeWithTag("search_country_input").performTextInput("a")
+    eventually("the list to filter again") { rule.onNodeWithTag("country_card_fr").assertIsDisplayed() }
+
+    rule.onNodeWithTag("search_country_input").assertIsFocused()
+    rule.onNodeWithTag("search_country_input").assert(hasText("fra"))
   }
 
   // ---- Flashcards in landscape ----------------------------------------------------------------
