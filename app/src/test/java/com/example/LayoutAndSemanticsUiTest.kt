@@ -35,6 +35,7 @@ import com.example.support.drawWindow
 import com.example.support.eventually
 import com.example.support.openTab
 import com.example.support.stateDescriptionIs
+import com.example.ui.components.FlagAspectRatio
 import com.example.ui.viewmodel.CountryViewModel
 import org.junit.Rule
 import org.junit.rules.RuleChain
@@ -125,7 +126,7 @@ class LayoutAndSemanticsUiTest {
         rule.onNodeWithTag("grade_mastered_btn").assertIsDisplayed()
     }
 
-    /** Chip above flag above hint, all inside the card, and the flag is a 3:2 rectangle of sensible size. */
+    /** Chip above flag above hint, all inside the card, and the flag is a 4:3 rectangle of sensible size. */
     private fun assertFrontFaceFits(minFlagDp: Float) {
         val card = rule.boundsOf("flashcard_flip_card")
         val chip = rule.boundsOf("flashcard_continent_chip")
@@ -137,7 +138,7 @@ class LayoutAndSemanticsUiTest {
         assertTrue("chip is above the flag: $where", chip.bottom <= flag.top + 1f)
         assertTrue("hint is below the flag: $where", flag.bottom <= hint.top + 1f)
         assertTrue("hint inside card: $where", hint.bottom <= card.bottom + 1f)
-        assertEquals("flag keeps its 3:2 shape: $where", 1.5f, flag.width / flag.height, 0.05f)
+        assertEquals("flag keeps its 4:3 shape: $where", FlagAspectRatio, flag.width / flag.height, 0.05f)
         assertTrue("flag at least ${minFlagDp}dp tall but at most 200dp: $where", flag.height / density in minFlagDp..200.5f)
     }
 
@@ -209,7 +210,7 @@ class LayoutAndSemanticsUiTest {
 
         val flag = rule.boundsOf("flashcard_flag")
         assertTrue(flag.height / density <= 200.5f)
-        assertEquals(1.5f, flag.width / flag.height, 0.05f)
+        assertEquals(FlagAspectRatio, flag.width / flag.height, 0.05f)
     }
 
     // ---- Explore: header, plural, empty states ------------------------------------------------
@@ -260,6 +261,29 @@ class LayoutAndSemanticsUiTest {
         rule.waitForIdle()
 
         rule.onNodeWithText("Left side").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
+    fun detailSheet_ofAntarcticaDoesNotClaimADrivingSide() {
+        rule.onNodeWithTag("search_country_input").performTextInput("Antarctica")
+        rule.eventually("the Antarctica card") { rule.onNodeWithTag("country_card_aq").assertIsDisplayed() }
+        rule.onNodeWithTag("country_card_aq").performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithText("No public roads").performScrollTo().assertIsDisplayed()
+        rule.onAllNodesWithText("N/A side").assertCountEquals(0)
+    }
+
+    @Test
+    @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
+    fun countryCard_showsOneCapitalWhereSeveralCitiesShareTheRole() {
+        rule.onNodeWithTag("search_country_input").performTextInput("South Africa")
+        rule.eventually("the South Africa card") { rule.onNodeWithTag("country_card_za").assertIsDisplayed() }
+
+        rule.onNodeWithTag("country_card_za").assertIsDisplayed()
+        rule.onNodeWithText("Pretoria").assertIsDisplayed()
+        rule.onAllNodesWithText("Cape Town", substring = true).assertCountEquals(0)
     }
 
     @Test

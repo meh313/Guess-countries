@@ -71,7 +71,7 @@ class QuizEngineTest {
                 QuizEngine.generate(allCountries.take(size), mode).forEach { q ->
                     val expected =
                         when (mode) {
-                            QuizMode.CAPITAL -> q.targetCountry.capital
+                            QuizMode.CAPITAL -> q.targetCountry.quizCapital
                             QuizMode.CONTINENT -> q.targetCountry.continent
                             QuizMode.FLAG_NAME,
                             QuizMode.SPEED_MATCH -> q.targetCountry.name

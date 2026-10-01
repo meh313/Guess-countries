@@ -254,7 +254,7 @@ fun CountryDetailSheet(
                 DetailMetricCard(
                     icon = Icons.Default.DirectionsCar,
                     label = "Driving Side",
-                    value = "${country.driveSide} side",
+                    value = if (country.driveSide == "N/A") "No public roads" else "${country.driveSide} side",
                     modifier = Modifier.weight(1f)
                 )
             }

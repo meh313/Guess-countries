@@ -51,11 +51,11 @@ class FlagArtTest {
     }
 
     @Test
-    fun everyFlagIsA3To2Image() {
+    fun everyFlagIsA4To3Image() {
         allCountries.forEach {
             val bitmap = bitmapOf(it.code)
             assertEquals("${it.code} width", 600, bitmap.width)
-            assertEquals("${it.code} height", 400, bitmap.height)
+            assertEquals("${it.code} height", 450, bitmap.height)
         }
     }
 

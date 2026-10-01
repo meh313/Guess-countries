@@ -24,7 +24,13 @@ import androidx.compose.ui.unit.sp
 import com.example.data.model.Country
 
 /**
- * A country's flag, drawn from the bundled artwork ([flagArtFor]) in a 3:2 box.
+ * The shape of every flag box: 4:3, the shape the bundled artwork is drawn in, so circles and stars stay
+ * round. (Stretching it to 3:2 turned Japan's disc into an ellipse.)
+ */
+const val FlagAspectRatio = 4f / 3f
+
+/**
+ * A country's flag, drawn from the bundled artwork ([flagArtFor]) in a [FlagAspectRatio] box.
  *
  * A country without artwork gets a plain placeholder carrying the device's own flag emoji, so adding a
  * country to the catalog never crashes or shows a wrong flag.
@@ -33,7 +39,7 @@ import com.example.data.model.Country
 fun FlagView(
     country: Country,
     modifier: Modifier = Modifier,
-    aspectRatio: Float = 1.5f, // Standard flag ratio 3:2
+    aspectRatio: Float = FlagAspectRatio,
     /** Draws the flag emoji over the artwork. Off by default: the artwork is the flag. */
     showEmojiOverlay: Boolean = false,
     /**

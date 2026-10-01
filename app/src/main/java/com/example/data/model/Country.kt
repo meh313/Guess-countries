@@ -18,7 +18,10 @@ data class Country(
     val landmarks: List<String>,
     val funFact: String,
     val driveSide: String = "Right",
-    /** The one city a capital quiz accepts; differs from [capital] where several cities share the role. */
+    /**
+     * One city, for places that have room for only one: the capital quiz and the country cards. It differs
+     * from [capital] where several cities share the role.
+     */
     val quizCapital: String = capital,
     /**
      * False for Antarctica: a continent with no government, capital, currency or official flag. It stays

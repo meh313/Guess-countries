@@ -2,8 +2,8 @@ package com.example
 
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
@@ -12,9 +12,11 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.example.data.model.Country
 import com.example.quiz.allCountries
+import com.example.support.colourName
 import com.example.support.crop
 import com.example.support.dominantColour
 import com.example.support.drawWindow
+import com.example.ui.components.FlagAspectRatio
 import com.example.ui.components.FlagView
 import com.example.ui.theme.WorldFlagsTheme
 import org.junit.Assert.assertEquals
@@ -39,8 +41,8 @@ class FlagViewTest {
     private fun show(country: Country, overlay: Boolean = false) {
         rule.setContent {
             WorldFlagsTheme {
-                Box(Modifier.size(300.dp, 200.dp)) {
-                    FlagView(country, Modifier.fillMaxSize().testTag("flag"), showEmojiOverlay = overlay)
+                Box(Modifier.size(300.dp, 300.dp)) {
+                    FlagView(country, Modifier.width(300.dp).testTag("flag"), showEmojiOverlay = overlay)
                 }
             }
         }
@@ -57,6 +59,26 @@ class FlagViewTest {
         val flag = flagPixels()
         val bands = listOf(0.08f, 0.25f, 0.5f, 0.75f, 0.92f).map { flag.dominantColour(0.3f, it - 0.02f, 0.7f, it + 0.02f).first }
         assertEquals(listOf("red", "white", "blue", "white", "red"), bands)
+    }
+
+    @Test
+    fun theBoxHasTheShapeOfTheArtworkSoCirclesStayRound() {
+        show(country("JP"))
+
+        val box = rule.onNodeWithTag("flag", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        assertEquals(FlagAspectRatio, box.width / box.height, 0.01f)
+        // The red disc is a circle: as wide as it is tall.
+        val flag = flagPixels()
+        fun redRun(vertical: Boolean): Int {
+            val n = if (vertical) flag.height else flag.width
+            return (0 until n).count {
+                val pixel = if (vertical) flag.getPixel(flag.width / 2, it) else flag.getPixel(it, flag.height / 2)
+                colourName(pixel) == "red"
+            }
+        }
+        val across = redRun(vertical = false)
+        val down = redRun(vertical = true)
+        assertTrue("disc is $across px wide and $down px tall", kotlin.math.abs(across - down) <= 4)
     }
 
     @Test

@@ -76,6 +76,7 @@ import com.example.data.model.SortOption
 import com.example.flashcards.FlashcardDeck
 import com.example.ui.components.FlagView
 import com.example.ui.components.getContinentColor
+import com.example.ui.components.FlagAspectRatio
 import com.example.ui.components.formatPopulation
 import com.example.ui.components.rememberCompactNumberFormat
 import com.example.ui.theme.MasteredColor
@@ -423,7 +424,7 @@ private fun FlipCard(
                     // The chip, hint, gaps and padding take their share; the flag gets the rest, never
                     // less than 72dp. If that does not fit (large fonts) the face scrolls.
                     val flagHeight = (maxHeight - (32.dp + 44.dp + gap * 2 + padding * 2)).coerceIn(72.dp, 200.dp)
-                    val flagWidth = minOf(flagHeight * 1.5f, maxWidth - padding * 2)
+                    val flagWidth = minOf(flagHeight * FlagAspectRatio, maxWidth - padding * 2)
 
                     Column(
                         modifier = Modifier

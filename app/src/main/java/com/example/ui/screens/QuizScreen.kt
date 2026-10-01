@@ -516,7 +516,7 @@ fun QuizScreen(
                                 .testTag("quiz_result")
                         )
                         Text(
-                            text = "💡 ${q.targetCountry.name} (${q.targetCountry.capital})",
+                            text = "💡 ${q.targetCountry.name}: ${q.targetCountry.capital}",
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )

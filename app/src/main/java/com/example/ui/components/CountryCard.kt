@@ -139,7 +139,7 @@ fun CountryCard(
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = country.capital,
+                    text = country.quizCapital,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                     maxLines = 1,
