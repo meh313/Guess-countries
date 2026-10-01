@@ -66,6 +66,7 @@ import com.example.ui.components.FlagView
 import com.example.ui.viewmodel.CountryViewModel
 
 private const val MAX_QUIZ_QUESTIONS = 10
+private const val MIN_QUIZ_POOL = 4 // a question needs 3 distractors plus the answer
 private const val POINTS_PER_CORRECT = 10
 private const val STREAK_BONUS = 2
 
@@ -117,7 +118,7 @@ fun QuizScreen(
     fun startNewQuiz() {
         val pool = poolFor(selectedContinentScope)
 
-        if (pool.size < 4) return
+        if (pool.size < MIN_QUIZ_POOL) return
 
         val generatedQuestions = pool.shuffled().take(MAX_QUIZ_QUESTIONS).map { target ->
             when (selectedMode) {
@@ -278,8 +279,11 @@ fun QuizScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             // Start Quiz Button
+            val scopePoolSize = poolFor(selectedContinentScope).size
+            val canStart = scopePoolSize >= MIN_QUIZ_POOL
             Button(
                 onClick = { startNewQuiz() },
+                enabled = canStart,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
@@ -288,7 +292,11 @@ fun QuizScreen(
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
                 Text(
-                    "Start ${minOf(MAX_QUIZ_QUESTIONS, poolFor(selectedContinentScope).size)}-Question Quiz",
+                    text = if (canStart) {
+                        "Start ${minOf(MAX_QUIZ_QUESTIONS, scopePoolSize)}-Question Quiz"
+                    } else {
+                        "Needs at least $MIN_QUIZ_POOL countries"
+                    },
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
