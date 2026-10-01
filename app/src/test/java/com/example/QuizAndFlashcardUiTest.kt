@@ -1,5 +1,6 @@
 package com.example
 
+import androidx.activity.ComponentDialog
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
@@ -10,8 +11,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.assertIsSelected
-import androidx.compose.ui.test.junit4.AndroidComposeTestRule
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.onNodeWithTag
@@ -33,6 +33,7 @@ import org.junit.Assert.assertTrue
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.shadows.ShadowTextToSpeech
 import com.example.support.FreshDatabaseRule
+import com.example.support.stateDescriptionIs
 import org.junit.Rule
 import org.junit.rules.RuleChain
 import org.junit.Test
@@ -137,9 +138,6 @@ class QuizAndFlashcardUiTest {
     rule.onNodeWithTag("start_quiz_btn").performScrollTo().performClick()
     rule.waitForIdle()
   }
-
-  private fun stateDescriptionIs(expected: String) =
-    SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, expected)
 
   @Test
   fun setupScreen_explainsTheModesThatNeedIt() {
@@ -317,8 +315,8 @@ class QuizAndFlashcardUiTest {
     rule.onNodeWithText("Quiz Complete!").assertIsDisplayed()
 
     // A Compose dialog lives in its own window, so Back must go to the dialog, not the activity.
-    val dialog = ShadowDialog.getLatestDialog()
-    rule.runOnUiThread { dialog.onBackPressed() }
+    val dialog = ShadowDialog.getLatestDialog() as ComponentDialog
+    rule.runOnUiThread { dialog.onBackPressedDispatcher.onBackPressed() }
     rule.waitForIdle()
 
     rule.onNodeWithText("Quiz Complete!").assertDoesNotExist()

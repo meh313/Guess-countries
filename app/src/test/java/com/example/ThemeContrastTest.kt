@@ -3,8 +3,8 @@ package com.example
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
+import com.example.support.contrastRatio
 import com.example.ui.theme.AfricaColor
 import com.example.ui.theme.AmericasColor
 import com.example.ui.theme.AntarcticaColor
@@ -30,12 +30,6 @@ class ThemeContrastTest {
 
   @get:Rule val rule = createComposeRule()
 
-  private fun contrast(a: Color, b: Color): Double {
-    val l1 = a.luminance().toDouble()
-    val l2 = b.luminance().toDouble()
-    return (maxOf(l1, l2) + 0.05) / (minOf(l1, l2) + 0.05)
-  }
-
   private fun schemeFor(dark: Boolean): ColorScheme {
     lateinit var scheme: ColorScheme
     rule.setContent { WorldFlagsTheme(darkTheme = dark) { scheme = MaterialTheme.colorScheme } }
@@ -46,24 +40,24 @@ class ThemeContrastTest {
   @Test
   fun selectedSavedChip_labelIsReadableInTheLightTheme() {
     val s = schemeFor(dark = false)
-    assertTrue("onSecondary on secondary = ${contrast(s.onSecondary, s.secondary)}", contrast(s.onSecondary, s.secondary) >= 4.5)
+    assertTrue("onSecondary on secondary = ${contrastRatio(s.onSecondary, s.secondary)}", contrastRatio(s.onSecondary, s.secondary) >= 4.5)
   }
 
   @Test
   fun selectedSavedChip_labelIsReadableInTheDarkTheme() {
     val s = schemeFor(dark = true)
-    assertTrue("onSecondary on secondary = ${contrast(s.onSecondary, s.secondary)}", contrast(s.onSecondary, s.secondary) >= 4.5)
+    assertTrue("onSecondary on secondary = ${contrastRatio(s.onSecondary, s.secondary)}", contrastRatio(s.onSecondary, s.secondary) >= 4.5)
   }
 
   @Test
   fun theOldChipColours_wouldHaveFailedInTheLightTheme() {
     // Documents the bug: black label on the light theme's navy secondary colour.
     val s = schemeFor(dark = false)
-    assertTrue(contrast(Color.Black, s.secondary) < 3.0)
+    assertTrue(contrastRatio(Color.Black, s.secondary) < 3.0)
   }
 
   private fun assertReadable(name: String, background: Color, text: Color, minimum: Double = 4.5) {
-    val ratio = contrast(text, background)
+    val ratio = contrastRatio(text, background)
     assertTrue("$name is %.2f:1, needs $minimum:1".format(ratio), ratio >= minimum)
   }
 
