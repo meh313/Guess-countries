@@ -184,4 +184,14 @@ class CountryDatasetTest {
         assertEquals("Africa • Southern Africa", allCountries.single { it.code == "ZA" }.regionLabel)
         allCountries.forEach { assertTrue(it.regionLabel, it.regionLabel.split(" • ").distinct().size == it.regionLabel.split(" • ").size) }
     }
+
+    @Test
+    fun noPopulationSitsOnAnExactRoundingTie() {
+        // Shown compactly ("1.4B"), a value like 1,450,000,000 rounds half-even to 1.4B although the real
+        // figure (about 1,451M) is closer to 1.5B. Store figures that are not exactly halfway.
+        allCountries.forEach {
+            val digits = it.population.toString().trimEnd('0')
+            assertTrue("${it.code}: ${it.population} is exactly on a rounding tie", !(digits.length == 3 && digits.endsWith("5")))
+        }
+    }
 }

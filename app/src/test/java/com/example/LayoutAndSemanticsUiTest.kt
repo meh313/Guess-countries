@@ -305,6 +305,33 @@ class LayoutAndSemanticsUiTest {
             bookmark.left >= flag.left && bookmark.right <= flag.right && bookmark.top >= flag.top && bookmark.bottom <= flag.bottom)
     }
 
+    private fun assertLongestRegionPillStaysOnTheFlagAndClearOfTheBookmark() {
+        val longest = allCountries.maxByOrNull { it.regionLabel.length }!!
+        rule.onNodeWithTag("search_country_input").performTextInput(longest.name)
+        rule.eventually("the ${longest.name} card") { rule.onNodeWithTag("country_card_${longest.code.lowercase()}").assertIsDisplayed() }
+        rule.onNodeWithTag("country_card_${longest.code.lowercase()}").performClick()
+        rule.waitForIdle()
+
+        val flag = rule.boundsOf("sheet_flag")
+        val pill = rule.boundsOf("sheet_region_pill")
+        val bookmark = rule.boundsOf("sheet_favorite_btn")
+        val label = longest.regionLabel
+        assertTrue("$label: pill $pill sticks out of the flag $flag",
+            pill.left >= flag.left && pill.right <= flag.right && pill.top >= flag.top && pill.bottom <= flag.bottom)
+        assertTrue("$label: pill $pill runs under the bookmark $bookmark", pill.right <= bookmark.left)
+        assertTrue("$label: bookmark $bookmark sticks out of the flag $flag", bookmark.right <= flag.right)
+    }
+
+    @Test
+    @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
+    fun detailSheet_longestRegionLabelStaysOnTheFlagAndClearOfTheBookmark() =
+        assertLongestRegionPillStaysOnTheFlagAndClearOfTheBookmark()
+
+    @Test
+    @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi", fontScale = 1.5f)
+    fun detailSheet_longestRegionLabelStillFitsAtLargeFontSize() =
+        assertLongestRegionPillStaysOnTheFlagAndClearOfTheBookmark()
+
     @Test
     @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
     fun countryCount_usesTheSingularForExactlyOne() {

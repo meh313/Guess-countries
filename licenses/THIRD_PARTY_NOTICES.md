@@ -1,10 +1,12 @@
 # Third-party notices
 
+This file is packaged into the app (its `assets/` folder) so the licence travels with the flag images.
+
 ## Flag artwork
 
 The flag images in `app/src/main/res/drawable-nodpi/flag_*.webp` were rendered from the SVG files of
-[flag-icons](https://github.com/lipis/flag-icons) 7.5.0 (`flags/4x3`), stretched to the app's 3:2 flag box and
-saved as lossless WebP. flag-icons is distributed under the MIT License:
+[flag-icons](https://github.com/lipis/flag-icons) 7.5.0 (`flags/4x3`), unstretched at 600x450 pixels (4:3) and
+saved as lossless WebP (`tools/render-flags.mjs` reproduces them). flag-icons is distributed under the MIT License:
 
 ```
 The MIT License (MIT)

@@ -80,7 +80,11 @@ android {
   }
   testOptions { unitTests { isIncludeAndroidResources = true } }
   // Exported Room schemas double as fixtures for migration tests.
-  sourceSets { getByName("androidTest").assets.directories.add("$projectDir/schemas") }
+  sourceSets {
+    getByName("androidTest").assets.directories.add("$projectDir/schemas")
+    // The third-party licence text ships inside the APK next to the artwork it covers.
+    getByName("main").assets.directories.add("$rootDir/licenses")
+  }
 }
 
 // Room writes one JSON per database version here; commit them so migrations can be tested.

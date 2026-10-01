@@ -81,7 +81,7 @@ class CountryViewModelSpeechTest {
         vm.speakCountryDetails(antarctica)
 
         val text = speech.spoken.single().first
-        assertTrue("text was: $text", text.startsWith("Antarctica. Located in Antarctica."))
+        assertEquals("Antarctica. ${antarctica.funFact}", text)
         assertFalse(text, text.contains("Capital"))
     }
 

@@ -163,39 +163,49 @@ fun CountryDetailSheet(
                         contentDescription = "Flag of ${country.name}"
                     )
 
-                    // Continent Pill
-                    Surface(
+                    // The region pill and the bookmark share the flag's width, so they sit in one row that is
+                    // exactly as big as the flag: a long label wraps instead of running under the bookmark.
+                    Row(
                         modifier = Modifier
-                            .padding(12.dp)
-                            .align(Alignment.TopStart),
-                        shape = RoundedCornerShape(12.dp),
-                        color = continentColor
+                            .matchParentSize()
+                            .padding(12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.Top
                     ) {
-                        Text(
-                            text = country.regionLabel,
-                            color = Color.White,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                        )
-                    }
+                        Surface(
+                            modifier = Modifier
+                                .weight(1f, fill = false)
+                                .padding(end = 8.dp)
+                                .testTag("sheet_region_pill"),
+                            shape = RoundedCornerShape(12.dp),
+                            color = continentColor
+                        ) {
+                            Text(
+                                text = country.regionLabel,
+                                color = Color.White,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                            )
+                        }
 
-                    // Bookmark Favorite Floating Action Button
-                    IconToggleButton(
-                        checked = isFavorite,
-                        onCheckedChange = { onToggleFavorite() },
-                        modifier = Modifier
-                            .padding(12.dp)
-                            .align(Alignment.TopEnd)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.surface)
-                            .testTag("sheet_favorite_btn")
-                    ) {
-                        Icon(
-                            imageVector = if (isFavorite) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                            contentDescription = "Bookmark ${country.name}",
-                            tint = if (isFavorite) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface
-                        )
+                        // Bookmark Favorite Floating Action Button
+                        IconToggleButton(
+                            checked = isFavorite,
+                            onCheckedChange = { onToggleFavorite() },
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.surface)
+                                .testTag("sheet_favorite_btn")
+                        ) {
+                            Icon(
+                                imageVector = if (isFavorite) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                                contentDescription = "Bookmark ${country.name}",
+                                tint = if (isFavorite) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface
+                            )
+                        }
                     }
                 }
             }

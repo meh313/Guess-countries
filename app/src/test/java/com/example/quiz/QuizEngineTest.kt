@@ -198,11 +198,15 @@ class QuizEngineTest {
     }
 
     @Test
-    fun everyCapitalQuestionHasOneCityPerOption() {
-        repeat(20) {
-            QuizEngine.generate(QuizEngine.poolFor("Global", allCountries), QuizMode.CAPITAL).forEach { q ->
+    fun everyCapitalQuestionOffersOnlyQuizCapitalsOfCountriesInThePool() {
+        val pool = QuizEngine.poolFor("Global", allCountries)
+        val quizCapitals = pool.map { it.quizCapital }.toSet()
+        val za = allCountries.single { it.code == "ZA" }
+        repeat(40) {
+            QuizEngine.generate(pool, QuizMode.CAPITAL).forEach { q ->
                 assertEquals(q.targetCountry.quizCapital, q.correctOption())
-                assertTrue(q.options.toString(), q.options.none { it.contains("/") })
+                assertTrue("options ${q.options}", quizCapitals.containsAll(q.options))
+                assertTrue("options ${q.options} contain South Africa's long capital", za.capital !in q.options)
             }
         }
     }

@@ -79,12 +79,13 @@ class CountryViewModel(
     fun stopSpeaking() = speech.stop()
 
     fun speakCountryDetails(country: Country) {
-        val place = if (country.isSovereign) {
-            "Capital is ${country.capital}, located in ${country.continent}."
-        } else {
-            "Located in ${country.continent}."
+        // Antarctica has no capital, and its name is its continent: say neither as if they were news.
+        val place = when {
+            country.isSovereign -> "Capital is ${country.capital}, located in ${country.continent}."
+            !country.continent.equals(country.name, ignoreCase = true) -> "Located in ${country.continent}."
+            else -> ""
         }
-        val text = "${country.name}. $place ${country.funFact}"
+        val text = listOf("${country.name}.", place, country.funFact).filter { it.isNotBlank() }.joinToString(" ")
         speech.speak(text, "country_tts_${country.code}")
     }
 

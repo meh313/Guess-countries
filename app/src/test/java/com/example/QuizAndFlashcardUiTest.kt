@@ -36,6 +36,7 @@ import org.robolectric.Shadows.shadowOf
 import org.robolectric.shadows.ShadowTextToSpeech
 import com.example.support.FreshDatabaseRule
 import com.example.support.boundsOf
+import com.example.support.eventually
 import com.example.ui.components.FlagAspectRatio
 import com.example.support.stateDescriptionIs
 import org.junit.Rule
@@ -269,6 +270,17 @@ class QuizAndFlashcardUiTest {
         rule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("stats_continent_oceania"))
         rule.onNodeWithTag("stats_continent_oceania").assertIsDisplayed()
         rule.onNodeWithTag("stats_continent_antarctica").assertDoesNotExist()
+    }
+
+    @Test
+    fun stats_doNotCountAMasteredAntarctica() {
+        // Antarctica can still be graded in Flashcards, but it is not one of the countries being counted.
+        repeat(3) { viewModel.updateMastery("AQ", true) }
+        repeat(3) { viewModel.updateMastery("FR", true) }
+
+        tab("stats")
+
+        rule.eventually("one mastered country") { rule.onNodeWithText("1 / 32").assertIsDisplayed() }
     }
 
     @Test
