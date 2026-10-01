@@ -22,7 +22,9 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import com.example.support.FreshDatabaseRule
 import org.junit.Rule
+import org.junit.rules.RuleChain
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -33,7 +35,12 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 class LayoutAndSemanticsUiTest {
 
-  @get:Rule val rule = createAndroidComposeRule<MainActivity>()
+  private val composeRule = createAndroidComposeRule<MainActivity>()
+
+  // The app database is a singleton, so reset it before the activity starts to keep tests independent.
+  @get:Rule val chain: RuleChain = RuleChain.outerRule(FreshDatabaseRule()).around(composeRule)
+
+  private val rule get() = composeRule
 
   private val density get() = rule.density.density
 

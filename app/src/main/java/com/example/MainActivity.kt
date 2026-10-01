@@ -62,7 +62,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainAppScreen(
-    viewModel: CountryViewModel = viewModel()
+    viewModel: CountryViewModel = viewModel(factory = CountryViewModel.Factory)
 ) {
     val navController = rememberNavController()
     val items = listOf(

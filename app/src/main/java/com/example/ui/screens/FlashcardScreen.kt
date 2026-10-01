@@ -50,6 +50,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.key
@@ -91,6 +92,8 @@ fun FlashcardScreen(
 ) {
     val countries by viewModel.filteredCountries.collectAsState()
     val speechAvailable by viewModel.speechAvailable.collectAsState()
+    // Bind the speech engine only once a screen that can speak is shown.
+    LaunchedEffect(Unit) { viewModel.prepareSpeech() }
     val searchQuery by viewModel.searchQuery.collectAsState()
     val selectedContinent by viewModel.selectedContinent.collectAsState()
     val showOnlyBookmarks by viewModel.showOnlyBookmarks.collectAsState()

@@ -1,9 +1,11 @@
 package com.example.ui.viewmodel
 
 import android.app.Application
-import android.speech.tts.TextToSpeech
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.data.local.AppDatabase
 import com.example.data.local.QuizScoreEntity
 import com.example.data.local.UserProgressEntity
@@ -13,18 +15,24 @@ import com.example.data.model.SortOption
 import com.example.quiz.QuizEngine
 import com.example.quiz.QuizMode
 import com.example.quiz.QuizSession
+import com.example.speech.AndroidSpeech
+import com.example.speech.Speech
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.util.Locale
 
-class CountryViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val db = AppDatabase.getDatabase(application)
-    val repository = CountryRepository(db.userProgressDao())
+/**
+ * State for every screen. Its collaborators are passed in, so tests can supply an in-memory database
+ * and a fake [Speech]; the app builds the real ones in [Factory].
+ */
+class CountryViewModel(
+    val repository: CountryRepository,
+    private val speech: Speech
+) : ViewModel() {
 
     val searchQuery = MutableStateFlow("")
     val selectedContinent = MutableStateFlow("All")
@@ -37,19 +45,11 @@ class CountryViewModel(application: Application) : AndroidViewModel(application)
     /** The quiz in progress, or null on the setup screen. Lives here so it survives rotation and tab switches. */
     val quizSession: StateFlow<QuizSession?> = _quizSession
 
-    val userProgressList: StateFlow<List<UserProgressEntity>> = db.userProgressDao()
-        .getAllProgress()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-    val userProgressMap: StateFlow<Map<String, UserProgressEntity>> = db.userProgressDao()
-        .getAllProgress()
-        .combine(MutableStateFlow(Unit)) { progressList, _ ->
-            progressList.associateBy { it.countryCode }
-        }
+    val userProgressMap: StateFlow<Map<String, UserProgressEntity>> = repository.progress
+        .map { list -> list.associateBy { it.countryCode } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
-    val quizHistory: StateFlow<List<QuizScoreEntity>> = db.userProgressDao()
-        .getQuizHistory()
+    val quizHistory: StateFlow<List<QuizScoreEntity>> = repository.quizHistory
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val filteredCountries: StateFlow<List<Country>> = combine(
@@ -67,33 +67,17 @@ class CountryViewModel(application: Application) : AndroidViewModel(application)
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), repository.allCountries)
 
-    // Android Text-to-Speech Engine
-    private var tts: TextToSpeech? = null
-    private val _speechAvailable = MutableStateFlow(false)
+    /** True once speech is ready; the UI disables its speak buttons until then. */
+    val speechAvailable: StateFlow<Boolean> = speech.isAvailable
 
-    /** True once the engine is ready and can speak English; the UI disables speak buttons until then. */
-    val speechAvailable: StateFlow<Boolean> = _speechAvailable
+    /** Starts the speech engine. Called when a screen that can speak first appears. */
+    fun prepareSpeech() = speech.prepare()
 
-    init {
-        tts = TextToSpeech(application) { status ->
-            if (status == TextToSpeech.SUCCESS) {
-                val result = tts?.setLanguage(Locale.US)
-                _speechAvailable.value = result != null &&
-                    result != TextToSpeech.LANG_MISSING_DATA &&
-                    result != TextToSpeech.LANG_NOT_SUPPORTED
-            }
-        }
-    }
-
-    fun stopSpeaking() {
-        tts?.stop()
-    }
+    fun stopSpeaking() = speech.stop()
 
     fun speakCountryDetails(country: Country) {
-        if (_speechAvailable.value) {
-            val textToSpeak = "${country.name}. Capital is ${country.capital}, located in ${country.continent}. ${country.funFact}"
-            tts?.speak(textToSpeak, TextToSpeech.QUEUE_FLUSH, null, "country_tts_${country.code}")
-        }
+        val text = "${country.name}. Capital is ${country.capital}, located in ${country.continent}. ${country.funFact}"
+        speech.speak(text, "country_tts_${country.code}")
     }
 
     fun onSearchQueryChange(query: String) {
@@ -126,24 +110,11 @@ class CountryViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun toggleFavorite(countryCode: String) {
-        viewModelScope.launch {
-            val currentProgress = userProgressMap.value[countryCode]
-            repository.toggleFavorite(countryCode, currentProgress)
-        }
+        viewModelScope.launch { repository.toggleFavorite(countryCode) }
     }
 
     fun updateMastery(countryCode: String, isCorrect: Boolean) {
-        viewModelScope.launch {
-            val current = userProgressMap.value[countryCode] ?: UserProgressEntity(countryCode)
-            val newScore = if (isCorrect) (current.masteryScore + 25).coerceAtMost(100) else (current.masteryScore - 10).coerceAtLeast(0)
-            val updated = current.copy(
-                masteryScore = newScore,
-                timesReviewed = current.timesReviewed + 1,
-                timesCorrect = if (isCorrect) current.timesCorrect + 1 else current.timesCorrect,
-                lastReviewed = System.currentTimeMillis()
-            )
-            db.userProgressDao().upsertProgress(updated)
-        }
+        viewModelScope.launch { repository.recordReview(countryCode, isCorrect) }
     }
 
     /** Starts a quiz over the full country list; does nothing if [scope] has too few countries. */
@@ -184,7 +155,19 @@ class CountryViewModel(application: Application) : AndroidViewModel(application)
 
     override fun onCleared() {
         super.onCleared()
-        tts?.stop()
-        tts?.shutdown()
+        speech.shutdown()
+    }
+
+    companion object {
+        /** Builds the real database-backed repository and speech engine for the app. */
+        val Factory: ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                val app = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as Application
+                CountryViewModel(
+                    repository = CountryRepository(AppDatabase.getDatabase(app).userProgressDao()),
+                    speech = AndroidSpeech(app)
+                )
+            }
+        }
     }
 }

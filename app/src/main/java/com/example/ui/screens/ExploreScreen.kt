@@ -42,6 +42,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -259,6 +260,13 @@ fun ExploreScreen(
                                         showSortMenu = false
                                     }
                                 )
+                                DropdownMenuItem(
+                                    text = { Text("Sort by Continent") },
+                                    onClick = {
+                                        viewModel.onSortSelect(SortOption.CONTINENT)
+                                        showSortMenu = false
+                                    }
+                                )
                             }
                         }
                     }
@@ -311,6 +319,8 @@ fun ExploreScreen(
 
     // Modal Bottom Sheet when country selected
     selectedCountry?.let { country ->
+        // Bind the speech engine only once the user can actually ask for it.
+        LaunchedEffect(Unit) { viewModel.prepareSpeech() }
         CountryDetailSheet(
             country = country,
             progress = userProgressMap[country.code],

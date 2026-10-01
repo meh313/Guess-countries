@@ -1,124 +1,121 @@
 package com.example
 
-import android.app.Application
-import android.speech.tts.TextToSpeech
-import androidx.test.core.app.ApplicationProvider
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.viewmodel.CreationExtras
+import com.example.data.local.AppDatabase
+import com.example.data.model.CountryRepository
+import com.example.support.FakeSpeech
+import com.example.support.inMemoryDatabase
 import com.example.ui.viewmodel.CountryViewModel
-import java.util.Locale
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
-import org.robolectric.shadows.ShadowTextToSpeech
 
+/** How the ViewModel drives the speech engine. The engine itself is covered by AndroidSpeechTest. */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class CountryViewModelSpeechTest {
 
-  @Before
-  fun resetShadow() {
-    ShadowTextToSpeech.reset()
-  }
+    private lateinit var db: AppDatabase
+    private lateinit var speech: FakeSpeech
+    private lateinit var vm: CountryViewModel
 
-  private fun newViewModel() =
-    CountryViewModel(ApplicationProvider.getApplicationContext<Application>())
+    @Before
+    fun setUp() {
+        db = inMemoryDatabase()
+        speech = FakeSpeech()
+        vm = CountryViewModel(CountryRepository(db.userProgressDao()), speech)
+    }
 
-  private fun engine() = shadowOf(ShadowTextToSpeech.getLastTextToSpeechInstance())
+    @After
+    fun tearDown() {
+        db.close()
+    }
 
-  private fun CountryViewModel.firstCountry() = repository.allCountries.first()
+    private val country get() = vm.repository.allCountries.first()
 
-  @Test
-  fun speech_isUnavailableUntilTheEngineReportsReady() {
-    val vm = newViewModel()
+    @Test
+    fun theEngineIsNotStartedUntilAScreenAsksForSpeech() {
+        assertEquals(0, speech.prepareCalls)
 
-    assertFalse(vm.speechAvailable.value)
-    vm.speakCountryDetails(vm.firstCountry())
+        vm.prepareSpeech()
 
-    assertNull(engine().lastSpokenText)
-  }
+        assertEquals(1, speech.prepareCalls)
+    }
 
-  @Test
-  fun speech_staysUnavailableWhenEnglishVoiceDataIsMissing() {
-    val vm = newViewModel()
+    @Test
+    fun speechAvailability_followsTheEngine() {
+        assertFalse(vm.speechAvailable.value)
 
-    // Engine initialises fine, but no English language data is installed.
-    engine().onInitListener.onInit(TextToSpeech.SUCCESS)
-    vm.speakCountryDetails(vm.firstCountry())
+        speech.setAvailable(true)
 
-    assertFalse(vm.speechAvailable.value)
-    assertNull(engine().lastSpokenText)
-  }
+        assertTrue(vm.speechAvailable.value)
+    }
 
-  @Test
-  fun speech_speaksCountrySummaryOnceReady() {
-    ShadowTextToSpeech.addLanguageAvailability(Locale.US)
-    val vm = newViewModel()
-    val country = vm.firstCountry()
+    @Test
+    fun speakCountryDetails_sendsTheSummaryWithAnIdForThatCountry() {
+        speech.setAvailable(true)
 
-    engine().onInitListener.onInit(TextToSpeech.SUCCESS)
-    vm.speakCountryDetails(country)
+        vm.speakCountryDetails(country)
 
-    assertTrue(vm.speechAvailable.value)
-    val spoken = engine().lastSpokenText
-    assertTrue("spoken text was: $spoken", spoken!!.contains(country.name))
-    assertTrue(spoken.contains(country.capital))
-  }
+        val (text, id) = speech.spoken.single()
+        assertTrue("text was: $text", text.startsWith("${country.name}. Capital is ${country.capital}"))
+        assertTrue(text.contains(country.funFact))
+        assertEquals("country_tts_${country.code}", id)
+    }
 
-  @Test
-  fun speech_failedEngineInitKeepsSpeechUnavailable() {
-    ShadowTextToSpeech.addLanguageAvailability(Locale.US)
-    val vm = newViewModel()
+    @Test
+    fun speakCountryDetails_saysNothingWhileSpeechIsUnavailable() {
+        vm.speakCountryDetails(country)
 
-    engine().onInitListener.onInit(TextToSpeech.ERROR)
+        assertTrue(speech.spoken.isEmpty())
+    }
 
-    assertFalse(vm.speechAvailable.value)
-  }
+    @Test
+    fun closingTheDetailSheet_stopsSpeech() {
+        vm.selectCountry(country)
+        assertEquals(0, speech.stopCalls)
 
-  @Test
-  fun closingTheDetailSheet_stopsSpeech() {
-    ShadowTextToSpeech.addLanguageAvailability(Locale.US)
-    val vm = newViewModel()
-    val country = vm.firstCountry()
-    engine().onInitListener.onInit(TextToSpeech.SUCCESS)
+        vm.selectCountry(null)
 
-    vm.selectCountry(country)
-    vm.speakCountryDetails(country)
-    assertFalse("speech should be running", engine().isStopped)
+        assertEquals(1, speech.stopCalls)
+        assertEquals(null, vm.selectedCountry.value)
+    }
 
-    vm.selectCountry(null)
+    @Test
+    fun selectingACountry_doesNotStopSpeech() {
+        vm.selectCountry(country)
 
-    assertTrue(engine().isStopped)
-    assertEquals(null, vm.selectedCountry.value)
-  }
+        assertEquals(0, speech.stopCalls)
+    }
 
-  @Test
-  fun selectingACountry_doesNotStopSpeech() {
-    ShadowTextToSpeech.addLanguageAvailability(Locale.US)
-    val vm = newViewModel()
-    val country = vm.firstCountry()
-    engine().onInitListener.onInit(TextToSpeech.SUCCESS)
-    vm.speakCountryDetails(country)
+    @Test
+    fun stopSpeaking_stopsTheEngine() {
+        vm.stopSpeaking()
 
-    vm.selectCountry(country)
+        assertEquals(1, speech.stopCalls)
+    }
 
-    assertFalse(engine().isStopped)
-  }
+    @Test
+    fun clearingTheViewModel_shutsTheEngineDown() {
+        val store = ViewModelStore()
+        val factory = object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T = vm as T
+        }
+        ViewModelProvider.create(store, factory)[CountryViewModel::class.java]
+        assertEquals(0, speech.shutdownCalls)
 
-  @Test
-  fun stopSpeaking_stopsTheEngine() {
-    ShadowTextToSpeech.addLanguageAvailability(Locale.US)
-    val vm = newViewModel()
-    engine().onInitListener.onInit(TextToSpeech.SUCCESS)
-    vm.speakCountryDetails(vm.firstCountry())
+        store.clear()
 
-    vm.stopSpeaking()
-
-    assertTrue(engine().isStopped)
-  }
+        assertEquals(1, speech.shutdownCalls)
+    }
 }

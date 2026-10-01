@@ -18,10 +18,13 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.ui.viewmodel.CountryViewModel
 import java.util.Locale
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.shadows.ShadowTextToSpeech
+import com.example.support.FreshDatabaseRule
 import org.junit.Rule
+import org.junit.rules.RuleChain
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -33,8 +36,12 @@ import org.robolectric.shadows.ShadowDialog
 @Config(sdk = [36], qualifiers = "w360dp-h640dp-xxhdpi")
 class QuizAndFlashcardUiTest {
 
-  @get:Rule val rule: AndroidComposeTestRule<ActivityScenarioRule<MainActivity>, MainActivity> =
-    createAndroidComposeRule<MainActivity>()
+  private val composeRule = createAndroidComposeRule<MainActivity>()
+
+  // The app database is a singleton, so reset it before the activity starts to keep tests independent.
+  @get:Rule val chain: RuleChain = RuleChain.outerRule(FreshDatabaseRule()).around(composeRule)
+
+  private val rule get() = composeRule
 
   private fun tab(route: String) {
     rule.onNodeWithTag("nav_tab_$route").performClick()
@@ -309,6 +316,9 @@ class QuizAndFlashcardUiTest {
   @Test
   fun speech_keepsGoingAcrossRotationButStopsWhenTheTabChanges() {
     ShadowTextToSpeech.addLanguageAvailability(Locale.US)
+    // The engine is only created once a screen that can speak is shown.
+    assertNull(ShadowTextToSpeech.getLastTextToSpeechInstance())
+    tab("flashcards")
     val engine = shadowOf(ShadowTextToSpeech.getLastTextToSpeechInstance())
     engine.onInitListener.onInit(TextToSpeech.SUCCESS)
     rule.waitForIdle()
