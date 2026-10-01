@@ -45,12 +45,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -63,6 +64,14 @@ import androidx.compose.ui.unit.sp
 import com.example.data.model.Country
 import com.example.ui.components.FlagView
 import com.example.ui.viewmodel.CountryViewModel
+
+private const val MAX_QUIZ_QUESTIONS = 10
+private const val POINTS_PER_CORRECT = 10
+private const val STREAK_BONUS = 2
+
+/** Best possible score for a quiz of [questionCount] questions: every answer correct, streak 0..n-1. */
+private fun maxQuizScore(questionCount: Int): Int =
+    POINTS_PER_CORRECT * questionCount + STREAK_BONUS * (questionCount * (questionCount - 1) / 2)
 
 enum class QuizMode(val title: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
     FLAG_NAME("Flag -> Country", Icons.Default.Flag),
@@ -83,7 +92,7 @@ fun QuizScreen(
     viewModel: CountryViewModel,
     modifier: Modifier = Modifier
 ) {
-    val countries by viewModel.filteredCountries.collectAsState()
+    val allCountries = viewModel.repository.allCountries
     var selectedMode by remember { mutableStateOf(QuizMode.FLAG_NAME) }
     var selectedContinentScope by remember { mutableStateOf("Global") }
 
@@ -91,22 +100,26 @@ fun QuizScreen(
     var currentQuestionIndex by remember { mutableIntStateOf(0) }
     var score by remember { mutableIntStateOf(0) }
     var streak by remember { mutableIntStateOf(0) }
+    val quizScrollState = rememberScrollState()
     var questions by remember { mutableStateOf<List<QuizQuestion>>(emptyList()) }
 
     var selectedAnswerIndex by remember { mutableStateOf<Int?>(null) }
     var showExplanation by remember { mutableStateOf(false) }
     var isQuizFinished by remember { mutableStateOf(false) }
 
-    fun startNewQuiz() {
-        val pool = if (selectedContinentScope == "Global") {
-            countries
+    fun poolFor(scope: String): List<Country> =
+        if (scope == "Global") {
+            allCountries
         } else {
-            countries.filter { it.continent.equals(selectedContinentScope, ignoreCase = true) }
+            allCountries.filter { it.continent.equals(scope, ignoreCase = true) }
         }
+
+    fun startNewQuiz() {
+        val pool = poolFor(selectedContinentScope)
 
         if (pool.size < 4) return
 
-        val generatedQuestions = pool.shuffled().take(10).map { target ->
+        val generatedQuestions = pool.shuffled().take(MAX_QUIZ_QUESTIONS).map { target ->
             when (selectedMode) {
                 QuizMode.FLAG_NAME -> {
                     val wrongOptions = (pool - target).shuffled().take(3).map { it.name }
@@ -274,7 +287,11 @@ fun QuizScreen(
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
-                Text("Start 10-Question Quiz", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    "Start ${minOf(MAX_QUIZ_QUESTIONS, poolFor(selectedContinentScope).size)}-Question Quiz",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     } else {
@@ -282,11 +299,22 @@ fun QuizScreen(
         if (questions.isEmpty()) return
         val q = questions[currentQuestionIndex]
 
+        // Each new question starts at the top so the flag is visible.
+        LaunchedEffect(currentQuestionIndex) { quizScrollState.scrollTo(0) }
+        // After answering, bring the explanation and Next button into view on small screens.
+        LaunchedEffect(showExplanation) {
+            if (showExplanation) {
+                withFrameNanos { } // wait one frame so the explanation card has been measured
+                quizScrollState.animateScrollTo(quizScrollState.maxValue)
+            }
+        }
+
         Column(
             modifier = modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
-                .padding(20.dp),
+                .padding(20.dp)
+                .verticalScroll(quizScrollState),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Top Status Bar: Score & Streak
@@ -297,7 +325,7 @@ fun QuizScreen(
             ) {
                 Column {
                     Text(
-                        text = "Question ${currentQuestionIndex + 1} of 10",
+                        text = "Question ${currentQuestionIndex + 1} of ${questions.size}",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -337,7 +365,7 @@ fun QuizScreen(
             Spacer(modifier = Modifier.height(10.dp))
 
             LinearProgressIndicator(
-                progress = { (currentQuestionIndex + 1) / 10f },
+                progress = { (currentQuestionIndex + 1).toFloat() / questions.size },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(8.dp)
@@ -401,7 +429,7 @@ fun QuizScreen(
                                 selectedAnswerIndex = index
                                 val correct = index == q.correctAnswerIndex
                                 if (correct) {
-                                    score += 10 + (streak * 2)
+                                    score += POINTS_PER_CORRECT + (streak * STREAK_BONUS)
                                     streak += 1
                                     viewModel.updateMastery(q.targetCountry.code, true)
                                 } else {
@@ -459,18 +487,18 @@ fun QuizScreen(
                         Spacer(modifier = Modifier.height(10.dp))
                         Button(
                             onClick = {
-                                if (currentQuestionIndex < 9) {
+                                if (currentQuestionIndex < questions.lastIndex) {
                                     currentQuestionIndex++
                                     selectedAnswerIndex = null
                                     showExplanation = false
                                 } else {
                                     isQuizFinished = true
-                                    viewModel.saveQuizResult(selectedMode.name, score, 100, selectedContinentScope)
+                                    viewModel.saveQuizResult(selectedMode.name, score, maxQuizScore(questions.size), selectedContinentScope)
                                 }
                             },
                             modifier = Modifier.fillMaxWidth().testTag("next_question_btn")
                         ) {
-                            Text(if (currentQuestionIndex < 9) "Next Question" else "Finish & View Score")
+                            Text(if (currentQuestionIndex < questions.lastIndex) "Next Question" else "Finish & View Score")
                         }
                     }
                 }
