@@ -11,14 +11,14 @@ fun QuizQuestion.correctOption(): String = options[correctAnswerIndex]
 
 /** Plays a whole session answering every question correctly (or wrongly) and returns the final state. */
 fun QuizSession.playThrough(correct: Boolean = true): QuizSession {
-  var session = this
-  var steps = 0
-  while (!session.isFinished) {
-    val index =
-      if (correct) session.current.correctAnswerIndex
-      else (session.current.correctAnswerIndex + 1) % session.current.options.size
-    session = session.answer(index).next()
-    check(++steps <= questions.size) { "session did not finish after ${questions.size} questions" }
-  }
-  return session
+    var session = this
+    var steps = 0
+    while (!session.isFinished) {
+        val index =
+            if (correct) session.current.correctAnswerIndex
+            else (session.current.correctAnswerIndex + 1) % session.current.options.size
+        session = session.answer(index).next()
+        check(++steps <= questions.size) { "session did not finish after ${questions.size} questions" }
+    }
+    return session
 }
