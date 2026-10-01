@@ -1,20 +1,40 @@
 package com.example.support
 
 import android.content.Context
+import android.os.Looper
 import androidx.room.Room
+import androidx.room.withTransaction
 import androidx.test.core.app.ApplicationProvider
 import com.example.data.local.AppDatabase
 import com.example.speech.Speech
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.runBlocking
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
+import org.robolectric.Shadows.shadowOf
 
-/** A throwaway database for tests that build their own repository. Close it in @After. */
+/** A throwaway database for tests that build their own repository. Close it in @After with [closeWhenIdle]. */
 fun inMemoryDatabase(): AppDatabase =
     Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext<Context>(), AppDatabase::class.java)
         .allowMainThreadQueries()
         .build()
+
+/** Waits for writes a ViewModel launched to reach the database, so a test can read what they stored. */
+fun AppDatabase.awaitPendingWrites() {
+    shadowOf(Looper.getMainLooper()).idle()
+    // Transactions run one at a time, so an empty one returns only after every queued write has.
+    runBlocking { withTransaction { } }
+}
+
+/**
+ * Closes the database once pending writes have finished. Closing under an in-flight write throws on a
+ * background thread, and JUnit then blames whichever unrelated test runs next.
+ */
+fun AppDatabase.closeWhenIdle() {
+    awaitPendingWrites()
+    close()
+}
 
 /**
  * Gives tests that launch the real activity a clean database. The app's database is a process-wide

@@ -12,7 +12,9 @@ data class QuizSession(
     val score: Int = 0,
     val streak: Int = 0,
     val selectedAnswerIndex: Int? = null,
-    val isFinished: Boolean = false
+    val isFinished: Boolean = false,
+    /** When the current question was shown, in the ViewModel's clock (milliseconds), for timed modes. */
+    val questionStartedAt: Long = 0L
 ) {
     init {
         require(questions.isNotEmpty()) { "A quiz needs at least one question" }
@@ -21,6 +23,7 @@ data class QuizSession(
 
     val current: QuizQuestion get() = questions[currentIndex]
     val hasAnswered: Boolean get() = selectedAnswerIndex != null
+    val timedOut: Boolean get() = selectedAnswerIndex == TIMED_OUT
     val isLastQuestion: Boolean get() = currentIndex == questions.lastIndex
     val maxScore: Int get() = QuizEngine.maxScore(questions.size)
 
@@ -35,10 +38,24 @@ data class QuizSession(
         )
     }
 
-    /** Moves to the next question, or finishes after the last one. Ignored until the question is answered. */
-    fun next(): QuizSession = when {
+    /** Ends the question as unanswered when the time ran out: no points and the streak is lost. */
+    fun timeOut(): QuizSession {
+        if (hasAnswered || isFinished) return this
+        return copy(selectedAnswerIndex = TIMED_OUT, streak = 0)
+    }
+
+    /**
+     * Moves to the next question, or finishes after the last one. Ignored until the question is answered.
+     * [now] is when the next question is shown, for timed modes.
+     */
+    fun next(now: Long = 0L): QuizSession = when {
         !hasAnswered || isFinished -> this
         isLastQuestion -> copy(isFinished = true)
-        else -> copy(currentIndex = currentIndex + 1, selectedAnswerIndex = null)
+        else -> copy(currentIndex = currentIndex + 1, selectedAnswerIndex = null, questionStartedAt = now)
+    }
+
+    companion object {
+        /** [selectedAnswerIndex] for a question the time ran out on; no real option has this index. */
+        const val TIMED_OUT = -1
     }
 }

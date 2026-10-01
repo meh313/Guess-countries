@@ -136,6 +136,71 @@ class QuizSessionTest {
     assertFalse(s.isFinished)
   }
 
+  @Test
+  fun timeOutEndsTheQuestionWithoutPointsAndBreaksTheStreak() {
+    var s = sessionOf(6)
+    s = s.answer(s.current.correctAnswerIndex).next()
+    assertEquals(1, s.streak)
+
+    val timedOut = s.timeOut()
+
+    assertTrue(timedOut.hasAnswered)
+    assertTrue(timedOut.timedOut)
+    assertEquals(QuizSession.TIMED_OUT, timedOut.selectedAnswerIndex)
+    assertEquals(s.score, timedOut.score)
+    assertEquals(0, timedOut.streak)
+  }
+
+  @Test
+  fun aTimedOutQuestionCannotBeAnsweredLateButCanBeMovedPast() {
+    val timedOut = sessionOf(6).timeOut()
+
+    assertSame(timedOut, timedOut.answer(timedOut.current.correctAnswerIndex))
+    assertEquals(1, timedOut.next().currentIndex)
+  }
+
+  @Test
+  fun timeOutIsIgnoredOnceTheQuestionIsAnswered() {
+    val s = sessionOf(6)
+    val answered = s.answer(s.current.correctAnswerIndex)
+
+    assertSame(answered, answered.timeOut())
+    assertFalse(answered.timedOut)
+    assertEquals(1, answered.streak)
+  }
+
+  @Test
+  fun timeOutIsIgnoredOnceTheQuizIsFinished() {
+    val finished = sessionOf(6).playThrough()
+
+    assertSame(finished, finished.timeOut())
+  }
+
+  @Test
+  fun aRunOfTimeOutsStillFinishesAndScoresZero() {
+    var s = sessionOf(4)
+    while (!s.isFinished) s = s.timeOut().next()
+
+    assertTrue(s.isFinished)
+    assertEquals(0, s.score)
+  }
+
+  @Test
+  fun nextRecordsWhenTheNextQuestionWasShown() {
+    var s = sessionOf(6)
+
+    s = s.answer(s.current.correctAnswerIndex).next(now = 12_345L)
+
+    assertEquals(12_345L, s.questionStartedAt)
+  }
+
+  @Test
+  fun anIgnoredNextDoesNotRestartTheClock() {
+    val s = sessionOf(6).copy(questionStartedAt = 500L)
+
+    assertEquals(500L, s.next(now = 9_000L).questionStartedAt)
+  }
+
   @Test(expected = IllegalArgumentException::class)
   fun aSessionNeedsQuestions() {
     QuizSession(QuizMode.FLAG_NAME, "Global", emptyList())

@@ -7,6 +7,7 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import com.example.data.local.AppDatabase
 import com.example.data.model.CountryRepository
 import com.example.support.FakeSpeech
+import com.example.support.closeWhenIdle
 import com.example.support.inMemoryDatabase
 import com.example.ui.viewmodel.CountryViewModel
 import org.junit.After
@@ -37,7 +38,7 @@ class CountryViewModelSpeechTest {
 
     @After
     fun tearDown() {
-        db.close()
+        db.closeWhenIdle()
     }
 
     private val country get() = vm.repository.allCountries.first()

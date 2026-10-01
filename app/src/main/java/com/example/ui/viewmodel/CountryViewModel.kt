@@ -1,6 +1,7 @@
 package com.example.ui.viewmodel
 
 import android.app.Application
+import android.os.SystemClock
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -31,7 +32,9 @@ import kotlinx.coroutines.launch
  */
 class CountryViewModel(
     val repository: CountryRepository,
-    private val speech: Speech
+    private val speech: Speech,
+    /** Monotonic milliseconds, used to time Speed Round questions. Injected so tests can control time. */
+    private val clock: () -> Long = SystemClock::elapsedRealtime
 ) : ViewModel() {
 
     val searchQuery = MutableStateFlow("")
@@ -119,10 +122,28 @@ class CountryViewModel(
 
     /** Starts a quiz over the full country list; does nothing if [scope] has too few countries. */
     fun startQuiz(mode: QuizMode, scope: String) {
-        val pool = QuizEngine.poolFor(scope, repository.allCountries)
+        val effectiveScope = QuizEngine.effectiveScope(mode, scope)
+        val pool = QuizEngine.poolFor(effectiveScope, repository.allCountries)
         val questions = QuizEngine.generate(pool, mode)
         if (questions.isEmpty()) return
-        _quizSession.value = QuizSession(mode = mode, scope = scope, questions = questions)
+        _quizSession.value = QuizSession(
+            mode = mode,
+            scope = effectiveScope,
+            questions = questions,
+            questionStartedAt = clock()
+        )
+    }
+
+    /** The clock timed questions run on, so the screen can show how much time is left. */
+    fun clockMillis(): Long = clock()
+
+    /** Called when a timed question runs out of time: counts as a wrong answer. */
+    fun timeOutQuiz() {
+        val session = _quizSession.value ?: return
+        val updated = session.timeOut()
+        if (updated === session) return
+        _quizSession.value = updated
+        updateMastery(session.current.targetCountry.code, false)
     }
 
     fun answerQuiz(index: Int) {
@@ -135,7 +156,7 @@ class CountryViewModel(
 
     fun nextQuizQuestion() {
         val session = _quizSession.value ?: return
-        val updated = session.next()
+        val updated = session.next(clock())
         if (updated === session) return
         _quizSession.value = updated
         if (updated.isFinished) {

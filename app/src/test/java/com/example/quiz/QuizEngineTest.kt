@@ -115,4 +115,52 @@ class QuizEngineTest {
       assertEquals("n=$n", perfectRun, QuizEngine.maxScore(n))
     }
   }
+
+  @Test
+  fun effectiveScope_isGlobalOnlyForModesThatAlwaysCoverTheWorld() {
+    for (mode in QuizMode.entries) {
+      for (scope in QuizEngine.SCOPES) {
+        val expected = if (mode == QuizMode.CONTINENT) "Global" else scope
+        assertEquals("mode=$mode scope=$scope", expected, QuizEngine.effectiveScope(mode, scope))
+      }
+    }
+  }
+
+  @Test
+  fun continentQuestions_neverNameTheCountryTheyAskAbout() {
+    // The old prompt said "Which continent is <country> in?" over a flag, so the flag was redundant.
+    for (mode in QuizMode.entries.filter { it.showsFlag }) {
+      QuizEngine.generate(allCountries, mode).forEach { q ->
+        val text = q.questionText.lowercase()
+        assertTrue("mode=$mode: ${q.questionText}", !text.contains(q.targetCountry.name.lowercase()))
+        assertTrue("mode=$mode: ${q.questionText}", !text.contains(q.targetCountry.capital.lowercase()))
+      }
+    }
+  }
+
+  @Test
+  fun capitalQuestions_nameTheCountryBecauseThereIsNoFlag() {
+    assertTrue(!QuizMode.CAPITAL.showsFlag)
+    QuizEngine.generate(allCountries, QuizMode.CAPITAL).forEach { q ->
+      assertTrue(q.questionText, q.questionText.contains(q.targetCountry.name))
+    }
+  }
+
+  @Test
+  fun continentQuestions_takeTheirWrongAnswersFromRealContinents() {
+    val continents = setOf("Africa", "Americas", "Asia", "Europe", "Oceania")
+    repeat(20) {
+      QuizEngine.generate(allCountries, QuizMode.CONTINENT).forEach { q ->
+        val wrong = q.options.filterIndexed { i, _ -> i != q.correctAnswerIndex }
+        assertEquals(q.toString(), 3, wrong.size)
+        assertTrue(q.toString(), continents.containsAll(wrong))
+      }
+    }
+  }
+
+  @Test
+  fun onlyTheSpeedRoundIsTimed() {
+    assertEquals(listOf(QuizMode.SPEED_MATCH), QuizMode.entries.filter { it.timeLimitSeconds != null })
+    assertEquals(10, QuizMode.SPEED_MATCH.timeLimitSeconds)
+  }
 }

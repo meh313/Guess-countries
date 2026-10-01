@@ -41,6 +41,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.quiz.QuizMode
 import com.example.ui.components.StatBadge
 import com.example.ui.components.getContinentColor
 import com.example.ui.viewmodel.CountryViewModel
@@ -222,7 +223,7 @@ fun StatsScreen(
                 }
             }
         } else {
-            items(quizHistory) { entry ->
+            items(quizHistory, key = { it.id }) { entry ->
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(14.dp),
@@ -237,7 +238,7 @@ fun StatsScreen(
                     ) {
                         Column {
                             Text(
-                                text = "${entry.mode} • ${entry.continentFilter}",
+                                text = "${QuizMode.entries.firstOrNull { it.name == entry.mode }?.title ?: entry.mode} • ${entry.continentFilter}",
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold
                             )

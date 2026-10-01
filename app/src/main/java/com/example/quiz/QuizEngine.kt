@@ -3,14 +3,26 @@ package com.example.quiz
 import com.example.data.model.Country
 import kotlin.random.Random
 
-enum class QuizMode(val title: String) {
+enum class QuizMode(
+    val title: String,
+    /** Seconds allowed per question, or null when the mode is untimed. */
+    val timeLimitSeconds: Int? = null,
+    /** Extra line under the title on the setup screen. */
+    val hint: String? = null
+) {
     FLAG_NAME("Flag -> Country"),
     CAPITAL("Country -> Capital"),
-    CONTINENT("Flag -> Continent"),
-    SPEED_MATCH("Speed Round");
+    CONTINENT("Flag -> Continent", hint = "Covers the whole world"),
+    SPEED_MATCH("Speed Round", timeLimitSeconds = 10, hint = "10 seconds per question");
 
     /** The question card shows the flag in every mode except the capital quiz. */
     val showsFlag: Boolean get() = this != CAPITAL
+
+    /**
+     * Continent questions always draw from every country. Under a single-continent scope every answer
+     * would be that continent, so the scope does not apply.
+     */
+    val usesWholeWorld: Boolean get() = this == CONTINENT
 }
 
 data class QuizQuestion(
@@ -34,6 +46,10 @@ object QuizEngine {
 
     private const val DISTRACTORS = 3
     private val ANSWER_CONTINENTS = listOf("Africa", "Americas", "Asia", "Europe", "Oceania")
+
+    /** The scope a quiz of [mode] actually uses: [requested], except modes that always cover the world. */
+    fun effectiveScope(mode: QuizMode, requested: String): String =
+        if (mode.usesWholeWorld) "Global" else requested
 
     fun poolFor(scope: String, countries: List<Country>): List<Country> =
         if (scope == "Global") {
@@ -66,7 +82,7 @@ object QuizEngine {
             QuizMode.CONTINENT ->
                 choice(
                     target,
-                    "Which continent is ${target.name} located in?",
+                    "Which continent does this flag belong to?",
                     target.continent,
                     (ANSWER_CONTINENTS - target.continent).shuffled(random).take(DISTRACTORS),
                     random

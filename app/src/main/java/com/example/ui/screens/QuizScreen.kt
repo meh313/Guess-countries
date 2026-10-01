@@ -1,5 +1,8 @@
 package com.example.ui.screens
 
+import android.os.Build
+import android.view.HapticFeedbackConstants
+import android.view.View
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -46,16 +49,26 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -66,6 +79,7 @@ import com.example.quiz.QuizMode
 import com.example.ui.components.FlagView
 import com.example.ui.theme.StreakColor
 import com.example.ui.viewmodel.CountryViewModel
+import kotlinx.coroutines.delay
 
 private val QuizMode.icon: ImageVector
     get() = when (this) {
@@ -151,12 +165,21 @@ fun QuizScreen(
                                 modifier = Modifier.size(28.dp)
                             )
                             Spacer(modifier = Modifier.width(16.dp))
-                            Text(
-                                text = mode.title,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
-                            )
+                            Column {
+                                Text(
+                                    text = mode.title,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                                )
+                                mode.hint?.let { hint ->
+                                    Text(
+                                        text = hint,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -173,15 +196,30 @@ fun QuizScreen(
             )
             Spacer(modifier = Modifier.height(10.dp))
 
+            // Some modes always cover the whole world; their scope chips show "Global" and are inactive.
+            val scopeApplies = !selectedMode.usesWholeWorld
+            val shownScope = QuizEngine.effectiveScope(selectedMode, selectedContinentScope)
+            if (!scopeApplies) {
+                Text(
+                    text = "The continent quiz always covers the whole world",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .align(Alignment.Start)
+                        .padding(bottom = 8.dp)
+                )
+            }
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(QuizEngine.SCOPES) { scope ->
-                    val isSelected = selectedContinentScope == scope
+                    val isSelected = shownScope == scope
                     Surface(
                         shape = RoundedCornerShape(16.dp),
                         color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
                         modifier = Modifier
+                            .alpha(if (scopeApplies) 1f else 0.5f)
                             .selectable(
                                 selected = isSelected,
+                                enabled = scopeApplies,
                                 role = Role.RadioButton,
                                 onClick = { selectedContinentScope = scope }
                             )
@@ -200,7 +238,7 @@ fun QuizScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             // Start Quiz Button
-            val scopePoolSize = QuizEngine.poolFor(selectedContinentScope, allCountries).size
+            val scopePoolSize = QuizEngine.poolFor(shownScope, allCountries).size
             val canStart = scopePoolSize >= QuizEngine.MIN_POOL
             Button(
                 onClick = { viewModel.startQuiz(selectedMode, selectedContinentScope) },
@@ -229,6 +267,26 @@ fun QuizScreen(
 
         // The quiz now outlives the screen, so offer a way out (Back asks first).
         BackHandler(enabled = !active.isFinished) { showQuitConfirm = true }
+
+        val view = LocalView.current
+        val limitMs = active.mode.timeLimitSeconds?.let { it * 1000L }
+        var remainingMs by remember(active.currentIndex, active.questionStartedAt) { mutableLongStateOf(limitMs ?: 0L) }
+        if (limitMs != null) {
+            // Time is measured from when the question was shown, so rotating or switching tabs neither
+            // pauses nor restarts it.
+            LaunchedEffect(active.currentIndex, active.questionStartedAt, active.hasAnswered) {
+                while (!active.hasAnswered) {
+                    val left = limitMs - (viewModel.clockMillis() - active.questionStartedAt)
+                    remainingMs = left.coerceIn(0L, limitMs)
+                    if (left <= 0L) {
+                        view.performAnswerHaptic(correct = false)
+                        viewModel.timeOutQuiz()
+                        break
+                    }
+                    delay(100)
+                }
+            }
+        }
         val questionCount = active.questions.size
 
         // Each new question starts at the top so the flag is visible.
@@ -314,6 +372,31 @@ fun QuizScreen(
                 color = MaterialTheme.colorScheme.primary
             )
 
+            if (limitMs != null && !active.hasAnswered) {
+                // One quiet description for TalkBack; a ticking bar would be announced constantly.
+                Column(
+                    modifier = Modifier
+                        .padding(top = 8.dp)
+                        .testTag("quiz_timer")
+                        .clearAndSetSemantics { contentDescription = "${limitMs / 1000} seconds per question" }
+                ) {
+                    val urgent = remainingMs <= 3_000L
+                    LinearProgressIndicator(
+                        progress = { remainingMs / limitMs.toFloat() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(6.dp)
+                            .clip(RoundedCornerShape(3.dp)),
+                        color = if (urgent) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary
+                    )
+                    Text(
+                        text = "${(remainingMs + 999) / 1000}s left",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (urgent) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.height(20.dp))
 
             // Question Visual Card
@@ -332,7 +415,8 @@ fun QuizScreen(
                             country = q.targetCountry,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(160.dp)
+                                .height(160.dp),
+                            contentDescription = "Flag to identify"
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                     }
@@ -366,7 +450,18 @@ fun QuizScreen(
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable(enabled = !active.hasAnswered) { viewModel.answerQuiz(index) }
+                            .clickable(enabled = !active.hasAnswered) {
+                                viewModel.answerQuiz(index)
+                                view.performAnswerHaptic(correct = isCorrect)
+                            }
+                            .semantics {
+                                // Not only colour: say which option was right and which one was picked.
+                                if (active.hasAnswered && isCorrect) {
+                                    stateDescription = "Correct answer"
+                                } else if (active.hasAnswered && isSelected) {
+                                    stateDescription = "Your answer, incorrect"
+                                }
+                            }
                             .testTag("quiz_option_$index"),
                         shape = RoundedCornerShape(14.dp),
                         colors = CardDefaults.cardColors(containerColor = containerColor),
@@ -398,11 +493,28 @@ fun QuizScreen(
 
             // Post-Answer Explanation & Next Button
             if (active.hasAnswered) {
+                val answerText = q.options[q.correctAnswerIndex]
+                val result = when {
+                    active.timedOut -> "Time's up! The answer is $answerText"
+                    active.selectedAnswerIndex == q.correctAnswerIndex ->
+                        "Correct! +${QuizEngine.pointsForCorrectAnswer(active.streak - 1)} points"
+                    else -> "Not quite. The answer is $answerText"
+                }
                 Card(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                    shape = RoundedCornerShape(16.dp)
+                    shape = RoundedCornerShape(16.dp),
+                    // Announced as soon as it appears, so TalkBack users hear the outcome.
+                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
+                        Text(
+                            text = result,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier
+                                .padding(bottom = 6.dp)
+                                .testTag("quiz_result")
+                        )
                         Text(
                             text = "💡 ${q.targetCountry.name} (${q.targetCountry.capital})",
                             fontWeight = FontWeight.Bold,
@@ -494,4 +606,14 @@ fun QuizScreen(
             }
         )
     }
+}
+
+/** A short confirm or reject buzz for an answer (a plain key tap before Android 11). */
+private fun View.performAnswerHaptic(correct: Boolean) {
+    val effect = when {
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.R ->
+            if (correct) HapticFeedbackConstants.CONFIRM else HapticFeedbackConstants.REJECT
+        else -> HapticFeedbackConstants.VIRTUAL_KEY
+    }
+    performHapticFeedback(effect)
 }

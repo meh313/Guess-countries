@@ -8,6 +8,8 @@ import com.example.data.model.SortOption
 import com.example.quiz.QuizEngine
 import com.example.quiz.QuizMode
 import com.example.support.FakeSpeech
+import com.example.support.awaitPendingWrites
+import com.example.support.closeWhenIdle
 import com.example.support.inMemoryDatabase
 import com.example.ui.viewmodel.CountryViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -43,10 +45,15 @@ class CountryViewModelQuizTest {
 
     @After
     fun tearDown() {
-        db.close()
+        db.closeWhenIdle()
     }
 
-    private fun newViewModel() = CountryViewModel(CountryRepository(db.userProgressDao()), FakeSpeech())
+    private var now = 1_000L
+
+    private fun newViewModel() = CountryViewModel(CountryRepository(db.userProgressDao()), FakeSpeech(), clock = { now })
+
+    private fun progressRow(code: String) =
+        runBlocking { db.userProgressDao().getAllProgress().first() }.firstOrNull { it.countryCode == code }
 
     /** Answers every remaining question correctly through the ViewModel's public actions. */
     private fun CountryViewModel.playToTheEnd() {
@@ -207,6 +214,82 @@ class CountryViewModelQuizTest {
         assertEquals(25, row.masteryScore)
         assertEquals(1, row.timesReviewed)
         assertEquals(1, row.timesCorrect)
+    }
+
+    @Test
+    fun startQuiz_continentModeIgnoresTheChosenScopeAndCoversTheWorld() {
+        val vm = newViewModel()
+
+        vm.startQuiz(QuizMode.CONTINENT, "Africa")
+
+        val s = vm.quizSession.value!!
+        assertEquals("Global", s.scope)
+        assertEquals(10, s.questions.size)
+        assertTrue("a continent quiz should reach beyond Africa", s.questions.any { it.targetCountry.continent != "Africa" })
+    }
+
+    @Test
+    fun startQuiz_continentModeStartsEvenWhereThatContinentIsTooSmallToQuiz() {
+        val vm = newViewModel()
+
+        vm.startQuiz(QuizMode.CONTINENT, "Oceania")
+
+        assertNotNull(vm.quizSession.value)
+    }
+
+    @Test
+    fun startQuiz_recordsWhenTheFirstQuestionWasShown() {
+        val vm = newViewModel()
+        now = 7_000L
+
+        vm.startQuiz(QuizMode.SPEED_MATCH, "Global")
+
+        assertEquals(7_000L, vm.quizSession.value!!.questionStartedAt)
+    }
+
+    @Test
+    fun nextQuizQuestion_recordsWhenTheNextQuestionWasShown() {
+        val vm = newViewModel()
+        vm.startQuiz(QuizMode.SPEED_MATCH, "Global")
+        vm.answerQuiz(vm.quizSession.value!!.current.correctAnswerIndex)
+        now = 15_500L
+
+        vm.nextQuizQuestion()
+
+        assertEquals(15_500L, vm.quizSession.value!!.questionStartedAt)
+    }
+
+    @Test
+    fun timeOutQuiz_countsAsAWrongReviewAndBreaksTheStreak() {
+        val vm = newViewModel()
+        vm.startQuiz(QuizMode.SPEED_MATCH, "Global")
+        val target = vm.quizSession.value!!.current.targetCountry.code
+
+        vm.timeOutQuiz()
+
+        val s = vm.quizSession.value!!
+        assertTrue(s.timedOut)
+        assertEquals(0, s.score)
+        awaitCondition("the review to be saved") { progressRow(target) != null }
+        val row = progressRow(target)!!
+        assertEquals(1, row.timesReviewed)
+        assertEquals(0, row.timesCorrect)
+    }
+
+    @Test
+    fun timeOutQuiz_afterAnsweringChangesNothingAndSavesNoSecondReview() {
+        val vm = newViewModel()
+        vm.startQuiz(QuizMode.SPEED_MATCH, "Global")
+        val target = vm.quizSession.value!!.current.targetCountry.code
+        vm.answerQuiz(vm.quizSession.value!!.current.correctAnswerIndex)
+        awaitCondition("the review to be saved") { progressRow(target) != null }
+
+        vm.timeOutQuiz()
+        vm.timeOutQuiz()
+
+        assertFalse(vm.quizSession.value!!.timedOut)
+        db.awaitPendingWrites()
+        assertEquals(1, progressRow(target)!!.timesReviewed)
     }
 
     @Test

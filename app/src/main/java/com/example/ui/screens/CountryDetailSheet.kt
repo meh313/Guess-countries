@@ -154,7 +154,8 @@ fun CountryDetailSheet(
                     country = country,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(180.dp)
+                        .height(180.dp),
+                    contentDescription = "Flag of ${country.name}"
                 )
 
                 // Continent Pill

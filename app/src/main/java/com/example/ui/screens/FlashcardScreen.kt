@@ -452,7 +452,8 @@ private fun FlipCard(
                             country = country,
                             modifier = Modifier
                                 .width(flagWidth)
-                                .testTag("flashcard_flag")
+                                .testTag("flashcard_flag"),
+                            contentDescription = "Flag to identify"
                         )
 
                         Spacer(modifier = Modifier.height(gap))

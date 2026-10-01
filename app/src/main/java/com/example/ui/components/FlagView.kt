@@ -21,6 +21,8 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.Country
@@ -30,7 +32,13 @@ fun FlagView(
     country: Country,
     modifier: Modifier = Modifier,
     aspectRatio: Float = 1.5f, // Standard flag ratio 3:2
-    showEmojiOverlay: Boolean = false
+    showEmojiOverlay: Boolean = false,
+    /**
+     * What a screen reader says for this flag. Null leaves it silent (the country name is next to it).
+     * Quiz and flashcard fronts pass a neutral text because the name is the answer. The emoji drawn over
+     * the flag is never read out.
+     */
+    contentDescription: String? = null
 ) {
     Box(
         modifier = modifier
@@ -38,7 +46,8 @@ fun FlagView(
             .shadow(4.dp, RoundedCornerShape(8.dp))
             .clip(RoundedCornerShape(8.dp))
             .background(Color.White)
-            .border(1.dp, Color.Black.copy(alpha = 0.15f), RoundedCornerShape(8.dp)),
+            .border(1.dp, Color.Black.copy(alpha = 0.15f), RoundedCornerShape(8.dp))
+            .clearAndSetSemantics { contentDescription?.let { this.contentDescription = it } },
         contentAlignment = Alignment.Center
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
