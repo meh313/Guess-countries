@@ -5,6 +5,7 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotSelected
@@ -18,6 +19,8 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import org.junit.Assert.assertEquals
@@ -30,9 +33,16 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 
-/** Layout at several window sizes and the accessibility semantics of toggles and selections. */
+/**
+ * Layout at several window sizes and the accessibility semantics of toggles and selections.
+ *
+ * Native graphics give real font metrics. The default mode measures text with approximate widths, which
+ * hides bugs that depend on how wide a string is (a long title squeezing the buttons beside it).
+ */
 @RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 class LayoutAndSemanticsUiTest {
 
   private val composeRule = createAndroidComposeRule<MainActivity>()
@@ -181,10 +191,11 @@ class LayoutAndSemanticsUiTest {
 
   private fun assertActionsAreTouchTargets() {
     for (label in listOf("Shuffle Cards", "Reset Deck")) {
-      // The merged node is the IconButton: a 40dp container with a 48dp minimum touch target.
-      val r = rule.onNodeWithContentDescription(label).fetchSemanticsNode().touchBoundsInRoot
-      assertTrue("$label touch target is ${r.width / density}dp wide", r.width / density >= 47.5f)
-      assertTrue("$label touch target is ${r.height / density}dp tall", r.height / density >= 47.5f)
+      // Layout bounds, not touch bounds: Material extends the touch area to 48dp even when the button
+      // itself has been squeezed to nothing. A normal icon button is 40dp.
+      val r = rule.onNodeWithContentDescription(label).fetchSemanticsNode().boundsInRoot
+      assertTrue("$label is ${r.width / density}dp wide", r.width / density >= 39.5f)
+      assertTrue("$label is ${r.height / density}dp tall", r.height / density >= 39.5f)
     }
   }
 
@@ -212,6 +223,96 @@ class LayoutAndSemanticsUiTest {
     assertEquals(1.5f, flag.width / flag.height, 0.05f)
   }
 
+  // ---- Explore: header, plural, empty states ------------------------------------------------
+
+  @Test
+  @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi", fontScale = 1.5f)
+  fun detailSheetWithALongOfficialName_keepsItsSpeakAndCloseButtons() {
+    rule.onNodeWithTag("search_country_input").performTextInput("United K")
+    eventually("the UK card") { rule.onNodeWithTag("country_card_gb").assertIsDisplayed() }
+    rule.onNodeWithTag("country_card_gb").performClick()
+    rule.waitForIdle()
+
+    // "United Kingdom of Great Britain and Northern Ireland" used to squeeze these to zero width. Measure
+    // the layout bounds: the 48dp touch area Material adds around an icon button survives a zero-width layout.
+    val windowWidth = rule.activity.resources.displayMetrics.widthPixels
+    for (target in listOf(
+      rule.onNodeWithTag("speak_country_btn"),
+      rule.onNodeWithContentDescription("Close")
+    )) {
+      val layout = target.fetchSemanticsNode().boundsInRoot
+      assertTrue("button is ${layout.width / density}dp wide", layout.width / density >= 39.5f)
+      assertTrue("button $layout is inside the ${windowWidth}px window", layout.right <= windowWidth)
+    }
+  }
+
+  @Test
+  @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
+  fun countryCount_usesTheSingularForExactlyOne() {
+    rule.onNodeWithText("33 Countries").assertIsDisplayed()
+
+    rule.onNodeWithTag("search_country_input").performTextInput("Japan")
+
+    eventually("one result") { rule.onNodeWithText("1 Country").assertIsDisplayed() }
+  }
+
+  @Test
+  @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
+  fun noResults_explainsAndOffersToClearTheSearch() {
+    rule.onNodeWithTag("search_country_input").performTextInput("zzzz-no-such-country")
+
+    eventually("the empty state") { rule.onNodeWithText("No countries found").assertIsDisplayed() }
+    rule.onNodeWithTag("explore_clear_filters_btn").performClick()
+
+    eventually("the full list") { rule.onNodeWithText("33 Countries").assertIsDisplayed() }
+  }
+
+  @Test
+  @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
+  fun savedOnlyWithNothingSaved_saysSoInsteadOfBlamingTheSearch() {
+    rule.onNodeWithTag("bookmarks_filter_chip").performClick()
+
+    eventually("the saved-only empty state") { rule.onNodeWithText("No saved countries yet").assertIsDisplayed() }
+    rule.onNodeWithText("Tap the bookmark on any country to save it here").assertIsDisplayed()
+
+    rule.onNodeWithTag("explore_clear_filters_btn").performClick()
+    eventually("the full list") { rule.onNodeWithText("33 Countries").assertIsDisplayed() }
+  }
+
+  @Test
+  @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
+  fun sortByContinent_isOfferedAndGroupsAfricaFirst() {
+    rule.onNodeWithTag("sort_menu_btn").performClick()
+    rule.onNodeWithText("Sort by Continent").performClick()
+    rule.waitForIdle()
+
+    // Africa sorts first; within a continent the dataset order is kept (Egypt is its first African entry).
+    val africanFirst = com.example.quiz.allCountries.first { it.continent == "Africa" }.code.lowercase()
+    val topOfList = bounds("country_card_$africanFirst").top
+    assertTrue(bounds("country_card_${africanFirst}").top <= topOfList)
+    rule.onNodeWithTag("country_card_aq").assertDoesNotExist()
+  }
+
+  @Test
+  @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
+  fun smallText_isNotStretchedToTheBodyLineHeight() {
+    // The 10sp country-code chip used to inherit a 24sp line height and came out about 24dp tall.
+    val code = rule.onNodeWithText("AQ", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+    assertTrue("code chip text is ${code.height / density}dp tall", code.height / density <= 16.5f)
+  }
+
+  // ---- Decorative content stays quiet for TalkBack ---------------------------------------------
+
+  @Test
+  @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
+  fun decorativeImagesAndNavIcons_haveNoDescription() {
+    // Each bottom-nav tab is announced once by its label, not again by its icon.
+    // Unmerged tree: the merged nav item would hide an icon's own description.
+    for (description in listOf("Explore", "Flashcards", "Quiz", "Progress", "World Map Banner", "Search icon")) {
+      rule.onAllNodesWithContentDescription(description, useUnmergedTree = true).assertCountEquals(0)
+    }
+  }
+
   // ---- Accessibility semantics ----------------------------------------------------------------
 
   @Test
@@ -229,12 +330,15 @@ class LayoutAndSemanticsUiTest {
   @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
   fun continentChips_exposeWhichOneIsSelected() {
     rule.onNodeWithTag("continent_chip_all").assertIsSelected()
+    // With real font widths the chip row is wider than the screen, so scroll to the next chip.
+    rule.onNodeWithTag("continent_chips").performScrollToNode(hasTestTag("continent_chip_europe"))
     rule.onNodeWithTag("continent_chip_europe").assertIsNotSelected()
 
     rule.onNodeWithTag("continent_chip_europe").performClick()
     rule.waitForIdle()
 
     rule.onNodeWithTag("continent_chip_europe").assertIsSelected()
+    rule.onNodeWithTag("continent_chips").performScrollToNode(hasTestTag("continent_chip_all"))
     rule.onNodeWithTag("continent_chip_all").assertIsNotSelected()
   }
 

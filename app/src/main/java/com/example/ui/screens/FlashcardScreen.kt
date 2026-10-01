@@ -34,7 +34,7 @@ import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.ThumbUp
-import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -76,9 +76,10 @@ import com.example.data.model.SortOption
 import com.example.flashcards.FlashcardDeck
 import com.example.ui.components.FlagView
 import com.example.ui.components.getContinentColor
+import com.example.ui.components.rememberNumberFormat
+import com.example.ui.theme.MasteredColor
+import com.example.ui.theme.NeedsPracticeColor
 import com.example.ui.viewmodel.CountryViewModel
-import java.text.NumberFormat
-import java.util.Locale
 
 /** Windows at least this wide but shorter than [COMPACT_HEIGHT] (a phone in landscape) use two panes. */
 private val COMPACT_HEIGHT = 480.dp
@@ -355,7 +356,7 @@ private fun NeedsPracticeButton(onClick: () -> Unit, modifier: Modifier) {
     Button(
         onClick = onClick,
         modifier = modifier.testTag("grade_hard_btn"),
-        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE74C3C)),
+        colors = ButtonDefaults.buttonColors(containerColor = NeedsPracticeColor),
         shape = RoundedCornerShape(14.dp)
     ) {
         Icon(imageVector = Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp))
@@ -369,7 +370,7 @@ private fun MasteredButton(onClick: () -> Unit, modifier: Modifier) {
     Button(
         onClick = onClick,
         modifier = modifier.testTag("grade_mastered_btn"),
-        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF27AE60)),
+        colors = ButtonDefaults.buttonColors(containerColor = MasteredColor),
         shape = RoundedCornerShape(14.dp)
     ) {
         Icon(imageVector = Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp))
@@ -391,6 +392,7 @@ private fun FlipCard(
     modifier: Modifier = Modifier
 ) {
     val continentColor = getContinentColor(country.continent)
+    val numberFormat = rememberNumberFormat()
     // Read lazily: the animation only invalidates the graphics layer, and this flips once at 90 degrees.
     val showBack by remember(rotation) { derivedStateOf { rotation.value > 90f } }
 
@@ -506,7 +508,7 @@ private fun FlipCard(
                             enabled = speechAvailable
                         ) {
                             Icon(
-                                imageVector = Icons.Default.VolumeUp,
+                                imageVector = Icons.AutoMirrored.Filled.VolumeUp,
                                 contentDescription = if (speechAvailable) {
                                     "Read country summary aloud"
                                 } else {
@@ -549,7 +551,7 @@ private fun FlipCard(
                         CardDetailPill(
                             icon = Icons.Default.People,
                             title = "Population",
-                            detail = NumberFormat.getNumberInstance(Locale.US).format(country.population),
+                            detail = numberFormat.format(country.population),
                             modifier = Modifier.weight(1f)
                         )
                     }

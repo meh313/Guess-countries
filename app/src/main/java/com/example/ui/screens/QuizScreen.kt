@@ -64,6 +64,7 @@ import androidx.compose.ui.unit.sp
 import com.example.quiz.QuizEngine
 import com.example.quiz.QuizMode
 import com.example.ui.components.FlagView
+import com.example.ui.theme.StreakColor
 import com.example.ui.viewmodel.CountryViewModel
 
 private val QuizMode.icon: ImageVector
@@ -271,7 +272,7 @@ fun QuizScreen(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Surface(
                         shape = RoundedCornerShape(20.dp),
-                        color = Color(0xFFE67E22)
+                        color = StreakColor
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),

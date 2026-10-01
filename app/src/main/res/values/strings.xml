@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">World Flags</string>
+    <plurals name="countries_count">
+        <item quantity="one">%d Country</item>
+        <item quantity="other">%d Countries</item>
+    </plurals>
 </resources>

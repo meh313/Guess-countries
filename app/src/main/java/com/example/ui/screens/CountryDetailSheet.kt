@@ -28,7 +28,7 @@ import androidx.compose.material.icons.filled.LocationCity
 import androidx.compose.material.icons.filled.MonetizationOn
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Public
-import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -54,10 +54,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.local.UserProgressEntity
 import com.example.data.model.Country
+import com.example.ui.components.rememberNumberFormat
+import androidx.compose.ui.text.style.TextOverflow
 import com.example.ui.components.FlagView
 import com.example.ui.components.getContinentColor
-import java.text.NumberFormat
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -71,6 +71,7 @@ fun CountryDetailSheet(
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val isFavorite = progress?.isFavorite == true
+    val numberFormat = rememberNumberFormat()
     val continentColor = getContinentColor(country.continent)
 
     ModalBottomSheet(
@@ -92,13 +93,18 @@ fun CountryDetailSheet(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                // The title takes the leftover width and may wrap, so long official names such as
+                // "United Kingdom of Great Britain and Northern Ireland" cannot push the buttons away.
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Text(
                         text = country.flagEmoji,
                         fontSize = 32.sp,
                         modifier = Modifier.padding(end = 8.dp)
                     )
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = country.name,
                             style = MaterialTheme.typography.headlineSmall,
@@ -107,7 +113,9 @@ fun CountryDetailSheet(
                         Text(
                             text = country.officialName,
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -119,7 +127,7 @@ fun CountryDetailSheet(
                         modifier = Modifier.testTag("speak_country_btn")
                     ) {
                         Icon(
-                            imageVector = Icons.Default.VolumeUp,
+                            imageVector = Icons.AutoMirrored.Filled.VolumeUp,
                             contentDescription = if (speechAvailable) {
                                 "Read country summary aloud"
                             } else {
@@ -207,7 +215,7 @@ fun CountryDetailSheet(
                 DetailMetricCard(
                     icon = Icons.Default.People,
                     label = "Population",
-                    value = NumberFormat.getNumberInstance(Locale.US).format(country.population),
+                    value = numberFormat.format(country.population),
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -218,7 +226,7 @@ fun CountryDetailSheet(
                 DetailMetricCard(
                     icon = Icons.Default.Public,
                     label = "Land Area",
-                    value = "${NumberFormat.getNumberInstance(Locale.US).format(country.areaSqKm)} km²",
+                    value = "${numberFormat.format(country.areaSqKm)} km²",
                     modifier = Modifier.weight(1f)
                 )
                 Spacer(modifier = Modifier.width(8.dp))

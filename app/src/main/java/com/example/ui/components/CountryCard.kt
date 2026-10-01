@@ -38,9 +38,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.Country
+import com.example.ui.theme.GoldAccent
 import com.example.data.local.UserProgressEntity
-import java.text.NumberFormat
-import java.util.Locale
 
 @Composable
 fun CountryCard(
@@ -51,6 +50,7 @@ fun CountryCard(
     modifier: Modifier = Modifier
 ) {
     val isFavorite = progress?.isFavorite == true
+    val compactNumbers = rememberCompactNumberFormat()
     val continentColor = getContinentColor(country.continent)
 
     Card(
@@ -109,7 +109,7 @@ fun CountryCard(
                     Icon(
                         imageVector = if (isFavorite) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
                         contentDescription = "Bookmark ${country.name}",
-                        tint = if (isFavorite) MaterialTheme.colorScheme.secondary else Color.White,
+                        tint = if (isFavorite) GoldAccent else Color.White,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -164,7 +164,7 @@ fun CountryCard(
                     )
                     Spacer(modifier = Modifier.width(3.dp))
                     Text(
-                        text = formatCompactNumber(country.population),
+                        text = compactNumbers.format(country.population),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.outline
                     )
@@ -184,14 +184,5 @@ fun CountryCard(
                 }
             }
         }
-    }
-}
-
-fun formatCompactNumber(number: Long): String {
-    return when {
-        number >= 1_000_000_000 -> String.format(Locale.US, "%.1fB", number / 1_000_000_000.0)
-        number >= 1_000_000 -> String.format(Locale.US, "%.1fM", number / 1_000_000.0)
-        number >= 1_000 -> String.format(Locale.US, "%.1fK", number / 1_000.0)
-        else -> number.toString()
     }
 }

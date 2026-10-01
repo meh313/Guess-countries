@@ -28,7 +28,7 @@ import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Sort
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -41,6 +41,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -54,7 +55,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
@@ -106,7 +109,7 @@ fun ExploreScreen(
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.img_world_banner),
-                        contentDescription = "World Map Banner",
+                        contentDescription = null, // decorative
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop,
                         alpha = 0.45f
@@ -144,7 +147,7 @@ fun ExploreScreen(
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Search,
-                            contentDescription = "Search icon"
+                            contentDescription = null // the field's placeholder already says what it is
                         )
                     },
                     trailingIcon = {
@@ -171,6 +174,7 @@ fun ExploreScreen(
 
                 // Continent Filter Chips Row
                 LazyRow(
+                    modifier = Modifier.testTag("continent_chips"),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     contentPadding = PaddingValues(vertical = 4.dp)
                 ) {
@@ -192,7 +196,7 @@ fun ExploreScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "${countries.size} Countries",
+                        text = pluralStringResource(R.plurals.countries_count, countries.size, countries.size),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
@@ -229,7 +233,7 @@ fun ExploreScreen(
                                 modifier = Modifier.testTag("sort_menu_btn")
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.Sort,
+                                    imageVector = Icons.AutoMirrored.Filled.Sort,
                                     contentDescription = "Sort Options",
                                     tint = MaterialTheme.colorScheme.primary
                                 )
@@ -276,6 +280,8 @@ fun ExploreScreen(
 
         if (countries.isEmpty()) {
             item(key = "empty", span = { GridItemSpan(maxLineSpan) }) {
+                val noSavedYet = showOnlyBookmarks && searchQuery.isBlank() && selectedContinent == "All"
+                val anyFilter = showOnlyBookmarks || searchQuery.isNotBlank() || selectedContinent != "All"
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -285,23 +291,36 @@ fun ExploreScreen(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
-                            imageVector = Icons.Default.Public,
+                            imageVector = if (noSavedYet) Icons.Default.BookmarkBorder else Icons.Default.Public,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.outline,
                             modifier = Modifier.size(64.dp)
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = "No countries found",
+                            text = if (noSavedYet) "No saved countries yet" else "No countries found",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.outline
                         )
                         Text(
-                            text = "Try adjusting your search query or continent filter",
+                            text = if (noSavedYet) {
+                                "Tap the bookmark on any country to save it here"
+                            } else {
+                                "Try adjusting your search query or continent filter"
+                            },
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.outline
+                            color = MaterialTheme.colorScheme.outline,
+                            textAlign = TextAlign.Center
                         )
+                        if (anyFilter) {
+                            TextButton(
+                                onClick = { viewModel.clearFilters() },
+                                modifier = Modifier.testTag("explore_clear_filters_btn")
+                            ) {
+                                Text("Clear filters")
+                            }
+                        }
                     }
                 }
             }

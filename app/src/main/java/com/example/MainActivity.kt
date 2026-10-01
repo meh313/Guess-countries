@@ -96,7 +96,7 @@ fun MainAppScreen(
                         icon = {
                             Icon(
                                 imageVector = screen.icon,
-                                contentDescription = screen.title
+                                contentDescription = null // the label below already names the tab
                             )
                         },
                         label = {
