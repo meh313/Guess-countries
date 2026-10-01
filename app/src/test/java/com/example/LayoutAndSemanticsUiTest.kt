@@ -1,8 +1,5 @@
 package com.example
 
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.os.Looper
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assert
@@ -21,8 +18,10 @@ import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -31,6 +30,8 @@ import com.example.quiz.allCountries
 import com.example.support.FreshDatabaseRule
 import com.example.support.boundsOf
 import com.example.support.contrastRatio
+import com.example.support.crop
+import com.example.support.drawWindow
 import com.example.support.eventually
 import com.example.support.openTab
 import com.example.support.stateDescriptionIs
@@ -40,7 +41,6 @@ import org.junit.rules.RuleChain
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
@@ -237,6 +237,33 @@ class LayoutAndSemanticsUiTest {
 
     @Test
     @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
+    fun detailSheet_showsRoundedFiguresLabelledAsEstimates() {
+        rule.onNodeWithTag("search_country_input").performTextInput("France")
+        rule.eventually("the France card") { rule.onNodeWithTag("country_card_fr").assertIsDisplayed() }
+        rule.onNodeWithTag("country_card_fr").performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithText("Total Area").performScrollTo().assertIsDisplayed()
+        rule.onNodeWithText("Languages").performScrollTo().assertIsDisplayed()
+        rule.onAllNodesWithText("Land Area").assertCountEquals(0)
+        rule.onAllNodesWithText("Official Languages").assertCountEquals(0)
+        rule.onNodeWithText("est.", substring = true).performScrollTo().assertIsDisplayed()
+        rule.onNodeWithText("km²", substring = true).performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
+    fun detailSheet_ofLeftHandTrafficCountrySaysLeft() {
+        rule.onNodeWithTag("search_country_input").performTextInput("Thailand")
+        rule.eventually("the Thailand card") { rule.onNodeWithTag("country_card_th").assertIsDisplayed() }
+        rule.onNodeWithTag("country_card_th").performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithText("Left side").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
     fun countryCount_usesTheSingularForExactlyOne() {
         rule.onNodeWithText("33 Countries").assertIsDisplayed()
 
@@ -291,14 +318,8 @@ class LayoutAndSemanticsUiTest {
      * its width, measured on the rendered pixels so it covers whatever colours the code really chose.
      */
     private fun renderedContrast(tag: String, from: Float, to: Float): Double {
-        shadowOf(Looper.getMainLooper()).idle()
         val area = rule.onNodeWithTag(tag).fetchSemanticsNode().boundsInRoot
-        // Drawing the window into a plain bitmap works under native graphics. Compose's captureToImage does
-        // not: it waits for a frame that Robolectric only runs when the test thread yields.
-        val window = rule.activity.window.decorView
-        val screen = Bitmap.createBitmap(window.width, window.height, Bitmap.Config.ARGB_8888)
-        window.draw(Canvas(screen))
-        val node = Bitmap.createBitmap(screen, area.left.toInt(), area.top.toInt(), area.width.toInt(), area.height.toInt())
+        val node = rule.drawWindow().crop(area)
 
         val solid = (0 until node.height).flatMap { y -> (0 until node.width).map { x -> node.getPixel(x, y) } }
             .filter { it ushr 24 == 0xFF }

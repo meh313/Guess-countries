@@ -55,17 +55,19 @@ fun StatsScreen(
 ) {
     val progressMap by viewModel.userProgressMap.collectAsState()
     val quizHistory by viewModel.quizHistory.collectAsState()
-    val allCountries = viewModel.repository.allCountries
+    // Antarctica cannot be quizzed, so it is not part of the mastery totals.
+    val allCountries = viewModel.repository.allCountries.filter { it.isSovereign }
     // Follows the user's locale (and updates if it changes) instead of a fixed US-style pattern.
     val locale = LocalLocale.current.platformLocale
     val dateFormat = remember(locale) { DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT, locale) }
 
     val bookmarkedCount = progressMap.values.count { it.isFavorite }
-    val masteredCount = progressMap.values.count { it.masteryScore >= 75 }
+    val sovereignCodes = allCountries.map { it.code }.toSet()
+    val masteredCount = progressMap.values.count { it.countryCode in sovereignCodes && it.masteryScore >= 75 }
     val totalQuizzes = quizHistory.size
     val maxScore = quizHistory.maxOfOrNull { it.score } ?: 0
 
-    val continents = listOf("Africa", "Americas", "Asia", "Europe", "Oceania", "Antarctica")
+    val continents = listOf("Africa", "Americas", "Asia", "Europe", "Oceania")
 
     LazyColumn(
         modifier = modifier

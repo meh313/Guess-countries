@@ -7,6 +7,7 @@ import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.performScrollToNode
@@ -27,6 +28,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.quiz.QuizMode
 import com.example.ui.viewmodel.CountryViewModel
 import java.util.Locale
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -254,6 +256,33 @@ class QuizAndFlashcardUiTest {
 
         rule.onNodeWithText("Speed Round • Global").assertIsDisplayed()
         rule.onAllNodesWithText("SPEED_MATCH", substring = true).assertCountEquals(0)
+    }
+
+    @Test
+    fun stats_countTheSovereignCountriesOnly() {
+        tab("stats")
+
+        rule.onNodeWithText("0 / 32").assertIsDisplayed()
+        // Antarctica would be the row after Oceania; the list is scrolled to its end to prove it is not there.
+        rule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("stats_continent_oceania"))
+        rule.onNodeWithTag("stats_continent_oceania").assertIsDisplayed()
+        rule.onNodeWithTag("stats_continent_antarctica").assertDoesNotExist()
+    }
+
+    @Test
+    fun explore_andFlashcards_stillIncludeAntarctica() {
+        rule.onNodeWithText("33 Countries").assertIsDisplayed()
+        tab("flashcards")
+        rule.onNodeWithText("Card 1 of 33").assertIsDisplayed()
+    }
+
+    @Test
+    fun capitalQuiz_neverOffersAnAntarcticanCapital() {
+        startQuizIn(QuizMode.CAPITAL)
+        val q = viewModel.quizSession.value!!.current
+
+        assertTrue(q.options.none { it.contains("McMurdo") || it.contains("Antarctic") })
+        assertEquals(q.targetCountry.quizCapital, q.options[q.correctAnswerIndex])
     }
 
     @Test

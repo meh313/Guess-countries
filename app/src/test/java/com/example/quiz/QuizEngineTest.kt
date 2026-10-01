@@ -11,7 +11,7 @@ class QuizEngineTest {
 
     @Test
     fun poolFor_matchesTheDatasetsContinentCounts() {
-        assertEquals(allCountries.size, QuizEngine.poolFor("Global", allCountries).size)
+        assertEquals(allCountries.count { it.isSovereign }, QuizEngine.poolFor("Global", allCountries).size)
         assertEquals(6, QuizEngine.poolFor("Africa", allCountries).size)
         assertEquals(7, QuizEngine.poolFor("Americas", allCountries).size)
         assertEquals(7, QuizEngine.poolFor("Asia", allCountries).size)
@@ -162,5 +162,48 @@ class QuizEngineTest {
     fun onlyTheSpeedRoundIsTimed() {
         assertEquals(listOf(QuizMode.SPEED_MATCH), QuizMode.entries.filter { it.timeLimitSeconds != null })
         assertEquals(10, QuizMode.SPEED_MATCH.timeLimitSeconds)
+    }
+
+    @Test
+    fun poolFor_leavesOutEntriesThatAreNotSovereignStates() {
+        assertEquals(listOf("AQ"), allCountries.filter { !it.isSovereign }.map { it.code })
+        for (scope in QuizEngine.SCOPES + "Antarctica") {
+            val pool = QuizEngine.poolFor(scope, allCountries)
+            assertTrue("scope=$scope", pool.all { it.isSovereign })
+        }
+        assertEquals(allCountries.size - 1, QuizEngine.poolFor("Global", allCountries).size)
+        assertTrue(QuizEngine.poolFor("Antarctica", allCountries).isEmpty())
+    }
+
+    @Test
+    fun antarcticaIsNeverAskedAboutNorOfferedAsAnAnswer() {
+        val pool = QuizEngine.poolFor("Global", allCountries)
+        repeat(40) {
+            for (mode in QuizMode.entries) {
+                QuizEngine.generate(pool, mode).forEach { q ->
+                    assertTrue("mode=$mode asked about Antarctica", q.targetCountry.code != "AQ")
+                    assertTrue("mode=$mode offered Antarctica", "Antarctica" !in q.options)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun capitalQuestions_askForTheSingleQuizCapital() {
+        val pool = allCountries.filter { it.code in setOf("ZA", "FR", "DE", "IT") }
+        val question = QuizEngine.generate(pool, QuizMode.CAPITAL).single { it.targetCountry.code == "ZA" }
+
+        assertEquals("Pretoria", question.correctOption())
+        assertTrue("options: ${question.options}", question.options.none { it.contains("/") })
+    }
+
+    @Test
+    fun everyCapitalQuestionHasOneCityPerOption() {
+        repeat(20) {
+            QuizEngine.generate(QuizEngine.poolFor("Global", allCountries), QuizMode.CAPITAL).forEach { q ->
+                assertEquals(q.targetCountry.quizCapital, q.correctOption())
+                assertTrue(q.options.toString(), q.options.none { it.contains("/") })
+            }
+        }
     }
 }

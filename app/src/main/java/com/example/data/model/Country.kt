@@ -17,7 +17,14 @@ data class Country(
     val currency: String,
     val landmarks: List<String>,
     val funFact: String,
-    val driveSide: String = "Right"
+    val driveSide: String = "Right",
+    /** The one city a capital quiz accepts; differs from [capital] where several cities share the role. */
+    val quizCapital: String = capital,
+    /**
+     * False for Antarctica: a continent with no government, capital, currency or official flag. It stays
+     * browsable but is left out of quizzes and mastery totals.
+     */
+    val isSovereign: Boolean = true
 )
 
 enum class FlagStyle {

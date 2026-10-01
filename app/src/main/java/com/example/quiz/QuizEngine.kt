@@ -51,12 +51,15 @@ object QuizEngine {
     fun effectiveScope(mode: QuizMode, requested: String): String =
         if (mode.usesWholeWorld) "Global" else requested
 
-    fun poolFor(scope: String, countries: List<Country>): List<Country> =
-        if (scope == "Global") {
-            countries
+    /** The countries a quiz in [scope] can ask about. Non-sovereign entries such as Antarctica never appear. */
+    fun poolFor(scope: String, countries: List<Country>): List<Country> {
+        val sovereign = countries.filter { it.isSovereign }
+        return if (scope == "Global") {
+            sovereign
         } else {
-            countries.filter { it.continent.equals(scope, ignoreCase = true) }
+            sovereign.filter { it.continent.equals(scope, ignoreCase = true) }
         }
+    }
 
     /** Number of questions a quiz over [poolSize] countries has; 0 when the pool is too small. */
     fun questionCount(poolSize: Int): Int =
@@ -78,7 +81,7 @@ object QuizEngine {
             QuizMode.FLAG_NAME ->
                 choice(target, "Which country does this flag belong to?", target.name, wrongAnswers(pool, target, random) { it.name }, random)
             QuizMode.CAPITAL ->
-                choice(target, "What is the capital city of ${target.name}?", target.capital, wrongAnswers(pool, target, random) { it.capital }, random)
+                choice(target, "What is the capital city of ${target.name}?", target.quizCapital, wrongAnswers(pool, target, random) { it.quizCapital }, random)
             QuizMode.CONTINENT ->
                 choice(
                     target,

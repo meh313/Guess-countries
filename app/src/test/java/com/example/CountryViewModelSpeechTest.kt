@@ -74,6 +74,18 @@ class CountryViewModelSpeechTest {
     }
 
     @Test
+    fun speakCountryDetails_forAntarcticaDoesNotInventACapital() {
+        speech.setAvailable(true)
+        val antarctica = vm.repository.allCountries.single { it.code == "AQ" }
+
+        vm.speakCountryDetails(antarctica)
+
+        val text = speech.spoken.single().first
+        assertTrue("text was: $text", text.startsWith("Antarctica. Located in Antarctica."))
+        assertFalse(text, text.contains("Capital"))
+    }
+
+    @Test
     fun speakCountryDetails_saysNothingWhileSpeechIsUnavailable() {
         vm.speakCountryDetails(country)
 

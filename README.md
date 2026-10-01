@@ -54,6 +54,12 @@ The keystore and its passwords are never read from the repository.
 `CountryViewModel` receives its repository, speech engine and clock through the constructor, which is how
 the tests replace them.
 
+## Flag artwork
+
+Each flag is a lossless WebP in `res/drawable-nodpi/flag_xx.webp`, rendered from the MIT-licensed
+[flag-icons](https://github.com/lipis/flag-icons) SVGs (see `THIRD_PARTY_NOTICES.md`) and looked up by country code in
+`FlagArt.kt`. A country without artwork gets a placeholder with its flag emoji, and a test fails until it has art.
+
 ## Dependencies
 
 The versions in `gradle/libs.versions.toml` are the newest that build against compileSdk 36. Compose BOM 2026.08+, navigation 2.10+, lifecycle 2.11+ and core 1.19+ need compileSdk 37, so

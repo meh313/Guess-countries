@@ -2,6 +2,9 @@ package com.example.data.model
 
 /** The built-in country dataset, kept apart from the repository so editing data never touches logic. */
 object CountryCatalog {
+    /** The year the population figures estimate; shown next to them, since they are rounded estimates. */
+    const val DATA_YEAR = 2024
+
     val all: List<Country> = listOf(
         // EUROPE
         Country(
@@ -74,7 +77,8 @@ object CountryCatalog {
             languages = listOf("English"),
             currency = "Pound Sterling (£)",
             landmarks = listOf("Big Ben", "Stonehenge", "Tower Bridge"),
-            funFact = "The BBC is the oldest national broadcasting organization in the world, founded in 1922."
+            funFact = "The BBC is the oldest national broadcasting organization in the world, founded in 1922.",
+            driveSide = "Left"
         ),
         Country(
             code = "ES",
@@ -312,7 +316,8 @@ object CountryCatalog {
             languages = listOf("Japanese"),
             currency = "Japanese Yen (¥)",
             landmarks = listOf("Mount Fuji", "Fushimi Inari Shrine", "Tokyo Tower"),
-            funFact = "Tokyo is the world's most populous metropolitan area, home to over 37 million residents."
+            funFact = "Tokyo is the world's most populous metropolitan area, home to over 37 million residents.",
+            driveSide = "Left"
         ),
         Country(
             code = "CN",
@@ -348,7 +353,8 @@ object CountryCatalog {
             languages = listOf("Hindi", "English"),
             currency = "Indian Rupee (₹)",
             landmarks = listOf("Taj Mahal", "Varanasi Ghats", "Amber Palace"),
-            funFact = "India is the world's most populous democracy and the origin birthplace of four major world religions: Hinduism, Buddhism, Jainism, and Sikhism."
+            funFact = "India is the world's most populous democracy and the origin birthplace of four major world religions: Hinduism, Buddhism, Jainism, and Sikhism.",
+            driveSide = "Left"
         ),
         Country(
             code = "KR",
@@ -402,7 +408,8 @@ object CountryCatalog {
             languages = listOf("Thai"),
             currency = "Thai Baht (฿)",
             landmarks = listOf("Grand Palace Bangkok", "Wat Arun", "Phi Phi Islands"),
-            funFact = "Bangkok's full ceremonial ceremonial ritual name is 168 letters long, making it the longest place name in the world."
+            funFact = "Bangkok's full ceremonial ceremonial ritual name is 168 letters long, making it the longest place name in the world.",
+            driveSide = "Left"
         ),
         Country(
             code = "SA",
@@ -458,7 +465,8 @@ object CountryCatalog {
             languages = listOf("Swahili", "English"),
             currency = "Kenyan Shilling (KSh)",
             landmarks = listOf("Maasai Mara National Reserve", "Mount Kenya", "Amboseli National Park"),
-            funFact = "Kenya is home to the Great Wildebeest Migration, where over 1.5 million animals cross the Mara River every year."
+            funFact = "Kenya is home to the Great Wildebeest Migration, where over 1.5 million animals cross the Mara River every year.",
+            driveSide = "Left"
         ),
         Country(
             code = "ZA",
@@ -476,7 +484,9 @@ object CountryCatalog {
             languages = listOf("Zulu", "Xhosa", "Afrikaans", "English", "Sotho + 7 more"),
             currency = "South African Rand (R)",
             landmarks = listOf("Table Mountain", "Kruger National Park", "Robben Island"),
-            funFact = "South Africa is the only country in the world with three official capital cities: Pretoria (Executive), Cape Town (Legislative), and Bloemfontein (Judicial)."
+            funFact = "South Africa is the only country in the world with three official capital cities: Pretoria (Executive), Cape Town (Legislative), and Bloemfontein (Judicial).",
+            driveSide = "Left",
+            quizCapital = "Pretoria"
         ),
         Country(
             code = "NG",
@@ -530,7 +540,8 @@ object CountryCatalog {
             languages = listOf("Swahili", "English"),
             currency = "Tanzanian Shilling (TSh)",
             landmarks = listOf("Mount Kilimanjaro", "Serengeti National Park", "Zanzibar Beaches"),
-            funFact = "Tanzania contains Mount Kilimanjaro, Africa's highest mountain peak at 5,895 meters above sea level."
+            funFact = "Tanzania contains Mount Kilimanjaro, Africa's highest mountain peak at 5,895 meters above sea level.",
+            driveSide = "Left"
         ),
 
         // OCEANIA
@@ -550,7 +561,8 @@ object CountryCatalog {
             languages = listOf("English"),
             currency = "Australian Dollar (A$)",
             landmarks = listOf("Sydney Opera House", "Great Barrier Reef", "Uluru (Ayers Rock)"),
-            funFact = "Australia is home to over 80% of unique mammals, reptiles, and plants found nowhere else on Earth."
+            funFact = "Australia is home to over 80% of unique mammals, reptiles, and plants found nowhere else on Earth.",
+            driveSide = "Left"
         ),
         Country(
             code = "NZ",
@@ -568,7 +580,8 @@ object CountryCatalog {
             languages = listOf("English", "Māori"),
             currency = "New Zealand Dollar (NZ$)",
             landmarks = listOf("Milford Sound", "Hobbiton Movie Set", "Aoraki / Mount Cook"),
-            funFact = "New Zealand was the first country in the world to grant all women the right to vote in parliamentary elections in 1893."
+            funFact = "New Zealand was the first country in the world to grant all women the right to vote in parliamentary elections in 1893.",
+            driveSide = "Left"
         ),
         Country(
             code = "FJ",
@@ -586,7 +599,8 @@ object CountryCatalog {
             languages = listOf("English", "Fijian", "Fiji Hindi"),
             currency = "Fijian Dollar (FJ$)",
             landmarks = listOf("Mamanuca Islands", "Sri Siva Subramaniya Temple", "Bouma National Heritage Park"),
-            funFact = "Fiji consists of an archipelago of more than 330 islands, of which only about 110 are permanently inhabited."
+            funFact = "Fiji consists of an archipelago of more than 330 islands, of which only about 110 are permanently inhabited.",
+            driveSide = "Left"
         ),
 
         // ANTARCTICA
@@ -606,7 +620,9 @@ object CountryCatalog {
             languages = listOf("English", "Russian", "Spanish", "French"),
             currency = "Antarctic Dollar / USD",
             landmarks = listOf("South Pole Station", "Blood Falls", "Mount Erebus Volcano"),
-            funFact = "Antarctica holds 70% of the world's fresh water and 90% of the world's ice, making it the coldest, windiest, and driest continent on Earth."
+            funFact = "Antarctica holds 70% of the world's fresh water and 90% of the world's ice, making it the coldest, windiest, and driest continent on Earth.",
+            driveSide = "N/A",
+            isSovereign = false
         )
     )
 }

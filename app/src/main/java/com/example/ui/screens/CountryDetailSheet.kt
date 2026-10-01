@@ -54,7 +54,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.local.UserProgressEntity
 import com.example.data.model.Country
-import com.example.ui.components.rememberNumberFormat
+import com.example.ui.components.formatArea
+import com.example.ui.components.formatPopulation
+import com.example.ui.components.rememberCompactNumberFormat
 import androidx.compose.ui.text.style.TextOverflow
 import com.example.ui.components.FlagView
 import com.example.ui.components.getContinentColor
@@ -71,7 +73,7 @@ fun CountryDetailSheet(
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val isFavorite = progress?.isFavorite == true
-    val numberFormat = rememberNumberFormat()
+    val compactNumbers = rememberCompactNumberFormat()
     val continentColor = getContinentColor(country.continent)
 
     ModalBottomSheet(
@@ -216,7 +218,7 @@ fun CountryDetailSheet(
                 DetailMetricCard(
                     icon = Icons.Default.People,
                     label = "Population",
-                    value = numberFormat.format(country.population),
+                    value = formatPopulation(compactNumbers, country.population),
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -226,8 +228,8 @@ fun CountryDetailSheet(
             Row(modifier = Modifier.fillMaxWidth()) {
                 DetailMetricCard(
                     icon = Icons.Default.Public,
-                    label = "Land Area",
-                    value = "${numberFormat.format(country.areaSqKm)} km²",
+                    label = "Total Area",
+                    value = formatArea(compactNumbers, country.areaSqKm),
                     modifier = Modifier.weight(1f)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
@@ -244,7 +246,7 @@ fun CountryDetailSheet(
             Row(modifier = Modifier.fillMaxWidth()) {
                 DetailMetricCard(
                     icon = Icons.Default.Language,
-                    label = "Official Languages",
+                    label = "Languages",
                     value = country.languages.joinToString(", "),
                     modifier = Modifier.weight(1f)
                 )

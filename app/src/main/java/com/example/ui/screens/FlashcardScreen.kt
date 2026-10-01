@@ -76,7 +76,8 @@ import com.example.data.model.SortOption
 import com.example.flashcards.FlashcardDeck
 import com.example.ui.components.FlagView
 import com.example.ui.components.getContinentColor
-import com.example.ui.components.rememberNumberFormat
+import com.example.ui.components.formatPopulation
+import com.example.ui.components.rememberCompactNumberFormat
 import com.example.ui.theme.MasteredColor
 import com.example.ui.theme.NeedsPracticeColor
 import com.example.ui.viewmodel.CountryViewModel
@@ -392,7 +393,7 @@ private fun FlipCard(
     modifier: Modifier = Modifier
 ) {
     val continentColor = getContinentColor(country.continent)
-    val numberFormat = rememberNumberFormat()
+    val compactNumbers = rememberCompactNumberFormat()
     // Read lazily: the animation only invalidates the graphics layer, and this flips once at 90 degrees.
     val showBack by remember(rotation) { derivedStateOf { rotation.value > 90f } }
 
@@ -552,7 +553,7 @@ private fun FlipCard(
                         CardDetailPill(
                             icon = Icons.Default.People,
                             title = "Population",
-                            detail = numberFormat.format(country.population),
+                            detail = formatPopulation(compactNumbers, country.population),
                             modifier = Modifier.weight(1f)
                         )
                     }
