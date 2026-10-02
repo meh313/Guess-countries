@@ -344,7 +344,9 @@ class LayoutAndSemanticsUiTest {
         rule.openTab("flashcards")
         rule.onNodeWithTag("flashcard_flip_card").performClick()
         rule.waitForIdle()
-        rule.onNodeWithText(longest.flagDescription).performScrollTo().assertIsDisplayed()
+        // The flip card is clickable, so its text is merged into the card's own node, which does not scroll;
+        // the unmerged node is the one inside the scrolling column.
+        rule.onNodeWithText(longest.flagDescription, useUnmergedTree = true).performScrollTo().assertIsDisplayed()
 
         rule.openTab("explore")
         rule.onNodeWithTag(card).performClick()

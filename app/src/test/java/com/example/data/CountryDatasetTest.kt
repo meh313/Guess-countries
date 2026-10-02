@@ -138,11 +138,11 @@ class CountryDatasetTest {
     private fun country(code: String) = allCountries.single { it.code == code }
 
     @Test
-    fun thailandsFlagIsDescribedAsFiveStripes() {
+    fun thailandsFlagTextExplainsTheStripesAndTheKingWhoChoseThem() {
         val flag = country("TH").flagDescription
-        assertTrue(flag, flag.startsWith("Five horizontal stripes"))
+        assertTrue(flag, flag.contains("Vajiravudh"))
+        assertTrue(flag, flag.contains("stripes") && flag.contains("blue"))
         assertTrue(flag, !flag.contains("Trairanga"))
-        assertTrue(flag, flag.contains("Trairong"))
     }
 
     @Test
