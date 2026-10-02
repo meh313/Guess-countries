@@ -333,6 +333,26 @@ class LayoutAndSemanticsUiTest {
         assertLongestRegionPillStaysOnTheFlagAndClearOfTheBookmark()
 
     @Test
+    @Config(sdk = [36], qualifiers = "w360dp-h640dp-xxhdpi", fontScale = 1.5f)
+    fun longestFlagText_canBeReadInFullOnTheFlashcardAndInTheDetailSheet() {
+        val longest = allCountries.maxByOrNull { it.flagDescription.length }!!
+        val card = "country_card_${longest.code.lowercase()}"
+        rule.onNodeWithTag("search_country_input").performTextInput(longest.name)
+        rule.eventually("the ${longest.name} card") { rule.onNodeWithTag(card).assertIsDisplayed() }
+
+        // The flashcard deck follows the Explore filter, so this country is card 1.
+        rule.openTab("flashcards")
+        rule.onNodeWithTag("flashcard_flip_card").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithText(longest.flagDescription).performScrollTo().assertIsDisplayed()
+
+        rule.openTab("explore")
+        rule.onNodeWithTag(card).performClick()
+        rule.waitForIdle()
+        rule.onNodeWithText(longest.flagDescription).performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
     @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
     fun countryCount_usesTheSingularForExactlyOne() {
         rule.onNodeWithText("33 Countries").assertIsDisplayed()
