@@ -116,7 +116,7 @@ class CountryDatasetTest {
         val volatile = Regex("\\b(currently|nowadays|these days|this year|recently|fastest|most visited)\\b", RegexOption.IGNORE_CASE)
         allCountries.forEach {
             assertTrue("${it.code} fun fact is ${it.funFact.length} chars", it.funFact.length <= 160)
-            assertTrue("${it.code} flag description is ${it.flagDescription.length} chars", it.flagDescription.length <= 230)
+            assertTrue("${it.code} flag description is ${it.flagDescription.length} chars", it.flagDescription.length <= 450)
             assertTrue("${it.code} fun fact ages badly: '${it.funFact}'", volatile.find(it.funFact) == null)
         }
     }
@@ -138,11 +138,11 @@ class CountryDatasetTest {
     private fun country(code: String) = allCountries.single { it.code == code }
 
     @Test
-    fun thailandsFlagIsDescribedAsFiveStripes() {
+    fun thailandsFlagTextExplainsTheStripesAndTheKingWhoChoseThem() {
         val flag = country("TH").flagDescription
-        assertTrue(flag, flag.startsWith("Five horizontal stripes"))
+        assertTrue(flag, flag.contains("Vajiravudh"))
+        assertTrue(flag, flag.contains("stripes") && flag.contains("blue"))
         assertTrue(flag, !flag.contains("Trairanga"))
-        assertTrue(flag, flag.contains("Trairong"))
     }
 
     @Test
@@ -192,6 +192,29 @@ class CountryDatasetTest {
         allCountries.forEach {
             val digits = it.population.toString().trimEnd('0')
             assertTrue("${it.code}: ${it.population} is exactly on a rounding tie", !(digits.length == 3 && digits.endsWith("5")))
+        }
+    }
+
+    @Test
+    fun flagTextsExplainWhyAndDoNotOnlyDescribe() {
+        // The flag image is on screen next to the text, so the text should say why its features are there:
+        // history, who or what it came from, what it is said to mean. A text of pure layout fails this.
+        val reasonWords = Regex(
+            "because|stand|represent|symbol|honor|remember|commemorat|inspired|reflect|recall|refer|celebrat|" +
+                "reminds|linked|tradition|often said|official|adopted|chosen|comes? from|came from|taken from|" +
+                "copied|in memory|meaning|mean |means|for the|shows|show |marks|reminder|unity|freedom|independence",
+            RegexOption.IGNORE_CASE
+        )
+        allCountries.forEach {
+            assertTrue("${it.code} does not say why: '${it.flagDescription}'", reasonWords.containsMatchIn(it.flagDescription))
+            assertTrue("${it.code} is only ${it.flagDescription.length} chars, too short to explain", it.flagDescription.length >= 150)
+        }
+    }
+
+    @Test
+    fun flagTextsHaveNoLineBreaksOrDoubleQuotes() {
+        allCountries.forEach {
+            assertTrue("${it.code}", !it.flagDescription.contains('\n') && !it.flagDescription.contains('"'))
         }
     }
 }
