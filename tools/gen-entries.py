@@ -13,7 +13,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from catalog_codes import ENTRY, catalog_file, codes as catalog_codes, fold  # noqa: E402
 
-IMPORT = {}
+IMPORT = {'__file__': str(Path(__file__).resolve().parent / 'apply-edits.py')}
 exec((Path(__file__).resolve().parent / 'apply-edits.py').read_text().split("if __name__ == '__main__':")[0], IMPORT)
 render = IMPORT['render']
 

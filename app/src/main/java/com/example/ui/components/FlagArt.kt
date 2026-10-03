@@ -10,38 +10,74 @@ import com.example.R
  */
 @DrawableRes
 fun flagArtFor(code: String): Int? = when (code) {
+    "AD" -> R.drawable.flag_ad
+    "AL" -> R.drawable.flag_al
     "AQ" -> R.drawable.flag_aq
     "AR" -> R.drawable.flag_ar
+    "AT" -> R.drawable.flag_at
     "AU" -> R.drawable.flag_au
+    "BA" -> R.drawable.flag_ba
+    "BE" -> R.drawable.flag_be
+    "BG" -> R.drawable.flag_bg
     "BR" -> R.drawable.flag_br
+    "BY" -> R.drawable.flag_by
     "CA" -> R.drawable.flag_ca
+    "CH" -> R.drawable.flag_ch
     "CL" -> R.drawable.flag_cl
     "CN" -> R.drawable.flag_cn
     "CO" -> R.drawable.flag_co
+    "CZ" -> R.drawable.flag_cz
     "DE" -> R.drawable.flag_de
+    "DK" -> R.drawable.flag_dk
+    "EE" -> R.drawable.flag_ee
     "EG" -> R.drawable.flag_eg
     "ES" -> R.drawable.flag_es
+    "FI" -> R.drawable.flag_fi
     "FJ" -> R.drawable.flag_fj
     "FR" -> R.drawable.flag_fr
     "GB" -> R.drawable.flag_gb
     "GR" -> R.drawable.flag_gr
+    "HR" -> R.drawable.flag_hr
+    "HU" -> R.drawable.flag_hu
+    "IE" -> R.drawable.flag_ie
     "IN" -> R.drawable.flag_in
+    "IS" -> R.drawable.flag_is
     "IT" -> R.drawable.flag_it
     "JP" -> R.drawable.flag_jp
     "KE" -> R.drawable.flag_ke
     "KR" -> R.drawable.flag_kr
+    "LI" -> R.drawable.flag_li
+    "LT" -> R.drawable.flag_lt
+    "LU" -> R.drawable.flag_lu
+    "LV" -> R.drawable.flag_lv
     "MA" -> R.drawable.flag_ma
+    "MC" -> R.drawable.flag_mc
+    "MD" -> R.drawable.flag_md
+    "ME" -> R.drawable.flag_me
+    "MK" -> R.drawable.flag_mk
+    "MT" -> R.drawable.flag_mt
     "MX" -> R.drawable.flag_mx
     "NG" -> R.drawable.flag_ng
+    "NL" -> R.drawable.flag_nl
     "NO" -> R.drawable.flag_no
     "NZ" -> R.drawable.flag_nz
+    "PL" -> R.drawable.flag_pl
+    "PT" -> R.drawable.flag_pt
+    "RO" -> R.drawable.flag_ro
+    "RS" -> R.drawable.flag_rs
+    "RU" -> R.drawable.flag_ru
     "SA" -> R.drawable.flag_sa
     "SE" -> R.drawable.flag_se
+    "SI" -> R.drawable.flag_si
+    "SK" -> R.drawable.flag_sk
+    "SM" -> R.drawable.flag_sm
     "TH" -> R.drawable.flag_th
     "TZ" -> R.drawable.flag_tz
     "UA" -> R.drawable.flag_ua
     "US" -> R.drawable.flag_us
+    "VA" -> R.drawable.flag_va
     "VN" -> R.drawable.flag_vn
+    "XK" -> R.drawable.flag_xk
     "ZA" -> R.drawable.flag_za
     else -> null
 }

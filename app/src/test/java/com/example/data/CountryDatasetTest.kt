@@ -70,7 +70,7 @@ class CountryDatasetTest {
      * (Wikipedia "Left- and right-hand traffic"); everything else in the catalog drives on the right.
      */
     private val leftHandTraffic = mapOf(
-        "Europe" to setOf("GB"),
+        "Europe" to setOf("GB", "IE", "MT"),
         "Asia" to setOf("JP", "IN", "TH"),
         "Africa" to setOf("KE", "ZA", "TZ"),
         "Americas" to emptySet(),

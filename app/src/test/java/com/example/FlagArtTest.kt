@@ -109,6 +109,43 @@ class FlagArtTest {
         "NZ" to listOf(Anchor(0.02f, 0.75f, 0.4f, 0.98f, "blue"), Anchor(0.55f, 0.75f, 0.98f, 0.98f, "blue")),
         "FJ" to listOf(Anchor(0.55f, 0.02f, 0.98f, 0.4f, "blue"), Anchor(0.05f, 0.7f, 0.4f, 0.98f, "blue")),
         "AQ" to listOf(Anchor(0f, 0f, 0.08f, 0.08f, "blue"), Anchor(0.45f, 0.45f, 0.55f, 0.55f, "white")),
+        // Europe batch
+        "NL" to listOf(Anchor(0.02f, 0.02f, 0.98f, 0.3f, "red"), Anchor(0.02f, 0.37f, 0.98f, 0.63f, "white"), Anchor(0.02f, 0.7f, 0.98f, 0.98f, "blue")),
+        "LU" to listOf(Anchor(0.02f, 0.02f, 0.98f, 0.3f, "red"), Anchor(0.02f, 0.37f, 0.98f, 0.63f, "white"), Anchor(0.02f, 0.7f, 0.98f, 0.98f, "blue")),
+        "RU" to listOf(Anchor(0.02f, 0.02f, 0.98f, 0.3f, "white"), Anchor(0.02f, 0.37f, 0.98f, 0.63f, "blue"), Anchor(0.02f, 0.7f, 0.98f, 0.98f, "red")),
+        "RS" to listOf(Anchor(0.55f, 0.02f, 0.98f, 0.3f, "red"), Anchor(0.55f, 0.37f, 0.98f, 0.63f, "blue"), Anchor(0.55f, 0.7f, 0.98f, 0.98f, "white")),
+        "SI" to listOf(Anchor(0.55f, 0.02f, 0.98f, 0.3f, "white"), Anchor(0.55f, 0.37f, 0.98f, 0.63f, "blue"), Anchor(0.55f, 0.7f, 0.98f, 0.98f, "red")),
+        "SK" to listOf(Anchor(0.55f, 0.02f, 0.98f, 0.3f, "white"), Anchor(0.55f, 0.37f, 0.98f, 0.63f, "blue"), Anchor(0.55f, 0.7f, 0.98f, 0.98f, "red")),
+        "HR" to listOf(Anchor(0.02f, 0.02f, 0.3f, 0.3f, "red"), Anchor(0.02f, 0.4f, 0.3f, 0.6f, "white"), Anchor(0.02f, 0.7f, 0.3f, 0.98f, "blue")),
+        "MC" to listOf(Anchor(0.02f, 0.02f, 0.98f, 0.45f, "red"), Anchor(0.02f, 0.55f, 0.98f, 0.98f, "white")),
+        "PL" to listOf(Anchor(0.02f, 0.02f, 0.98f, 0.45f, "white"), Anchor(0.02f, 0.55f, 0.98f, 0.98f, "red")),
+        "IE" to listOf(Anchor(0.02f, 0.1f, 0.3f, 0.9f, "green"), Anchor(0.37f, 0.1f, 0.63f, 0.9f, "white"), Anchor(0.7f, 0.1f, 0.98f, 0.9f, "orange")),
+        "RO" to listOf(Anchor(0.02f, 0.1f, 0.3f, 0.9f, "blue"), Anchor(0.37f, 0.1f, 0.63f, 0.9f, "yellow"), Anchor(0.7f, 0.1f, 0.98f, 0.9f, "red")),
+        "AD" to listOf(Anchor(0.02f, 0.1f, 0.3f, 0.9f, "blue"), Anchor(0.37f, 0.02f, 0.63f, 0.2f, "yellow"), Anchor(0.7f, 0.1f, 0.98f, 0.9f, "red")),
+        "MD" to listOf(Anchor(0.02f, 0.1f, 0.3f, 0.9f, "blue"), Anchor(0.37f, 0.02f, 0.63f, 0.15f, "yellow"), Anchor(0.7f, 0.1f, 0.98f, 0.9f, "red")),
+        "HU" to listOf(Anchor(0.02f, 0.02f, 0.98f, 0.3f, "red"), Anchor(0.02f, 0.37f, 0.98f, 0.63f, "white"), Anchor(0.02f, 0.7f, 0.98f, 0.98f, "green")),
+        "BG" to listOf(Anchor(0.02f, 0.02f, 0.98f, 0.3f, "white"), Anchor(0.02f, 0.37f, 0.98f, 0.63f, "green"), Anchor(0.02f, 0.7f, 0.98f, 0.98f, "red")),
+        "AT" to listOf(Anchor(0.02f, 0.02f, 0.98f, 0.3f, "red"), Anchor(0.02f, 0.37f, 0.98f, 0.63f, "white"), Anchor(0.02f, 0.7f, 0.98f, 0.98f, "red")),
+        "LV" to listOf(Anchor(0.02f, 0.02f, 0.98f, 0.35f, "red"), Anchor(0.02f, 0.42f, 0.98f, 0.58f, "white"), Anchor(0.02f, 0.65f, 0.98f, 0.98f, "red")),
+        "BE" to listOf(Anchor(0.02f, 0.1f, 0.3f, 0.9f, "black"), Anchor(0.37f, 0.1f, 0.63f, 0.9f, "yellow"), Anchor(0.7f, 0.1f, 0.98f, 0.9f, "red")),
+        "LT" to listOf(Anchor(0.02f, 0.37f, 0.98f, 0.63f, "green"), Anchor(0.02f, 0.7f, 0.98f, 0.98f, "red")),
+        "EE" to listOf(Anchor(0.02f, 0.02f, 0.98f, 0.3f, "blue"), Anchor(0.02f, 0.37f, 0.98f, 0.63f, "black"), Anchor(0.02f, 0.7f, 0.98f, 0.98f, "white")),
+        "DK" to listOf(Anchor(0.02f, 0.02f, 0.25f, 0.4f, "red"), Anchor(0.02f, 0.42f, 0.98f, 0.58f, "white"), Anchor(0.5f, 0.62f, 0.98f, 0.98f, "red")),
+        "FI" to listOf(Anchor(0.02f, 0.02f, 0.25f, 0.4f, "white"), Anchor(0.02f, 0.42f, 0.98f, 0.58f, "blue"), Anchor(0.5f, 0.62f, 0.98f, 0.98f, "white")),
+        "IS" to listOf(Anchor(0.02f, 0.02f, 0.2f, 0.3f, "blue"), Anchor(0.02f, 0.44f, 0.98f, 0.56f, "red"), Anchor(0.5f, 0.62f, 0.98f, 0.98f, "blue")),
+        "CZ" to listOf(Anchor(0.02f, 0.4f, 0.3f, 0.6f, "blue"), Anchor(0.6f, 0.02f, 0.98f, 0.45f, "white"), Anchor(0.6f, 0.55f, 0.98f, 0.98f, "red")),
+        "PT" to listOf(Anchor(0.02f, 0.1f, 0.25f, 0.9f, "green"), Anchor(0.7f, 0.1f, 0.98f, 0.9f, "red")),
+        "MT" to listOf(Anchor(0.02f, 0.3f, 0.45f, 0.9f, "white"), Anchor(0.55f, 0.1f, 0.98f, 0.9f, "red")),
+        "VA" to listOf(Anchor(0.02f, 0.1f, 0.45f, 0.9f, "yellow"), Anchor(0.55f, 0.02f, 0.98f, 0.2f, "white")),
+        "CH" to listOf(Anchor(0.02f, 0.02f, 0.2f, 0.2f, "red"), Anchor(0.47f, 0.47f, 0.53f, 0.53f, "white"), Anchor(0.8f, 0.8f, 0.98f, 0.98f, "red")),
+        "XK" to listOf(Anchor(0.02f, 0.02f, 0.98f, 0.2f, "blue"), Anchor(0.02f, 0.8f, 0.98f, 0.98f, "blue")),
+        "AL" to listOf(Anchor(0.02f, 0.02f, 0.2f, 0.98f, "red"), Anchor(0.8f, 0.02f, 0.98f, 0.98f, "red")),
+        "BY" to listOf(Anchor(0.2f, 0.02f, 0.98f, 0.6f, "red"), Anchor(0.2f, 0.75f, 0.98f, 0.98f, "green")),
+        "BA" to listOf(Anchor(0.02f, 0.02f, 0.2f, 0.3f, "blue"), Anchor(0.02f, 0.7f, 0.5f, 0.98f, "blue"), Anchor(0.45f, 0.1f, 0.55f, 0.3f, "yellow")),
+        "ME" to listOf(Anchor(0.08f, 0.08f, 0.3f, 0.3f, "red"), Anchor(0.7f, 0.7f, 0.92f, 0.92f, "red")),
+        "MK" to listOf(Anchor(0f, 0f, 0.06f, 0.06f, "red"), Anchor(0.45f, 0.45f, 0.55f, 0.55f, "yellow")),
+        "LI" to listOf(Anchor(0.4f, 0.02f, 0.98f, 0.45f, "blue"), Anchor(0.02f, 0.55f, 0.98f, 0.98f, "red")),
+        "SM" to listOf(Anchor(0.02f, 0.02f, 0.98f, 0.2f, "white"), Anchor(0.02f, 0.8f, 0.98f, 0.98f, "blue")),
     )
 
     /**
@@ -117,7 +154,11 @@ class FlagArtTest {
      */
     private val requiredAnchors = setOf(
         "FR", "DE", "IT", "GB", "ES", "GR", "SE", "NO", "UA", "US", "CA", "MX", "BR", "AR", "CO", "CL", "JP", "CN",
-        "IN", "KR", "VN", "TH", "SA", "EG", "KE", "ZA", "NG", "MA", "TZ", "AU", "NZ", "FJ", "AQ"
+        "IN", "KR", "VN", "TH", "SA", "EG", "KE", "ZA", "NG", "MA", "TZ", "AU", "NZ", "FJ", "AQ",
+        // Europe: look-alike bands (NL/LU/RU, RS/SI/SK/HR, MC/PL, IE, RO/AD/MD, HU/BG, AT/LV, BE, LT/EE, the Nordic crosses, CZ) and the rest
+        "AL", "AD", "AT", "BY", "BE", "BA", "BG", "HR", "CZ", "DK", "EE", "FI",
+        "HU", "IS", "IE", "XK", "LV", "LI", "LT", "LU", "MT", "MD", "MC", "ME",
+        "NL", "MK", "PL", "PT", "RO", "RU", "SM", "RS", "SK", "SI", "CH", "VA"
     )
 
     @Test

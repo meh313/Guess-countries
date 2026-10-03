@@ -50,7 +50,7 @@ def apply(edits):
     for e in edits:
         code, field, value = e['code'], e['field'], e['value']
         for path, src in files.items():
-            m = re.search(r'^        Country\(\n            code = "' + code + r'"\n(?:            .*\n)+?        \)', src, re.M)
+            m = re.search(r'^        Country\(\n            code = "' + code + r'",?\n(?:            .*\n)+?        \)', src, re.M)
             if not m:
                 continue
             block = m.group(0)
