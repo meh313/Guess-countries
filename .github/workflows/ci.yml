@@ -42,7 +42,7 @@ jobs:
 
       - name: Upload reports
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: reports
           path: |
@@ -53,7 +53,7 @@ jobs:
       # Pictures of every screen, taken by ScreenshotsTest, so a change can be looked at from the run page.
       - name: Upload screenshots
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: screenshots
           path: app/build/screenshots/
