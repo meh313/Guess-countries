@@ -27,6 +27,12 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import androidx.lifecycle.ViewModelProvider
 import com.example.quiz.allCountries
+import org.junit.Assert.assertFalse
+import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.semantics.SemanticsActions
+import com.example.data.model.CountryRepository
+import com.example.quiz.byName
 import com.example.support.FreshDatabaseRule
 import com.example.support.boundsOf
 import com.example.support.contrastRatio
@@ -67,7 +73,7 @@ class LayoutAndSemanticsUiTest {
     // ---- Explore grid -------------------------------------------------------------------------
 
     /** Card tags in the Explore tab's default order (by name), straight from the catalog. */
-    private val cardsByName get() = allCountries.sortedBy { it.name }.map { "country_card_${it.code.lowercase()}" }
+    private val cardsByName get() = byName.map { "country_card_${it.code.lowercase()}" }
 
     @Test
     @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
@@ -340,8 +346,14 @@ class LayoutAndSemanticsUiTest {
         rule.onNodeWithTag("search_country_input").performTextInput(longest.name)
         rule.eventually("the ${longest.name} card") { rule.onNodeWithTag(card).assertIsDisplayed() }
 
-        // The flashcard deck follows the Explore filter, so this country is card 1.
+        // The flashcard deck follows the Explore filter; the search may match several countries ("Guinea",
+        // "Sudan"), so step to this one's place in the deck before flipping.
+        val shown = ViewModelProvider(rule.activity)[CountryViewModel::class.java].filteredCountries.value
         rule.openTab("flashcards")
+        repeat(shown.indexOfFirst { it.code == longest.code }) {
+            rule.onNodeWithTag("grade_mastered_btn").performClick()
+            rule.waitForIdle()
+        }
         rule.onNodeWithTag("flashcard_flip_card").performClick()
         rule.waitForIdle()
         // The flip card is clickable, so its text is merged into the card's own node, which does not scroll;
@@ -356,8 +368,22 @@ class LayoutAndSemanticsUiTest {
 
     @Test
     @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
+    fun countryCard_showsTheLongestNameWithoutCuttingItOff() {
+        val longest = allCountries.maxByOrNull { it.name.length }!!
+        rule.onNodeWithTag("search_country_input").performTextInput(longest.name)
+        rule.eventually("the ${longest.name} card") { rule.onNodeWithTag("country_card_${longest.code.lowercase()}").assertIsDisplayed() }
+
+        // The search field also holds the typed name, so pick the node that is not editable.
+        val node = rule.onNode(hasText(longest.name) and !hasSetTextAction(), useUnmergedTree = true).fetchSemanticsNode()
+        val layouts = mutableListOf<TextLayoutResult>()
+        node.config[SemanticsActions.GetTextLayoutResult].action!!.invoke(layouts)
+        assertFalse("'${longest.name}' is cut off on its card", layouts.single().hasVisualOverflow)
+    }
+
+    @Test
+    @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
     fun countryCount_usesTheSingularForExactlyOne() {
-        rule.onNodeWithText("33 Countries").assertIsDisplayed()
+        rule.onNodeWithText("${allCountries.size} Countries").assertIsDisplayed()
 
         rule.onNodeWithTag("search_country_input").performTextInput("Japan")
 
@@ -372,7 +398,7 @@ class LayoutAndSemanticsUiTest {
         rule.eventually("the empty state") { rule.onNodeWithText("No countries found").assertIsDisplayed() }
         rule.onNodeWithTag("explore_clear_filters_btn").performClick()
 
-        rule.eventually("the full list") { rule.onNodeWithText("33 Countries").assertIsDisplayed() }
+        rule.eventually("the full list") { rule.onNodeWithText("${allCountries.size} Countries").assertIsDisplayed() }
     }
 
     @Test
@@ -384,7 +410,7 @@ class LayoutAndSemanticsUiTest {
         rule.onNodeWithText("Tap the bookmark on any country to save it here").assertIsDisplayed()
 
         rule.onNodeWithTag("explore_clear_filters_btn").performClick()
-        rule.eventually("the full list") { rule.onNodeWithText("33 Countries").assertIsDisplayed() }
+        rule.eventually("the full list") { rule.onNodeWithText("${allCountries.size} Countries").assertIsDisplayed() }
     }
 
     @Test
@@ -395,7 +421,7 @@ class LayoutAndSemanticsUiTest {
         rule.onNodeWithText("Sort by Continent").performClick()
         rule.waitForIdle()
 
-        val expected = allCountries.sortedBy { it.continent }.take(4).map { "country_card_${it.code.lowercase()}" }
+        val expected = allCountries.sortedWith(CountryRepository.byContinentThenName).take(4).map { "country_card_${it.code.lowercase()}" }
         assertTrue("test needs the first cards to differ from the by-name order", expected != cardsByName.take(4))
         val cards = expected.map { rule.boundsOf(it) }
         cards.zipWithNext().forEachIndexed { i, (a, b) ->
@@ -447,7 +473,7 @@ class LayoutAndSemanticsUiTest {
     @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
     fun smallText_isNotStretchedToTheBodyLineHeight() {
         // The 10sp country-code chip used to inherit a 24sp line height and came out about 24dp tall.
-        val code = rule.onNodeWithText("AQ", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        val code = rule.onNodeWithText(byName.first().code, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
         assertTrue("code chip text is ${code.height / density}dp tall", code.height / density <= 16.5f)
     }
 
@@ -468,12 +494,12 @@ class LayoutAndSemanticsUiTest {
     @Test
     @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
     fun bookmarkButton_isAToggleThatReflectsItsState() {
-        val button = rule.onNodeWithTag("favorite_btn_ar")
+        val button = rule.onNodeWithTag("favorite_btn_${byName.first().code.lowercase()}")
         button.assertIsToggleable().assertIsOff()
 
         button.performClick()
 
-        rule.eventually("the bookmark to be saved") { rule.onNodeWithTag("favorite_btn_ar").assertIsOn() }
+        rule.eventually("the bookmark to be saved") { rule.onNodeWithTag("favorite_btn_${byName.first().code.lowercase()}").assertIsOn() }
     }
 
     @Test

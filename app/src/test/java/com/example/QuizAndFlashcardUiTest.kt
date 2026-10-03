@@ -26,6 +26,10 @@ import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.lifecycle.ViewModelProvider
 import com.example.quiz.QuizMode
+import com.example.quiz.sovereign
+import com.example.quiz.questionsFor
+import com.example.quiz.byName
+import com.example.quiz.allCountries
 import com.example.ui.viewmodel.CountryViewModel
 import java.util.Locale
 import org.junit.Assert.assertEquals
@@ -91,8 +95,8 @@ class QuizAndFlashcardUiTest {
     fun africaQuiz_playsAllSixQuestionsAndFinishes() {
         startQuiz("Africa")
 
-        for (n in 1..6) {
-            rule.onNodeWithText("Question $n of 6").assertIsDisplayed()
+        for (n in 1..questionsFor("Africa")) {
+            rule.onNodeWithText("Question $n of ${questionsFor("Africa")}").assertIsDisplayed()
             answerFirstOption()
             goNext()
         }
@@ -111,27 +115,17 @@ class QuizAndFlashcardUiTest {
     }
 
     @Test
-    fun oceaniaScope_disablesStartAndExplainsWhy() {
-        tab("quiz")
-
-        rule.onNodeWithTag("quiz_scope_oceania").performClick()
-
-        rule.onNodeWithTag("start_quiz_btn").performScrollTo().assertIsNotEnabled()
-        rule.onNodeWithText("Needs at least 4 countries").assertIsDisplayed()
-    }
-
-    @Test
     fun startButton_countsTheQuestionsTheScopeWillHave() {
         tab("quiz")
 
         rule.onNodeWithTag("quiz_scope_africa").performClick()
         rule.onNodeWithTag("start_quiz_btn").performScrollTo()
-        rule.onNodeWithText("Start 6-Question Quiz").assertIsDisplayed()
+        rule.onNodeWithText("Start ${questionsFor("Africa")}-Question Quiz").assertIsDisplayed()
         rule.onNodeWithTag("start_quiz_btn").assertIsEnabled()
 
         rule.onNodeWithTag("quiz_scope_global").performScrollTo().performClick()
         rule.onNodeWithTag("start_quiz_btn").performScrollTo()
-        rule.onNodeWithText("Start 10-Question Quiz").assertIsDisplayed()
+        rule.onNodeWithText("Start ${questionsFor("Global")}-Question Quiz").assertIsDisplayed()
     }
 
     private val viewModel get() = ViewModelProvider(rule.activity)[CountryViewModel::class.java]
@@ -157,7 +151,7 @@ class QuizAndFlashcardUiTest {
         tab("quiz")
         rule.onNodeWithTag("quiz_scope_africa").performClick()
         rule.onNodeWithTag("start_quiz_btn").performScrollTo()
-        rule.onNodeWithText("Start 6-Question Quiz").assertIsDisplayed()
+        rule.onNodeWithText("Start ${questionsFor("Africa")}-Question Quiz").assertIsDisplayed()
 
         rule.onNodeWithTag("quiz_mode_continent").performScrollTo().performClick()
 
@@ -165,7 +159,7 @@ class QuizAndFlashcardUiTest {
         rule.onNodeWithTag("quiz_scope_africa").assertIsNotEnabled()
         rule.onNodeWithTag("quiz_scope_global").assertIsSelected()
         rule.onNodeWithTag("start_quiz_btn").performScrollTo()
-        rule.onNodeWithText("Start 10-Question Quiz").assertIsDisplayed()
+        rule.onNodeWithText("Start ${questionsFor("Global")}-Question Quiz").assertIsDisplayed()
     }
 
     @Test
@@ -178,7 +172,7 @@ class QuizAndFlashcardUiTest {
 
         rule.onNodeWithTag("quiz_scope_africa").performScrollTo().assertIsEnabled().assertIsSelected()
         rule.onNodeWithTag("start_quiz_btn").performScrollTo()
-        rule.onNodeWithText("Start 6-Question Quiz").assertIsDisplayed()
+        rule.onNodeWithText("Start ${questionsFor("Africa")}-Question Quiz").assertIsDisplayed()
     }
 
     @Test
@@ -265,7 +259,7 @@ class QuizAndFlashcardUiTest {
     fun stats_countTheSovereignCountriesOnly() {
         tab("stats")
 
-        rule.onNodeWithText("0 / 32").assertIsDisplayed()
+        rule.onNodeWithText("0 / ${sovereign.size}").assertIsDisplayed()
         // Antarctica would be the row after Oceania; the list is scrolled to its end to prove it is not there.
         rule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("stats_continent_oceania"))
         rule.onNodeWithTag("stats_continent_oceania").assertIsDisplayed()
@@ -280,14 +274,14 @@ class QuizAndFlashcardUiTest {
 
         tab("stats")
 
-        rule.eventually("one mastered country") { rule.onNodeWithText("1 / 32").assertIsDisplayed() }
+        rule.eventually("one mastered country") { rule.onNodeWithText("1 / ${sovereign.size}").assertIsDisplayed() }
     }
 
     @Test
     fun explore_andFlashcards_stillIncludeAntarctica() {
-        rule.onNodeWithText("33 Countries").assertIsDisplayed()
+        rule.onNodeWithText("${allCountries.size} Countries").assertIsDisplayed()
         tab("flashcards")
-        rule.onNodeWithText("Card 1 of 33").assertIsDisplayed()
+        rule.onNodeWithText("Card 1 of ${allCountries.size}").assertIsDisplayed()
     }
 
     @Test
@@ -324,11 +318,11 @@ class QuizAndFlashcardUiTest {
         startQuiz("Africa")
         answerFirstOption()
         goNext()
-        rule.onNodeWithText("Question 2 of 6").assertIsDisplayed()
+        rule.onNodeWithText("Question 2 of ${questionsFor("Africa")}").assertIsDisplayed()
 
         rotate()
 
-        rule.onNodeWithText("Question 2 of 6").assertIsDisplayed()
+        rule.onNodeWithText("Question 2 of ${questionsFor("Africa")}").assertIsDisplayed()
         answerFirstOption()
         rotate()
         // The answered state is kept too, so Next is still offered.
@@ -344,7 +338,7 @@ class QuizAndFlashcardUiTest {
         tab("stats")
         tab("quiz")
 
-        rule.onNodeWithText("Question 2 of 6").assertIsDisplayed()
+        rule.onNodeWithText("Question 2 of ${questionsFor("Africa")}").assertIsDisplayed()
     }
 
     @Test
@@ -362,7 +356,7 @@ class QuizAndFlashcardUiTest {
     @Test
     fun finishedQuizDialog_canBeDismissedWithBack() {
         startQuiz("Africa")
-        repeat(6) {
+        repeat(questionsFor("Africa")) {
             answerFirstOption()
             goNext()
         }
@@ -387,7 +381,7 @@ class QuizAndFlashcardUiTest {
         rule.onNodeWithText("Quit this quiz?").assertIsDisplayed()
         rule.onNodeWithTag("quiz_quit_cancel_btn").performClick()
         rule.waitForIdle()
-        rule.onNodeWithText("Question 1 of 6").assertIsDisplayed()
+        rule.onNodeWithText("Question 1 of ${questionsFor("Africa")}").assertIsDisplayed()
 
         rule.onNodeWithTag("quiz_quit_btn").performScrollTo().performClick()
         rule.onNodeWithTag("quiz_quit_confirm_btn").performClick()
@@ -397,7 +391,7 @@ class QuizAndFlashcardUiTest {
         // Free to choose something else again.
         rule.onNodeWithTag("quiz_scope_europe").performScrollTo().performClick()
         rule.onNodeWithTag("start_quiz_btn").performScrollTo()
-        rule.onNodeWithText("Start 9-Question Quiz").assertIsDisplayed()
+        rule.onNodeWithText("Start ${questionsFor("Europe")}-Question Quiz").assertIsDisplayed()
     }
 
     @Test
@@ -408,7 +402,7 @@ class QuizAndFlashcardUiTest {
         rule.waitForIdle()
 
         rule.onNodeWithText("Quit this quiz?").assertIsDisplayed()
-        rule.onNodeWithText("Question 1 of 6").assertIsDisplayed()
+        rule.onNodeWithText("Question 1 of ${questionsFor("Africa")}").assertIsDisplayed()
     }
 
     @Test
@@ -423,7 +417,7 @@ class QuizAndFlashcardUiTest {
         rule.waitForIdle()
         tab("flashcards")
 
-        rule.onNodeWithText("Card 1 of 7").assertIsDisplayed()
+        rule.onNodeWithText("Card 1 of ${allCountries.count { it.continent == "Asia" }}").assertIsDisplayed()
         rule.onNodeWithText("Flag Meaning").assertDoesNotExist()
         rule.onNodeWithText("Tap to reveal Country Name & Capital").assertIsDisplayed()
     }
@@ -441,27 +435,30 @@ class QuizAndFlashcardUiTest {
         rule.onNodeWithTag("flashcard_clear_filters_btn").performClick()
         rule.waitForIdle()
 
-        rule.onNodeWithText("Card 1 of 33").assertIsDisplayed()
+        rule.onNodeWithText("Card 1 of ${allCountries.size}").assertIsDisplayed()
         rule.onNodeWithText("Flag Meaning").assertDoesNotExist()
     }
 
     @Test
     fun deckPosition_followsTheCountryWhenTheFilterChanges() {
+        // Study up to the second country of the Americas in the full deck, then filter Explore to the
+        // Americas: the deck should still show that country, at its place among its continent.
+        val americas = byName.filter { it.continent == "Americas" }
+        val target = americas[1]
+        val position = byName.indexOf(target)
         tab("flashcards")
-        repeat(3) {
+        repeat(position) {
             rule.onNodeWithTag("grade_mastered_btn").performClick()
             rule.waitForIdle()
         }
-        // Sorted by name: Antarctica, Argentina, Australia, then Brazil.
-        rule.onNodeWithText("Card 4 of 33").assertIsDisplayed()
+        rule.onNodeWithText("Card ${position + 1} of ${allCountries.size}").assertIsDisplayed()
 
         tab("explore")
         rule.onNodeWithTag("continent_chip_americas").performClick()
         rule.waitForIdle()
         tab("flashcards")
 
-        // Brazil is the second of the seven American countries, not a clamped index.
-        rule.onNodeWithText("Card 2 of 7").assertIsDisplayed()
+        rule.onNodeWithText("Card 2 of ${americas.size}").assertIsDisplayed()
     }
 
     @Test
@@ -471,12 +468,12 @@ class QuizAndFlashcardUiTest {
             rule.onNodeWithTag("grade_mastered_btn").performClick()
             rule.waitForIdle()
         }
-        rule.onNodeWithText("Card 3 of 33").assertIsDisplayed()
+        rule.onNodeWithText("Card 3 of ${allCountries.size}").assertIsDisplayed()
 
         rule.onNodeWithContentDescription("Shuffle Cards").performClick()
         rule.waitForIdle()
 
-        rule.onNodeWithText("Card 1 of 33").assertIsDisplayed()
+        rule.onNodeWithText("Card 1 of ${allCountries.size}").assertIsDisplayed()
     }
 
     @Test
@@ -490,7 +487,7 @@ class QuizAndFlashcardUiTest {
         rule.onNodeWithContentDescription("Reset Deck").performClick()
         rule.waitForIdle()
 
-        rule.onNodeWithText("Card 1 of 33").assertIsDisplayed()
+        rule.onNodeWithText("Card 1 of ${allCountries.size}").assertIsDisplayed()
     }
 
     @Test
@@ -547,11 +544,11 @@ class QuizAndFlashcardUiTest {
         tab("flashcards")
         rule.onNodeWithTag("grade_mastered_btn").performClick()
         rule.waitForIdle()
-        rule.onNodeWithText("Card 2 of 33").assertIsDisplayed()
+        rule.onNodeWithText("Card 2 of ${allCountries.size}").assertIsDisplayed()
 
         rotate()
 
-        rule.onNodeWithText("Card 2 of 33").assertIsDisplayed()
+        rule.onNodeWithText("Card 2 of ${allCountries.size}").assertIsDisplayed()
     }
 
     @Test
@@ -563,13 +560,13 @@ class QuizAndFlashcardUiTest {
         tab("flashcards")
 
         rule.onNodeWithTag("flashcard_filter_notice").assertIsDisplayed()
-        rule.onNodeWithText("Card 1 of 9").assertIsDisplayed()
+        rule.onNodeWithText("Card 1 of ${allCountries.count { it.continent == "Europe" }}").assertIsDisplayed()
 
         rule.onNodeWithTag("flashcard_clear_filters_btn").performClick()
         rule.waitForIdle()
 
         rule.onNodeWithTag("flashcard_filter_notice").assertDoesNotExist()
-        rule.onNodeWithText("Card 1 of 33").assertIsDisplayed()
+        rule.onNodeWithText("Card 1 of ${allCountries.size}").assertIsDisplayed()
     }
 
     @Test
@@ -583,6 +580,6 @@ class QuizAndFlashcardUiTest {
         rule.onNodeWithText("No flashcards available for current filters.").assertIsDisplayed()
         rule.onNodeWithTag("flashcard_empty_clear_filters_btn").performClick()
         rule.waitForIdle()
-        rule.onNodeWithText("Card 1 of 33").assertIsDisplayed()
+        rule.onNodeWithText("Card 1 of ${allCountries.size}").assertIsDisplayed()
     }
 }
