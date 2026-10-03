@@ -18,7 +18,7 @@ class QuizSessionTest {
         QuizSession(
             QuizMode.CAPITAL,
             "Global",
-            QuizEngine.generate(allCountries.take(poolSize), QuizMode.CAPITAL)
+            QuizEngine.generate(sovereign.take(poolSize), QuizMode.CAPITAL)
         )
 
     @Test
@@ -40,7 +40,7 @@ class QuizSessionTest {
 
     @Test
     fun aPerfectRunScoresExactlyTheMaximumForEveryQuizLength() {
-        for (size in listOf(4, 5, 6, 7, 9, 10, 33)) {
+        for (size in listOf(4, 5, 6, 7, 9, 10, sovereign.size)) {
             val finished = sessionOf(size).playThrough()
             assertEquals("pool=$size", finished.maxScore, finished.score)
             assertEquals("pool=$size", QuizEngine.maxScore(QuizEngine.questionCount(size)), finished.score)

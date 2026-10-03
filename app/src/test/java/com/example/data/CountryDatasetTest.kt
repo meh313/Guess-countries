@@ -1,6 +1,7 @@
 package com.example.data
 
 import com.example.data.model.CountryCatalog
+import com.example.data.model.nameSortKey
 import com.example.quiz.allCountries
 import com.example.ui.components.flagArtFor
 import org.junit.Assert.assertEquals
@@ -64,11 +65,27 @@ class CountryDatasetTest {
         }
     }
 
+    /**
+     * Who drives on the left, per continent. Extended with each continent batch from a checked source
+     * (Wikipedia "Left- and right-hand traffic"); everything else in the catalog drives on the right.
+     */
+    private val leftHandTraffic = mapOf(
+        "Europe" to setOf("GB"),
+        "Asia" to setOf("JP", "IN", "TH"),
+        "Africa" to setOf("KE", "ZA", "TZ"),
+        "Americas" to emptySet(),
+        "Oceania" to setOf("AU", "NZ", "FJ")
+    )
+
     @Test
-    fun theTenLeftHandTrafficCountriesDriveOnTheLeft() {
-        // Everything else in the catalog drives on the right.
-        val left = setOf("GB", "JP", "IN", "TH", "KE", "ZA", "TZ", "AU", "NZ", "FJ")
-        assertEquals(left, allCountries.filter { it.driveSide == "Left" }.map { it.code }.toSet())
+    fun theLeftHandTrafficCountriesDriveOnTheLeft_andNobodyElseDoes() {
+        val expected = leftHandTraffic.values.flatten().toSet()
+        assertEquals(expected, allCountries.filter { it.driveSide == "Left" }.map { it.code }.toSet())
+        leftHandTraffic.forEach { (continent, codes) ->
+            codes.forEach { code ->
+                assertEquals("$code should be in $continent", continent, country(code).continent)
+            }
+        }
     }
 
     @Test
@@ -103,10 +120,13 @@ class CountryDatasetTest {
     fun proseUsesAmericanSpellingAndPlainWords() {
         val british = Regex("colour|centre|tricolour|symbolis|neighbour|\\bmetre", RegexOption.IGNORE_CASE)
         val jargon = Regex("\\b(hoist|canton|fimbriation|ensign)\\b", RegexOption.IGNORE_CASE)
+        // Words that are jargon elsewhere but the plain term for one country (a Swiss canton).
+        val allowedJargon = mapOf("CH" to setOf("canton"))
         allCountries.forEach { c ->
             listOf(c.flagDescription, c.funFact).forEach {
                 assertTrue("${c.code} is not American spelling: '$it'", british.find(it) == null)
-                assertTrue("${c.code} uses flag jargon: '$it'", jargon.find(it) == null)
+                val hit = jargon.find(it)?.groupValues?.get(1)?.lowercase()
+                assertTrue("${c.code} uses flag jargon: '$it'", hit == null || hit in allowedJargon[c.code].orEmpty())
             }
         }
     }
@@ -216,5 +236,40 @@ class CountryDatasetTest {
         allCountries.forEach {
             assertTrue("${it.code}", !it.flagDescription.contains('\n') && !it.flagDescription.contains('"'))
         }
+    }
+
+    // ---- Shape rules that must hold however many countries there are ---------------------------------
+
+    @Test
+    fun codesAreTwoUppercaseLetters_andTheEmojiIsTheirRegionalIndicatorPair() {
+        allCountries.forEach {
+            assertTrue(it.code, Regex("[A-Z]{2}").matches(it.code))
+            val expected = it.code.map { ch -> String(Character.toChars(0x1F1E6 + (ch - 'A'))) }.joinToString("")
+            assertEquals("${it.code} flag emoji", expected, it.flagEmoji)
+        }
+    }
+
+    @Test
+    fun quizCapitalsAreUniqueAmongTheCountriesThatCanBeQuizzed() {
+        // Two countries with the same quiz answer would make a capital question unanswerable.
+        val answers = allCountries.filter { it.isSovereign }.map { it.quizCapital }
+        assertEquals(answers.toSet().size, answers.size)
+    }
+
+    @Test
+    fun eachContinentIsOneAlphabeticalBlockInTheCatalog() {
+        // Per-continent files, each alphabetical, concatenated: the order users see under "Sort by
+        // Continent" and the order tools/gen-entries.py keeps.
+        val continentsInOrder = allCountries.map { it.continent }
+        assertEquals("continents must not interleave", continentsInOrder.distinct().size, continentsInOrder.zipWithNext().count { (a, b) -> a != b } + 1)
+        allCountries.groupBy { it.continent }.forEach { (continent, countries) ->
+            val keys = countries.map { it.nameSortKey }
+            assertEquals("$continent is not alphabetical", keys.sorted(), keys)
+        }
+    }
+
+    @Test
+    fun antarcticaComesLast() {
+        assertEquals("AQ", allCountries.last().code)
     }
 }

@@ -49,3 +49,12 @@ jobs:
             app/build/reports/
             app/build/test-results/
           if-no-files-found: ignore
+
+      # Pictures of every screen, taken by ScreenshotsTest, so a change can be looked at from the run page.
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: app/build/screenshots/
+          if-no-files-found: ignore

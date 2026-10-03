@@ -1,29 +1,54 @@
-// Renders the bundled flag images (app/src/main/res/drawable-nodpi/flag_xx.webp) from flag-icons.
+// Renders flag SVGs to PNG with Chromium, unstretched, for to-webp.py.
 //
-//   npm pack flag-icons@7.5.0 && tar xzf flag-icons-7.5.0.tgz     # creates ./package
-//   npm i playwright-core && pip install pillow
-//   CHROME=/path/to/chrome node /path/to/repo/tools/render-flags.mjs   # writes ./out/<code>.png
-//   python3 tools/to-webp.py                                      # lossless WebP into the app
+//   cd /tmp/flagwork            # holds package/ (flag-icons), cfi/ (country-flag-icons), node_modules/
+//   CHROME=/path/to/chrome node <repo>/tools/render-flags.mjs [--force] [--source cfi] \
+//       [--seed <repo>/content/seed/europe.json] [xk tw ...]
 //
-// The 4x3 SVGs are rendered at their own shape and never stretched, so circles stay round. The page is
-// transparent: where two shapes meet the edge pixel is partly transparent, and to-webp.py keeps its colour
-// (dropping the alpha) instead of blending it with a background, which would draw a pale hairline.
+// Codes come from the arguments, else from the seed file, else from every catalog file. flag-icons
+// (4:3, the app's artwork) renders into out/<code>.png at 600x450; --source cfi renders the independent
+// country-flag-icons drawing (3:2) into ref/<code>.png at 600x400 for side-by-side comparison only.
+// Existing files are skipped unless --force.
 import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
 
-// Resolve playwright-core from the directory the script is run in (where `npm i` put it).
 const { chromium } = createRequire(process.cwd() + '/')('playwright-core');
+const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-const codes = 'fr de it gb es gr se no ua us ca mx br ar co cl jp cn in kr vn th sa eg ke za ng ma tz au nz fj aq'.split(' ');
-const W = 600, H = 450, SCALE = 1;
+const args = process.argv.slice(2);
+const flag = (name) => { const i = args.indexOf(name); if (i < 0) return null; const v = args[i + 1]; args.splice(i, 2); return v; };
+const force = args.includes('--force'); if (force) args.splice(args.indexOf('--force'), 1);
+const source = flag('--source') || 'flag-icons';
+const seed = flag('--seed');
+
+let codes = args.map(c => c.toLowerCase());
+if (!codes.length && seed) codes = JSON.parse(fs.readFileSync(seed, 'utf8')).entries.map(e => e.code.toLowerCase());
+if (!codes.length) {
+  const dir = path.join(repo, 'app/src/main/java/com/example/data/model');
+  for (const f of fs.readdirSync(dir).filter(f => f.endsWith('Catalog.kt'))) {
+    for (const m of fs.readFileSync(path.join(dir, f), 'utf8').matchAll(/code = "([A-Z]{2})"/g)) codes.push(m[1].toLowerCase());
+  }
+}
+
+const cfi = source === 'cfi';
+const outDir = cfi ? 'ref' : 'out';
+const W = 600, H = cfi ? 400 : 450;
+fs.mkdirSync(outDir, { recursive: true });
 const browser = await chromium.launch({ executablePath: process.env.CHROME, args: ['--no-sandbox'] });
-const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: SCALE });
-fs.mkdirSync('out', { recursive: true });
+const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
+let done = 0, skipped = 0;
 for (const c of codes) {
-  const svg = fs.readFileSync(`package/flags/4x3/${c}.svg`, 'utf8')
-    .replace(/<svg([^>]*)>/, (m, attrs) =>
-      `<svg${attrs.replace(/\s(width|height)="[^"]*"/g, '')} width="${W}" height="${H}">`);
+  const target = `${outDir}/${c}.png`;
+  if (!force && fs.existsSync(target)) { skipped++; continue; }
+  const file = cfi ? `cfi/package/3x2/${c.toUpperCase()}.svg` : `package/flags/4x3/${c}.svg`;
+  const svg = fs.readFileSync(file, 'utf8')
+    .replace(/<svg([^>]*)>/, (m, attrs) => `<svg${attrs.replace(/\s(width|height)="[^"]*"/g, '')} width="${W}" height="${H}">`);
+  // Transparent page: where two shapes meet, the edge pixel keeps its colour (to-webp.py drops the alpha)
+  // instead of being blended with a background, which would draw a pale hairline.
   await page.setContent(`<html><body style="margin:0">${svg}</body></html>`);
-  await page.screenshot({ path: `out/${c}.png`, clip: { x: 0, y: 0, width: W, height: H }, omitBackground: true });
+  await page.screenshot({ path: target, clip: { x: 0, y: 0, width: W, height: H }, omitBackground: true });
+  done++;
 }
 await browser.close();
+console.log(`${done} rendered, ${skipped} already present, in ${outDir}/`);

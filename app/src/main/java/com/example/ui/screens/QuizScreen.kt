@@ -473,11 +473,14 @@ fun QuizScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
+                            // The text yields to the result icon, so a long name wraps instead of pushing
+                            // the icon out of the card.
                             Text(
                                 text = optionText,
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.Bold,
-                                color = textColor
+                                color = textColor,
+                                modifier = Modifier.weight(1f, fill = false)
                             )
 
                             if (active.hasAnswered && isCorrect) {

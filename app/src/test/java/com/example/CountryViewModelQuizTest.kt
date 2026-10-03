@@ -4,6 +4,10 @@ import android.os.Looper
 import com.example.data.local.AppDatabase
 import com.example.data.local.QuizScoreEntity
 import com.example.data.model.CountryRepository
+import com.example.quiz.sovereign
+import com.example.quiz.allCountries
+import com.example.data.model.CountryCatalog
+import com.example.data.model.Country
 import com.example.data.model.SortOption
 import com.example.quiz.QuizEngine
 import com.example.quiz.QuizMode
@@ -50,7 +54,14 @@ class CountryViewModelQuizTest {
 
     private var now = 1_000L
 
-    private fun newViewModel() = CountryViewModel(CountryRepository(db.userProgressDao()), FakeSpeech(), clock = { now })
+    private fun newViewModel(countries: List<Country> = CountryCatalog.all) =
+        CountryViewModel(CountryRepository(db.userProgressDao(), countries), FakeSpeech(), clock = { now })
+
+    // Small worlds for the paths the full catalog no longer reaches: a scope with fewer than ten
+    // countries and one with too few to quiz at all.
+    private val sixAfrican = sovereign.filter { it.continent == "Africa" }.take(6)
+    private val threeOceanian = sovereign.filter { it.continent == "Oceania" }.take(3)
+    private val fourEuropean = sovereign.filter { it.continent == "Europe" }.take(4)
 
     private fun progressRow(code: String) =
         runBlocking { db.userProgressDao().getAllProgress().first() }.firstOrNull { it.countryCode == code }
@@ -82,11 +93,11 @@ class CountryViewModelQuizTest {
 
     @Test
     fun startQuiz_continentScopeUsesAllItsCountriesWhenFewerThanTen() {
-        val vm = newViewModel()
+        val vm = newViewModel(sixAfrican + fourEuropean)
 
         vm.startQuiz(QuizMode.CAPITAL, "Africa")
 
-        assertEquals(6, vm.quizSession.value!!.questions.size)
+        assertEquals(sixAfrican.size, vm.quizSession.value!!.questions.size)
     }
 
     @Test
@@ -96,7 +107,7 @@ class CountryViewModelQuizTest {
         val collector = CoroutineScope(Dispatchers.Default).launch { vm.filteredCountries.collect {} }
         try {
             vm.onContinentSelect("Oceania")
-            awaitCondition("the Oceania filter to apply") { vm.filteredCountries.value.size == 3 }
+            awaitCondition("the Oceania filter to apply") { vm.filteredCountries.value.size == allCountries.count { it.continent == "Oceania" } }
 
             vm.startQuiz(QuizMode.FLAG_NAME, "Global")
 
@@ -108,7 +119,7 @@ class CountryViewModelQuizTest {
 
     @Test
     fun startQuiz_doesNothingForAScopeTooSmallToQuiz() {
-        val vm = newViewModel()
+        val vm = newViewModel(threeOceanian + fourEuropean)
 
         vm.startQuiz(QuizMode.FLAG_NAME, "Oceania")
 
@@ -184,7 +195,7 @@ class CountryViewModelQuizTest {
 
     @Test
     fun finishingAQuizSavesExactlyOneResultWithTheRealMaximum() {
-        val vm = newViewModel()
+        val vm = newViewModel(sixAfrican + fourEuropean)
         vm.startQuiz(QuizMode.CAPITAL, "Africa")
         vm.playToTheEnd()
 
@@ -195,8 +206,8 @@ class CountryViewModelQuizTest {
         val entry = saved.single()
         assertEquals(QuizMode.CAPITAL.name, entry.mode)
         assertEquals("Africa", entry.continentFilter)
-        assertEquals(QuizEngine.maxScore(6), entry.score)
-        assertEquals(QuizEngine.maxScore(6), entry.total)
+        assertEquals(QuizEngine.maxScore(sixAfrican.size), entry.score)
+        assertEquals(QuizEngine.maxScore(sixAfrican.size), entry.total)
     }
 
     @Test
@@ -230,7 +241,7 @@ class CountryViewModelQuizTest {
 
     @Test
     fun startQuiz_continentModeStartsEvenWhereThatContinentIsTooSmallToQuiz() {
-        val vm = newViewModel()
+        val vm = newViewModel(threeOceanian + fourEuropean)
 
         vm.startQuiz(QuizMode.CONTINENT, "Oceania")
 

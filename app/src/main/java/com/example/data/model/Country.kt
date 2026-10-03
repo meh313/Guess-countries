@@ -11,7 +11,6 @@ data class Country(
     val areaSqKm: Double,
     val flagEmoji: String,
     val flagColors: List<String>,
-    val flagType: FlagStyle,
     val flagDescription: String,
     val languages: List<String>,
     val currency: String,
@@ -32,14 +31,4 @@ data class Country(
     /** "Africa • Southern Africa", or just "Antarctica" where the subregion repeats the continent. */
     val regionLabel: String
         get() = if (subregion.equals(continent, ignoreCase = true)) continent else "$continent • $subregion"
-}
-
-enum class FlagStyle {
-    VERTICAL_STRIPES_3,
-    HORIZONTAL_STRIPES_3,
-    HORIZONTAL_STRIPES_2,
-    CANTON_STARS,
-    CENTER_CIRCLE,
-    CROSS_NORDIC,
-    COMPLEX_EMBLEM
 }

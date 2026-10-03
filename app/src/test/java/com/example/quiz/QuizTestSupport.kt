@@ -2,9 +2,21 @@ package com.example.quiz
 
 import com.example.data.model.Country
 import com.example.data.model.CountryCatalog
+import com.example.data.model.CountryRepository
 
-/** The app's real 33-country dataset. */
+/** The app's real dataset, every entry including Antarctica. */
 val allCountries: List<Country> = CountryCatalog.all
+
+/** The entries a quiz can ask about. */
+val sovereign: List<Country> = allCountries.filter { it.isSovereign }
+
+/** Every entry in the order the Explore list shows them. */
+val byName: List<Country> = allCountries.sortedWith(CountryRepository.byName)
+
+/** How many countries a quiz in [scope] draws from, and how many questions that gives. */
+fun poolSize(scope: String): Int = QuizEngine.poolFor(scope, allCountries).size
+
+fun questionsFor(scope: String): Int = QuizEngine.questionCount(poolSize(scope))
 
 /** The text of the correct option for [question], independent of how options were shuffled. */
 fun QuizQuestion.correctOption(): String = options[correctAnswerIndex]

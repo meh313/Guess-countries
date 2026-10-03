@@ -1,7 +1,7 @@
 # World Flags & Continents
 
-An offline Android app for learning world geography: browse 33 countries, drill them with flashcards,
-and test yourself with quizzes. Everything runs on the device; there is no network access.
+An offline Android app for learning world geography: browse the countries of the world (33 today, being
+expanded one continent at a time), drill them with flashcards, and test yourself with quizzes. Everything runs on the device; there is no network access.
 
 ## Features
 
@@ -47,9 +47,10 @@ The keystore and its passwords are never read from the repository.
 | `quiz/` | Pure quiz rules (`QuizEngine`) and the immutable `QuizSession`; no Android types. |
 | `flashcards/` | Deck ordering for the flashcard screen. |
 | `speech/` | Text-to-speech behind a small `Speech` interface. |
-| `data/model/` | The country catalog and `CountryRepository`. |
+| `data/model/` | The country catalog, one file per continent (`EuropeCatalog.kt`…, alphabetical), and `CountryRepository`. |
 | `data/local/` | Room database; progress and quiz history. Schemas are exported to `app/schemas/`. |
 | `ui/` | Compose screens, components, theme and `CountryViewModel`. |
+| `tools/` | Content pipeline: flag rendering (`render-flags.mjs`, `to-webp.py`, `contact-sheet.py`), catalog generation (`validate-research.py`, `gen-entries.py`, `apply-edits.py`, `gen-flag-art.py`, `flag-checksums.py`). |
 
 `CountryViewModel` receives its repository, speech engine and clock through the constructor, which is how
 the tests replace them.

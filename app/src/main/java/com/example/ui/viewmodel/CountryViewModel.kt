@@ -68,7 +68,7 @@ class CountryViewModel(
         } else {
             filtered
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), repository.allCountries)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), repository.filterCountries("", "All", SortOption.NAME))
 
     /** True once speech is ready; the UI disables its speak buttons until then. */
     val speechAvailable: StateFlow<Boolean> = speech.isAvailable

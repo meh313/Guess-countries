@@ -1,0 +1,132 @@
+package com.example.data.model
+
+/**
+ * The countries of Asia as the UN M49 geoscheme defines the region.
+ * Entries are alphabetical by name; tools/gen-entries.py inserts new ones in place.
+ */
+object AsiaCatalog {
+    val countries: List<Country> = listOf(
+        Country(
+            code = "CN",
+            name = "China",
+            officialName = "People's Republic of China",
+            capital = "Beijing",
+            continent = "Asia",
+            subregion = "Eastern Asia",
+            population = 1420000000L,
+            areaSqKm = 9596961.0,
+            flagEmoji = "🇨🇳",
+            flagColors = listOf("Red", "Yellow"),
+            flagDescription = "Officially, red stands for the revolution, the big star for the Communist Party, and the four small stars for the Chinese people. Each small star points one tip at the big star to show unity around one center. The stars are yellow so they shine brightly on the red. Zeng Liansong, who entered a public contest, designed it, and it was chosen in 1949.",
+            languages = listOf("Mandarin Chinese"),
+            currency = "Chinese Yuan (¥)",
+            landmarks = listOf("Great Wall of China", "Forbidden City", "Terracotta Army"),
+            funFact = "The Great Wall is not one wall but many, built by different dynasties from the 7th century BC; the Ming-era defenses alone stretch about 8,850 km."
+        ),
+        Country(
+            code = "IN",
+            name = "India",
+            officialName = "Republic of India",
+            capital = "New Delhi",
+            continent = "Asia",
+            subregion = "Southern Asia",
+            population = 1451000000L,
+            areaSqKm = 3287263.0,
+            flagEmoji = "🇮🇳",
+            flagColors = listOf("Saffron", "White", "Green", "Navy"),
+            flagDescription = "The colors come from the flag of the independence movement, adopted for India on 22 July 1947. In the debate, S. Radhakrishnan explained saffron as leaders giving up selfish goals, white as the light of truth, and green as the soil and plant life. The wheel, from an ancient Ashoka pillar, means law and moving forward. It replaced a spinning wheel that looked different on each side. No official meaning is given for the 24 spokes.",
+            languages = listOf("Hindi", "English"),
+            currency = "Indian Rupee (₹)",
+            landmarks = listOf("Taj Mahal", "Varanasi Ghats", "Amer Fort"),
+            funFact = "Hinduism, Buddhism, Jainism and Sikhism all began in the Indian subcontinent, and India has the world's largest population.",
+            driveSide = "Left"
+        ),
+        Country(
+            code = "JP",
+            name = "Japan",
+            officialName = "Japan",
+            capital = "Tokyo",
+            continent = "Asia",
+            subregion = "Eastern Asia",
+            population = 124000000L,
+            areaSqKm = 377975.0,
+            flagEmoji = "🇯🇵",
+            flagColors = listOf("White", "Red"),
+            flagDescription = "The red circle is the sun. Japan's name, Nihon, means origin of the sun, and legend says the emperors came from the sun goddess Amaterasu. Sun banners are recorded in Japan as early as 701. In 1854 Japanese ships were ordered to fly this flag so they would not be mistaken for foreign ships. A 1999 law made it the national flag. No official meaning is given for the white.",
+            languages = listOf("Japanese"),
+            currency = "Japanese Yen (¥)",
+            landmarks = listOf("Mount Fuji", "Fushimi Inari Shrine", "Tokyo Tower"),
+            funFact = "Japan is an archipelago of thousands of islands, and mountains cover most of its land, so most people live on narrow coastal plains.",
+            driveSide = "Left"
+        ),
+        Country(
+            code = "SA",
+            name = "Saudi Arabia",
+            officialName = "Kingdom of Saudi Arabia",
+            capital = "Riyadh",
+            continent = "Asia",
+            subregion = "Western Asia",
+            population = 34000000L,
+            areaSqKm = 2149690.0,
+            flagEmoji = "🇸🇦",
+            flagColors = listOf("Green", "White"),
+            flagDescription = "Followers of the preacher Muhammad ibn Abd al-Wahhab put the Muslim creed on their flags from the 1700s, so the design is inherited. The white words say there is no god but God and Muhammad is God's messenger. The law requires them on the flag. In 1921 Abdulaziz Al Saud added the sword, said to stand for safety and justice. Green is traditionally linked to Islam. The law gives no meaning for the colors.",
+            languages = listOf("Arabic"),
+            currency = "Saudi Riyal (SAR)",
+            landmarks = listOf("Hegra (Al-Ula)", "Masmak Fortress", "Kingdom Centre Tower"),
+            funFact = "Saudi Arabia has no permanent natural rivers; its dry valleys, called wadis, fill with water only after heavy rain."
+        ),
+        Country(
+            code = "KR",
+            name = "South Korea",
+            officialName = "Republic of Korea",
+            capital = "Seoul",
+            continent = "Asia",
+            subregion = "Eastern Asia",
+            population = 51700000L,
+            areaSqKm = 100432.0,
+            flagEmoji = "🇰🇷",
+            flagColors = listOf("White", "Red", "Blue", "Black"),
+            flagDescription = "White stands for brightness, purity and peace, and was a traditional color, common in everyday clothes in the 1800s. The circle shows yin (blue) and yang (red), two opposite forces that balance each other. The four groups of black bars stand for heaven, earth, water and fire, in harmony around the circle. No meaning is given for the black. The design dates from 1882, and King Gojong made it Korea's flag in 1883.",
+            languages = listOf("Korean"),
+            currency = "South Korean Won (₩)",
+            landmarks = listOf("Gyeongbokgung Palace", "Jeju Island", "N Seoul Tower"),
+            funFact = "Korea's alphabet, Hangul, was created in the 1440s by King Sejong the Great to help ordinary people learn to read and write."
+        ),
+        Country(
+            code = "TH",
+            name = "Thailand",
+            officialName = "Kingdom of Thailand",
+            capital = "Bangkok",
+            continent = "Asia",
+            subregion = "South-Eastern Asia",
+            population = 71700000L,
+            areaSqKm = 513120.0,
+            flagEmoji = "🇹🇭",
+            flagColors = listOf("Red", "White", "Blue"),
+            flagDescription = "King Vajiravudh replaced the older white elephant flag with red and white stripes in 1916 or 1917. A popular story says he did it after seeing the elephant flown upside down. In 1917 he made the middle stripe blue, to match the flags of the country's allies in World War I and because blue was linked to the day he was born. The king explained that red means blood given for the nation, white the purity of Buddhism, and blue the king.",
+            languages = listOf("Thai"),
+            currency = "Thai Baht (฿)",
+            landmarks = listOf("Grand Palace (Bangkok)", "Wat Arun", "Phi Phi Islands"),
+            funFact = "Bangkok's full ceremonial name has 168 letters, which Guinness World Records lists as the longest place name; Thais shorten it to Krung Thep.",
+            driveSide = "Left"
+        ),
+        Country(
+            code = "VN",
+            name = "Vietnam",
+            officialName = "Socialist Republic of Vietnam",
+            capital = "Hanoi",
+            continent = "Asia",
+            subregion = "South-Eastern Asia",
+            population = 101000000L,
+            areaSqKm = 331340.0,
+            flagEmoji = "🇻🇳",
+            flagColors = listOf("Red", "Yellow"),
+            flagDescription = "The flag first appeared in 1940 in an uprising against French rule. It was adopted in 1945 and became the flag of the whole country in 1976. The red is said to stand for blood shed in the struggle for independence. The yellow star is often said to mean the soul of the nation, and the yellow the people's skin. Its five points are often said to mean farmers, workers, soldiers, thinkers and business owners.",
+            languages = listOf("Vietnamese"),
+            currency = "Vietnamese Đồng (₫)",
+            landmarks = listOf("Ha Long Bay", "Hoi An Ancient Town", "Cu Chi Tunnels"),
+            funFact = "Vietnam is one of the world's top coffee producers, and egg coffee (cà phê trứng), made with whipped egg yolk, was invented in Hanoi in the 1940s."
+        )
+    )
+}

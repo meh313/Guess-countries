@@ -7,16 +7,25 @@ import org.junit.Test
 
 class QuizEngineTest {
 
-    private val poolSizes = listOf(4, 5, 6, 7, 9, 10, 11, 33)
+    private val poolSizes = listOf(4, 5, 6, 7, 9, 10, 11, sovereign.size)
 
     @Test
     fun poolFor_matchesTheDatasetsContinentCounts() {
-        assertEquals(allCountries.count { it.isSovereign }, QuizEngine.poolFor("Global", allCountries).size)
-        assertEquals(6, QuizEngine.poolFor("Africa", allCountries).size)
-        assertEquals(7, QuizEngine.poolFor("Americas", allCountries).size)
-        assertEquals(7, QuizEngine.poolFor("Asia", allCountries).size)
-        assertEquals(9, QuizEngine.poolFor("Europe", allCountries).size)
-        assertEquals(3, QuizEngine.poolFor("Oceania", allCountries).size)
+        assertEquals(sovereign.size, QuizEngine.poolFor("Global", allCountries).size)
+        for (scope in QuizEngine.SCOPES.filter { it != "Global" }) {
+            assertEquals(scope, sovereign.count { it.continent == scope }, QuizEngine.poolFor(scope, allCountries).size)
+        }
+    }
+
+    /** Scopes still too small to quiz; emptied as the catalog grows (Oceania gains its countries last). */
+    private val tooSmallForNow = setOf("Oceania")
+
+    @Test
+    fun everyScopeExceptThePinnedOnesHasEnoughCountriesForAQuiz() {
+        for (scope in QuizEngine.SCOPES) {
+            val enough = poolSize(scope) >= QuizEngine.MIN_POOL
+            assertEquals("$scope has ${poolSize(scope)} countries", scope !in tooSmallForNow, enough)
+        }
     }
 
     @Test
@@ -41,7 +50,7 @@ class QuizEngineTest {
     @Test
     fun generate_returnsNothingWhenThePoolIsTooSmall() {
         QuizMode.entries.forEach { mode ->
-            assertTrue(QuizEngine.generate(allCountries.take(3), mode).isEmpty())
+            assertTrue(QuizEngine.generate(sovereign.take(3), mode).isEmpty())
             assertTrue(QuizEngine.generate(emptyList(), mode).isEmpty())
         }
     }
@@ -50,7 +59,7 @@ class QuizEngineTest {
     fun generate_buildsExactlyQuestionCountQuestionsForEveryPoolSizeAndMode() {
         for (size in poolSizes) {
             for (mode in QuizMode.entries) {
-                val questions = QuizEngine.generate(allCountries.take(size), mode)
+                val questions = QuizEngine.generate(sovereign.take(size), mode)
                 assertEquals("pool=$size mode=$mode", QuizEngine.questionCount(size), questions.size)
             }
         }
@@ -59,7 +68,7 @@ class QuizEngineTest {
     @Test
     fun generate_asksAboutEachCountryAtMostOnce() {
         for (size in poolSizes) {
-            val targets = QuizEngine.generate(allCountries.take(size), QuizMode.FLAG_NAME).map { it.targetCountry.code }
+            val targets = QuizEngine.generate(sovereign.take(size), QuizMode.FLAG_NAME).map { it.targetCountry.code }
             assertEquals("pool=$size", targets.distinct(), targets)
         }
     }
@@ -68,7 +77,7 @@ class QuizEngineTest {
     fun generate_everyQuestionHasFourDistinctOptionsAndTheRightAnswerAtTheRightIndex() {
         for (size in poolSizes) {
             for (mode in QuizMode.entries) {
-                QuizEngine.generate(allCountries.take(size), mode).forEach { q ->
+                QuizEngine.generate(sovereign.take(size), mode).forEach { q ->
                     val expected =
                         when (mode) {
                             QuizMode.CAPITAL -> q.targetCountry.quizCapital
@@ -171,7 +180,7 @@ class QuizEngineTest {
             val pool = QuizEngine.poolFor(scope, allCountries)
             assertTrue("scope=$scope", pool.all { it.isSovereign })
         }
-        assertEquals(allCountries.size - 1, QuizEngine.poolFor("Global", allCountries).size)
+        assertEquals(sovereign.size, QuizEngine.poolFor("Global", allCountries).size)
         assertTrue(QuizEngine.poolFor("Antarctica", allCountries).isEmpty())
     }
 
