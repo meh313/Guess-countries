@@ -21,3 +21,6 @@ debug.keystore
 *.jks
 *.keystore
 *.p12
+
+# Python tool caches
+__pycache__/

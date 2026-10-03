@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
@@ -115,13 +116,16 @@ fun CountryCard(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Country Name
+            // Country Name: long names ("Saint Vincent and the Grenadines") shrink a little and take a
+            // second line instead of being cut off.
             Text(
                 text = country.name,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                autoSize = TextAutoSize.StepBased(minFontSize = 12.sp, maxFontSize = 16.sp),
+                modifier = Modifier.fillMaxWidth()
             )
 
             // Capital City

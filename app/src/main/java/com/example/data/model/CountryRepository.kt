@@ -15,24 +15,26 @@ class CountryRepository(
     private val now: () -> Long = System::currentTimeMillis
 ) {
 
+    // Folded once per country: search ignores case and accents, so "Brasilia" finds Brasília.
+    private val searchText: Map<String, String> =
+        allCountries.associate { it.code to fold("${it.name}\n${it.capital}\n${it.officialName}") }
+
     fun filterCountries(
         query: String,
         continent: String,
         sortBy: SortOption
     ): List<Country> {
+        val needle = fold(query.trim())
         return allCountries.filter { country ->
-            val matchesQuery = query.isBlank() ||
-                    country.name.contains(query, ignoreCase = true) ||
-                    country.capital.contains(query, ignoreCase = true) ||
-                    country.officialName.contains(query, ignoreCase = true)
+            val matchesQuery = needle.isEmpty() || searchText.getValue(country.code).contains(needle)
             val matchesContinent = continent == "All" || country.continent.equals(continent, ignoreCase = true)
             matchesQuery && matchesContinent
         }.let { list ->
             when (sortBy) {
-                SortOption.NAME -> list.sortedBy { it.name }
+                SortOption.NAME -> list.sortedWith(byName)
                 SortOption.POPULATION -> list.sortedByDescending { it.population }
                 SortOption.AREA -> list.sortedByDescending { it.areaSqKm }
-                SortOption.CONTINENT -> list.sortedBy { it.continent }
+                SortOption.CONTINENT -> list.sortedWith(byContinentThenName)
             }
         }
     }
@@ -56,6 +58,14 @@ class CountryRepository(
                 timestamp = now()
             )
         )
+    }
+
+    companion object {
+        /** Alphabetical by name, ignoring accents and case. */
+        val byName: Comparator<Country> = compareBy { it.nameSortKey }
+
+        /** Continent first, then name, so the order never depends on the catalog's file order. */
+        val byContinentThenName: Comparator<Country> = compareBy<Country> { it.continent }.thenBy { it.nameSortKey }
     }
 }
 
