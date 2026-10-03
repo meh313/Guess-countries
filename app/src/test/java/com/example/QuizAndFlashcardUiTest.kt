@@ -424,8 +424,12 @@ class QuizAndFlashcardUiTest {
 
     @Test
     fun clearingTheFilterNotice_showsTheNewDeckUnflipped() {
+        // A continent whose first card is not the full deck's first card, so clearing the filter really
+        // shows another country (a card keeps its side only while it shows the same country).
+        val continent = allCountries.map { it.continent }.distinct()
+            .first { c -> byName.first { it.continent == c } != byName.first() }
         tab("explore")
-        rule.onNodeWithTag("continent_chip_europe").performClick()
+        rule.onNodeWithTag("continent_chip_${continent.lowercase()}").performClick()
         rule.waitForIdle()
         tab("flashcards")
         rule.onNodeWithTag("flashcard_flip_card").performClick()
