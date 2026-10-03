@@ -31,7 +31,7 @@ jobs:
           SDKMANAGER=$(ls "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager | head -1)
           yes | "$SDKMANAGER" --licenses > /dev/null || true
 
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
 
       # Lint, unit tests (Robolectric, Compose UI) and both APKs. The release APK is unsigned here:
       # signing only happens when KEYSTORE_PATH, STORE_PASSWORD and KEY_PASSWORD are set.
