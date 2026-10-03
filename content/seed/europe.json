@@ -1,0 +1,270 @@
+{
+ "continent": "Europe",
+ "entries": [
+  {
+   "code": "AL",
+   "name": "Albania",
+   "continent": "Europe",
+   "subregion": "Southern Europe",
+   "leftHand": false
+  },
+  {
+   "code": "AD",
+   "name": "Andorra",
+   "continent": "Europe",
+   "subregion": "Southern Europe",
+   "leftHand": false
+  },
+  {
+   "code": "AT",
+   "name": "Austria",
+   "continent": "Europe",
+   "subregion": "Western Europe",
+   "leftHand": false
+  },
+  {
+   "code": "BY",
+   "name": "Belarus",
+   "continent": "Europe",
+   "subregion": "Eastern Europe",
+   "leftHand": false
+  },
+  {
+   "code": "BE",
+   "name": "Belgium",
+   "continent": "Europe",
+   "subregion": "Western Europe",
+   "leftHand": false
+  },
+  {
+   "code": "BA",
+   "name": "Bosnia and Herzegovina",
+   "continent": "Europe",
+   "subregion": "Southern Europe",
+   "leftHand": false,
+   "ownerRules": "name \"Bosnia and Herzegovina\""
+  },
+  {
+   "code": "BG",
+   "name": "Bulgaria",
+   "continent": "Europe",
+   "subregion": "Eastern Europe",
+   "leftHand": false
+  },
+  {
+   "code": "HR",
+   "name": "Croatia",
+   "continent": "Europe",
+   "subregion": "Southern Europe",
+   "leftHand": false
+  },
+  {
+   "code": "CZ",
+   "name": "Czech Republic",
+   "continent": "Europe",
+   "subregion": "Eastern Europe",
+   "leftHand": false,
+   "ownerRules": "name \"Czech Republic\" (Wikipedia title); officialName \"Czech Republic\"; note the short form Czechia is searchable only if it appears in officialName, so write officialName \"Czech Republic (Czechia)\""
+  },
+  {
+   "code": "DK",
+   "name": "Denmark",
+   "continent": "Europe",
+   "subregion": "Northern Europe",
+   "leftHand": false
+  },
+  {
+   "code": "EE",
+   "name": "Estonia",
+   "continent": "Europe",
+   "subregion": "Northern Europe",
+   "leftHand": false
+  },
+  {
+   "code": "FI",
+   "name": "Finland",
+   "continent": "Europe",
+   "subregion": "Northern Europe",
+   "leftHand": false
+  },
+  {
+   "code": "HU",
+   "name": "Hungary",
+   "continent": "Europe",
+   "subregion": "Eastern Europe",
+   "leftHand": false
+  },
+  {
+   "code": "IS",
+   "name": "Iceland",
+   "continent": "Europe",
+   "subregion": "Northern Europe",
+   "leftHand": false
+  },
+  {
+   "code": "IE",
+   "name": "Ireland",
+   "continent": "Europe",
+   "subregion": "Northern Europe",
+   "leftHand": true
+  },
+  {
+   "code": "XK",
+   "name": "Kosovo",
+   "continent": "Europe",
+   "subregion": "Southern Europe",
+   "leftHand": false,
+   "ownerRules": "funFact must carry the agreed status sentence: \"Kosovo declared independence from Serbia in 2008; about half of the world's countries recognize it, and Serbia does not.\" Population from the Kosovo Agency of Statistics 2024 estimate; Serbia's population must exclude Kosovo."
+  },
+  {
+   "code": "LV",
+   "name": "Latvia",
+   "continent": "Europe",
+   "subregion": "Northern Europe",
+   "leftHand": false
+  },
+  {
+   "code": "LI",
+   "name": "Liechtenstein",
+   "continent": "Europe",
+   "subregion": "Western Europe",
+   "leftHand": false,
+   "ownerRules": "capital Vaduz"
+  },
+  {
+   "code": "LT",
+   "name": "Lithuania",
+   "continent": "Europe",
+   "subregion": "Northern Europe",
+   "leftHand": false
+  },
+  {
+   "code": "LU",
+   "name": "Luxembourg",
+   "continent": "Europe",
+   "subregion": "Western Europe",
+   "leftHand": false
+  },
+  {
+   "code": "MT",
+   "name": "Malta",
+   "continent": "Europe",
+   "subregion": "Southern Europe",
+   "leftHand": true
+  },
+  {
+   "code": "MD",
+   "name": "Moldova",
+   "continent": "Europe",
+   "subregion": "Eastern Europe",
+   "leftHand": false,
+   "ownerRules": "name \"Moldova\", officialName \"Republic of Moldova\""
+  },
+  {
+   "code": "MC",
+   "name": "Monaco",
+   "continent": "Europe",
+   "subregion": "Western Europe",
+   "leftHand": false,
+   "ownerRules": "languages French"
+  },
+  {
+   "code": "ME",
+   "name": "Montenegro",
+   "continent": "Europe",
+   "subregion": "Southern Europe",
+   "leftHand": false
+  },
+  {
+   "code": "NL",
+   "name": "Netherlands",
+   "continent": "Europe",
+   "subregion": "Western Europe",
+   "leftHand": false,
+   "ownerRules": "capital \"Amsterdam (capital), The Hague (seat of government)\", quizCapital \"Amsterdam\""
+  },
+  {
+   "code": "MK",
+   "name": "North Macedonia",
+   "continent": "Europe",
+   "subregion": "Southern Europe",
+   "leftHand": false,
+   "ownerRules": "name \"North Macedonia\" (since 2019)"
+  },
+  {
+   "code": "PL",
+   "name": "Poland",
+   "continent": "Europe",
+   "subregion": "Eastern Europe",
+   "leftHand": false
+  },
+  {
+   "code": "PT",
+   "name": "Portugal",
+   "continent": "Europe",
+   "subregion": "Southern Europe",
+   "leftHand": false
+  },
+  {
+   "code": "RO",
+   "name": "Romania",
+   "continent": "Europe",
+   "subregion": "Eastern Europe",
+   "leftHand": false
+  },
+  {
+   "code": "RU",
+   "name": "Russia",
+   "continent": "Europe",
+   "subregion": "Eastern Europe",
+   "leftHand": false,
+   "ownerRules": "subregion Eastern Europe (UN M49); area is the whole country, including the Asian part"
+  },
+  {
+   "code": "SM",
+   "name": "San Marino",
+   "continent": "Europe",
+   "subregion": "Southern Europe",
+   "leftHand": false,
+   "ownerRules": "capital \"City of San Marino\""
+  },
+  {
+   "code": "RS",
+   "name": "Serbia",
+   "continent": "Europe",
+   "subregion": "Southern Europe",
+   "leftHand": false,
+   "ownerRules": "population excludes Kosovo"
+  },
+  {
+   "code": "SK",
+   "name": "Slovakia",
+   "continent": "Europe",
+   "subregion": "Eastern Europe",
+   "leftHand": false
+  },
+  {
+   "code": "SI",
+   "name": "Slovenia",
+   "continent": "Europe",
+   "subregion": "Southern Europe",
+   "leftHand": false
+  },
+  {
+   "code": "CH",
+   "name": "Switzerland",
+   "continent": "Europe",
+   "subregion": "Western Europe",
+   "leftHand": false,
+   "ownerRules": "capital \"Bern\" (the federal city; Switzerland has no capital in law), quizCapital \"Bern\""
+  },
+  {
+   "code": "VA",
+   "name": "Vatican City",
+   "continent": "Europe",
+   "subregion": "Southern Europe",
+   "leftHand": false,
+   "ownerRules": "officialName \"Vatican City State\"; population from UN WPP \"Holy See\"; languages Italian (Latin is the Holy See's official language; say so in a note only)."
+  }
+ ]
+}
