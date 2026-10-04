@@ -1,0 +1,229 @@
+{
+ "continent": "Americas",
+ "entries": [
+  {
+   "code": "BZ",
+   "name": "Belize",
+   "continent": "Americas",
+   "subregion": "Central America",
+   "leftHand": false,
+   "ownerRules": "capital Belmopan; languages English. Flag: explain the two people and the border of 50 leaves."
+  },
+  {
+   "code": "CR",
+   "name": "Costa Rica",
+   "continent": "Americas",
+   "subregion": "Central America",
+   "leftHand": false,
+   "ownerRules": "capital San José."
+  },
+  {
+   "code": "SV",
+   "name": "El Salvador",
+   "continent": "Americas",
+   "subregion": "Central America",
+   "leftHand": false,
+   "ownerRules": "capital San Salvador; currency EXACTLY \"US Dollar (US$)\" (bitcoin is no longer legal tender; do not mention it)."
+  },
+  {
+   "code": "GT",
+   "name": "Guatemala",
+   "continent": "Americas",
+   "subregion": "Central America",
+   "leftHand": false,
+   "ownerRules": "capital Guatemala City."
+  },
+  {
+   "code": "HN",
+   "name": "Honduras",
+   "continent": "Americas",
+   "subregion": "Central America",
+   "leftHand": false,
+   "ownerRules": "capital Tegucigalpa."
+  },
+  {
+   "code": "NI",
+   "name": "Nicaragua",
+   "continent": "Americas",
+   "subregion": "Central America",
+   "leftHand": false,
+   "ownerRules": "capital Managua. Neutral wording."
+  },
+  {
+   "code": "PA",
+   "name": "Panama",
+   "continent": "Americas",
+   "subregion": "Central America",
+   "leftHand": false,
+   "ownerRules": "capital Panama City; currency: the balboa and the US dollar are both legal tender nationwide, write \"Panamanian Balboa (B/.) and US Dollar (US$)\"."
+  },
+  {
+   "code": "AG",
+   "name": "Antigua and Barbuda",
+   "continent": "Americas",
+   "subregion": "Caribbean",
+   "leftHand": true,
+   "ownerRules": "capital \"St. John's\", currency EXACTLY \"East Caribbean Dollar (EC$)\". drives on the left."
+  },
+  {
+   "code": "BS",
+   "name": "Bahamas",
+   "continent": "Americas",
+   "subregion": "Caribbean",
+   "leftHand": true,
+   "ownerRules": "name \"Bahamas\" (short form; the article title is The Bahamas), officialName \"Commonwealth of The Bahamas\", capital Nassau. drives on the left."
+  },
+  {
+   "code": "BB",
+   "name": "Barbados",
+   "continent": "Americas",
+   "subregion": "Caribbean",
+   "leftHand": true,
+   "ownerRules": "capital Bridgetown. drives on the left."
+  },
+  {
+   "code": "CU",
+   "name": "Cuba",
+   "continent": "Americas",
+   "subregion": "Caribbean",
+   "leftHand": false,
+   "ownerRules": "capital Havana. Neutral wording."
+  },
+  {
+   "code": "DM",
+   "name": "Dominica",
+   "continent": "Americas",
+   "subregion": "Caribbean",
+   "leftHand": true,
+   "ownerRules": "name \"Dominica\" (not the Dominican Republic), capital Roseau, currency EXACTLY \"East Caribbean Dollar (EC$)\". drives on the left."
+  },
+  {
+   "code": "DO",
+   "name": "Dominican Republic",
+   "continent": "Americas",
+   "subregion": "Caribbean",
+   "leftHand": false,
+   "ownerRules": "name \"Dominican Republic\", capital Santo Domingo."
+  },
+  {
+   "code": "GD",
+   "name": "Grenada",
+   "continent": "Americas",
+   "subregion": "Caribbean",
+   "leftHand": true,
+   "ownerRules": "capital \"St. George's\", currency EXACTLY \"East Caribbean Dollar (EC$)\". drives on the left."
+  },
+  {
+   "code": "HT",
+   "name": "Haiti",
+   "continent": "Americas",
+   "subregion": "Caribbean",
+   "leftHand": false,
+   "ownerRules": "capital Port-au-Prince; languages French, Haitian Creole. Neutral wording."
+  },
+  {
+   "code": "JM",
+   "name": "Jamaica",
+   "continent": "Americas",
+   "subregion": "Caribbean",
+   "leftHand": true,
+   "ownerRules": "capital Kingston; languages English. drives on the left. The flag is the only national flag without red, white or blue: say so."
+  },
+  {
+   "code": "KN",
+   "name": "Saint Kitts and Nevis",
+   "continent": "Americas",
+   "subregion": "Caribbean",
+   "leftHand": true,
+   "ownerRules": "name \"Saint Kitts and Nevis\", officialName \"Federation of Saint Christopher and Nevis\", capital Basseterre, currency EXACTLY \"East Caribbean Dollar (EC$)\". drives on the left."
+  },
+  {
+   "code": "LC",
+   "name": "Saint Lucia",
+   "continent": "Americas",
+   "subregion": "Caribbean",
+   "leftHand": true,
+   "ownerRules": "capital Castries, currency EXACTLY \"East Caribbean Dollar (EC$)\". drives on the left."
+  },
+  {
+   "code": "VC",
+   "name": "Saint Vincent and the Grenadines",
+   "continent": "Americas",
+   "subregion": "Caribbean",
+   "leftHand": true,
+   "ownerRules": "name \"Saint Vincent and the Grenadines\", capital Kingstown, currency EXACTLY \"East Caribbean Dollar (EC$)\". drives on the left."
+  },
+  {
+   "code": "TT",
+   "name": "Trinidad and Tobago",
+   "continent": "Americas",
+   "subregion": "Caribbean",
+   "leftHand": true,
+   "ownerRules": "capital Port of Spain. drives on the left."
+  },
+  {
+   "code": "BO",
+   "name": "Bolivia",
+   "continent": "Americas",
+   "subregion": "South America",
+   "leftHand": false,
+   "ownerRules": "capital EXACTLY \"Sucre (constitutional capital), La Paz (seat of government)\", quizCapital \"Sucre\". Languages: the constitution makes Spanish and 36 indigenous languages official; list Spanish, Quechua, Aymara, Guaraní and say in the note that 36 indigenous languages are official in all."
+  },
+  {
+   "code": "EC",
+   "name": "Ecuador",
+   "continent": "Americas",
+   "subregion": "South America",
+   "leftHand": false,
+   "ownerRules": "capital Quito; currency EXACTLY \"US Dollar (US$)\"; languages Spanish (Kichwa and Shuar are official for intercultural relations: note only)."
+  },
+  {
+   "code": "GY",
+   "name": "Guyana",
+   "continent": "Americas",
+   "subregion": "South America",
+   "leftHand": true,
+   "ownerRules": "capital Georgetown; languages English. drives on the left."
+  },
+  {
+   "code": "PY",
+   "name": "Paraguay",
+   "continent": "Americas",
+   "subregion": "South America",
+   "leftHand": false,
+   "ownerRules": "capital Asunción; languages Spanish, Guaraní."
+  },
+  {
+   "code": "PE",
+   "name": "Peru",
+   "continent": "Americas",
+   "subregion": "South America",
+   "leftHand": false,
+   "ownerRules": "capital Lima; languages Spanish, Quechua, Aymara (co-official where they predominate: say so in the note)."
+  },
+  {
+   "code": "SR",
+   "name": "Suriname",
+   "continent": "Americas",
+   "subregion": "South America",
+   "leftHand": true,
+   "ownerRules": "capital Paramaribo; languages Dutch. drives on the left."
+  },
+  {
+   "code": "UY",
+   "name": "Uruguay",
+   "continent": "Americas",
+   "subregion": "South America",
+   "leftHand": false,
+   "ownerRules": "capital Montevideo."
+  },
+  {
+   "code": "VE",
+   "name": "Venezuela",
+   "continent": "Americas",
+   "subregion": "South America",
+   "leftHand": false,
+   "ownerRules": "capital Caracas; languages Spanish. The flag has eight stars since 2006: explain the eighth. Neutral wording."
+  }
+ ]
+}

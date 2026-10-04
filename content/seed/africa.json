@@ -1,0 +1,389 @@
+{
+ "continent": "Africa",
+ "entries": [
+  {
+   "code": "DZ",
+   "name": "Algeria",
+   "continent": "Africa",
+   "subregion": "Northern Africa",
+   "leftHand": false,
+   "ownerRules": "capital Algiers; languages Arabic, Tamazight."
+  },
+  {
+   "code": "LY",
+   "name": "Libya",
+   "continent": "Africa",
+   "subregion": "Northern Africa",
+   "leftHand": false,
+   "ownerRules": "capital Tripoli; neutral wording on the government."
+  },
+  {
+   "code": "SD",
+   "name": "Sudan",
+   "continent": "Africa",
+   "subregion": "Northern Africa",
+   "leftHand": false,
+   "ownerRules": "capital Khartoum (the constitutional capital; no dated wording about the temporary seat). Neutral wording."
+  },
+  {
+   "code": "TN",
+   "name": "Tunisia",
+   "continent": "Africa",
+   "subregion": "Northern Africa",
+   "leftHand": false,
+   "ownerRules": "capital Tunis; languages Arabic."
+  },
+  {
+   "code": "BJ",
+   "name": "Benin",
+   "continent": "Africa",
+   "subregion": "Western Africa",
+   "leftHand": false,
+   "ownerRules": "capital EXACTLY \"Porto-Novo (capital), Cotonou (seat of government)\", quizCapital \"Porto-Novo\"."
+  },
+  {
+   "code": "BF",
+   "name": "Burkina Faso",
+   "continent": "Africa",
+   "subregion": "Western Africa",
+   "leftHand": false,
+   "ownerRules": "capital Ouagadougou. Languages: the 2024 constitutional amendment made the national languages official and French a working language; verify and list the official languages as the law names them."
+  },
+  {
+   "code": "CV",
+   "name": "Cape Verde",
+   "continent": "Africa",
+   "subregion": "Western Africa",
+   "leftHand": false,
+   "ownerRules": "name \"Cape Verde\" (Wikipedia title), officialName \"Republic of Cabo Verde\", capital Praia."
+  },
+  {
+   "code": "CI",
+   "name": "Ivory Coast",
+   "continent": "Africa",
+   "subregion": "Western Africa",
+   "leftHand": false,
+   "ownerRules": "name \"Ivory Coast\" (Wikipedia title), officialName \"Republic of Côte d'Ivoire\". capital EXACTLY \"Yamoussoukro (capital), Abidjan (economic capital)\", quizCapital \"Yamoussoukro\"."
+  },
+  {
+   "code": "GM",
+   "name": "Gambia",
+   "continent": "Africa",
+   "subregion": "Western Africa",
+   "leftHand": false,
+   "ownerRules": "name \"Gambia\" (short form; the article title is The Gambia), officialName \"Republic of The Gambia\", capital Banjul."
+  },
+  {
+   "code": "GH",
+   "name": "Ghana",
+   "continent": "Africa",
+   "subregion": "Western Africa",
+   "leftHand": false,
+   "ownerRules": "capital Accra; languages English."
+  },
+  {
+   "code": "GN",
+   "name": "Guinea",
+   "continent": "Africa",
+   "subregion": "Western Africa",
+   "leftHand": false,
+   "ownerRules": "capital Conakry; languages French."
+  },
+  {
+   "code": "GW",
+   "name": "Guinea-Bissau",
+   "continent": "Africa",
+   "subregion": "Western Africa",
+   "leftHand": false,
+   "ownerRules": "capital Bissau; languages Portuguese."
+  },
+  {
+   "code": "LR",
+   "name": "Liberia",
+   "continent": "Africa",
+   "subregion": "Western Africa",
+   "leftHand": false,
+   "ownerRules": "capital Monrovia; languages English."
+  },
+  {
+   "code": "ML",
+   "name": "Mali",
+   "continent": "Africa",
+   "subregion": "Western Africa",
+   "leftHand": false,
+   "ownerRules": "capital Bamako. Languages: the 2023 constitution made the national languages official and French a working language; verify and list them as the constitution names them, all of them."
+  },
+  {
+   "code": "MR",
+   "name": "Mauritania",
+   "continent": "Africa",
+   "subregion": "Western Africa",
+   "leftHand": false,
+   "ownerRules": "capital Nouakchott; languages Arabic. Flag: the two red bands were added in 2017 (verify) and the text must explain them."
+  },
+  {
+   "code": "NE",
+   "name": "Niger",
+   "continent": "Africa",
+   "subregion": "Western Africa",
+   "leftHand": false,
+   "ownerRules": "capital Niamey. Languages: verify the 2025 refoundation charter (Hausa as national language, French demoted to working language) and list the official languages as it names them."
+  },
+  {
+   "code": "SN",
+   "name": "Senegal",
+   "continent": "Africa",
+   "subregion": "Western Africa",
+   "leftHand": false,
+   "ownerRules": "capital Dakar; languages French."
+  },
+  {
+   "code": "SL",
+   "name": "Sierra Leone",
+   "continent": "Africa",
+   "subregion": "Western Africa",
+   "leftHand": false,
+   "ownerRules": "capital Freetown; languages English."
+  },
+  {
+   "code": "TG",
+   "name": "Togo",
+   "continent": "Africa",
+   "subregion": "Western Africa",
+   "leftHand": false,
+   "ownerRules": "capital Lomé; languages French."
+  },
+  {
+   "code": "AO",
+   "name": "Angola",
+   "continent": "Africa",
+   "subregion": "Middle Africa",
+   "leftHand": false,
+   "ownerRules": "capital Luanda; languages Portuguese."
+  },
+  {
+   "code": "CM",
+   "name": "Cameroon",
+   "continent": "Africa",
+   "subregion": "Middle Africa",
+   "leftHand": false,
+   "ownerRules": "capital Yaoundé; languages French, English."
+  },
+  {
+   "code": "CF",
+   "name": "Central African Republic",
+   "continent": "Africa",
+   "subregion": "Middle Africa",
+   "leftHand": false,
+   "ownerRules": "name \"Central African Republic\", capital Bangui; languages Sango, French."
+  },
+  {
+   "code": "TD",
+   "name": "Chad",
+   "continent": "Africa",
+   "subregion": "Middle Africa",
+   "leftHand": false,
+   "ownerRules": "capital N'Djamena; languages French, Arabic. The flag is nearly identical to Romania's: say in the flag text that it dates from 1959 and that the blue is darker."
+  },
+  {
+   "code": "CG",
+   "name": "Republic of the Congo",
+   "continent": "Africa",
+   "subregion": "Middle Africa",
+   "leftHand": false,
+   "ownerRules": "name \"Republic of the Congo\", capital Brazzaville."
+  },
+  {
+   "code": "CD",
+   "name": "Democratic Republic of the Congo",
+   "continent": "Africa",
+   "subregion": "Middle Africa",
+   "leftHand": false,
+   "ownerRules": "name \"Democratic Republic of the Congo\", capital Kinshasa."
+  },
+  {
+   "code": "GQ",
+   "name": "Equatorial Guinea",
+   "continent": "Africa",
+   "subregion": "Middle Africa",
+   "leftHand": false,
+   "ownerRules": "capital Malabo: the planned move to Ciudad de la Paz has not taken legal effect, so Malabo stays, with no dated wording. languages Spanish, French, Portuguese."
+  },
+  {
+   "code": "GA",
+   "name": "Gabon",
+   "continent": "Africa",
+   "subregion": "Middle Africa",
+   "leftHand": false,
+   "ownerRules": "capital Libreville; languages French."
+  },
+  {
+   "code": "ST",
+   "name": "São Tomé and Príncipe",
+   "continent": "Africa",
+   "subregion": "Middle Africa",
+   "leftHand": false,
+   "ownerRules": "name \"São Tomé and Príncipe\", capital \"São Tomé\"."
+  },
+  {
+   "code": "BI",
+   "name": "Burundi",
+   "continent": "Africa",
+   "subregion": "Eastern Africa",
+   "leftHand": false,
+   "ownerRules": "capital EXACTLY \"Gitega (capital), Bujumbura (economic capital)\", quizCapital \"Gitega\"."
+  },
+  {
+   "code": "KM",
+   "name": "Comoros",
+   "continent": "Africa",
+   "subregion": "Eastern Africa",
+   "leftHand": false,
+   "ownerRules": "capital Moroni; languages Comorian, Arabic, French."
+  },
+  {
+   "code": "DJ",
+   "name": "Djibouti",
+   "continent": "Africa",
+   "subregion": "Eastern Africa",
+   "leftHand": false,
+   "ownerRules": "capital \"Djibouti\" (the city shares the country's name); languages French, Arabic."
+  },
+  {
+   "code": "ER",
+   "name": "Eritrea",
+   "continent": "Africa",
+   "subregion": "Eastern Africa",
+   "leftHand": false,
+   "ownerRules": "capital Asmara; Eritrea has no official language in law: list the working languages Tigrinya, Arabic, English and explain in the note."
+  },
+  {
+   "code": "ET",
+   "name": "Ethiopia",
+   "continent": "Africa",
+   "subregion": "Eastern Africa",
+   "leftHand": false,
+   "ownerRules": "capital Addis Ababa; languages: the five federal working languages (Afar, Amharic, Oromo, Somali, Tigrinya) per the 2020 decision; verify."
+  },
+  {
+   "code": "MG",
+   "name": "Madagascar",
+   "continent": "Africa",
+   "subregion": "Eastern Africa",
+   "leftHand": false,
+   "ownerRules": "capital Antananarivo; languages Malagasy, French."
+  },
+  {
+   "code": "MW",
+   "name": "Malawi",
+   "continent": "Africa",
+   "subregion": "Eastern Africa",
+   "leftHand": true,
+   "ownerRules": "capital Lilongwe; languages English, Chichewa (verify). Flag: the rising sun returned in 2012. drives on the left."
+  },
+  {
+   "code": "MU",
+   "name": "Mauritius",
+   "continent": "Africa",
+   "subregion": "Eastern Africa",
+   "leftHand": true,
+   "ownerRules": "capital Port Louis; Mauritius has no official language in law and English is the language of parliament: list languages [\"English\"] and explain in the note. drives on the left."
+  },
+  {
+   "code": "MZ",
+   "name": "Mozambique",
+   "continent": "Africa",
+   "subregion": "Eastern Africa",
+   "leftHand": true,
+   "ownerRules": "capital Maputo; languages Portuguese; the flag shows an AK-47 rifle, explain why neutrally. drives on the left."
+  },
+  {
+   "code": "RW",
+   "name": "Rwanda",
+   "continent": "Africa",
+   "subregion": "Eastern Africa",
+   "leftHand": false,
+   "ownerRules": "capital Kigali; languages Kinyarwanda, English, French, Swahili."
+  },
+  {
+   "code": "SC",
+   "name": "Seychelles",
+   "continent": "Africa",
+   "subregion": "Eastern Africa",
+   "leftHand": true,
+   "ownerRules": "capital Victoria; languages Seychellois Creole, English, French. drives on the left."
+  },
+  {
+   "code": "SO",
+   "name": "Somalia",
+   "continent": "Africa",
+   "subregion": "Eastern Africa",
+   "leftHand": false,
+   "ownerRules": "capital Mogadishu; languages Somali, Arabic. Neutral wording."
+  },
+  {
+   "code": "SS",
+   "name": "South Sudan",
+   "continent": "Africa",
+   "subregion": "Eastern Africa",
+   "leftHand": false,
+   "ownerRules": "name \"South Sudan\", capital Juba; languages English."
+  },
+  {
+   "code": "UG",
+   "name": "Uganda",
+   "continent": "Africa",
+   "subregion": "Eastern Africa",
+   "leftHand": true,
+   "ownerRules": "capital Kampala; languages English, Swahili. drives on the left."
+  },
+  {
+   "code": "ZM",
+   "name": "Zambia",
+   "continent": "Africa",
+   "subregion": "Eastern Africa",
+   "leftHand": true,
+   "ownerRules": "capital Lusaka; languages English. drives on the left."
+  },
+  {
+   "code": "ZW",
+   "name": "Zimbabwe",
+   "continent": "Africa",
+   "subregion": "Eastern Africa",
+   "leftHand": true,
+   "ownerRules": "capital Harare. The constitution names 16 official languages: list all 16 as South Africa's entry lists its 12. drives on the left."
+  },
+  {
+   "code": "BW",
+   "name": "Botswana",
+   "continent": "Africa",
+   "subregion": "Southern Africa",
+   "leftHand": true,
+   "ownerRules": "capital Gaborone; languages English (official), Setswana (national): list both. drives on the left."
+  },
+  {
+   "code": "SZ",
+   "name": "Eswatini",
+   "continent": "Africa",
+   "subregion": "Southern Africa",
+   "leftHand": true,
+   "ownerRules": "name \"Eswatini\", officialName \"Kingdom of Eswatini\". capital EXACTLY \"Mbabane (administrative), Lobamba (royal and legislative)\", quizCapital \"Mbabane\". drives on the left."
+  },
+  {
+   "code": "LS",
+   "name": "Lesotho",
+   "continent": "Africa",
+   "subregion": "Southern Africa",
+   "leftHand": true,
+   "ownerRules": "capital Maseru; languages Sesotho, English. drives on the left."
+  },
+  {
+   "code": "NA",
+   "name": "Namibia",
+   "continent": "Africa",
+   "subregion": "Southern Africa",
+   "leftHand": true,
+   "ownerRules": "capital Windhoek; languages English. drives on the left."
+  }
+ ]
+}
