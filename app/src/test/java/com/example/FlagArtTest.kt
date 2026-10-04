@@ -240,6 +240,35 @@ class FlagArtTest {
         "WS" to listOf(Anchor(0.02f, 0.02f, 0.06f, 0.1f, "blue"), Anchor(0.6f, 0.6f, 0.98f, 0.98f, "red"), Anchor(0.6f, 0.02f, 0.98f, 0.4f, "red")),
         "TO" to listOf(Anchor(0.02f, 0.02f, 0.06f, 0.08f, "white"), Anchor(0.6f, 0.6f, 0.98f, 0.98f, "red"), Anchor(0.6f, 0.02f, 0.98f, 0.4f, "red")),
         "TV" to listOf(Anchor(0.6f, 0.6f, 0.98f, 0.98f, "blue"), Anchor(0.6f, 0.02f, 0.98f, 0.2f, "blue"), Anchor(0.02f, 0.6f, 0.4f, 0.98f, "blue")),
+        // Americas batch
+        "BZ" to listOf(Anchor(0.02f, 0.02f, 0.98f, 0.06f, "red"), Anchor(0.02f, 0.94f, 0.98f, 0.98f, "red"), Anchor(0.02f, 0.3f, 0.2f, 0.7f, "blue")),
+        "CR" to listOf(Anchor(0.02f, 0.02f, 0.98f, 0.14f, "blue"), Anchor(0.02f, 0.2f, 0.98f, 0.3f, "white"), Anchor(0.02f, 0.38f, 0.98f, 0.62f, "red"), Anchor(0.02f, 0.86f, 0.98f, 0.98f, "blue")),
+        "SV" to listOf(Anchor(0.02f, 0.02f, 0.98f, 0.3f, "blue"), Anchor(0.02f, 0.7f, 0.98f, 0.98f, "blue"), Anchor(0.02f, 0.4f, 0.25f, 0.6f, "white")),
+        "GT" to listOf(Anchor(0.02f, 0.1f, 0.3f, 0.9f, "blue"), Anchor(0.7f, 0.1f, 0.98f, 0.9f, "blue"), Anchor(0.37f, 0.02f, 0.63f, 0.2f, "white")),
+        "HN" to listOf(Anchor(0.02f, 0.02f, 0.98f, 0.3f, "blue"), Anchor(0.02f, 0.7f, 0.98f, 0.98f, "blue"), Anchor(0.02f, 0.4f, 0.2f, 0.6f, "white")),
+        "NI" to listOf(Anchor(0.02f, 0.02f, 0.98f, 0.3f, "blue"), Anchor(0.02f, 0.7f, 0.98f, 0.98f, "blue"), Anchor(0.02f, 0.4f, 0.25f, 0.6f, "white")),
+        "PA" to listOf(Anchor(0.55f, 0.02f, 0.98f, 0.45f, "red"), Anchor(0.02f, 0.55f, 0.45f, 0.98f, "blue"), Anchor(0.02f, 0.02f, 0.1f, 0.1f, "white"), Anchor(0.9f, 0.9f, 0.98f, 0.98f, "white")),
+        "AG" to listOf(Anchor(0.02f, 0.8f, 0.1f, 0.98f, "red"), Anchor(0.9f, 0.8f, 0.98f, 0.98f, "red"), Anchor(0.2f, 0.05f, 0.28f, 0.15f, "black"), Anchor(0.45f, 0.6f, 0.55f, 0.75f, "white")),
+        "BS" to listOf(Anchor(0.5f, 0.02f, 0.98f, 0.3f, "blue"), Anchor(0.5f, 0.38f, 0.98f, 0.62f, "yellow"), Anchor(0.5f, 0.7f, 0.98f, 0.98f, "blue"), Anchor(0.02f, 0.4f, 0.12f, 0.6f, "black")),
+        "BB" to listOf(Anchor(0.02f, 0.1f, 0.3f, 0.9f, "blue"), Anchor(0.7f, 0.1f, 0.98f, 0.9f, "blue"), Anchor(0.37f, 0.02f, 0.63f, 0.1f, "orange")),
+        "CU" to listOf(Anchor(0.6f, 0.02f, 0.98f, 0.18f, "blue"), Anchor(0.6f, 0.22f, 0.98f, 0.38f, "white"), Anchor(0.6f, 0.82f, 0.98f, 0.98f, "blue"), Anchor(0.02f, 0.44f, 0.08f, 0.56f, "red")),
+        "DM" to listOf(Anchor(0.02f, 0.02f, 0.3f, 0.3f, "green"), Anchor(0.7f, 0.7f, 0.98f, 0.98f, "green"), Anchor(0.38f, 0.47f, 0.41f, 0.53f, "red")),
+        "DO" to listOf(Anchor(0.02f, 0.02f, 0.4f, 0.4f, "blue"), Anchor(0.6f, 0.6f, 0.98f, 0.98f, "blue"), Anchor(0.6f, 0.02f, 0.98f, 0.4f, "red"), Anchor(0.02f, 0.6f, 0.4f, 0.98f, "red"), Anchor(0.46f, 0.02f, 0.54f, 0.3f, "white")),
+        "GD" to listOf(Anchor(0.02f, 0.02f, 0.98f, 0.06f, "red"), Anchor(0.02f, 0.94f, 0.98f, 0.98f, "red"), Anchor(0.45f, 0.12f, 0.55f, 0.2f, "yellow"), Anchor(0.1f, 0.3f, 0.15f, 0.36f, "green")),
+        "HT" to listOf(Anchor(0.02f, 0.02f, 0.98f, 0.3f, "blue"), Anchor(0.02f, 0.7f, 0.98f, 0.98f, "red")),
+        "JM" to listOf(Anchor(0.4f, 0.02f, 0.6f, 0.1f, "green"), Anchor(0.4f, 0.9f, 0.6f, 0.98f, "green"), Anchor(0.02f, 0.4f, 0.1f, 0.6f, "black"), Anchor(0.9f, 0.4f, 0.98f, 0.6f, "black")),
+        "KN" to listOf(Anchor(0.02f, 0.02f, 0.2f, 0.2f, "green"), Anchor(0.8f, 0.8f, 0.98f, 0.98f, "red"), Anchor(0.47f, 0.47f, 0.53f, 0.53f, "black")),
+        "LC" to listOf(Anchor(0.02f, 0.02f, 0.2f, 0.98f, "blue"), Anchor(0.8f, 0.02f, 0.98f, 0.98f, "blue"), Anchor(0.3f, 0.85f, 0.35f, 0.9f, "yellow")),
+        "VC" to listOf(Anchor(0.02f, 0.1f, 0.2f, 0.9f, "blue"), Anchor(0.8f, 0.1f, 0.98f, 0.9f, "green"), Anchor(0.3f, 0.02f, 0.7f, 0.1f, "yellow")),
+        "TT" to listOf(Anchor(0.7f, 0.02f, 0.98f, 0.3f, "red"), Anchor(0.02f, 0.7f, 0.3f, 0.98f, "red"), Anchor(0.47f, 0.47f, 0.53f, 0.53f, "black")),
+        "BO" to listOf(Anchor(0.02f, 0.02f, 0.98f, 0.3f, "red"), Anchor(0.02f, 0.7f, 0.98f, 0.98f, "green"), Anchor(0.02f, 0.4f, 0.2f, 0.6f, "yellow")),
+        "EC" to listOf(Anchor(0.02f, 0.02f, 0.98f, 0.2f, "yellow"), Anchor(0.02f, 0.55f, 0.2f, 0.72f, "blue"), Anchor(0.02f, 0.8f, 0.98f, 0.98f, "red")),
+        "GY" to listOf(Anchor(0.6f, 0.02f, 0.98f, 0.2f, "green"), Anchor(0.6f, 0.8f, 0.98f, 0.98f, "green"), Anchor(0.1f, 0.44f, 0.16f, 0.56f, "red"), Anchor(0.5f, 0.47f, 0.56f, 0.53f, "yellow")),
+        "PY" to listOf(Anchor(0.02f, 0.02f, 0.98f, 0.3f, "red"), Anchor(0.02f, 0.7f, 0.98f, 0.98f, "blue"), Anchor(0.02f, 0.4f, 0.2f, 0.6f, "white")),
+        "PE" to listOf(Anchor(0.02f, 0.1f, 0.3f, 0.9f, "red"), Anchor(0.7f, 0.1f, 0.98f, 0.9f, "red"), Anchor(0.37f, 0.02f, 0.63f, 0.2f, "white")),
+        "SR" to listOf(Anchor(0.02f, 0.02f, 0.98f, 0.18f, "green"), Anchor(0.02f, 0.82f, 0.98f, 0.98f, "green"), Anchor(0.02f, 0.4f, 0.25f, 0.6f, "red"), Anchor(0.47f, 0.47f, 0.53f, 0.53f, "yellow")),
+        "UY" to listOf(Anchor(0.02f, 0.02f, 0.1f, 0.1f, "white"), Anchor(0.6f, 0.12f, 0.98f, 0.2f, "blue"), Anchor(0.6f, 0.9f, 0.98f, 0.98f, "white")),
+        "VE" to listOf(Anchor(0.02f, 0.02f, 0.98f, 0.3f, "yellow"), Anchor(0.02f, 0.7f, 0.98f, 0.98f, "red"), Anchor(0.02f, 0.38f, 0.15f, 0.62f, "blue")),
         "CH" to listOf(Anchor(0.02f, 0.02f, 0.2f, 0.2f, "red"), Anchor(0.47f, 0.47f, 0.53f, 0.53f, "white"), Anchor(0.8f, 0.8f, 0.98f, 0.98f, "red")),
         "XK" to listOf(Anchor(0.02f, 0.02f, 0.98f, 0.2f, "blue"), Anchor(0.02f, 0.8f, 0.98f, 0.98f, "blue")),
         "AL" to listOf(Anchor(0.02f, 0.02f, 0.2f, 0.98f, "red"), Anchor(0.8f, 0.02f, 0.98f, 0.98f, "red")),
@@ -273,7 +302,11 @@ class FlagArtTest {
         "CD", "GQ", "GA", "ST", "BI", "KM", "DJ", "ER", "ET", "MG", "MW", "MU",
         "MZ", "RW", "SC", "SO", "SS", "UG", "ZM", "ZW", "BW", "SZ", "LS", "NA",
         // Oceania: the Southern Cross flags (PG, WS vs AU/NZ), the Union Jack of TV, NR/PW light blues
-        "PG", "SB", "VU", "KI", "MH", "FM", "NR", "PW", "WS", "TO", "TV"
+        "PG", "SB", "VU", "KI", "MH", "FM", "NR", "PW", "WS", "TO", "TV",
+        // Americas: the five Central American blue-white-blue flags, CO/EC/VE, HN's navy shade, and the rest
+        "BZ", "CR", "SV", "GT", "HN", "NI", "PA", "AG", "BS", "BB", "CU", "DM",
+        "DO", "GD", "HT", "JM", "KN", "LC", "VC", "TT", "BO", "EC", "GY", "PY",
+        "PE", "SR", "UY", "VE"
     )
 
     @Test
