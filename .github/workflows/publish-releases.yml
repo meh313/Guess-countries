@@ -1,0 +1,72 @@
+name: Publish releases
+
+# Publishes signed APKs as GitHub Releases. The APKs are built and signed on the maintainer's machine
+# (the signing key is neither in this repository nor in its secrets), so this workflow only verifies
+# them and uploads them.
+#
+# Usage: on any branch, add release-assets/manifest.json plus the files it names, push, and run this
+# workflow on that branch (Actions > Publish releases > Run workflow). Each manifest entry gives the tag,
+# the commit the APK was built from, a title, a notes file, whether it is the latest release, the APK
+# (checked against the release certificate and its .sha256 file) and the files to attach. Tags that
+# already have a release are skipped, so a run can be repeated safely. The branch can be deleted
+# afterwards; the releases keep the files.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify signatures and checksums
+        env:
+          EXPECTED_CERT: 151c68bfdc8dba3cfdba818ff827309344382e268dc45cd5bc3ac88460189d7a
+        run: |
+          set -euo pipefail
+          if [ ! -f release-assets/manifest.json ]; then
+            echo "::notice::release-assets/manifest.json is not on this branch; nothing to publish."
+            exit 0
+          fi
+          cd release-assets
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          for apk in $(jq -r '.[].apk' manifest.json); do
+            cert=$("$APKSIGNER" verify --print-certs "$apk" | sed -n 's/.*SHA-256 digest: //p' | head -1)
+            if [ "$cert" != "$EXPECTED_CERT" ]; then
+              echo "::error::$apk is not signed with the release key (certificate $cert)"
+              exit 1
+            fi
+            sha256sum -c "$apk.sha256"
+          done
+
+      - name: Create the releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          [ -f release-assets/manifest.json ] || exit 0
+          mapfile -t entries < <(jq -c '.[]' release-assets/manifest.json)
+          cd release-assets
+          for entry in "${entries[@]}"; do
+            tag=$(jq -r .tag <<< "$entry")
+            if gh release view "$tag" > /dev/null 2>&1; then
+              echo "$tag already has a release; skipping"
+              continue
+            fi
+            commit=$(git rev-parse --verify "$(jq -r .commit <<< "$entry")^{commit}")
+            title=$(jq -r .title <<< "$entry")
+            notes=$(jq -r .notes <<< "$entry")
+            latest=$(jq -r '.latest // false' <<< "$entry")
+            mapfile -t files < <(jq -r '.files[]' <<< "$entry")
+            gh release create "$tag" --target "$commit" --title "$title" --notes-file "$notes" \
+              --latest="$latest" "${files[@]}"
+            echo "published $tag from $commit with ${#files[@]} files"
+          done
