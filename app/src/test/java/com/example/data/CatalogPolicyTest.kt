@@ -28,6 +28,9 @@ class CatalogPolicyTest {
      * pass cannot add or drop a country without changing this list.
      */
     private val continentSeedLists = mapOf(
+        "Americas" to setOf(
+            "AG", "AR", "BB", "BO", "BR", "BS", "BZ", "CA", "CL", "CO", "CR", "CU", "DM", "DO", "EC", "GD", "GT", "GY", "HN", "HT", "JM", "KN", "LC", "MX", "NI", "PA", "PE", "PY", "SR", "SV", "TT", "US", "UY", "VC", "VE"
+        ),
         "Oceania" to setOf(
             "AU", "FJ", "FM", "KI", "MH", "NR", "NZ", "PG", "PW", "SB", "TO", "TV", "VU", "WS"
         ),
@@ -124,5 +127,27 @@ class CatalogPolicyTest {
         assertEquals("South Tarawa", country("KI").capital)
         assertEquals("Australian Dollar (A$)", country("TV").currency)
         assertEquals("US Dollar (US$)", country("PW").currency)
+    }
+
+    /** Decisions the owner made for the Americas; see the Americas PR. */
+    @Test
+    fun americasFollowsTheOwnersDecisions() {
+        assertEquals("Sucre", country("BO").quizCapital)
+        assertTrue(country("BO").capital.contains("La Paz"))
+        assertEquals("Bahamas", country("BS").name)
+        assertEquals("Dominica", country("DM").name)
+        assertEquals("Dominican Republic", country("DO").name)
+        assertEquals("East Caribbean Dollar (EC$)", country("LC").currency)
+        assertEquals("US Dollar (US$)", country("EC").currency)
+        assertEquals("US Dollar (US$)", country("US").currency)
+        assertEquals("Panamanian Balboa (B/.) and US Dollar (US$)", country("PA").currency)
+    }
+
+    /** Every continent's list is pinned above, so the catalog is complete: 196 countries plus Antarctica. */
+    @Test
+    fun theCatalogIsComplete() {
+        assertEquals(197, allCountries.size)
+        assertEquals(196, allCountries.count { it.isSovereign })
+        assertEquals(continentSeedLists.values.sumOf { it.size }, allCountries.count { it.continent != "Antarctica" })
     }
 }

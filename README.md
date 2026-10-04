@@ -1,7 +1,7 @@
 # World Flags & Continents
 
-An offline Android app for learning world geography: browse the countries of the world (169 today, being
-expanded one continent at a time), drill them with flashcards, and test yourself with quizzes. Everything runs on the device; there is no network access.
+An offline Android app for learning world geography: browse all 196 countries of the world plus Antarctica,
+drill them with flashcards, and test yourself with quizzes. Everything runs on the device; there is no network access.
 
 ## Features
 
