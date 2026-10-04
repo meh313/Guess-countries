@@ -74,7 +74,7 @@ class CountryDatasetTest {
         "Asia" to setOf("JP", "IN", "TH", "BD", "BT", "BN", "CY", "ID", "MY", "MV", "NP", "PK", "SG", "LK", "TL"),
         "Africa" to setOf("KE", "ZA", "TZ", "BW", "SZ", "LS", "MW", "MU", "MZ", "NA", "SC", "UG", "ZM", "ZW"),
         "Americas" to emptySet(),
-        "Oceania" to setOf("AU", "NZ", "FJ")
+        "Oceania" to setOf("AU", "NZ", "FJ", "KI", "NR", "PG", "WS", "SB", "TO", "TV")
     )
 
     @Test

@@ -228,6 +228,18 @@ class FlagArtTest {
         "SZ" to listOf(Anchor(0.02f, 0.02f, 0.98f, 0.15f, "blue"), Anchor(0.02f, 0.85f, 0.98f, 0.98f, "blue"), Anchor(0.02f, 0.4f, 0.1f, 0.6f, "red")),
         "LS" to listOf(Anchor(0.02f, 0.02f, 0.98f, 0.25f, "blue"), Anchor(0.02f, 0.75f, 0.98f, 0.98f, "green"), Anchor(0.02f, 0.4f, 0.25f, 0.6f, "white")),
         "NA" to listOf(Anchor(0.3f, 0.02f, 0.5f, 0.1f, "blue"), Anchor(0.6f, 0.9f, 0.98f, 0.98f, "green"), Anchor(0.02f, 0.02f, 0.06f, 0.1f, "blue"), Anchor(0.47f, 0.47f, 0.53f, 0.53f, "red")),
+        // Oceania batch
+        "PG" to listOf(Anchor(0.9f, 0.3f, 0.98f, 0.5f, "red"), Anchor(0.02f, 0.5f, 0.1f, 0.7f, "black"), Anchor(0.7f, 0.02f, 0.98f, 0.2f, "red")),
+        "SB" to listOf(Anchor(0.6f, 0.02f, 0.98f, 0.2f, "blue"), Anchor(0.02f, 0.8f, 0.4f, 0.98f, "green")),
+        "VU" to listOf(Anchor(0.6f, 0.02f, 0.98f, 0.3f, "red"), Anchor(0.6f, 0.7f, 0.98f, 0.98f, "green"), Anchor(0.02f, 0.02f, 0.06f, 0.1f, "black")),
+        "KI" to listOf(Anchor(0.02f, 0.02f, 0.98f, 0.2f, "red"), Anchor(0.02f, 0.9f, 0.98f, 0.98f, "blue")),
+        "MH" to listOf(Anchor(0.6f, 0.85f, 0.98f, 0.98f, "blue"), Anchor(0.4f, 0.02f, 0.6f, 0.1f, "blue"), Anchor(0.9f, 0.3f, 0.98f, 0.36f, "white")),
+        "FM" to listOf(Anchor(0.02f, 0.02f, 0.2f, 0.98f, "blue"), Anchor(0.8f, 0.02f, 0.98f, 0.98f, "blue"), Anchor(0.47f, 0.47f, 0.53f, 0.53f, "blue")),
+        "NR" to listOf(Anchor(0.02f, 0.02f, 0.98f, 0.4f, "blue"), Anchor(0.5f, 0.6f, 0.98f, 0.98f, "blue"), Anchor(0.3f, 0.48f, 0.98f, 0.52f, "orange")),
+        "PW" to listOf(Anchor(0.02f, 0.02f, 0.98f, 0.15f, "blue"), Anchor(0.02f, 0.85f, 0.98f, 0.98f, "blue"), Anchor(0.4f, 0.44f, 0.48f, 0.56f, "yellow")),
+        "WS" to listOf(Anchor(0.02f, 0.02f, 0.06f, 0.1f, "blue"), Anchor(0.6f, 0.6f, 0.98f, 0.98f, "red"), Anchor(0.6f, 0.02f, 0.98f, 0.4f, "red")),
+        "TO" to listOf(Anchor(0.02f, 0.02f, 0.06f, 0.08f, "white"), Anchor(0.6f, 0.6f, 0.98f, 0.98f, "red"), Anchor(0.6f, 0.02f, 0.98f, 0.4f, "red")),
+        "TV" to listOf(Anchor(0.6f, 0.6f, 0.98f, 0.98f, "blue"), Anchor(0.6f, 0.02f, 0.98f, 0.2f, "blue"), Anchor(0.02f, 0.6f, 0.4f, 0.98f, "blue")),
         "CH" to listOf(Anchor(0.02f, 0.02f, 0.2f, 0.2f, "red"), Anchor(0.47f, 0.47f, 0.53f, 0.53f, "white"), Anchor(0.8f, 0.8f, 0.98f, 0.98f, "red")),
         "XK" to listOf(Anchor(0.02f, 0.02f, 0.98f, 0.2f, "blue"), Anchor(0.02f, 0.8f, 0.98f, 0.98f, "blue")),
         "AL" to listOf(Anchor(0.02f, 0.02f, 0.2f, 0.98f, "red"), Anchor(0.8f, 0.02f, 0.98f, 0.98f, "red")),
@@ -259,7 +271,9 @@ class FlagArtTest {
         "DZ", "LY", "SD", "TN", "BJ", "BF", "CV", "CI", "GM", "GH", "GN", "GW",
         "LR", "ML", "MR", "NE", "SN", "SL", "TG", "AO", "CM", "CF", "TD", "CG",
         "CD", "GQ", "GA", "ST", "BI", "KM", "DJ", "ER", "ET", "MG", "MW", "MU",
-        "MZ", "RW", "SC", "SO", "SS", "UG", "ZM", "ZW", "BW", "SZ", "LS", "NA"
+        "MZ", "RW", "SC", "SO", "SS", "UG", "ZM", "ZW", "BW", "SZ", "LS", "NA",
+        // Oceania: the Southern Cross flags (PG, WS vs AU/NZ), the Union Jack of TV, NR/PW light blues
+        "PG", "SB", "VU", "KI", "MH", "FM", "NR", "PW", "WS", "TO", "TV"
     )
 
     @Test
