@@ -28,6 +28,9 @@ class CatalogPolicyTest {
      * pass cannot add or drop a country without changing this list.
      */
     private val continentSeedLists = mapOf(
+        "Oceania" to setOf(
+            "AU", "FJ", "FM", "KI", "MH", "NR", "NZ", "PG", "PW", "SB", "TO", "TV", "VU", "WS"
+        ),
         "Africa" to setOf(
             "AO", "BF", "BI", "BJ", "BW", "CD", "CF", "CG", "CI", "CM", "CV", "DJ", "DZ", "EG", "ER", "ET", "GA", "GH", "GM", "GN", "GQ", "GW", "KE", "KM", "LR", "LS", "LY", "MA", "MG", "ML", "MR", "MU", "MW", "MZ", "NA", "NE", "NG", "RW", "SC", "SD", "SL", "SN", "SO", "SS", "ST", "SZ", "TD", "TG", "TN", "TZ", "UG", "ZA", "ZM", "ZW"
         ),
@@ -108,5 +111,18 @@ class CatalogPolicyTest {
         assertEquals("Democratic Republic of the Congo", country("CD").name)
         assertEquals("Republic of the Congo", country("CG").name)
         assertEquals("Khartoum", country("SD").capital)
+    }
+
+    /** Decisions the owner made for Oceania; see the Oceania PR. */
+    @Test
+    fun oceaniaFollowsTheOwnersDecisions() {
+        assertEquals("Yaren (de facto)", country("NR").capital)
+        assertEquals("Yaren", country("NR").quizCapital)
+        assertEquals("Micronesia", country("FM").name)
+        assertEquals("Federated States of Micronesia", country("FM").officialName)
+        assertEquals("Nukuʻalofa", country("TO").capital)
+        assertEquals("South Tarawa", country("KI").capital)
+        assertEquals("Australian Dollar (A$)", country("TV").currency)
+        assertEquals("US Dollar (US$)", country("PW").currency)
     }
 }

@@ -17,8 +17,8 @@ class QuizEngineTest {
         }
     }
 
-    /** Scopes still too small to quiz; emptied as the catalog grows (Oceania gains its countries last). */
-    private val tooSmallForNow = setOf("Oceania")
+    /** Scopes still too small to quiz; empty now that every continent has its countries. */
+    private val tooSmallForNow = emptySet<String>()
 
     @Test
     fun everyScopeExceptThePinnedOnesHasEnoughCountriesForAQuiz() {
