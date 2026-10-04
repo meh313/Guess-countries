@@ -11,21 +11,30 @@ import com.example.R
 @DrawableRes
 fun flagArtFor(code: String): Int? = when (code) {
     "AD" -> R.drawable.flag_ad
+    "AE" -> R.drawable.flag_ae
+    "AF" -> R.drawable.flag_af
     "AL" -> R.drawable.flag_al
+    "AM" -> R.drawable.flag_am
     "AQ" -> R.drawable.flag_aq
     "AR" -> R.drawable.flag_ar
     "AT" -> R.drawable.flag_at
     "AU" -> R.drawable.flag_au
+    "AZ" -> R.drawable.flag_az
     "BA" -> R.drawable.flag_ba
+    "BD" -> R.drawable.flag_bd
     "BE" -> R.drawable.flag_be
     "BG" -> R.drawable.flag_bg
+    "BH" -> R.drawable.flag_bh
+    "BN" -> R.drawable.flag_bn
     "BR" -> R.drawable.flag_br
+    "BT" -> R.drawable.flag_bt
     "BY" -> R.drawable.flag_by
     "CA" -> R.drawable.flag_ca
     "CH" -> R.drawable.flag_ch
     "CL" -> R.drawable.flag_cl
     "CN" -> R.drawable.flag_cn
     "CO" -> R.drawable.flag_co
+    "CY" -> R.drawable.flag_cy
     "CZ" -> R.drawable.flag_cz
     "DE" -> R.drawable.flag_de
     "DK" -> R.drawable.flag_dk
@@ -36,17 +45,30 @@ fun flagArtFor(code: String): Int? = when (code) {
     "FJ" -> R.drawable.flag_fj
     "FR" -> R.drawable.flag_fr
     "GB" -> R.drawable.flag_gb
+    "GE" -> R.drawable.flag_ge
     "GR" -> R.drawable.flag_gr
     "HR" -> R.drawable.flag_hr
     "HU" -> R.drawable.flag_hu
+    "ID" -> R.drawable.flag_id
     "IE" -> R.drawable.flag_ie
     "IN" -> R.drawable.flag_in
+    "IQ" -> R.drawable.flag_iq
+    "IR" -> R.drawable.flag_ir
     "IS" -> R.drawable.flag_is
     "IT" -> R.drawable.flag_it
+    "JO" -> R.drawable.flag_jo
     "JP" -> R.drawable.flag_jp
     "KE" -> R.drawable.flag_ke
+    "KG" -> R.drawable.flag_kg
+    "KH" -> R.drawable.flag_kh
+    "KP" -> R.drawable.flag_kp
     "KR" -> R.drawable.flag_kr
+    "KW" -> R.drawable.flag_kw
+    "KZ" -> R.drawable.flag_kz
+    "LA" -> R.drawable.flag_la
+    "LB" -> R.drawable.flag_lb
     "LI" -> R.drawable.flag_li
+    "LK" -> R.drawable.flag_lk
     "LT" -> R.drawable.flag_lt
     "LU" -> R.drawable.flag_lu
     "LV" -> R.drawable.flag_lv
@@ -55,29 +77,48 @@ fun flagArtFor(code: String): Int? = when (code) {
     "MD" -> R.drawable.flag_md
     "ME" -> R.drawable.flag_me
     "MK" -> R.drawable.flag_mk
+    "MM" -> R.drawable.flag_mm
+    "MN" -> R.drawable.flag_mn
     "MT" -> R.drawable.flag_mt
+    "MV" -> R.drawable.flag_mv
     "MX" -> R.drawable.flag_mx
+    "MY" -> R.drawable.flag_my
     "NG" -> R.drawable.flag_ng
     "NL" -> R.drawable.flag_nl
     "NO" -> R.drawable.flag_no
+    "NP" -> R.drawable.flag_np
     "NZ" -> R.drawable.flag_nz
+    "OM" -> R.drawable.flag_om
+    "PH" -> R.drawable.flag_ph
+    "PK" -> R.drawable.flag_pk
     "PL" -> R.drawable.flag_pl
+    "PS" -> R.drawable.flag_ps
     "PT" -> R.drawable.flag_pt
+    "QA" -> R.drawable.flag_qa
     "RO" -> R.drawable.flag_ro
     "RS" -> R.drawable.flag_rs
     "RU" -> R.drawable.flag_ru
     "SA" -> R.drawable.flag_sa
     "SE" -> R.drawable.flag_se
+    "SG" -> R.drawable.flag_sg
     "SI" -> R.drawable.flag_si
     "SK" -> R.drawable.flag_sk
     "SM" -> R.drawable.flag_sm
+    "SY" -> R.drawable.flag_sy
     "TH" -> R.drawable.flag_th
+    "TJ" -> R.drawable.flag_tj
+    "TL" -> R.drawable.flag_tl
+    "TM" -> R.drawable.flag_tm
+    "TR" -> R.drawable.flag_tr
+    "TW" -> R.drawable.flag_tw
     "TZ" -> R.drawable.flag_tz
     "UA" -> R.drawable.flag_ua
     "US" -> R.drawable.flag_us
+    "UZ" -> R.drawable.flag_uz
     "VA" -> R.drawable.flag_va
     "VN" -> R.drawable.flag_vn
     "XK" -> R.drawable.flag_xk
+    "YE" -> R.drawable.flag_ye
     "ZA" -> R.drawable.flag_za
     else -> null
 }

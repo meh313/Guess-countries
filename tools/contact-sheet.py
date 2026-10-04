@@ -16,6 +16,13 @@ from PIL import Image, ImageDraw, ImageFont
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from catalog_codes import entries  # noqa: E402
 
+
+def flatten(image):
+    """RGB with fully transparent pixels turned white (Nepal's surround), as tools/to-webp.py does."""
+    rgba = image.convert('RGBA')
+    opaque = rgba.getchannel('A').point(lambda a: 255 if a > 0 else 0)
+    return Image.composite(rgba.convert('RGB'), Image.new('RGB', rgba.size, (255, 255, 255)), opaque)
+
 ap = argparse.ArgumentParser()
 ap.add_argument('codes', nargs='*')
 ap.add_argument('--out', required=True)
@@ -48,12 +55,12 @@ for i, code in enumerate(codes):
     y = PAD + (i // COLS) * (H + 30)
     ours = Path(a.src) / f'{code.lower()}.png'
     if ours.exists():
-        sheet.paste(Image.open(ours).convert('RGB').resize((W, H), Image.LANCZOS), (x, y))
+        sheet.paste(flatten(Image.open(ours)).resize((W, H), Image.LANCZOS), (x, y))
     else:
         draw.rectangle((x, y, x + W, y + H), outline=(200, 0, 0), width=3)
     ref = Path(a.ref) / f'{code.lower()}.png'
     if with_ref and ref.exists():
-        img = Image.open(ref).convert('RGB')
+        img = flatten(Image.open(ref))
         img = img.resize((W, int(W * img.height / img.width)), Image.LANCZOS)
         sheet.paste(img, (x + W + PAD, y + (H - img.height) // 2))
     draw.text((x, y + H + 6), f"{code} {names.get(code, '?')}", fill=(0, 0, 0), font=font)

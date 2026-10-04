@@ -1,0 +1,93 @@
+{
+ "continent": "Oceania",
+ "entries": [
+  {
+   "code": "PG",
+   "name": "Papua New Guinea",
+   "continent": "Oceania",
+   "subregion": "Melanesia",
+   "leftHand": true,
+   "ownerRules": "name \"Papua New Guinea\", capital Port Moresby; languages Tok Pisin, English, Hiri Motu, PNG Sign Language (verify). drives on the left."
+  },
+  {
+   "code": "SB",
+   "name": "Solomon Islands",
+   "continent": "Oceania",
+   "subregion": "Melanesia",
+   "leftHand": true,
+   "ownerRules": "name \"Solomon Islands\", capital Honiara; languages English. drives on the left."
+  },
+  {
+   "code": "VU",
+   "name": "Vanuatu",
+   "continent": "Oceania",
+   "subregion": "Melanesia",
+   "leftHand": false,
+   "ownerRules": "capital Port Vila; languages Bislama, English, French."
+  },
+  {
+   "code": "KI",
+   "name": "Kiribati",
+   "continent": "Oceania",
+   "subregion": "Micronesia",
+   "leftHand": true,
+   "ownerRules": "capital \"South Tarawa\" (Wikipedia title), currency EXACTLY \"Australian Dollar (A$)\"; languages English, Gilbertese. drives on the left."
+  },
+  {
+   "code": "MH",
+   "name": "Marshall Islands",
+   "continent": "Oceania",
+   "subregion": "Micronesia",
+   "leftHand": false,
+   "ownerRules": "name \"Marshall Islands\", officialName \"Republic of the Marshall Islands\", capital Majuro, currency EXACTLY \"US Dollar (US$)\"."
+  },
+  {
+   "code": "FM",
+   "name": "Micronesia",
+   "continent": "Oceania",
+   "subregion": "Micronesia",
+   "leftHand": false,
+   "ownerRules": "name \"Micronesia\" (short form; the article title is Federated States of Micronesia), officialName \"Federated States of Micronesia\", capital Palikir, currency EXACTLY \"US Dollar (US$)\"."
+  },
+  {
+   "code": "NR",
+   "name": "Nauru",
+   "continent": "Oceania",
+   "subregion": "Micronesia",
+   "leftHand": true,
+   "ownerRules": "capital EXACTLY \"Yaren (de facto)\" and quizCapital \"Yaren\" (Nauru has no official capital; Yaren district holds the government). currency EXACTLY \"Australian Dollar (A$)\". drives on the left."
+  },
+  {
+   "code": "PW",
+   "name": "Palau",
+   "continent": "Oceania",
+   "subregion": "Micronesia",
+   "leftHand": false,
+   "ownerRules": "capital Ngerulmud, currency EXACTLY \"US Dollar (US$)\". languages Palauan, English."
+  },
+  {
+   "code": "WS",
+   "name": "Samoa",
+   "continent": "Oceania",
+   "subregion": "Polynesia",
+   "leftHand": true,
+   "ownerRules": "name \"Samoa\", officialName \"Independent State of Samoa\", capital Apia. drives on the left (since 2009: explain in the note)."
+  },
+  {
+   "code": "TO",
+   "name": "Tonga",
+   "continent": "Oceania",
+   "subregion": "Polynesia",
+   "leftHand": true,
+   "ownerRules": "capital Nukuʻalofa (Wikipedia title with the ʻokina; write it exactly). drives on the left."
+  },
+  {
+   "code": "TV",
+   "name": "Tuvalu",
+   "continent": "Oceania",
+   "subregion": "Polynesia",
+   "leftHand": true,
+   "ownerRules": "capital Funafuti, currency EXACTLY \"Australian Dollar (A$)\" (Tuvaluan coins circulate: note only). drives on the left."
+  }
+ ]
+}

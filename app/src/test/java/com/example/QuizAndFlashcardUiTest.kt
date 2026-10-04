@@ -405,6 +405,13 @@ class QuizAndFlashcardUiTest {
         rule.onNodeWithText("Question 1 of ${questionsFor("Africa")}").assertIsDisplayed()
     }
 
+    /**
+     * A continent whose first card is not the full deck's first card, so switching between the two decks
+     * really shows another country (a card keeps its side only while it shows the same country).
+     */
+    private fun continentWhoseFirstCardIsNotTheDecksFirst(): String =
+        allCountries.map { it.continent }.distinct().first { c -> byName.first { it.continent == c } != byName.first() }
+
     @Test
     fun flippedCard_doesNotCarryOverToAnotherCountryWhenExploreFiltersChange() {
         tab("flashcards")
@@ -412,22 +419,20 @@ class QuizAndFlashcardUiTest {
         rule.waitForIdle()
         rule.onNodeWithText("Flag Meaning").assertIsDisplayed()
 
+        val continent = continentWhoseFirstCardIsNotTheDecksFirst()
         tab("explore")
-        rule.onNodeWithTag("continent_chip_asia").performClick()
+        rule.onNodeWithTag("continent_chip_${continent.lowercase()}").performClick()
         rule.waitForIdle()
         tab("flashcards")
 
-        rule.onNodeWithText("Card 1 of ${allCountries.count { it.continent == "Asia" }}").assertIsDisplayed()
+        rule.onNodeWithText("Card 1 of ${allCountries.count { it.continent == continent }}").assertIsDisplayed()
         rule.onNodeWithText("Flag Meaning").assertDoesNotExist()
         rule.onNodeWithText("Tap to reveal Country Name & Capital").assertIsDisplayed()
     }
 
     @Test
     fun clearingTheFilterNotice_showsTheNewDeckUnflipped() {
-        // A continent whose first card is not the full deck's first card, so clearing the filter really
-        // shows another country (a card keeps its side only while it shows the same country).
-        val continent = allCountries.map { it.continent }.distinct()
-            .first { c -> byName.first { it.continent == c } != byName.first() }
+        val continent = continentWhoseFirstCardIsNotTheDecksFirst()
         tab("explore")
         rule.onNodeWithTag("continent_chip_${continent.lowercase()}").performClick()
         rule.waitForIdle()

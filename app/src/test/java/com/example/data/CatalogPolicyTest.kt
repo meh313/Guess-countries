@@ -28,6 +28,9 @@ class CatalogPolicyTest {
      * pass cannot add or drop a country without changing this list.
      */
     private val continentSeedLists = mapOf(
+        "Asia" to setOf(
+            "AE", "AF", "AM", "AZ", "BD", "BH", "BN", "BT", "CN", "CY", "GE", "ID", "IN", "IQ", "IR", "JO", "JP", "KG", "KH", "KP", "KR", "KW", "KZ", "LA", "LB", "LK", "MM", "MN", "MV", "MY", "NP", "OM", "PH", "PK", "PS", "QA", "SA", "SG", "SY", "TH", "TJ", "TL", "TM", "TR", "TW", "UZ", "VN", "YE"
+        ),
         "Europe" to setOf(
             "AD", "AL", "AT", "BA", "BE", "BG", "BY", "CH", "CZ", "DE", "DK", "EE", "ES", "FI", "FR", "GB", "GR", "HR", "HU", "IE", "IS", "IT", "LI", "LT", "LU", "LV", "MC", "MD", "ME", "MK", "MT", "NL", "NO", "PL", "PT", "RO", "RS", "RU", "SE", "SI", "SK", "SM", "UA", "VA", "XK"
         )
@@ -59,5 +62,29 @@ class CatalogPolicyTest {
         assertEquals("North Macedonia", country("MK").name)
         assertEquals("Bosnia and Herzegovina", country("BA").name)
         assertEquals("Moldova", country("MD").name)
+    }
+
+    /** Decisions the owner made for Asia; see the Asia PR. */
+    @Test
+    fun asiaFollowsTheOwnersDecisions() {
+        val taiwan = country("TW")
+        assertEquals("Taiwan", taiwan.name)
+        assertTrue("Taiwan can be quizzed", taiwan.isSovereign)
+        assertTrue(
+            "Taiwan's fun fact carries the agreed status sentence",
+            taiwan.funFact.contains("Taiwan has its own government, elections and currency, but its status is disputed: China claims it, and most countries do not recognize it as a state.")
+        )
+        val palestine = country("PS")
+        assertEquals("Palestine", palestine.name)
+        assertEquals("Al Quds (Jerusalem)", palestine.capital)
+        assertEquals("Al Quds", palestine.quizCapital)
+        assertTrue(palestine.currency.startsWith("No currency of its own"))
+        assertEquals("Kuala Lumpur", country("MY").quizCapital)
+        assertTrue(country("MY").capital.contains("Putrajaya"))
+        assertEquals("Sri Jayawardenepura Kotte", country("LK").quizCapital)
+        assertEquals("Astana", country("KZ").capital)
+        assertEquals("Turkey", country("TR").name)
+        assertEquals("Timor-Leste", country("TL").name)
+        assertEquals("Western Asia", country("CY").subregion)
     }
 }

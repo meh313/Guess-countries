@@ -17,6 +17,15 @@ from catalog_codes import REPO, codes as catalog_codes, seed_codes  # noqa: E402
 
 FLAGS = REPO / 'app/src/main/res/drawable-nodpi'
 
+
+def flatten(image):
+    """Drops the alpha channel. Fully transparent pixels (outside Nepal's two pennants, the only
+    non-rectangular flag) become white, as references draw them; partially transparent edge pixels keep
+    their own colour, so no pale hairline appears where two shapes of a flag meet."""
+    rgba = image.convert('RGBA')
+    opaque = rgba.getchannel('A').point(lambda a: 255 if a > 0 else 0)
+    return Image.composite(rgba.convert('RGB'), Image.new('RGB', rgba.size, (255, 255, 255)), opaque)
+
 ap = argparse.ArgumentParser()
 ap.add_argument('codes', nargs='*')
 ap.add_argument('--in', dest='src', default='out')
@@ -27,7 +36,7 @@ codes = [c.upper() for c in a.codes] or (seed_codes(a.seed) if a.seed else catal
 
 total = 0
 for code in codes:
-    image = Image.open(Path(a.src) / f'{code.lower()}.png').convert('RGB')  # drops the alpha channel
+    image = flatten(Image.open(Path(a.src) / f'{code.lower()}.png'))
     assert image.size == (600, 450), (code, image.size)
     target = FLAGS / f'flag_{code.lower()}.webp'
     if a.lossy is None:
