@@ -13,6 +13,7 @@ fun flagArtFor(code: String): Int? = when (code) {
     "AD" -> R.drawable.flag_ad
     "AE" -> R.drawable.flag_ae
     "AF" -> R.drawable.flag_af
+    "AG" -> R.drawable.flag_ag
     "AL" -> R.drawable.flag_al
     "AM" -> R.drawable.flag_am
     "AO" -> R.drawable.flag_ao
@@ -22,6 +23,7 @@ fun flagArtFor(code: String): Int? = when (code) {
     "AU" -> R.drawable.flag_au
     "AZ" -> R.drawable.flag_az
     "BA" -> R.drawable.flag_ba
+    "BB" -> R.drawable.flag_bb
     "BD" -> R.drawable.flag_bd
     "BE" -> R.drawable.flag_be
     "BF" -> R.drawable.flag_bf
@@ -30,10 +32,13 @@ fun flagArtFor(code: String): Int? = when (code) {
     "BI" -> R.drawable.flag_bi
     "BJ" -> R.drawable.flag_bj
     "BN" -> R.drawable.flag_bn
+    "BO" -> R.drawable.flag_bo
     "BR" -> R.drawable.flag_br
+    "BS" -> R.drawable.flag_bs
     "BT" -> R.drawable.flag_bt
     "BW" -> R.drawable.flag_bw
     "BY" -> R.drawable.flag_by
+    "BZ" -> R.drawable.flag_bz
     "CA" -> R.drawable.flag_ca
     "CD" -> R.drawable.flag_cd
     "CF" -> R.drawable.flag_cf
@@ -44,13 +49,18 @@ fun flagArtFor(code: String): Int? = when (code) {
     "CM" -> R.drawable.flag_cm
     "CN" -> R.drawable.flag_cn
     "CO" -> R.drawable.flag_co
+    "CR" -> R.drawable.flag_cr
+    "CU" -> R.drawable.flag_cu
     "CV" -> R.drawable.flag_cv
     "CY" -> R.drawable.flag_cy
     "CZ" -> R.drawable.flag_cz
     "DE" -> R.drawable.flag_de
     "DJ" -> R.drawable.flag_dj
     "DK" -> R.drawable.flag_dk
+    "DM" -> R.drawable.flag_dm
+    "DO" -> R.drawable.flag_do
     "DZ" -> R.drawable.flag_dz
+    "EC" -> R.drawable.flag_ec
     "EE" -> R.drawable.flag_ee
     "EG" -> R.drawable.flag_eg
     "ER" -> R.drawable.flag_er
@@ -62,14 +72,19 @@ fun flagArtFor(code: String): Int? = when (code) {
     "FR" -> R.drawable.flag_fr
     "GA" -> R.drawable.flag_ga
     "GB" -> R.drawable.flag_gb
+    "GD" -> R.drawable.flag_gd
     "GE" -> R.drawable.flag_ge
     "GH" -> R.drawable.flag_gh
     "GM" -> R.drawable.flag_gm
     "GN" -> R.drawable.flag_gn
     "GQ" -> R.drawable.flag_gq
     "GR" -> R.drawable.flag_gr
+    "GT" -> R.drawable.flag_gt
     "GW" -> R.drawable.flag_gw
+    "GY" -> R.drawable.flag_gy
+    "HN" -> R.drawable.flag_hn
     "HR" -> R.drawable.flag_hr
+    "HT" -> R.drawable.flag_ht
     "HU" -> R.drawable.flag_hu
     "ID" -> R.drawable.flag_id
     "IE" -> R.drawable.flag_ie
@@ -78,6 +93,7 @@ fun flagArtFor(code: String): Int? = when (code) {
     "IR" -> R.drawable.flag_ir
     "IS" -> R.drawable.flag_is
     "IT" -> R.drawable.flag_it
+    "JM" -> R.drawable.flag_jm
     "JO" -> R.drawable.flag_jo
     "JP" -> R.drawable.flag_jp
     "KE" -> R.drawable.flag_ke
@@ -85,12 +101,14 @@ fun flagArtFor(code: String): Int? = when (code) {
     "KH" -> R.drawable.flag_kh
     "KI" -> R.drawable.flag_ki
     "KM" -> R.drawable.flag_km
+    "KN" -> R.drawable.flag_kn
     "KP" -> R.drawable.flag_kp
     "KR" -> R.drawable.flag_kr
     "KW" -> R.drawable.flag_kw
     "KZ" -> R.drawable.flag_kz
     "LA" -> R.drawable.flag_la
     "LB" -> R.drawable.flag_lb
+    "LC" -> R.drawable.flag_lc
     "LI" -> R.drawable.flag_li
     "LK" -> R.drawable.flag_lk
     "LR" -> R.drawable.flag_lr
@@ -120,12 +138,15 @@ fun flagArtFor(code: String): Int? = when (code) {
     "NA" -> R.drawable.flag_na
     "NE" -> R.drawable.flag_ne
     "NG" -> R.drawable.flag_ng
+    "NI" -> R.drawable.flag_ni
     "NL" -> R.drawable.flag_nl
     "NO" -> R.drawable.flag_no
     "NP" -> R.drawable.flag_np
     "NR" -> R.drawable.flag_nr
     "NZ" -> R.drawable.flag_nz
     "OM" -> R.drawable.flag_om
+    "PA" -> R.drawable.flag_pa
+    "PE" -> R.drawable.flag_pe
     "PG" -> R.drawable.flag_pg
     "PH" -> R.drawable.flag_ph
     "PK" -> R.drawable.flag_pk
@@ -133,6 +154,7 @@ fun flagArtFor(code: String): Int? = when (code) {
     "PS" -> R.drawable.flag_ps
     "PT" -> R.drawable.flag_pt
     "PW" -> R.drawable.flag_pw
+    "PY" -> R.drawable.flag_py
     "QA" -> R.drawable.flag_qa
     "RO" -> R.drawable.flag_ro
     "RS" -> R.drawable.flag_rs
@@ -150,8 +172,10 @@ fun flagArtFor(code: String): Int? = when (code) {
     "SM" -> R.drawable.flag_sm
     "SN" -> R.drawable.flag_sn
     "SO" -> R.drawable.flag_so
+    "SR" -> R.drawable.flag_sr
     "SS" -> R.drawable.flag_ss
     "ST" -> R.drawable.flag_st
+    "SV" -> R.drawable.flag_sv
     "SY" -> R.drawable.flag_sy
     "SZ" -> R.drawable.flag_sz
     "TD" -> R.drawable.flag_td
@@ -163,14 +187,18 @@ fun flagArtFor(code: String): Int? = when (code) {
     "TN" -> R.drawable.flag_tn
     "TO" -> R.drawable.flag_to
     "TR" -> R.drawable.flag_tr
+    "TT" -> R.drawable.flag_tt
     "TV" -> R.drawable.flag_tv
     "TW" -> R.drawable.flag_tw
     "TZ" -> R.drawable.flag_tz
     "UA" -> R.drawable.flag_ua
     "UG" -> R.drawable.flag_ug
     "US" -> R.drawable.flag_us
+    "UY" -> R.drawable.flag_uy
     "UZ" -> R.drawable.flag_uz
     "VA" -> R.drawable.flag_va
+    "VC" -> R.drawable.flag_vc
+    "VE" -> R.drawable.flag_ve
     "VN" -> R.drawable.flag_vn
     "VU" -> R.drawable.flag_vu
     "WS" -> R.drawable.flag_ws
