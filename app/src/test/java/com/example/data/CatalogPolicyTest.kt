@@ -28,6 +28,9 @@ class CatalogPolicyTest {
      * pass cannot add or drop a country without changing this list.
      */
     private val continentSeedLists = mapOf(
+        "Africa" to setOf(
+            "AO", "BF", "BI", "BJ", "BW", "CD", "CF", "CG", "CI", "CM", "CV", "DJ", "DZ", "EG", "ER", "ET", "GA", "GH", "GM", "GN", "GQ", "GW", "KE", "KM", "LR", "LS", "LY", "MA", "MG", "ML", "MR", "MU", "MW", "MZ", "NA", "NE", "NG", "RW", "SC", "SD", "SL", "SN", "SO", "SS", "ST", "SZ", "TD", "TG", "TN", "TZ", "UG", "ZA", "ZM", "ZW"
+        ),
         "Asia" to setOf(
             "AE", "AF", "AM", "AZ", "BD", "BH", "BN", "BT", "CN", "CY", "GE", "ID", "IN", "IQ", "IR", "JO", "JP", "KG", "KH", "KP", "KR", "KW", "KZ", "LA", "LB", "LK", "MM", "MN", "MV", "MY", "NP", "OM", "PH", "PK", "PS", "QA", "SA", "SG", "SY", "TH", "TJ", "TL", "TM", "TR", "TW", "UZ", "VN", "YE"
         ),
@@ -86,5 +89,24 @@ class CatalogPolicyTest {
         assertEquals("Turkey", country("TR").name)
         assertEquals("Timor-Leste", country("TL").name)
         assertEquals("Western Asia", country("CY").subregion)
+    }
+
+    /** Decisions the owner made for Africa; see the Africa PR. */
+    @Test
+    fun africaFollowsTheOwnersDecisions() {
+        assertEquals("Yamoussoukro", country("CI").quizCapital)
+        assertTrue(country("CI").capital.contains("Abidjan"))
+        assertEquals("Ivory Coast", country("CI").name)
+        assertEquals("Porto-Novo", country("BJ").quizCapital)
+        assertEquals("Mbabane", country("SZ").quizCapital)
+        assertEquals("Eswatini", country("SZ").name)
+        assertEquals("Gitega", country("BI").quizCapital)
+        assertEquals("Ciudad de la Paz", country("GQ").quizCapital)
+        assertTrue(country("GQ").capital.contains("Malabo"))
+        assertEquals("Cape Verde", country("CV").name)
+        assertEquals("Gambia", country("GM").name)
+        assertEquals("Democratic Republic of the Congo", country("CD").name)
+        assertEquals("Republic of the Congo", country("CG").name)
+        assertEquals("Khartoum", country("SD").capital)
     }
 }
