@@ -72,7 +72,7 @@ class CountryDatasetTest {
     private val leftHandTraffic = mapOf(
         "Europe" to setOf("GB", "IE", "MT"),
         "Asia" to setOf("JP", "IN", "TH", "BD", "BT", "BN", "CY", "ID", "MY", "MV", "NP", "PK", "SG", "LK", "TL"),
-        "Africa" to setOf("KE", "ZA", "TZ"),
+        "Africa" to setOf("KE", "ZA", "TZ", "BW", "SZ", "LS", "MW", "MU", "MZ", "NA", "SC", "UG", "ZM", "ZW"),
         "Americas" to emptySet(),
         "Oceania" to setOf("AU", "NZ", "FJ")
     )
