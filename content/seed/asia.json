@@ -1,0 +1,319 @@
+{
+ "continent": "Asia",
+ "entries": [
+  {
+   "code": "KZ",
+   "name": "Kazakhstan",
+   "continent": "Asia",
+   "subregion": "Central Asia",
+   "leftHand": false,
+   "ownerRules": "capital Astana (renamed back from Nur-Sultan in 2022). Area is the whole country including the part west of the Ural River."
+  },
+  {
+   "code": "KG",
+   "name": "Kyrgyzstan",
+   "continent": "Asia",
+   "subregion": "Central Asia",
+   "leftHand": false
+  },
+  {
+   "code": "TJ",
+   "name": "Tajikistan",
+   "continent": "Asia",
+   "subregion": "Central Asia",
+   "leftHand": false
+  },
+  {
+   "code": "TM",
+   "name": "Turkmenistan",
+   "continent": "Asia",
+   "subregion": "Central Asia",
+   "leftHand": false
+  },
+  {
+   "code": "UZ",
+   "name": "Uzbekistan",
+   "continent": "Asia",
+   "subregion": "Central Asia",
+   "leftHand": false
+  },
+  {
+   "code": "MN",
+   "name": "Mongolia",
+   "continent": "Asia",
+   "subregion": "Eastern Asia",
+   "leftHand": false,
+   "ownerRules": "capital Ulaanbaatar."
+  },
+  {
+   "code": "KP",
+   "name": "North Korea",
+   "continent": "Asia",
+   "subregion": "Eastern Asia",
+   "leftHand": false,
+   "ownerRules": "name \"North Korea\", officialName \"Democratic People's Republic of Korea\", capital Pyongyang. Neutral wording."
+  },
+  {
+   "code": "TW",
+   "name": "Taiwan",
+   "continent": "Asia",
+   "subregion": "Eastern Asia",
+   "leftHand": false,
+   "ownerRules": "name \"Taiwan\", officialName \"Republic of China\". capital Taipei. funFact must carry the agreed status sentence verbatim: \"Taiwan has its own government, elections and currency, but its status is disputed: China claims it, and most countries do not recognize it as a state.\" Population from UN WPP 2024 (listed there as China, Taiwan Province of China; report the figure only). Currency \"New Taiwan Dollar (NT$)\". Flag text: the Blue Sky with a White Sun of the Kuomintang (1895-1928 history), the red field; neutral tone."
+  },
+  {
+   "code": "BN",
+   "name": "Brunei",
+   "continent": "Asia",
+   "subregion": "South-Eastern Asia",
+   "leftHand": true,
+   "ownerRules": "name \"Brunei\", officialName \"Brunei Darussalam\" (Nation of Brunei, the Abode of Peace), capital Bandar Seri Begawan."
+  },
+  {
+   "code": "KH",
+   "name": "Cambodia",
+   "continent": "Asia",
+   "subregion": "South-Eastern Asia",
+   "leftHand": false,
+   "ownerRules": "capital Phnom Penh."
+  },
+  {
+   "code": "ID",
+   "name": "Indonesia",
+   "continent": "Asia",
+   "subregion": "South-Eastern Asia",
+   "leftHand": true,
+   "ownerRules": "capital Jakarta: the law moving the capital to Nusantara has not taken effect, so Jakarta stays, with no dated wording."
+  },
+  {
+   "code": "LA",
+   "name": "Laos",
+   "continent": "Asia",
+   "subregion": "South-Eastern Asia",
+   "leftHand": false,
+   "ownerRules": "name \"Laos\", officialName \"Lao People's Democratic Republic\", capital Vientiane."
+  },
+  {
+   "code": "MY",
+   "name": "Malaysia",
+   "continent": "Asia",
+   "subregion": "South-Eastern Asia",
+   "leftHand": true,
+   "ownerRules": "capital EXACTLY \"Kuala Lumpur (capital), Putrajaya (seat of government)\", quizCapital \"Kuala Lumpur\"."
+  },
+  {
+   "code": "MM",
+   "name": "Myanmar",
+   "continent": "Asia",
+   "subregion": "South-Eastern Asia",
+   "leftHand": false,
+   "ownerRules": "name \"Myanmar\", officialName \"Republic of the Union of Myanmar\", capital Naypyidaw. Neutral wording on the government."
+  },
+  {
+   "code": "PH",
+   "name": "Philippines",
+   "continent": "Asia",
+   "subregion": "South-Eastern Asia",
+   "leftHand": false,
+   "ownerRules": "capital Manila; languages Filipino, English."
+  },
+  {
+   "code": "SG",
+   "name": "Singapore",
+   "continent": "Asia",
+   "subregion": "South-Eastern Asia",
+   "leftHand": true,
+   "ownerRules": "capital \"Singapore\"; languages English, Malay, Mandarin, Tamil; drives on the left."
+  },
+  {
+   "code": "TL",
+   "name": "Timor-Leste",
+   "continent": "Asia",
+   "subregion": "South-Eastern Asia",
+   "leftHand": true,
+   "ownerRules": "name \"Timor-Leste\" (Wikipedia title), officialName \"Democratic Republic of Timor-Leste\", capital Dili, currency EXACTLY \"US Dollar (US$)\"."
+  },
+  {
+   "code": "AF",
+   "name": "Afghanistan",
+   "continent": "Asia",
+   "subregion": "Southern Asia",
+   "leftHand": false,
+   "ownerRules": "name \"Afghanistan\", officialName \"Afghanistan\" (the UN-listed name; the long form is contested, say so in the note only). capital Kabul. languages Pashto, Dari. Flag: write the text for the black-red-green vertical tricolour with the white emblem (the flag recognised by the UN and shown on most references); the owner will decide whether to show the white Shahada flag instead, so add one neutral clause that a white flag with the Shahada has been flown by the authorities in Kabul since 2021. Government: neutral wording, no dated claims."
+  },
+  {
+   "code": "BD",
+   "name": "Bangladesh",
+   "continent": "Asia",
+   "subregion": "Southern Asia",
+   "leftHand": true
+  },
+  {
+   "code": "BT",
+   "name": "Bhutan",
+   "continent": "Asia",
+   "subregion": "Southern Asia",
+   "leftHand": true,
+   "ownerRules": "capital Thimphu; drives on the left."
+  },
+  {
+   "code": "IR",
+   "name": "Iran",
+   "continent": "Asia",
+   "subregion": "Southern Asia",
+   "leftHand": false,
+   "ownerRules": "name \"Iran\", officialName \"Islamic Republic of Iran\", capital Tehran. Neutral wording."
+  },
+  {
+   "code": "MV",
+   "name": "Maldives",
+   "continent": "Asia",
+   "subregion": "Southern Asia",
+   "leftHand": true,
+   "ownerRules": "capital Malé; drives on the left."
+  },
+  {
+   "code": "NP",
+   "name": "Nepal",
+   "continent": "Asia",
+   "subregion": "Southern Asia",
+   "leftHand": true,
+   "ownerRules": "The flag is the only non-rectangular national flag (two stacked pennants); say so in the flag text. Open /tmp/flagwork/out/np.png and describe what the drawing shows around the pennants (white or empty) in remainingDoubts."
+  },
+  {
+   "code": "PK",
+   "name": "Pakistan",
+   "continent": "Asia",
+   "subregion": "Southern Asia",
+   "leftHand": true
+  },
+  {
+   "code": "LK",
+   "name": "Sri Lanka",
+   "continent": "Asia",
+   "subregion": "Southern Asia",
+   "leftHand": true,
+   "ownerRules": "capital EXACTLY \"Sri Jayawardenepura Kotte (capital), Colombo (commercial capital)\", quizCapital \"Sri Jayawardenepura Kotte\"."
+  },
+  {
+   "code": "AM",
+   "name": "Armenia",
+   "continent": "Asia",
+   "subregion": "Western Asia",
+   "leftHand": false
+  },
+  {
+   "code": "AZ",
+   "name": "Azerbaijan",
+   "continent": "Asia",
+   "subregion": "Western Asia",
+   "leftHand": false
+  },
+  {
+   "code": "BH",
+   "name": "Bahrain",
+   "continent": "Asia",
+   "subregion": "Western Asia",
+   "leftHand": false
+  },
+  {
+   "code": "CY",
+   "name": "Cyprus",
+   "continent": "Asia",
+   "subregion": "Western Asia",
+   "leftHand": true,
+   "ownerRules": "subregion Western Asia (UN M49). capital Nicosia; languages Greek, Turkish; the whole island's area (9,251 km2) per the Wikipedia list; drives on the left."
+  },
+  {
+   "code": "GE",
+   "name": "Georgia",
+   "continent": "Asia",
+   "subregion": "Western Asia",
+   "leftHand": false,
+   "ownerRules": "name \"Georgia\" (the country), capital Tbilisi."
+  },
+  {
+   "code": "IQ",
+   "name": "Iraq",
+   "continent": "Asia",
+   "subregion": "Western Asia",
+   "leftHand": false,
+   "ownerRules": "capital Baghdad; languages Arabic, Kurdish."
+  },
+  {
+   "code": "JO",
+   "name": "Jordan",
+   "continent": "Asia",
+   "subregion": "Western Asia",
+   "leftHand": false
+  },
+  {
+   "code": "KW",
+   "name": "Kuwait",
+   "continent": "Asia",
+   "subregion": "Western Asia",
+   "leftHand": false
+  },
+  {
+   "code": "LB",
+   "name": "Lebanon",
+   "continent": "Asia",
+   "subregion": "Western Asia",
+   "leftHand": false
+  },
+  {
+   "code": "OM",
+   "name": "Oman",
+   "continent": "Asia",
+   "subregion": "Western Asia",
+   "leftHand": false
+  },
+  {
+   "code": "PS",
+   "name": "Palestine",
+   "continent": "Asia",
+   "subregion": "Western Asia",
+   "leftHand": false,
+   "ownerRules": "name \"Palestine\", officialName \"State of Palestine\". capital EXACTLY \"Al Quds (Jerusalem)\" and quizCapital EXACTLY \"Al Quds\" (owner decision). currency EXACTLY \"No currency of its own (shekel, Jordanian dinar and US dollar are used)\". population: UN WPP 2024 row \"State of Palestine\". areaSqKm 6020 (West Bank and Gaza Strip). Fun fact: an ordinary one (for example Jericho, one of the oldest continuously inhabited cities). Neutral wording throughout; the flag text explains the Pan-Arab colors (Arab Revolt flag of 1916) and the 1964/1988 adoption."
+  },
+  {
+   "code": "QA",
+   "name": "Qatar",
+   "continent": "Asia",
+   "subregion": "Western Asia",
+   "leftHand": false
+  },
+  {
+   "code": "SY",
+   "name": "Syria",
+   "continent": "Asia",
+   "subregion": "Western Asia",
+   "leftHand": false,
+   "ownerRules": "name \"Syria\", officialName per the 2025 constitutional declaration (verify; \"Syrian Arab Republic\" if unchanged). capital Damascus. FLAG: the current national flag is the green-white-black horizontal flag with THREE red stars (the independence flag, made official in 2025); write the text for that flag and verify the drawing in /tmp/flagwork/out/sy.png shows three red stars on the white band. If the image shows two green stars, say so in remainingDoubts."
+  },
+  {
+   "code": "TR",
+   "name": "Turkey",
+   "continent": "Asia",
+   "subregion": "Western Asia",
+   "leftHand": false,
+   "ownerRules": "name \"Turkey\" (Wikipedia title), officialName \"Republic of Türkiye\"."
+  },
+  {
+   "code": "AE",
+   "name": "United Arab Emirates",
+   "continent": "Asia",
+   "subregion": "Western Asia",
+   "leftHand": false,
+   "ownerRules": "name \"United Arab Emirates\", capital Abu Dhabi."
+  },
+  {
+   "code": "YE",
+   "name": "Yemen",
+   "continent": "Asia",
+   "subregion": "Western Asia",
+   "leftHand": false,
+   "ownerRules": "capital Sanaa (the constitutional capital; no dated wording about the seat of government). Neutral wording."
+  }
+ ]
+}
