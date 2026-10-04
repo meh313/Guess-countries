@@ -1,0 +1,188 @@
+name: Release
+
+# Builds the release APK from the checked-out commit, signs it with the upload key kept in the
+# repository secrets, verifies it and publishes it as a GitHub Release.
+#
+# Two ways to run it:
+#   - Actions > Release > Run workflow, on main (the usual way). The version is versionName in
+#     app/build.gradle.kts; the tag v<version> is created at that commit and the release published.
+#     Tick "dry run" to only build, sign and verify: the files are kept as a workflow artifact for a
+#     week and nothing is published. Use that once after adding the secrets.
+#   - Push a tag v<version>; it must match versionName.
+#
+# Secrets (Settings > Secrets and variables > Actions > Repository secrets):
+#   KEYSTORE_BASE64  the upload keystore (world-flags-upload.jks) encoded with base64
+#   STORE_PASSWORD   its store password
+#   KEY_PASSWORD     the password of the "upload" key inside it
+#
+# versionCode is derived from the version as major*10000 + minor*100 + patch (1.6 -> 10600,
+# 1.6.1 -> 10601), so it always grows with the version and stays above the hand-numbered codes
+# 1 to 7 of releases 1.0 to 1.5.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Build, sign and verify only; publish nothing
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # SHA-256 of the upload certificate. A keystore that does not produce it fails the run.
+      EXPECTED_CERT: 151c68bfdc8dba3cfdba818ff827309344382e268dc45cd5bc3ac88460189d7a
+      DRY_RUN: ${{ inputs.dry_run == true }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the signing secrets
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          missing=""
+          [ -n "$KEYSTORE_BASE64" ] || missing="$missing KEYSTORE_BASE64"
+          [ -n "$STORE_PASSWORD" ] || missing="$missing STORE_PASSWORD"
+          [ -n "$KEY_PASSWORD" ] || missing="$missing KEY_PASSWORD"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repository secret(s):$missing. Add them under Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+          printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+          echo "KEYSTORE_PATH=$RUNNER_TEMP/upload.jks" >> "$GITHUB_ENV"
+
+      - name: Work out the version
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          version=$(sed -n 's/^ *versionName = "\([0-9][0-9.]*\)".*/\1/p' app/build.gradle.kts | head -1)
+          [ -n "$version" ] || { echo "::error::versionName not found in app/build.gradle.kts"; exit 1; }
+          tag="v$version"
+          if [ "$GITHUB_REF_TYPE" = tag ] && [ "$GITHUB_REF_NAME" != "$tag" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match versionName $version in app/build.gradle.kts"
+            exit 1
+          fi
+          IFS=. read -r major minor patch <<< "$version"
+          code=$(( major * 10000 + minor * 100 + ${patch:-0} ))
+          if [ "$DRY_RUN" != true ]; then
+            if gh release view "$tag" > /dev/null 2>&1; then
+              echo "::error::Release $tag already exists. Bump versionName in app/build.gradle.kts first."
+              exit 1
+            fi
+            newest=$( { gh release list --json tagName --jq '.[].tagName'; echo "$tag"; } | sed 's/^v//' | sort -V | tail -1 )
+            if [ "$newest" != "$version" ]; then
+              echo "::error::Version $version is lower than the latest release v$newest."
+              exit 1
+            fi
+          fi
+          {
+            echo "version=$version"
+            echo "tag=$tag"
+            echo "code=$code"
+          } >> "$GITHUB_OUTPUT"
+          echo "Building World Flags $version as $tag, versionCode $code (dry run: $DRY_RUN)"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Accept Android SDK licences
+        run: |
+          SDKMANAGER=$(ls "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager | head -1)
+          yes | "$SDKMANAGER" --licenses > /dev/null || true
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build the signed release APK
+        env:
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          VERSION_CODE: ${{ steps.version.outputs.code }}
+        run: ./gradlew --console=plain assembleRelease
+
+      - name: Verify the APK and collect the files
+        id: files
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          CODE: ${{ steps.version.outputs.code }}
+        run: |
+          set -euo pipefail
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          src=app/build/outputs/apk/release/app-release.apk
+          cert=$("$BT/apksigner" verify --print-certs "$src" | sed -n 's/.*SHA-256 digest: //p' | head -1)
+          if [ "$cert" != "$EXPECTED_CERT" ]; then
+            echo "::error::The APK is signed with an unexpected certificate ($cert). Check KEYSTORE_BASE64."
+            exit 1
+          fi
+          "$BT/zipalign" -c 4 "$src"
+          badging=$("$BT/aapt2" dump badging "$src" | grep -oE "versionCode='[0-9]+' versionName='[^']+'")
+          if [ "$badging" != "versionCode='$CODE' versionName='$VERSION'" ]; then
+            echo "::error::Unexpected version in the APK: $badging"
+            exit 1
+          fi
+          apk="world-flags-$VERSION-code$CODE-release.apk"
+          mkdir -p dist
+          cp "$src" "dist/$apk"
+          (cd dist && sha256sum "$apk" > "$apk.sha256")
+          gzip -9 -c app/build/outputs/mapping/release/mapping.txt > "dist/mapping-$VERSION.txt.gz"
+          sha=$(cut -c1-64 "dist/$apk.sha256")
+          commit=$(git rev-parse --short HEAD)
+          {
+            echo "apk=$apk"
+            echo "sha=$sha"
+          } >> "$GITHUB_OUTPUT"
+          cat > dist/notes.md <<EOF
+          **World Flags $VERSION** (versionCode $CODE), built by GitHub Actions from \`$commit\`.
+
+          **Install:** Android 7.0 or newer. Installs over any earlier release from this page (same signing key); your progress is kept.
+
+          **Verify**
+
+          | File | SHA-256 |
+          |---|---|
+          | \`$apk\` | \`$sha\` |
+
+          Signing certificate SHA-256 (the same for every release): \`$EXPECTED_CERT\`
+
+          \`mapping-$VERSION.txt.gz\` is the R8 mapping file for reading obfuscated crash traces.
+          EOF
+          ls -l dist
+
+      - name: Keep the files as a workflow artifact (dry run)
+        if: env.DRY_RUN == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ steps.version.outputs.tag }}-dry-run
+          path: dist/
+          retention-days: 7
+
+      - name: Publish the release
+        if: env.DRY_RUN != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+          VERSION: ${{ steps.version.outputs.version }}
+          APK: ${{ steps.files.outputs.apk }}
+        run: |
+          set -euo pipefail
+          gh release create "$TAG" --target "$GITHUB_SHA" --title "World Flags $VERSION" \
+            --notes-file dist/notes.md --generate-notes --latest \
+            "dist/$APK" "dist/$APK.sha256" "dist/mapping-$VERSION.txt.gz"
+          echo "Published https://github.com/$GITHUB_REPOSITORY/releases/tag/$TAG"

@@ -40,6 +40,21 @@ export VERSION_CODE=42                     # optional; defaults to 1, must be a 
 
 The keystore and its passwords are never read from the repository.
 
+### Publishing a release
+
+Releases are built, signed and published by the **Release** workflow (`.github/workflows/release.yml`),
+which reads the upload keystore and its passwords from the repository secrets `KEYSTORE_BASE64`,
+`STORE_PASSWORD` and `KEY_PASSWORD`. To ship a version:
+
+1. Bump `versionName` in `app/build.gradle.kts` (for example `"1.6"`) and merge it to `main`.
+2. Open Actions > Release > Run workflow on `main`. The run creates the tag `v1.6`, builds and signs the
+   APK, checks the certificate, alignment and version, and publishes a release with the APK, its SHA-256
+   and the R8 mapping. Pushing a tag `v1.6` does the same.
+
+`versionCode` is derived from the version (`major*10000 + minor*100 + patch`, so `1.6` is `10600`), which
+keeps it increasing without a manual bump. Tick "dry run" to build and verify without publishing; the files
+are then kept as a workflow artifact for a week.
+
 ## Project layout
 
 | Path | What lives there |
