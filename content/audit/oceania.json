@@ -1,0 +1,389 @@
+{
+ "continent": "Oceania",
+ "batchesRun": 4,
+ "batchesMissing": [],
+ "fixes": [
+  {
+   "code": "FM",
+   "field": "flagDescription",
+   "current": "The flag grew out of the flag of the United Nations Trust Territory of the Pacific Islands: six white stars on blue, one per district. When Palau and the Marshall Islands voted against joining in 1978, the other four, Yap, Chuuk, Pohnpei and Kosrae, adopted a four-star flag on 30 November 1978. The stars stand for the four states; the light blue is said to be the Pacific Ocean and echoes the United Nations flag.",
+   "value": "The flag grew out of the flag of the United Nations Trust Territory of the Pacific Islands, which had six white stars on blue, one per district. After Palau and the Marshall Islands voted in 1978 not to join the federation, a four-star version was adopted on 30 November 1978. Its stars stand for the four states: Yap, Chuuk, Pohnpei and Kosrae. The blue is said to be the Pacific Ocean; the old flag's blue was based on the United Nations flag.",
+   "reason": "Two problems in the shipped text. (1) 'the other four' implies the four state stars are what remained of the six district stars; Wikipedia lists the six Trust Territory stars as Yap, Truk, Pohnpei, Palau, Marshall Islands and Northern Mariana Islands (FOTW lists them slightly differently), and says Kosrae split from Pohnpei and is represented by the fourth star, so the arithmetic is misleading. (2) 'the light blue ... echoes the United Nations flag' presents the UN-based shade as today's flag, but Wikipedia says the UN-based blue was the Trust Territory flag's shade and was replaced by a darker blue after the 1986 Compact of Free Association; FOTW lists several differing blue standards and no single official shade. Verified: adoption of the four-star variation on 30 November 1978, stars are the four states Chuuk, Pohnpei, Kosrae and Yap. The blue-as-ocean reading stays hedged because the FSM Code gives no meaning (FOTW states none either). Replacement is 445 characters, no jargon, no double quotes.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_the_Federated_States_of_Micronesia",
+    "https://www.crwflags.com/fotw/flags/fm.html"
+   ],
+   "confidence": "medium",
+   "from": "oc01"
+  },
+  {
+   "code": "MH",
+   "field": "funFact",
+   "current": "Marshallese navigators learned ocean swell patterns from stick charts of coconut-leaf ribs and shells, memorized before a voyage rather than carried.",
+   "value": "Marshallese stick charts of coconut-leaf ribs and shells show ocean swell patterns; navigators memorized them before a voyage and did not consult them at sea.",
+   "reason": "Wikipedia says the charts were studied and memorized before a voyage and were not consulted during a trip, made from coconut frond midribs with shells for islands. It does not say they were never carried, so 'rather than carried' claims more than the source supports. The replacement follows the source wording, is neutral and durable, and is 158 characters.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Marshall_Islands_stick_chart"
+   ],
+   "confidence": "medium",
+   "from": "oc01"
+  },
+  {
+   "code": "NR",
+   "field": "flagDescription",
+   "current": "Nauru's flag came from a local design competition and was first raised at independence on 31 January 1968. It works like a map: blue is the Pacific Ocean, the thin yellow line is the Equator, and the white star just below it marks Nauru, about one degree south of that line. The star's twelve points stand for the twelve original Nauruan tribes, and its white color is said to recall phosphate, which once made the island rich.",
+   "value": "Nauru's flag came from a local design competition and was first raised at independence on 31 January 1968. It works like a map: blue is the Pacific Ocean, the thin yellow line is the Equator, and the white star just below it marks Nauru, which lies a little south of that line. The star's twelve points stand for the twelve original Nauruan tribes, and its white color is said to recall phosphate, which once made the island rich.",
+   "reason": "Nauru sits at 0 deg 31' 39\" S (Wikipedia Nauru), about half a degree south of the Equator, and Britannica says the Equator lies less than one degree from the island. 'About one degree south' (the rounded government phrase repeated on Wikipedia) could be repeated by a child as a wrong number; 'a little south' is true under every source. Everything else was re-checked and stands: local competition (Wikipedia and Britannica both say it), 31 January 1968, blue = Pacific, stripe = Equator, 12 points = 12 original tribes, white = phosphate correctly hedged. Replacement is 430 characters, no jargon, no double quotes.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Nauru",
+    "https://www.britannica.com/topic/flag-of-Nauru",
+    "https://en.wikipedia.org/wiki/Nauru"
+   ],
+   "confidence": "medium",
+   "from": "oc02"
+  },
+  {
+   "code": "NR",
+   "field": "funFact",
+   "current": "Nauru is the world's smallest island country and has no official capital; its interior was mined for a century for phosphate from ancient seabird droppings.",
+   "value": "Nauru is the world's smallest island country and has no official capital; its central plateau was heavily mined for phosphate from ancient seabird droppings.",
+   "reason": "'Mined for a century' is loose and reads as finished: Britannica says mining began in 1907, Wikipedia says the main reserves were exhausted in the 1990s (about 90 years) and that small-scale mining by RONPhos continues. The seabird origin is confirmed plainly by Britannica ('rock phosphate, leached from guano, or bird droppings'), smallest island country is confirmed by Britannica, and no official capital (Yaren is de facto) by Wikipedia. Replacement keeps the true core, drops the inexact duration, is one neutral sentence of 157 characters.",
+   "sources": [
+    "https://www.britannica.com/place/Nauru",
+    "https://en.wikipedia.org/wiki/Nauru"
+   ],
+   "confidence": "medium",
+   "from": "oc02"
+  },
+  {
+   "code": "PW",
+   "field": "flagDescription",
+   "current": "Blau Skebong's design won Palau's 1979 flag contest and became official on 1 January 1981, when the islands became self-governing. Officially the light blue is the Pacific Ocean and the nation's long path to self-rule. The yellow disc is a full moon, the time when Palauans traditionally fish, plant and celebrate, so it stands for peace, calm and a nation coming into its own. It is not a sun, and no meaning is given for its place left of center.",
+   "value": "Blau Skebong's design won Palau's 1979 flag contest and became law in October 1980. It was raised on 1 January 1981, when the constitution took effect. The light blue stands for the Pacific Ocean and the move from foreign rule to self-government. The yellow disc is a full moon, when Palauans traditionally fish, plant and celebrate, so it stands for peace and national unity. It is not a sun, and no meaning is given for its place left of center.",
+   "reason": "'Became official on 1 January 1981' contradicts the flag law: Public Law 7-6-2 passed 18 September 1980 and was approved 22 October 1980 (crwflags; Britannica says approved by the government on 22 October 1980 and the flag was hoisted on 1 January 1981; fotw says adopted September 1980). 1 January 1981 is the day the constitution took effect and the flag was first raised (Wikipedia Palau, Britannica). 'The nation's long path to self-rule' is editorial; Wikipedia and Britannica give the transition from foreign rule to self-government. The 1979 contest and designer Blau Skebong are confirmed by crwflags, fotw and Britannica. Full moon as the traditional best time for fishing, planting and celebration is confirmed (Wikipedia, Britannica); peace (Wikipedia) and national unity (government text on crwflags and fotw) are the stated meanings. No source gives a reason for the off-center placement, which the law only specifies as 0.7 of the flag width from the staff side. Replacement is 447 characters, no double quotes, no jargon, American spelling.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Palau",
+    "https://crwflags.com/FOTW/flags/pw.html",
+    "https://www.britannica.com/topic/flag-of-Palau",
+    "https://fotw.info/flags/pw.html",
+    "https://en.wikipedia.org/wiki/Palau"
+   ],
+   "confidence": "medium",
+   "from": "oc02"
+  },
+  {
+   "code": "PG",
+   "field": "languages",
+   "current": "[\"Tok Pisin\",\"English\",\"Hiri Motu\",\"Papua New Guinea Sign Language\"]",
+   "value": "[\"Tok Pisin\",\"English\",\"Hiri Motu\",\"Papua New Guinean Sign Language\"]",
+   "reason": "The language set is correct (sign language made official in 2015). Only the label changes. I opened the live Wikipedia article and its title is 'Papua New Guinean Sign Language'. The PNG article infobox says 'PNG Sign Language'. The shipped 'Papua New Guinea Sign Language' matches neither, and the first pass had the title backwards. The owner seed's short form 'PNG Sign Language (verify)' is an acceptable alternative if the owner prefers it.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Papua_New_Guinean_Sign_Language",
+    "https://en.wikipedia.org/wiki/Papua_New_Guinea"
+   ],
+   "confidence": "medium",
+   "from": "oc03"
+  },
+  {
+   "code": "PG",
+   "field": "flagDescription",
+   "current": "Susan Karike, a 15-year-old student, won a 1971 contest to design this flag, adopted that year and kept at independence in 1975. Officially the soaring golden bird of paradise stands for the nation's emergence and its place in traditional ceremonies, and the five white stars of the Southern Cross, also on Australia's flag, signify ties with other South Pacific nations. Red, black and yellow are colors traditionally used in local art and dress.",
+   "value": "Susan Karike, a 15-year-old student, won a 1971 contest to design this flag, kept at independence in 1975. Officially the golden bird of paradise stands for the nation's emergence and its place in traditional ceremonies. The five white stars are the Southern Cross, a star group of southern skies also on Australia's flag, and signify ties with other South Pacific nations. Red, black and yellow are traditional colors of local art and dress.",
+   "reason": "The Southern Cross is a shared motif. Australia, New Zealand and Samoa each name its origin in one clause ('a star group seen in southern skies'), but the decided Papua New Guinea text does not say what the Southern Cross is. This rewrite adds the clause and keeps the decided claims. It is 442 characters, so it stays under 450. The decided version was 447 characters, so there was no room for the clause without trimming.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Papua_New_Guinea"
+   ],
+   "confidence": "medium",
+   "from": "critic"
+  },
+  {
+   "code": "SB",
+   "field": "flagDescription",
+   "current": "John Hazeldine, an art teacher in Honiara, designed the flag, adopted in 1977 shortly before independence from Britain. Blue is said to stand for water: the ocean, rivers and rain; green for the land; and the thin yellow diagonal stripe for the sun whose rays divide them. The five white stars first stood for the country's five districts; after more provinces were created they came to be described as the five main island groups instead.",
+   "value": "John Hazeldine, an art teacher in Honiara, designed the flag, adopted in 1977 shortly before independence from Britain. Blue is said to stand for water: the ocean, rivers and rain; green for the land; and the thin yellow diagonal stripe for the sun, whose rays divide them. The five white stars are often said to stand for the five main island groups, though some accounts link them to the five provinces of the time.",
+   "reason": "The clause 'after more provinces were created they came to be described as the five main island groups' invents a cause. The sources conflict on the stars. Wikipedia (opened) says they stood for the provinces at independence (Central, Western, Eastern, Malaita, Honiara Capital). Flags of the World quotes Sir Peter Kenilorea (2008) saying they never counted provinces and always meant the five major island groupings (Malaita, Eastern, Central, Western, Polynesian outliers), and says the country had four districts after WWII. 'Five districts' therefore also contradicts both. The replacement hedges both readings and drops the invented link. Colour meanings match Wikipedia and the designer's own account. Adoption was 18 Nov 1977 and independence 7 July 1978, so 'shortly before' holds. The designer name is left unchanged and reported as a doubt. Replacement is 417 characters.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_the_Solomon_Islands",
+    "https://crwflags.com/FOTW/flags/sb.html",
+    "https://www.solomontimes.com/news/the-solomon-islands-flag/2659"
+   ],
+   "confidence": "medium",
+   "from": "oc03"
+  },
+  {
+   "code": "VU",
+   "field": "flagDescription",
+   "current": "Kalontas Malon drew it in 1977 for the party that won independence; it became the national flag in 1980. Officially red stands for the blood of boars and people, green for island richness and black for the ni-Vanuatu people. The yellow Y shape, edged in black, traces the islands' layout and the light of the gospel. A boar's tusk, a sign of wealth, rings two namele leaves for peace, with 39 leaflets for the first parliament's 39 members.",
+   "value": "Kalontas Malon designed a similar flag in 1977 for the party that won independence; the national flag followed in 1980. Officially red stands for the blood of boars and people, green for island richness and black for the ni-Vanuatu people. The yellow Y, edged in black, traces the islands' layout and the light of the gospel. A boar's tusk for prosperity rings two namele leaves for peace, with 39 leaflets for the first parliament's 39 members.",
+   "reason": "Wikipedia (opened) says the 1977 flag by Malon for the Vanua'aku Pati had almost the same colors and symbolism as the future national flag. The black and yellow edging was added at PM Walter Lini's request, and the national flag was adopted on 18 February 1980. 'Drew it in 1977' therefore overstates. Wikipedia and Flags of the World both give the tusk meaning as prosperity (customs and tradition as well), so 'prosperity' is used. The Y, namele leaves and 39 leaflets match all sources. The 'Officially red' wording is left as is and reported as a doubt. The verifier's 445-character version was too long once the independence clause was kept, so this version is 445 characters. Count verified: 445 characters.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Vanuatu",
+    "https://www.britannica.com/topic/flag-of-Vanuatu",
+    "https://crwflags.com/FOTW/flags/vu.html"
+   ],
+   "confidence": "medium",
+   "from": "oc03"
+  },
+  {
+   "code": "TO",
+   "field": "flagDescription",
+   "current": "Tonga's flag dates from 1875, when King George Tupou I gave the kingdom a constitution saying the flag shall never be altered. The king wanted a flag showing his people's Christian faith: a red cross in a white box in the upper left corner. The cross stands for Christianity; red is often said to recall the blood of Christ and white purity. An earlier red cross on white looked too much like the Red Cross emblem, so the rest was made red.",
+   "value": "Tonga's King George Tupou I wanted a flag that showed his people's Christian faith, so it has a red cross in a white box in the upper left corner. An 1862 flag with a red cross on plain white looked too much like the Red Cross emblem, so by 1866 the white box was set on a red background. The 1875 constitution says the flag shall never be altered. Red is often said to recall the blood of Christ and white purity.",
+   "reason": "The shipped text says the flag dates from 1875, but Wikipedia and Britannica both say the present design was first used in 1866 and only codified by the 1875 constitution. The shipped order also implies the Red Cross change came after the 1875 law. The replacement fixes the chronology (1862 plain-white flag, 1866 red-background flag, 1875 constitution). The Red Cross reason is stated plainly because Wikipedia and Flags of the World both give it as fact. The color meanings stay hedged. I counted 414 characters. It has no double quotes, no jargon words, American spelling, and it explains the cross, the white box and the red background.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Tonga",
+    "https://www.britannica.com/topic/flag-of-Tonga",
+    "https://crwflags.com/fotw/flags/to.html"
+   ],
+   "confidence": "high",
+   "from": "oc04"
+  },
+  {
+   "code": "TO",
+   "field": "landmarks",
+   "current": "[\"Haʻamonga ʻa Maui Trilithon (Tongatapu)\", \"Mapu ʻa Vaea Blowholes (Tongatapu)\", \"Royal Palace (Nukuʻalofa)\"]",
+   "value": "[\"Haʻamonga ʻa Maui Trilithon (Tongatapu)\", \"Mapuʻa ʻa Vaea Blowholes (Tongatapu)\", \"Royal Palace (Nukuʻalofa)\"]",
+   "reason": "The blowholes' name is split wrongly in the catalog as 'Mapu ʻa Vaea'. The Wikipedia article (which gives the spellings Mapu a Vaea, Mapu'a Vaea and Mapu'a 'a Vaea) and the Tonga Pocket Guide (Mapua 'a Vaea) all keep 'Mapuʻa' as one word, followed by 'ʻa Vaea'. The proposed form uses the U+02BB okina as in the other landmark names. Only the middle landmark changes, and the format stays 'Name (Place)'.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Mapu_a_Vaea",
+    "https://book.tongapocketguide.com/free/mapua-a-vaea-blowholes"
+   ],
+   "confidence": "medium",
+   "from": "oc04"
+  },
+  {
+   "code": "PW",
+   "field": "flagColors",
+   "current": "[\"Blue\",\"Yellow\"]",
+   "value": "[\"Light Blue\",\"Yellow\"]",
+   "reason": "The Palau flag field is light blue (Wikipedia calls it light blue and sky blue), and the flag story itself says 'The light blue stands for the Pacific Ocean'. Fiji and Tuvalu already use 'Light Blue', so plain 'Blue' is inconsistent across the continent.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Palau"
+   ],
+   "confidence": "high",
+   "from": "critic"
+  },
+  {
+   "code": "FM",
+   "field": "flagColors",
+   "current": "[\"Blue\",\"White\"]",
+   "value": "[\"Light Blue\",\"White\"]",
+   "reason": "Wikipedia describes the FSM flag as 'a light blue field with four white five-pointed stars' (Pantone 277 C), not the darker blue of Nauru, the Marshall Islands or Samoa. Fiji, Tuvalu and (after the fix above) Palau use 'Light Blue', so FM should match. The decided flag story avoids the word 'light', so it stays consistent.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_the_Federated_States_of_Micronesia"
+   ],
+   "confidence": "medium",
+   "from": "critic"
+  },
+  {
+   "code": "FJ",
+   "field": "areaSqKm",
+   "current": "18274.0",
+   "value": "18272.0",
+   "reason": "The rule says total area per Wikipedia's list of countries by area, which gives Fiji 18,272 km2. 18,274 comes from other sources such as the Fiji article infobox. Australia, New Zealand, Papua New Guinea, Solomon Islands and Vanuatu match the same list exactly.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/List_of_countries_and_dependencies_by_area"
+   ],
+   "confidence": "medium",
+   "from": "critic"
+  },
+  {
+   "code": "TV",
+   "field": "flagDescription",
+   "current": "Tuvalu's flag was adopted at independence in 1978. Designer Vione Natano kept the British flag in the upper left corner to show ties to Britain and the Commonwealth. The nine yellow stars are the nine islands, placed as they lie on a map. Light blue and yellow are said to show the islands in the ocean; no reason is given for why some stars point down. A 1995 flag without the British flag was unpopular, so the original returned in 1997.",
+   "value": "Tuvalu's flag was adopted at independence on 1 October 1978. Designer Vione Natano kept the Union Jack in the upper left corner to show ties to Britain and the Commonwealth. The light blue stands for the ocean and the nine yellow stars for the nine islands, placed as they lie on a map. No reason is given for why some stars point up and others down. A 1995 flag without the Union Jack was unpopular, so the original returned in 1997.",
+   "reason": "Australia, New Zealand and Fiji all say 'Union Jack', but Tuvalu says 'the British flag', so the shared motif is named differently. The sentence 'Light blue and yellow are said to show the islands in the ocean' is muddled and I found no source for a yellow meaning. Wikipedia gives the light blue as the ocean and the stars as the nine islands, with 'no official explanation' for the star directions. The rewrite fixes both, adds the exact date, and is 434 characters with no flag jargon.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Tuvalu"
+   ],
+   "confidence": "medium",
+   "from": "critic"
+  }
+ ],
+ "ownerDecisions": [],
+ "doubts": [
+  {
+   "code": "KI",
+   "field": "landmarks",
+   "issue": "The third entry 'Battle of Tarawa Sites (Betio)' is a plural descriptive label rather than one named sight; Betio on Tarawa is real and holds WWII relics, but I found no single named monument to substitute, so no replacement is proposed.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Betio"
+   ],
+   "from": "oc01"
+  },
+  {
+   "code": "KI",
+   "field": "flagDescription",
+   "issue": "The year of Grimble's badge is slightly disputed: FOTW cites a letter dated 15 August 1931 and Wikipedia's Arthur Grimble article says 1931, but Wikipedia's Coat of arms of Kiribati article says 1932; only the 1937 grant is firmly sourced. The text keeps 1931; 'in the early 1930s' would be the safe alternative wording.",
+   "sources": [
+    "https://www.crwflags.com/fotw/flags/ki.html",
+    "https://www.britannica.com/topic/flag-of-Kiribati"
+   ],
+   "from": "oc01"
+  },
+  {
+   "code": "MH",
+   "field": "flagDescription",
+   "issue": "Sources differ on the fourth longer star point: Wikipedia and FOTW say Ebeye, while a DK reference quoted by FOTW says Kwajalein (Ebeye lies on Kwajalein Atoll); also the 1979 Act itself was not opened, so whether the symbolism is statutory or only the government's explanation is unverified. The shipped text matches Wikipedia and FOTW and is left unchanged.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_the_Marshall_Islands",
+    "https://www.crwflags.com/fotw/flags/mh.html"
+   ],
+   "from": "oc01"
+  },
+  {
+   "code": "FM",
+   "field": "flagDescription",
+   "issue": "The reading that the blue stands for the Pacific Ocean is not in the FSM Code and I could not find it stated on the FOTW page or in the Wikipedia excerpt I read, so it remains a hedged popular reading; the exact shade of blue has no single official specification.",
+   "sources": [
+    "https://www.crwflags.com/fotw/flags/fm.html",
+    "https://en.wikipedia.org/wiki/Flag_of_the_Federated_States_of_Micronesia"
+   ],
+   "from": "oc01"
+  },
+  {
+   "code": "SB",
+   "field": "flagDescription",
+   "issue": "The designer name 'John Hazeldine' rests only on Flags of the World, which relays his own 2001 account (John A. Hazeldine, New Zealand visual arts master at King George VI School 1974-78). Wikipedia and the Solomon Times piece say only 'a New Zealander teaching visual arts' and give no name, and I found no encyclopaedic or government source that names him. The teacher-designer claim is consistent across sources. The owner can keep the name or use 'A New Zealand art teacher in Honiara'.",
+   "sources": [
+    "https://crwflags.com/FOTW/flags/sb.html",
+    "https://en.wikipedia.org/wiki/Flag_of_the_Solomon_Islands",
+    "https://www.solomontimes.com/news/the-solomon-islands-flag/2659"
+   ],
+   "from": "oc03"
+  },
+  {
+   "code": "VU",
+   "field": "flagDescription",
+   "issue": "'Officially red stands for the blood of boars and people' could not be checked against the 1980 State Flag and Armorial Bearings Public Declaration (PacLII returned 403). The sources word red differently: Wikipedia says 'blood which unites humanity as humans', Britannica says the blood of sacrificed pigs, and Flags of the World says 'blood of sacrificed boars, power of traditions, and men's blood'. The text is left unchanged. If the declaration cannot be seen, hedge red, for example 'Red is said to stand for blood, linked to boar sacrifice and to people'.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Vanuatu",
+    "https://www.britannica.com/topic/flag-of-Vanuatu",
+    "https://crwflags.com/FOTW/flags/vu.html"
+   ],
+   "from": "oc03"
+  },
+  {
+   "code": "TV",
+   "field": "landmarks",
+   "issue": "Funafuti Lagoon contains and overlaps the Funafuti Conservation Area, and Fongafale is the islet that holds the capital's buildings, so the three entries are close to one place seen three ways. No authoritative ranking of Tuvalu's best-known sights was found to justify a replacement; a more distinct third sight, such as the WWII remains on Fongafale or the Philatelic Bureau, is an owner or editor choice. I did not open the Funafuti pages myself; this rests on the verifier's sources and the prior pass's note that Fongafale is an islet rather than a single sight.",
+   "sources": [],
+   "from": "oc04"
+  }
+ ],
+ "rejected": [
+  {
+   "code": "MH",
+   "field": "flagDescription",
+   "why": "Stylistic and unneeded: the shipped text matches Wikipedia and FOTW (Majuro, Jaluit, Wotje, Ebeye), so adding '(on Kwajalein Atoll)' fixes no error and would push the text to 449 of 450 characters; I could not open the Act to settle the Ebeye versus Kwajalein difference (kept as a doubt).",
+   "from": "oc01"
+  },
+  {
+   "code": "FM",
+   "field": "flagDescription",
+   "why": "Second proposal superseded by the accepted rewrite: it keeps 'the other four, Yap, Chuuk, Pohnpei and Kosrae', which Wikipedia contradicts (the six Trust Territory stars were Yap, Truk, Pohnpei, Palau, Marshall Islands and Northern Mariana Islands, and Kosrae split from Pohnpei), and its 418-character wording was not adopted over the cleaner version above. Its UN-blue correction was merged into the accepted fix.",
+   "from": "oc01"
+  },
+  {
+   "code": "NR",
+   "field": "flagDescription",
+   "why": "The doubt about the local design competition is settled: Wikipedia says the flag was chosen in a local design competition and Britannica says it was chosen in a local competition and put in final graphic form by an Australian flag manufacturer. No designer is named, but the current text names none. The opening clause is kept as is; the white = phosphate reading is cited on Wikipedia and already hedged with 'is said to'.",
+   "from": "oc02"
+  },
+  {
+   "code": "SB",
+   "field": "flagDescription",
+   "why": "The verifier's alternative that replaces the name with 'A New Zealand art teacher in Honiara' is superseded by the accepted stars fix. Removing the name is the owner's call because the name is only a doubt, not a confirmed error. The alternative also adds unneeded changes ('land and its crops', 'land from sea') and uses the vaguer 'five main island groups' reading as the lead.",
+   "from": "oc03"
+  },
+  {
+   "code": "SB",
+   "field": "flagDescription",
+   "why": "The first verifier's SB text is the same stars fix as the accepted one (the accepted version is adapted from it). Its rewording 'five districts of the time' is rejected because Flags of the World says there were four districts at independence and Wikipedia says five provinces, so I wrote 'five provinces of the time' as attributed to some accounts.",
+   "from": "oc03"
+  },
+  {
+   "code": "VU",
+   "field": "flagDescription",
+   "why": "The verifier's proposed text is 445 characters but drops the 1980 adoption fact and the edging, and uses 'Vanua'aku Pati'. The accepted version keeps the same corrections (1977 similar flag, 1980 national flag, prosperity) in plainer words. The doubt finding on 'Officially red' is reported under doubts and not turned into a fix.",
+   "from": "oc03"
+  }
+ ],
+ "notes": [
+  "oc01: Opened and used: FOTW Kiribati, FOTW Micronesia, Wikipedia Flag of the Federated States of Micronesia, Wikipedia Flag of the Marshall Islands, Wikipedia Marshall Islands stick chart, Britannica flag of Kiribati. The National Identity Act 1989 on PacLII (pacliirms.austlii.edu.au/ki/legis/num_act/nia1989197) returned 503 and a curl attempt returned nothing, so its flag wording was seen only as a search excerpt: upper segment red representing the sky; frigate bird = power, freedom and Kiribati cultural dance patterns; rising sun = tropical sun as Kiribati lies astride the Equator; sea = Pacific Ocean. All three replacement texts were counted: KI flag 411 characters, FM flag 445, MH fun fact 158, with no double quotes. No owner decisions were touched. Not covered by the supplied findings and left as prior doubts: population figures (KI 134,500, MH 37,550, FM 113,000 from Worldometers' WPP 2024 table, FM's gap with the 2023 census is large) and 'Laura Beach (Majuro)' and 'Sokehs Rock (Pohnpei)', which earlier passes could not verify from an opened page.",
+  "oc02: Opened and checked: Wikipedia Flag of Nauru, Britannica flag of Nauru, Wikipedia Nauru, Britannica Nauru, Wikipedia Flag of Palau, crwflags Palau, fotw Palau, Britannica flag of Palau, Wikipedia Palau. Nothing in the batch touches an owner decision (Nauru capital 'Yaren (de facto)' with quizCapital 'Yaren' and Australian Dollar (A$) are left alone). Re-checked and left unchanged: Nauru officialName 'Republic of Naoero' (Wikipedia: Nauru told the UN on 26 June 2026), population 11,900 (WPP 2024 11,875), area 21, languages, landmarks, left-hand traffic; Palau population 17,700, area 459, capital Ngerulmud, constitution effective 1 January 1981, shark sanctuary fun fact (Wikipedia: 2009, world's first, about 600,000 km2; a historical event, not a year-stamped statistic), right-hand traffic. Not confirmed by me: Ngardmau Waterfall and Anibare Bay did not appear in the pages I fetched (kept, not flagged by either lens). Palau blue-field meaning differs by source: Wikipedia gives Pacific Ocean plus the move to self-government, Britannica quotes the final passage of the foreign administering authority, and the government text on crwflags/fotw says independence and the constancy of Palau. The replacement follows the Wikipedia/Britannica-consistent reading and drops the editorial 'long path'.\"",
+  "oc03: Four fixes accepted and two doubts reported. No owner decision was touched. Replacement texts were length-checked: PG 447, SB 417, VU 445 characters. All three are one paragraph with no double quotes and no line breaks. The PacLII declaration pages returned 403, so the official wording for Vanuatu's red was not verified. The embassy page cited by the PG verifier was not opened by me. The PG language label is a naming call. Wikipedia's article title is 'Papua New Guinean Sign Language', the PNG infobox says 'PNG Sign Language', and the owner seed said 'PNG Sign Language (verify)'. Other fields in these three entries (population, area, currency symbols, landmarks, fun facts, drive side) were not part of the findings and were not re-verified.",
+  "oc04: Opened and read: the Wikipedia articles on the flags of Tonga, Samoa and Tuvalu and on Mapu a Vaea, Britannica's flag of Tonga page, Flags of the World's Tonga page, and the Tonga Pocket Guide blowholes page. The Tonga flag-story rewrite is confirmed by three independent sources: the 1866 first use, the 1875 codification, the 1862 plain-white flag, and the Red Cross reason (given as fact by Wikipedia and Flags of the World). The three flagColors reorders follow a catalog convention I checked in the repo files (field or dominant color first: AU, FJ, NZ, GB, DK, CH). The field rule says only 'in order', so they are consistency fixes, not factual errors; I rate them medium. The landmark spelling fix is also medium because sources vary in how they write the okina. No owner decisions were touched. Population, area, currency, languages, fun facts, Samoa's flag story and Tuvalu's flag story were outside the findings and I did not re-audit them.",
+  "critic: VERIFIED, no change needed: all 14 populations match the UN WPP 2024 medium-variant 2024 values after rounding. Values checked: AU 26,713,205; NZ 5,213,944; FJ 928,784; PG 10,576,502; SB 819,198; VU 327,777; KI 134,518 (4 sig figs, so 134,500); MH 37,548 (4 sig figs, so 37,550); FM 113,160; NR 11,947; PW 17,695; WS 218,019; TO 104,175; TV 9,646 (4 sig figs). Source: https://population.un.org/wpp/assets/Excel%20Files/1_Indicator%20(Standard)/CSV_FILES/WPP2024_TotalPopulationBySex.csv.gz",
+  "critic: VERIFIED, no change needed: Nauru's officialName 'Republic of Naoero' is correct today. Wikipedia reports that a May 2026 constitutional amendment changed the official English name from 'Republic of Nauru', and that Nauru told the UN on 26 June 2026 (https://en.wikipedia.org/wiki/Nauru). Do not revert it to 'Republic of Nauru'.",
+  "critic: Cross-checks that came out clean: the shared currencies are written identically ('Australian Dollar (A$)' for AU, KI, NR and TV; 'US Dollar (US$)' for MH, FM and PW). No two entries share a quizCapital. Subregions follow the UN scheme (Micronesia: KI, MH, FM, NR, PW; Melanesia: FJ, PG, SB, VU; Polynesia: WS, TO, TV; AU and NZ together). Drive sides are right. No fun fact repeats another country's. FM languages as English only is right, because Chuukese, Kosraean, Pohnpeian and Yapese are only 'recognized regional languages' (https://en.wikipedia.org/wiki/Federated_States_of_Micronesia).",
+  "critic: Verified in the Wikipedia articles listed: the Marshall Islands flag story (Emlain Kabua, 1 May 1979, 24 electoral districts, four long points for Majuro, Jaluit, Wotje and Ebeye, Ratak/Ralik meanings) (https://en.wikipedia.org/wiki/Flag_of_the_Marshall_Islands). Tuvalu's highest point is 4.6 m on Niulakita (https://en.wikipedia.org/wiki/Geography_of_Tuvalu). Fiji's flag was designed by Tessa Mackenzie and adopted on 10 October 1970, and the coat of arms dates from 1908 (https://en.wikipedia.org/wiki/Flag_of_Fiji).",
+  "critic: Length check on the decided fun facts: MH 158, NR 157, FM 158 and WS 159 characters. All are within the 160 limit, but any later wording edit will break it. The decided flag texts are all 411 to 447 characters, with no double quotes and no flag jargon.",
+  "critic: DOUBT, no replacement: Marshall Islands landmark 'Kwajalein Atoll' is a US military base with restricted access, so it is an odd pick for a 'well-known sight' for families. I could not verify a better third landmark in the time limit.",
+  "critic: DOUBT, no replacement: Tuvalu's three landmarks overlap. 'Funafuti Lagoon' is the core of the 'Funafuti Conservation Area', and 'Fongafale (Funafuti)' is the main islet of the same atoll, so all three sit in Funafuti and are not three distinct sights. Palau has a milder version: Jellyfish Lake lies inside the Rock Islands Southern Lagoon.",
+  "critic: DOUBT, no replacement: the Marshall Islands flag story hedges the Equator reading ('often read as'), but Nauru's states it plainly ('the thin yellow line is the Equator'). Wikipedia states both plainly, so the difference is harmless. The Fiji flag story's attribution 'said designer Tessa Mackenzie' for the blue's meaning is not backed by what I found, since Wikipedia gives that meaning without attributing it to her. It could be dropped if someone wants to tighten the text.",
+  "critic: DOUBT, no replacement: flagColors use 'Gold' for KI and PG but 'Yellow' for FJ, NR, PW, SB, TV, TO and VU. The repo as a whole uses both (about 34 'Gold' and 58 'Yellow'), so this is not a rule break. Samoa's 'Alofaaga Blowholes' matches the Wikipedia article title, although some sources write Alofaʻaga. The spelling is therefore fine, but it is inconsistent with 'Savaiʻi' in the same landmark if a diacritic policy is ever applied.",
+  "critic: Owner decisions touched: none. Nauru's capital 'Yaren (de facto)' and its quizCapital were left as decided."
+ ],
+ "duplicates": [
+  "PG.flagDescription"
+ ],
+ "perBatch": [
+  {
+   "id": "oc01",
+   "codes": [
+    "KI",
+    "MH",
+    "FM"
+   ],
+   "factsFindings": 3,
+   "textsFindings": 4,
+   "fixes": 3
+  },
+  {
+   "id": "oc02",
+   "codes": [
+    "NR",
+    "PW"
+   ],
+   "factsFindings": 1,
+   "textsFindings": 3,
+   "fixes": 3
+  },
+  {
+   "id": "oc03",
+   "codes": [
+    "PG",
+    "SB",
+    "VU"
+   ],
+   "factsFindings": 4,
+   "textsFindings": 3,
+   "fixes": 4
+  },
+  {
+   "id": "oc04",
+   "codes": [
+    "WS",
+    "TO",
+    "TV"
+   ],
+   "factsFindings": 5,
+   "textsFindings": 1,
+   "fixes": 5
+  }
+ ],
+ "droppedOrderOnly": [
+  "TO.flagColors",
+  "WS.flagColors",
+  "TV.flagColors"
+ ],
+ "rejectedAfterReview": [
+  {
+   "code": "KI",
+   "field": "flagDescription",
+   "why": "Reverted before merge. The proposed \"the red is the sky, per the 1989 law\" rests on an unopened Act and a colour-specification table labelled \"Sky - Red\" (Flags of the World, 1984 publication) that gives no symbolic meaning; Wikipedia quotes the 1989 Act for the bird, sun and sea but not for the red. The shipped text, which says no meaning is given for the red, stays.",
+   "proposedValue": "The design comes from the badge British colonial official Arthur Grimble drew in 1931; islanders kept it when the flag was adopted at independence in 1979. A 1989 law says the frigatebird stands for power, freedom and Kiribati dance patterns, the sun is the tropical sun over the Equator, the red is the sky, and the waves are the Pacific Ocean. The 17 rays are often read as the 16 Gilbert Islands plus Banaba."
+  }
+ ]
+}
