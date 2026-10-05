@@ -138,7 +138,8 @@ class CountryViewModel(
             scope = effectiveScope,
             questions = questions,
             difficulty = difficulty,
-            questionStartedAt = clock()
+            questionStartedAt = clock(),
+            startedAt = clock()
         )
     }
 
@@ -167,9 +168,22 @@ class CountryViewModel(
         val updated = session.next(clock())
         if (updated === session) return
         _quizSession.value = updated
-        if (updated.isFinished) {
-            saveQuizResult(updated.mode.name, updated.score, updated.maxScore, updated.scope)
-        }
+        if (updated.isFinished) onQuizFinished(updated)
+    }
+
+    /** The clock of an endless quiz ran out: end it where it stands and keep the score. */
+    fun finishQuiz() {
+        val session = _quizSession.value ?: return
+        val updated = session.finish()
+        if (updated === session) return
+        _quizSession.value = updated
+        onQuizFinished(updated)
+    }
+
+    /** Fixed-length quizzes are scored out of the best possible; an endless one by how many were right. */
+    private fun onQuizFinished(session: QuizSession) {
+        val total = if (session.mode.isEndless) session.correct else session.maxScore
+        saveQuizResult(session.mode.name, session.score, total, session.scope)
     }
 
     fun endQuiz() {

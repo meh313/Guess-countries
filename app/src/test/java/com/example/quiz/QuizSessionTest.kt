@@ -29,11 +29,10 @@ class QuizSessionTest {
             for (mode in QuizMode.entries) {
                 val finished = session(scope, mode).playThrough()
                 assertTrue("scope=$scope mode=$mode", finished.isFinished)
-                assertEquals(
-                    "scope=$scope mode=$mode",
-                    QuizEngine.questionCount(QuizEngine.poolFor(scope, allCountries).size) - 1,
-                    finished.currentIndex
-                )
+                val questions =
+                    if (mode.isEndless) QuizEngine.BLITZ_QUESTIONS
+                    else QuizEngine.questionCount(QuizEngine.poolFor(scope, allCountries).size)
+                assertEquals("scope=$scope mode=$mode", questions - 1, finished.currentIndex)
             }
         }
     }
@@ -204,5 +203,51 @@ class QuizSessionTest {
     @Test(expected = IllegalArgumentException::class)
     fun aSessionNeedsQuestions() {
         QuizSession(QuizMode.FLAG_NAME, "Global", emptyList())
+    }
+
+    @Test
+    fun correct_countsTheRightAnswersOnly() {
+        var s = session()
+        val first = s.current
+        s = s.answer(first.correctAnswerIndex).next()
+        assertEquals(1, s.correct)
+        s = s.answer((s.current.correctAnswerIndex + 1) % s.current.options.size).next()
+        assertEquals(1, s.correct)
+        s = s.timeOut().next()
+        assertEquals(1, s.correct)
+        s = s.answer(s.current.correctAnswerIndex)
+        assertEquals(2, s.correct)
+    }
+
+    @Test
+    fun finish_endsTheQuizInTheMiddleOfAQuestionAndKeepsTheScore() {
+        var s = session(mode = QuizMode.BLITZ)
+        s = s.answer(s.current.correctAnswerIndex).next()
+        val before = s
+
+        val finished = s.finish()
+
+        assertTrue(finished.isFinished)
+        assertEquals(before.score, finished.score)
+        assertEquals(before.correct, finished.correct)
+        assertEquals(before.currentIndex, finished.currentIndex)
+    }
+
+    @Test
+    fun finish_isIdempotentAndBlocksFurtherAnswers() {
+        val finished = session().finish()
+
+        assertTrue(finished === finished.finish())
+        assertTrue(finished === finished.answer(0))
+        assertTrue(finished === finished.timeOut())
+    }
+
+    @Test
+    fun startedAt_survivesMovingOn() {
+        var s = QuizSession(QuizMode.BLITZ, "Global", session().questions, startedAt = 5_000L)
+        s = s.answer(s.current.correctAnswerIndex).next(now = 9_000L)
+
+        assertEquals(5_000L, s.startedAt)
+        assertEquals(9_000L, s.questionStartedAt)
     }
 }

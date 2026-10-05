@@ -73,6 +73,15 @@ class ScreenshotsTest {
         viewModel.endQuiz()
         rule.waitForIdle()
 
+        // The 60-second blitz after one right answer.
+        viewModel.startQuiz(QuizMode.BLITZ, "Global")
+        rule.waitForIdle()
+        viewModel.answerQuiz(viewModel.quizSession.value!!.current.correctAnswerIndex)
+        rule.waitForIdle()
+        save("quiz_blitz")
+        viewModel.endQuiz()
+        rule.waitForIdle()
+
         rule.openTab("stats")
         save("stats")
     }

@@ -61,7 +61,8 @@ class QuizEngineTest {
         for (size in poolSizes) {
             for (mode in QuizMode.entries) {
                 val questions = QuizEngine.generate(sovereign.take(size), mode)
-                assertEquals("pool=$size mode=$mode", QuizEngine.questionCount(size), questions.size)
+                val expected = if (mode.isEndless) QuizEngine.BLITZ_QUESTIONS else QuizEngine.questionCount(size)
+                assertEquals("pool=$size mode=$mode", expected, questions.size)
             }
         }
     }
@@ -85,6 +86,7 @@ class QuizEngineTest {
                             QuizMode.CONTINENT -> q.targetCountry.continent
                             QuizMode.PICK_FLAG -> q.targetCountry.code
                             QuizMode.FLAG_NAME,
+                            QuizMode.BLITZ,
                             QuizMode.SPEED_MATCH -> q.targetCountry.name
                         }
                     val where = "pool=$size mode=$mode target=${q.targetCountry.code}"
@@ -176,6 +178,14 @@ class QuizEngineTest {
     }
 
     @Test
+    fun onlyTheBlitzIsEndlessAndItRunsForSixtySecondsInAll() {
+        assertEquals(listOf(QuizMode.BLITZ), QuizMode.entries.filter { it.isEndless })
+        assertEquals(60, QuizMode.BLITZ.totalTimeSeconds)
+        assertEquals(null, QuizMode.BLITZ.timeLimitSeconds)
+        assertTrue(QuizMode.BLITZ.showsFlag && !QuizMode.BLITZ.answersAreFlags)
+    }
+
+    @Test
     fun poolFor_leavesOutEntriesThatAreNotSovereignStates() {
         assertEquals(listOf("AQ"), allCountries.filter { !it.isSovereign }.map { it.code })
         for (scope in QuizEngine.SCOPES + "Antarctica") {
@@ -235,7 +245,7 @@ class QuizEngineTest {
         answerPool: List<com.example.data.model.Country> = sovereign
     ): QuizQuestion {
         val targets = listOf(country(code)) + answerPool.filter { it.code != code }.take(3)
-        return QuizEngine.generate(targets, mode, Random(seed), difficulty, answerPool).single { it.targetCountry.code == code }
+        return QuizEngine.generate(targets, mode, Random(seed), difficulty, answerPool).first { it.targetCountry.code == code }
     }
 
     private fun wrongNames(q: QuizQuestion) = q.options.filterIndexed { i, _ -> i != q.correctAnswerIndex }
@@ -352,10 +362,44 @@ class QuizEngineTest {
     @Test
     fun onlyFlagBasedModesUseLookAlikes() {
         assertEquals(
-            setOf(QuizMode.FLAG_NAME, QuizMode.PICK_FLAG, QuizMode.SPEED_MATCH),
+            setOf(QuizMode.FLAG_NAME, QuizMode.PICK_FLAG, QuizMode.SPEED_MATCH, QuizMode.BLITZ),
             QuizMode.entries.filter { it.usesLookAlikes }.toSet()
         )
         assertEquals(listOf(QuizDifficulty.NORMAL, QuizDifficulty.HARD), QuizDifficulty.entries)
         assertEquals(listOf(1, 3), QuizDifficulty.entries.map { it.lookAlikes })
+    }
+
+    @Test
+    fun blitzQuestions_neverAskAboutTheSameCountryTwiceInARow() {
+        for (size in listOf(4, 5, 6, 10, sovereign.size)) {
+            for (seed in 1..10) {
+                val targets = QuizEngine.generate(sovereign.take(size), QuizMode.BLITZ, Random(seed)).map { it.targetCountry.code }
+                targets.zipWithNext().forEach { (a, b) -> assertTrue("pool=$size seed=$seed repeats $a", a != b) }
+            }
+        }
+    }
+
+    @Test
+    fun blitzQuestions_visitEveryCountryBeforeAnyComesAgain() {
+        val pool = sovereign.take(6)
+        val targets = QuizEngine.generate(pool, QuizMode.BLITZ, Random(2)).map { it.targetCountry.code }
+        val codes = pool.map { it.code }.toSet()
+        targets.chunked(6).filter { it.size == 6 }.forEach { block -> assertEquals(codes, block.toSet()) }
+    }
+
+    @Test
+    fun blitzQuestions_neverRepeatACountryWithinTheFirstHundredWhenThePoolIsBigEnough() {
+        val targets = QuizEngine.generate(sovereign, QuizMode.BLITZ, Random(7)).map { it.targetCountry.code }
+        assertEquals(QuizEngine.BLITZ_QUESTIONS, targets.size)
+        assertEquals(targets.distinct(), targets)
+    }
+
+    @Test
+    fun blitzQuestions_useLookAlikesLikeEveryFlagQuestion() {
+        val similar = lookAlikeNames("IE")
+        for (seed in 1..20) {
+            val q = questionAbout("IE", QuizDifficulty.HARD, seed, QuizMode.BLITZ)
+            assertEquals("seed=$seed ${q.options}", similar, wrongNames(q).toSet())
+        }
     }
 }

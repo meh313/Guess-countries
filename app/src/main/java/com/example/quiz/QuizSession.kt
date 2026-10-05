@@ -16,7 +16,11 @@ data class QuizSession(
     /** How many look-alike flags the questions were built with; shown on the score screen. */
     val difficulty: QuizDifficulty = QuizDifficulty.NORMAL,
     /** When the current question was shown, in the ViewModel's clock (milliseconds), for timed modes. */
-    val questionStartedAt: Long = 0L
+    val questionStartedAt: Long = 0L,
+    /** How many answers were right; the score of an endless quiz is counted in these. */
+    val correct: Int = 0,
+    /** When the quiz began, in the ViewModel's clock, for modes that run against one clock. */
+    val startedAt: Long = 0L
 ) {
     init {
         require(questions.isNotEmpty()) { "A quiz needs at least one question" }
@@ -36,9 +40,13 @@ data class QuizSession(
         return copy(
             selectedAnswerIndex = index,
             score = if (correct) score + QuizEngine.pointsForCorrectAnswer(streak) else score,
-            streak = if (correct) streak + 1 else 0
+            streak = if (correct) streak + 1 else 0,
+            correct = if (correct) this.correct + 1 else this.correct
         )
     }
+
+    /** Ends the quiz now, in the middle of a question if need be: the clock of an endless quiz ran out. */
+    fun finish(): QuizSession = if (isFinished) this else copy(isFinished = true)
 
     /** Ends the question as unanswered when the time ran out: no points and the streak is lost. */
     fun timeOut(): QuizSession {

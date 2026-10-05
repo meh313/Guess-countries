@@ -18,6 +18,7 @@ data class QuizScoreEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val mode: String,
     val score: Int,
+    /** The best possible score of a fixed-length quiz; for an endless quiz (the blitz) how many answers were right. */
     val total: Int,
     val continentFilter: String,
     val timestamp: Long = System.currentTimeMillis()
