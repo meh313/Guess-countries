@@ -26,14 +26,14 @@ val versionCodeFromEnv: Int? =
 
 android {
   namespace = "com.example"
-  compileSdk { version = release(36) { minorApiLevel = 1 } }
+  compileSdk { version = release(37) }
 
   defaultConfig {
     applicationId = "com.aistudio.worldexplorer.flags"
     minSdk = 24
     targetSdk = 36
     versionCode = versionCodeFromEnv ?: 1
-    versionName = "1.5"
+    versionName = "1.6"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -78,7 +78,25 @@ android {
   buildFeatures {
     compose = true
   }
-  testOptions { unitTests { isIncludeAndroidResources = true } }
+  testOptions {
+    unitTests {
+      isIncludeAndroidResources = true
+      // Robolectric 4.17 needs these module openings on JDK 17+ (robolectric.org/getting-started).
+      all {
+        it.jvmArgs(
+          "--add-opens=java.base/java.lang=ALL-UNNAMED",
+          "--add-opens=java.base/java.util=ALL-UNNAMED",
+          "--add-opens=java.base/java.io=ALL-UNNAMED",
+          "--add-opens=java.base/java.net=ALL-UNNAMED",
+          "--add-opens=java.base/java.security=ALL-UNNAMED",
+          "--add-opens=java.base/java.text=ALL-UNNAMED",
+          "--add-opens=java.base/jdk.internal.access=ALL-UNNAMED",
+          "--add-opens=java.desktop/java.awt.font=ALL-UNNAMED",
+          "--add-opens=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED"
+        )
+      }
+    }
+  }
   // Exported Room schemas double as fixtures for migration tests.
   sourceSets {
     getByName("androidTest").assets.directories.add("$projectDir/schemas")

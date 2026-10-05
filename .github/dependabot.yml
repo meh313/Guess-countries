@@ -21,16 +21,6 @@ updates:
         versions: [">= 1.7.0"]
       - dependency-name: "androidx.test:runner"
         versions: [">= 1.7.0"]
-      # These need compileSdk 37 (their AAR metadata says so; the build fails at checkAarMetadata).
-      # Drop these four entries when the project moves to compileSdk 37.
-      - dependency-name: "androidx.compose:compose-bom"
-        versions: [">= 2026.08.00"]
-      - dependency-name: "androidx.navigation:navigation-compose"
-        versions: [">= 2.10.0"]
-      - dependency-name: "androidx.lifecycle:*"
-        versions: [">= 2.11.0"]
-      - dependency-name: "androidx.core:core-ktx"
-        versions: [">= 1.19.0"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
