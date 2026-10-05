@@ -1,5 +1,6 @@
 package com.example.support
 
+import com.example.ui.viewmodel.CountryViewModel
 import android.os.Looper
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
@@ -49,3 +50,14 @@ fun contrastRatio(a: Color, b: Color): Double {
     val l2 = b.luminance().toDouble()
     return (maxOf(l1, l2) + 0.05) / (minOf(l1, l2) + 0.05)
 }
+
+/** Waits until the weak spots number [count], handing Room's results to the main thread while it waits. */
+fun ComposeTestRule.awaitWeakSpots(viewModel: CountryViewModel, count: Int, timeoutMillis: Long = 10_000) =
+    awaitWeakSpotsWhere(viewModel, timeoutMillis) { it == count }
+
+/** Waits until the number of weak spots satisfies [accept], handing Room's results to the main thread meanwhile. */
+fun ComposeTestRule.awaitWeakSpotsWhere(viewModel: CountryViewModel, timeoutMillis: Long = 10_000, accept: (Int) -> Boolean) =
+    waitUntil(timeoutMillis) {
+        shadowOf(Looper.getMainLooper()).idle()
+        accept(viewModel.weakSpots.value.size)
+    }

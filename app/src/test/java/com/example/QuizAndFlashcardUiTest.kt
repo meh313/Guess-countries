@@ -20,7 +20,11 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.rules.ActivityScenarioRule
+import com.example.data.local.AppDatabase
+import com.example.quiz.QuizEngine
+import kotlinx.coroutines.runBlocking
 import android.speech.tts.TextToSpeech
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -40,6 +44,7 @@ import org.junit.Assert.assertTrue
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.shadows.ShadowTextToSpeech
 import com.example.support.FreshDatabaseRule
+import com.example.support.awaitWeakSpots
 import com.example.support.boundsOf
 import com.example.support.eventually
 import com.example.ui.components.FlagAspectRatio
@@ -682,5 +687,110 @@ class QuizAndFlashcardUiTest {
         rule.onNodeWithText("14 correct · 340 pts").assertIsDisplayed()
         rule.onNodeWithText("60-Second Blitz • Global").assertIsDisplayed()
         rule.onAllNodesWithText("340 pts", substring = false).assertCountEquals(0)
+    }
+
+    // --- Weak spots deck ---------------------------------------------------------------------------------------------
+
+    /** Writes reviews straight to the database, one after another, so the order of their effects is certain. */
+    private fun review(code: String, vararg results: Boolean) = runBlocking {
+        val dao = AppDatabase.getDatabase(ApplicationProvider.getApplicationContext()).userProgressDao()
+        results.forEachIndexed { i, correct -> dao.recordReview(code, correct, 1_000L + i) }
+    }
+
+    @Test
+    fun flashcards_weakSpotsDeck_isLockedUntilFourCountriesAreWeak() {
+        tab("flashcards")
+
+        rule.onNodeWithTag("flashcard_weak_spots_btn").performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithTag("flashcard_weak_spots_locked_notice").assertIsDisplayed()
+        rule.onNodeWithText("Weak spots unlocks once 4 reviewed countries are below mastery (you have 0)").assertIsDisplayed()
+        rule.onNodeWithText("Card 1 of ${allCountries.size}").assertIsDisplayed()
+
+        rule.onNodeWithTag("flashcard_weak_spots_locked_ok_btn").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithTag("flashcard_weak_spots_locked_notice").assertDoesNotExist()
+    }
+
+    @Test
+    fun flashcards_weakSpotsDeck_holdsTheWeakCountriesWeakestFirstAndKeepsItsOrderWhileGrading() {
+        review("FR", false) // 0
+        review("DE", true, false) // 15
+        review("ES", true, true, false) // 40
+        review("JP", true, true) // 50
+        review("BR", true, true, true) // 75: learned
+        review("AQ", false) // not a country
+        viewModel.toggleFavorite("IT") // a bookmark is not a review
+        rule.awaitWeakSpots(viewModel, 4)
+        tab("flashcards")
+
+        rule.onNodeWithTag("flashcard_weak_spots_btn").performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithTag("flashcard_weak_spots_notice").assertIsDisplayed()
+        rule.onNodeWithText("Weak spots deck: 4 countries, weakest first").assertIsDisplayed()
+        rule.onNodeWithText("Card 1 of 4").assertIsDisplayed()
+        rule.onNodeWithTag("flashcard_flip_card").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithText("France").assertIsDisplayed()
+
+        // Mastering France lifts it out of the weak spots, but the deck in hand keeps its four cards and its order.
+        rule.onNodeWithTag("grade_mastered_btn").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithText("Card 2 of 4").assertIsDisplayed()
+        rule.onNodeWithTag("flashcard_flip_card").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithText("Germany").assertIsDisplayed()
+    }
+
+    @Test
+    fun flashcards_weakSpotsDeck_showAllReturnsToTheExploreDeck() {
+        listOf("FR", "DE", "ES", "JP").forEach { review(it, false) }
+        rule.awaitWeakSpots(viewModel, 4)
+        tab("flashcards")
+        rule.onNodeWithTag("flashcard_weak_spots_btn").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithText("Card 1 of 4").assertIsDisplayed()
+
+        rule.onNodeWithTag("flashcard_weak_spots_off_btn").performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithTag("flashcard_weak_spots_notice").assertDoesNotExist()
+        rule.onNodeWithText("Card 1 of ${allCountries.size}").assertIsDisplayed()
+    }
+
+    @Test
+    fun flashcards_weakSpotsDeck_ignoresExploresFilters() {
+        listOf("FR", "DE", "ES", "JP").forEach { review(it, false) }
+        rule.awaitWeakSpots(viewModel, 4)
+        tab("explore")
+        rule.onNodeWithTag("sort_menu_btn").performClick()
+        rule.onNodeWithText("Sort by Population").performClick()
+        rule.waitForIdle()
+        tab("flashcards")
+        rule.onNodeWithTag("flashcard_filter_notice").assertIsDisplayed()
+
+        rule.onNodeWithTag("flashcard_weak_spots_btn").performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithTag("flashcard_filter_notice").assertDoesNotExist()
+        rule.onNodeWithText("Weak spots deck: 4 countries, weakest first · Explore filters not applied").assertIsDisplayed()
+        rule.onNodeWithText("Card 1 of 4").assertIsDisplayed()
+    }
+
+    @Test
+    fun quiz_weakSpotsScope_startsAQuizAboutTheWeakCountries() {
+        listOf("FR", "DE", "ES", "JP", "BR").forEach { review(it, false) }
+        rule.awaitWeakSpots(viewModel, 5)
+        tab("quiz")
+
+        clickSetup("quiz_scope_weak_spots")
+        rule.onNodeWithText("Start 5-Question Quiz").assertIsDisplayed()
+        rule.onNodeWithTag("start_quiz_btn").performScrollTo().performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithText("Question 1 of 5").assertIsDisplayed()
+        assertEquals(setOf("FR", "DE", "ES", "JP", "BR"), viewModel.quizSession.value!!.questions.map { it.targetCountry.code }.toSet())
     }
 }

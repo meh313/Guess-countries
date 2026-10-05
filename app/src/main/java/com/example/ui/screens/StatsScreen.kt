@@ -41,6 +41,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.data.model.WeakSpots
 import com.example.quiz.QuizMode
 import com.example.ui.components.StatBadge
 import com.example.ui.components.getContinentColor
@@ -63,7 +64,7 @@ fun StatsScreen(
 
     val bookmarkedCount = progressMap.values.count { it.isFavorite }
     val sovereignCodes = allCountries.map { it.code }.toSet()
-    val masteredCount = progressMap.values.count { it.countryCode in sovereignCodes && it.masteryScore >= 75 }
+    val masteredCount = progressMap.values.count { it.countryCode in sovereignCodes && it.masteryScore >= WeakSpots.MASTERED }
     val totalQuizzes = quizHistory.size
     // A blitz runs as long as the clock allows, so its points would swamp the 190-point maximum of the others.
     val maxScore = quizHistory.filter { it.mode != QuizMode.BLITZ.name }.maxOfOrNull { it.score } ?: 0
@@ -145,7 +146,7 @@ fun StatsScreen(
         items(continents) { continent ->
             val continentCountries = allCountries.filter { it.continent.equals(continent, ignoreCase = true) }
             val total = continentCountries.size
-            val masteredInContinent = continentCountries.count { (progressMap[it.code]?.masteryScore ?: 0) >= 75 }
+            val masteredInContinent = continentCountries.count { (progressMap[it.code]?.masteryScore ?: 0) >= WeakSpots.MASTERED }
             val progressRatio = if (total > 0) masteredInContinent.toFloat() / total else 0f
             val continentColor = getContinentColor(continent)
 

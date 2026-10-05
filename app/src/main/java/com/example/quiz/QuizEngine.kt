@@ -67,12 +67,21 @@ object QuizEngine {
 
     val SCOPES = listOf("Global", "Africa", "Americas", "Asia", "Europe", "Oceania")
 
+    /** A scope that is not a place: the countries the player practiced and has not mastered yet. */
+    const val WEAK_SPOTS = "Weak spots"
+
     private const val DISTRACTORS = 3
     private val ANSWER_CONTINENTS = listOf("Africa", "Americas", "Asia", "Europe", "Oceania")
 
-    /** The scope a quiz of [mode] actually uses: [requested], except modes that always cover the world. */
-    fun effectiveScope(mode: QuizMode, requested: String): String =
-        if (mode.usesWholeWorld) "Global" else requested
+    /**
+     * The scope a quiz of [mode] actually uses: [requested], except modes that always cover the world, and the weak
+     * spots once there are too few of them left to ask about.
+     */
+    fun effectiveScope(mode: QuizMode, requested: String, weakSpotsAvailable: Boolean = true): String = when {
+        mode.usesWholeWorld -> "Global"
+        requested == WEAK_SPOTS && !weakSpotsAvailable -> "Global"
+        else -> requested
+    }
 
     /** The countries a quiz in [scope] can ask about. Non-sovereign entries such as Antarctica never appear. */
     fun poolFor(scope: String, countries: List<Country>): List<Country> {

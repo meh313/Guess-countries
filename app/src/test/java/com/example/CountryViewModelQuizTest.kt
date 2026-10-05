@@ -437,4 +437,138 @@ class CountryViewModelQuizTest {
         assertEquals(4_321L, vm.quizSession.value!!.startedAt)
         assertEquals(QuizEngine.BLITZ_QUESTIONS, vm.quizSession.value!!.questions.size)
     }
+
+    // --- Weak spots -------------------------------------------------------------------------------------------------
+
+    /** Reviews [codes] one after another at [now] ticks, wrong answers each, so the first one is the one practiced longest ago. */
+    private fun reviewWrong(codes: List<String>) {
+        codes.forEach { code ->
+            now += 10
+            runBlocking { db.userProgressDao().recordReview(code, false, now) }
+        }
+    }
+
+    /** The weak spots follow the database through Room's invalidation, which needs the main looper to deliver. */
+    private fun CountryViewModel.awaitWeakSpots(count: Int) {
+        val deadline = System.currentTimeMillis() + 10_000
+        while (weakSpots.value.size != count) {
+            check(System.currentTimeMillis() < deadline) { "weak spots stayed at ${weakSpots.value.size}, wanted $count" }
+            shadowOf(Looper.getMainLooper()).idle()
+            Thread.sleep(10)
+        }
+    }
+
+    private val twelveWeak = sovereign.map { it.code }.take(12)
+
+    @Test
+    fun weakSpots_listsReviewedCountriesBelowMasteryWeakestFirst() {
+        runBlocking {
+            val dao = db.userProgressDao()
+            dao.recordReview("FR", true, 10L)
+            dao.recordReview("FR", true, 11L) // 50
+            dao.recordReview("DE", false, 12L) // 0
+            dao.recordReview("JP", true, 13L) // 25
+            repeat(3) { dao.recordReview("BR", true, 14L + it) } // 75, learned
+            dao.recordReview("AQ", false, 20L) // not a country
+        }
+        val vm = newViewModel()
+
+        vm.awaitWeakSpots(3)
+
+        assertEquals(listOf("DE", "JP", "FR"), vm.weakSpots.value.map { it.code })
+    }
+
+    @Test
+    fun startQuiz_weakSpots_asksAboutTheWeakestTenWithAnswersFromTheWholeWorld() {
+        reviewWrong(twelveWeak)
+        val vm = newViewModel()
+        vm.awaitWeakSpots(12)
+
+        vm.startQuiz(QuizMode.FLAG_NAME, QuizEngine.WEAK_SPOTS)
+
+        val s = vm.quizSession.value!!
+        assertEquals(QuizEngine.WEAK_SPOTS, s.scope)
+        assertEquals(10, s.questions.size)
+        // Mastery is 0 for all twelve, so the ten practiced longest ago are the weakest.
+        assertEquals(twelveWeak.take(10).toSet(), s.questions.map { it.targetCountry.code }.toSet())
+        val weakNames = sovereign.filter { it.code in twelveWeak }.map { it.name }.toSet()
+        assertTrue("wrong answers come from the whole world", s.questions.any { q -> q.options.any { it !in weakNames } })
+    }
+
+    @Test
+    fun startQuiz_weakSpots_inThePickFlagModeUsesFlagsFromTheWholeWorld() {
+        reviewWrong(twelveWeak)
+        val vm = newViewModel()
+        vm.awaitWeakSpots(12)
+
+        vm.startQuiz(QuizMode.PICK_FLAG, QuizEngine.WEAK_SPOTS, QuizDifficulty.HARD)
+
+        val s = vm.quizSession.value!!
+        assertEquals(QuizEngine.WEAK_SPOTS, s.scope)
+        assertTrue(s.questions.any { q -> q.options.any { it !in twelveWeak } })
+    }
+
+    @Test
+    fun startQuiz_weakSpots_inTheBlitzCyclesThroughEveryWeakSpot() {
+        reviewWrong(twelveWeak)
+        val vm = newViewModel()
+        vm.awaitWeakSpots(12)
+
+        vm.startQuiz(QuizMode.BLITZ, QuizEngine.WEAK_SPOTS)
+
+        val s = vm.quizSession.value!!
+        assertEquals(QuizEngine.BLITZ_QUESTIONS, s.questions.size)
+        assertEquals(twelveWeak.toSet(), s.questions.map { it.targetCountry.code }.toSet())
+    }
+
+    @Test
+    fun startQuiz_weakSpots_withFewerThanFourFallsBackToGlobal() {
+        reviewWrong(twelveWeak.take(3))
+        val vm = newViewModel()
+        vm.awaitWeakSpots(3)
+
+        vm.startQuiz(QuizMode.FLAG_NAME, QuizEngine.WEAK_SPOTS)
+
+        assertEquals("Global", vm.quizSession.value!!.scope)
+    }
+
+    @Test
+    fun startQuiz_weakSpots_isIgnoredByTheContinentQuiz() {
+        reviewWrong(twelveWeak)
+        val vm = newViewModel()
+        vm.awaitWeakSpots(12)
+
+        vm.startQuiz(QuizMode.CONTINENT, QuizEngine.WEAK_SPOTS)
+
+        assertEquals("Global", vm.quizSession.value!!.scope)
+    }
+
+    @Test
+    fun aFinishedWeakSpotsQuiz_isLoggedUnderWeakSpots() {
+        reviewWrong(twelveWeak)
+        val vm = newViewModel()
+        vm.awaitWeakSpots(12)
+        vm.startQuiz(QuizMode.FLAG_NAME, QuizEngine.WEAK_SPOTS)
+
+        vm.playToTheEnd()
+
+        db.awaitPendingWrites()
+        val rows = runBlocking { db.userProgressDao().getQuizHistory().first() }
+        assertEquals(listOf(QuizEngine.WEAK_SPOTS), rows.map { it.continentFilter })
+    }
+
+    @Test
+    fun weakSpots_shrinkAsTheQuizLiftsCountriesToMastery() {
+        reviewWrong(twelveWeak.take(4))
+        val vm = newViewModel()
+        vm.awaitWeakSpots(4)
+        // Three right answers take a country from 0 to 75, which is learned.
+        repeat(3) {
+            vm.startQuiz(QuizMode.FLAG_NAME, QuizEngine.WEAK_SPOTS)
+            vm.playToTheEnd()
+            db.awaitPendingWrites()
+        }
+
+        vm.awaitWeakSpots(0)
+    }
 }

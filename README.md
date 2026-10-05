@@ -8,13 +8,17 @@ drill them with flashcards, and test yourself with quizzes. Everything runs on t
 - **Explore** – search, filter by continent or Saved, sort by name, population, area or continent, open a detail
   sheet and have it read aloud.
 - **Flashcards** – flip through the deck (it follows the Explore filters), shuffle it, and grade yourself.
-- **Quiz** – flag → country, country → capital, flag → continent (always the whole world), and a
-  10-second-per-question speed round. Ten questions or fewer, with a streak bonus.
+  A *Weak spots* deck holds the countries you have practiced but not yet mastered, weakest first.
+- **Quiz** – flag → country, country → flag (pick the right flag out of four), country → capital,
+  flag → continent (always the whole world), a 10-second-per-question speed round and a 60-second blitz
+  (as many flags as you can). Ten questions or fewer, with a streak bonus. *Answers: Normal* puts one
+  look-alike flag among the wrong answers, *Hard* as many as exist. The *Weak spots* scope quizzes you on
+  the ten countries you know least.
 - **Stats** – mastery per continent and a log of recent quizzes.
 
 ## Build
 
-Requires JDK 21 and the Android SDK (compileSdk 36.1). The Gradle wrapper picks the right Gradle version.
+Requires JDK 21 and the Android SDK (compileSdk 37, targetSdk 36). The Gradle wrapper picks the right Gradle version.
 
 ```sh
 ./gradlew assembleDebug        # debug APK
@@ -82,6 +86,6 @@ packaged into the APK's assets.
 
 ## Dependencies
 
-The versions in `gradle/libs.versions.toml` are the newest that build against compileSdk 36. Compose BOM 2026.08+, navigation 2.10+, lifecycle 2.11+ and core 1.19+ need compileSdk 37, so
-Dependabot updates to those fail until compileSdk (and probably AGP) is raised on purpose. androidx.test 1.7
-breaks Robolectric 4.16, so core and runner stay on 1.6.
+The versions in `gradle/libs.versions.toml` are the newest that build against compileSdk 37; targetSdk stays
+at 36 so Robolectric keeps running at a supported level. androidx.test 1.7 breaks Robolectric's setup, so
+core and runner stay on 1.6 (see `.github/dependabot.yml`).

@@ -7,6 +7,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.hasTestTag
 import com.example.support.FreshDatabaseRule
+import com.example.support.awaitWeakSpotsWhere
 import com.example.support.drawWindow
 import com.example.support.openTab
 import java.io.File
@@ -55,6 +56,12 @@ class ScreenshotsTest {
         rule.onNodeWithTag("flashcard_flip_card").performClick()
         rule.waitForIdle()
         save("flashcards_back")
+        // Nothing practiced yet, so the weak-spots deck says what it needs.
+        rule.onNodeWithTag("flashcard_weak_spots_btn").performClick()
+        rule.waitForIdle()
+        save("flashcards_weak_spots_locked")
+        rule.onNodeWithTag("flashcard_weak_spots_locked_ok_btn").performClick()
+        rule.waitForIdle()
 
         rule.openTab("quiz")
         save("quiz_setup")
@@ -81,6 +88,20 @@ class ScreenshotsTest {
         save("quiz_blitz")
         viewModel.endQuiz()
         rule.waitForIdle()
+
+        // Six countries answered wrong (and the two quizzes above left their own marks): the weak-spots scope unlocks
+        // and so does the deck.
+        listOf("FR", "DE", "ES", "JP", "BR", "IT").forEach { viewModel.updateMastery(it, false) }
+        rule.awaitWeakSpotsWhere(viewModel) { it >= 6 }
+        rule.openTab("quiz")
+        rule.onNodeWithTag("start_quiz_btn").performScrollTo()
+        rule.onNodeWithTag("quiz_scope_weak_spots").performScrollTo().performClick()
+        rule.waitForIdle()
+        save("quiz_setup_weak_spots")
+        rule.openTab("flashcards")
+        rule.onNodeWithTag("flashcard_weak_spots_btn").performClick()
+        rule.waitForIdle()
+        save("flashcards_weak_spots")
 
         rule.openTab("stats")
         save("stats")
