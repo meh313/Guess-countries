@@ -20,7 +20,7 @@ core = "1.6.1"
 runner = "1.6.2"
 kotlinxCoroutinesAndroid = "1.11.0"
 kotlinxCoroutinesCore = "1.11.0"
-robolectric = "4.16.1"
+robolectric = "4.17"
 
 
 [libraries]
