@@ -9,6 +9,7 @@ import com.example.quiz.allCountries
 import com.example.data.model.CountryCatalog
 import com.example.data.model.Country
 import com.example.data.model.SortOption
+import com.example.data.settings.InMemoryUserSettings
 import com.example.quiz.QuizDifficulty
 import com.example.quiz.QuizEngine
 import com.example.quiz.QuizMode
@@ -570,5 +571,23 @@ class CountryViewModelQuizTest {
         }
 
         vm.awaitWeakSpots(0)
+    }
+
+    // --- Remembered difficulty --------------------------------------------------------------------------------------
+
+    @Test
+    fun theChosenDifficulty_isRememberedByTheNextViewModel() {
+        val settings = InMemoryUserSettings()
+        fun viewModel() = CountryViewModel(CountryRepository(db.userProgressDao()), FakeSpeech(), clock = { now }, settings = settings)
+        val first = viewModel()
+        assertEquals(QuizDifficulty.NORMAL, first.quizDifficulty.value)
+
+        first.setQuizDifficulty(QuizDifficulty.HARD)
+
+        assertEquals(QuizDifficulty.HARD, first.quizDifficulty.value)
+        assertEquals(QuizDifficulty.HARD, viewModel().quizDifficulty.value)
+
+        first.setQuizDifficulty(QuizDifficulty.NORMAL)
+        assertEquals(QuizDifficulty.NORMAL, viewModel().quizDifficulty.value)
     }
 }

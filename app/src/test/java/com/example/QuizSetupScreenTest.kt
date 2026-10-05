@@ -12,6 +12,8 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import com.example.data.local.AppDatabase
 import com.example.data.model.CountryRepository
+import com.example.data.settings.InMemoryUserSettings
+import com.example.quiz.QuizDifficulty
 import com.example.quiz.QuizEngine
 import com.example.quiz.sovereign
 import com.example.support.FakeSpeech
@@ -206,5 +208,20 @@ class QuizSetupScreenTest {
         rule.onNodeWithTag("quiz_scope_weak_spots").performScrollTo().assertIsNotEnabled()
         rule.onNodeWithText("The continent quiz always covers the whole world").assertIsDisplayed()
         rule.onNodeWithTag("quiz_weak_spots_note").assertDoesNotExist()
+    }
+
+    @Test
+    fun theAnswersRow_startsOnTheRememberedDifficultyAndRemembersTheNextChoice() {
+        val settings = InMemoryUserSettings(QuizDifficulty.HARD)
+        val vm = CountryViewModel(CountryRepository(db.userProgressDao(), smallWorld), FakeSpeech(), settings = settings)
+        rule.setContent { WorldFlagsTheme { QuizScreen(vm) } }
+        rule.waitForIdle()
+
+        rule.onNodeWithTag("quiz_difficulty_hard").performScrollTo().assertIsSelected()
+
+        clickSetup("quiz_difficulty_normal")
+
+        rule.onNodeWithTag("quiz_difficulty_normal").assertIsSelected()
+        assertEquals(QuizDifficulty.NORMAL, settings.quizDifficulty)
     }
 }

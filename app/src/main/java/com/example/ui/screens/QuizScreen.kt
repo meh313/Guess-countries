@@ -113,7 +113,7 @@ fun QuizScreen(
     val session by viewModel.quizSession.collectAsState()
     var selectedMode by rememberSaveable { mutableStateOf(QuizMode.FLAG_NAME) }
     var selectedContinentScope by rememberSaveable { mutableStateOf("Global") }
-    var selectedDifficulty by rememberSaveable { mutableStateOf(QuizDifficulty.NORMAL) }
+    val selectedDifficulty by viewModel.quizDifficulty.collectAsState()
     val weakSpots by viewModel.weakSpots.collectAsState()
     val weakSpotsAvailable = weakSpots.size >= QuizEngine.MIN_POOL
     // Once practice lifts the weak spots out of reach, the choice goes back to Global instead of reviving by itself.
@@ -324,7 +324,7 @@ fun QuizScreen(
                                 selected = isSelected,
                                 enabled = difficultyApplies,
                                 role = Role.RadioButton,
-                                onClick = { selectedDifficulty = difficulty }
+                                onClick = { viewModel.setQuizDifficulty(difficulty) }
                             )
                             .testTag("quiz_difficulty_${difficulty.name.lowercase()}")
                     ) {

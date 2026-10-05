@@ -14,6 +14,9 @@ import com.example.data.model.Country
 import com.example.data.model.CountryRepository
 import com.example.data.model.SortOption
 import com.example.data.model.WeakSpots
+import com.example.data.settings.InMemoryUserSettings
+import com.example.data.settings.PrefsUserSettings
+import com.example.data.settings.UserSettings
 import com.example.quiz.QuizDifficulty
 import com.example.quiz.QuizEngine
 import com.example.quiz.QuizMode
@@ -36,7 +39,9 @@ class CountryViewModel(
     val repository: CountryRepository,
     private val speech: Speech,
     /** Monotonic milliseconds, used to time Speed Round questions. Injected so tests can control time. */
-    private val clock: () -> Long = SystemClock::elapsedRealtime
+    private val clock: () -> Long = SystemClock::elapsedRealtime,
+    /** Settings that outlive the app process; in tests an in-memory copy. */
+    private val settings: UserSettings = InMemoryUserSettings()
 ) : ViewModel() {
 
     val searchQuery = MutableStateFlow("")
@@ -44,6 +49,16 @@ class CountryViewModel(
     val sortBy = MutableStateFlow(SortOption.NAME)
     val showOnlyBookmarks = MutableStateFlow(false)
     val selectedCountry = MutableStateFlow<Country?>(null)
+
+    private val _quizDifficulty = MutableStateFlow(settings.quizDifficulty)
+
+    /** The answers difficulty picked on the quiz setup screen, remembered across restarts. */
+    val quizDifficulty: StateFlow<QuizDifficulty> = _quizDifficulty
+
+    fun setQuizDifficulty(difficulty: QuizDifficulty) {
+        settings.quizDifficulty = difficulty
+        _quizDifficulty.value = difficulty
+    }
 
     private val _quizSession = MutableStateFlow<QuizSession?>(null)
 
@@ -228,7 +243,8 @@ class CountryViewModel(
                 val app = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as Application
                 CountryViewModel(
                     repository = CountryRepository(AppDatabase.getDatabase(app).userProgressDao()),
-                    speech = AndroidSpeech(app)
+                    speech = AndroidSpeech(app),
+                    settings = PrefsUserSettings(app)
                 )
             }
         }

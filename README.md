@@ -12,7 +12,7 @@ drill them with flashcards, and test yourself with quizzes. Everything runs on t
 - **Quiz** – flag → country, country → flag (pick the right flag out of four), country → capital,
   flag → continent (always the whole world), a 10-second-per-question speed round and a 60-second blitz
   (as many flags as you can). Ten questions or fewer, with a streak bonus. *Answers: Normal* puts one
-  look-alike flag among the wrong answers, *Hard* as many as exist. The *Weak spots* scope quizzes you on
+  look-alike flag among the wrong answers, *Hard* as many as exist (the choice is remembered). The *Weak spots* scope quizzes you on
   the ten countries you know least.
 - **Stats** – mastery per continent and a log of recent quizzes.
 
