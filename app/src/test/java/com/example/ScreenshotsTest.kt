@@ -17,6 +17,11 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import androidx.compose.ui.test.performScrollTo
+import androidx.lifecycle.ViewModelProvider
+import com.example.quiz.QuizDifficulty
+import com.example.quiz.QuizMode
+import com.example.ui.viewmodel.CountryViewModel
 
 /**
  * Saves a picture of each screen under app/build/screenshots so a change can be looked at without a
@@ -53,6 +58,20 @@ class ScreenshotsTest {
 
         rule.openTab("quiz")
         save("quiz_setup")
+        rule.onNodeWithTag("start_quiz_btn").performScrollTo()
+        save("quiz_setup_bottom")
+
+        // A "pick the flag" question on Hard, then the same question after a wrong answer.
+        val viewModel = ViewModelProvider(rule.activity)[CountryViewModel::class.java]
+        viewModel.startQuiz(QuizMode.PICK_FLAG, "Europe", QuizDifficulty.HARD)
+        rule.waitForIdle()
+        save("quiz_pick_flag")
+        val question = viewModel.quizSession.value!!.current
+        viewModel.answerQuiz((question.correctAnswerIndex + 1) % question.options.size)
+        rule.waitForIdle()
+        save("quiz_pick_flag_answered")
+        viewModel.endQuiz()
+        rule.waitForIdle()
 
         rule.openTab("stats")
         save("stats")

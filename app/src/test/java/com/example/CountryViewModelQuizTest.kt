@@ -9,6 +9,7 @@ import com.example.quiz.allCountries
 import com.example.data.model.CountryCatalog
 import com.example.data.model.Country
 import com.example.data.model.SortOption
+import com.example.quiz.QuizDifficulty
 import com.example.quiz.QuizEngine
 import com.example.quiz.QuizMode
 import com.example.support.FakeSpeech
@@ -339,5 +340,30 @@ class CountryViewModelQuizTest {
             done(history)
         }
         return history
+    }
+
+    @Test
+    fun startQuiz_remembersTheDifficultyAndDefaultsToNormal() {
+        val vm = newViewModel()
+
+        vm.startQuiz(QuizMode.FLAG_NAME, "Global")
+        assertEquals(QuizDifficulty.NORMAL, vm.quizSession.value!!.difficulty)
+        vm.endQuiz()
+
+        vm.startQuiz(QuizMode.FLAG_NAME, "Global", QuizDifficulty.HARD)
+        assertEquals(QuizDifficulty.HARD, vm.quizSession.value!!.difficulty)
+    }
+
+    @Test
+    fun aPickTheFlagQuizAnswersWithFlagsAndPlaysToTheEnd() {
+        val vm = newViewModel()
+
+        vm.startQuiz(QuizMode.PICK_FLAG, "Europe", QuizDifficulty.HARD)
+
+        val s = vm.quizSession.value!!
+        val europe = sovereign.filter { it.continent == "Europe" }.map { it.code }.toSet()
+        s.questions.forEach { q -> assertTrue(q.options.toString(), europe.containsAll(q.options)) }
+        vm.playToTheEnd()
+        assertTrue(vm.quizSession.value!!.isFinished)
     }
 }

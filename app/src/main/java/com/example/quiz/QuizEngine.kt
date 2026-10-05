@@ -1,6 +1,7 @@
 package com.example.quiz
 
 import com.example.data.model.Country
+import com.example.data.model.FlagLookAlikes
 import kotlin.random.Random
 
 enum class QuizMode(
@@ -11,18 +12,31 @@ enum class QuizMode(
     val hint: String? = null
 ) {
     FLAG_NAME("Flag -> Country"),
+    PICK_FLAG("Country -> Flag", hint = "Pick the right flag out of four"),
     CAPITAL("Country -> Capital"),
     CONTINENT("Flag -> Continent", hint = "Covers the whole world"),
     SPEED_MATCH("Speed Round", timeLimitSeconds = 10, hint = "10 seconds per question");
 
-    /** The question card shows the flag in every mode except the capital quiz. */
-    val showsFlag: Boolean get() = this != CAPITAL
+    /** The question card shows the flag, except in the capital quiz and where the flags are the answers. */
+    val showsFlag: Boolean get() = this != CAPITAL && this != PICK_FLAG
+
+    /** The four options are flags (their text is the country code) instead of words. */
+    val answersAreFlags: Boolean get() = this == PICK_FLAG
+
+    /** Wrong answers can be flags that look like the right one; capitals and continents have no such thing. */
+    val usesLookAlikes: Boolean get() = this != CAPITAL && this != CONTINENT
 
     /**
      * Continent questions always draw from every country. Under a single-continent scope every answer
      * would be that continent, so the scope does not apply.
      */
     val usesWholeWorld: Boolean get() = this == CONTINENT
+}
+
+/** How many of a question's three wrong answers are flags that look like the right one, where any exist. */
+enum class QuizDifficulty(val title: String, val lookAlikes: Int, val hint: String) {
+    NORMAL("Normal", 1, "One look-alike flag among the answers"),
+    HARD("Hard", 3, "Look-alike flags wherever they exist")
 }
 
 data class QuizQuestion(
@@ -71,17 +85,31 @@ object QuizEngine {
     fun maxScore(questionCount: Int): Int =
         POINTS_PER_CORRECT * questionCount + STREAK_BONUS * (questionCount * (questionCount - 1) / 2)
 
-    fun generate(pool: List<Country>, mode: QuizMode, random: Random = Random.Default): List<QuizQuestion> {
+    /**
+     * Up to [MAX_QUESTIONS] questions about countries of [pool]. Wrong answers come from [answerPool], which is
+     * [pool] unless the targets are a hand-picked subset (weak spots) and the answers should still be drawn from a
+     * wider set. [difficulty] sets how many wrong answers are look-alike flags (flag-based modes only).
+     */
+    fun generate(
+        pool: List<Country>,
+        mode: QuizMode,
+        random: Random = Random.Default,
+        difficulty: QuizDifficulty = QuizDifficulty.NORMAL,
+        answerPool: List<Country> = pool
+    ): List<QuizQuestion> {
         if (pool.size < MIN_POOL) return emptyList()
-        return pool.shuffled(random).take(MAX_QUESTIONS).map { target -> question(pool, target, mode, random) }
+        val lookAlikes = if (mode.usesLookAlikes) difficulty.lookAlikes else 0
+        return pool.shuffled(random).take(MAX_QUESTIONS).map { target -> question(answerPool, target, mode, lookAlikes, random) }
     }
 
-    private fun question(pool: List<Country>, target: Country, mode: QuizMode, random: Random): QuizQuestion =
+    private fun question(pool: List<Country>, target: Country, mode: QuizMode, lookAlikes: Int, random: Random): QuizQuestion =
         when (mode) {
             QuizMode.FLAG_NAME ->
-                choice(target, "Which country does this flag belong to?", target.name, wrongAnswers(pool, target, random) { it.name }, random)
+                choice(target, "Which country does this flag belong to?", target.name, wrongAnswers(pool, target, random, lookAlikes) { it.name }, random)
+            QuizMode.PICK_FLAG ->
+                choice(target, "Which of these is the flag of ${target.name}?", target.code, wrongAnswers(pool, target, random, lookAlikes) { it.code }, random)
             QuizMode.CAPITAL ->
-                choice(target, "What is the capital city of ${target.name}?", target.quizCapital, wrongAnswers(pool, target, random) { it.quizCapital }, random)
+                choice(target, "What is the capital city of ${target.name}?", target.quizCapital, wrongAnswers(pool, target, random, 0) { it.quizCapital }, random)
             QuizMode.CONTINENT ->
                 choice(
                     target,
@@ -91,25 +119,44 @@ object QuizEngine {
                     random
                 )
             QuizMode.SPEED_MATCH ->
-                choice(target, "Identify the country for this flag:", target.name, wrongAnswers(pool, target, random) { it.name }, random)
+                choice(target, "Identify the country for this flag:", target.name, wrongAnswers(pool, target, random, lookAlikes) { it.name }, random)
         }
 
-    /** Distractors that differ from the answer text, so no two options can look identical. */
+    /**
+     * Distractors that differ from the answer text, so no two options can look identical. Up to [lookAlikes] of them
+     * are flags that look like the target's (only those inside [pool], so a Europe quiz never offers Chad); the rest
+     * are random members of [pool].
+     */
     private fun wrongAnswers(
         pool: List<Country>,
         target: Country,
         random: Random,
+        lookAlikes: Int,
         answerOf: (Country) -> String
     ): List<String> {
         val answer = answerOf(target)
-        return pool.asSequence()
+        val similar =
+            if (lookAlikes <= 0) {
+                emptyList()
+            } else {
+                val byCode = pool.associateBy { it.code }
+                FlagLookAlikes.of(target.code).asSequence()
+                    .mapNotNull { byCode[it] }
+                    .map(answerOf)
+                    .filter { it != answer }
+                    .distinct()
+                    .toList()
+                    .shuffled(random)
+                    .take(lookAlikes)
+            }
+        val rest = pool.asSequence()
             .filter { it != target }
             .map(answerOf)
-            .filter { it != answer }
+            .filter { it != answer && it !in similar }
             .distinct()
             .toList()
             .shuffled(random)
-            .take(DISTRACTORS)
+        return (similar + rest).take(DISTRACTORS)
     }
 
     private fun choice(

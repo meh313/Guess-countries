@@ -13,6 +13,7 @@ import com.example.data.local.UserProgressEntity
 import com.example.data.model.Country
 import com.example.data.model.CountryRepository
 import com.example.data.model.SortOption
+import com.example.quiz.QuizDifficulty
 import com.example.quiz.QuizEngine
 import com.example.quiz.QuizMode
 import com.example.quiz.QuizSession
@@ -127,15 +128,16 @@ class CountryViewModel(
     }
 
     /** Starts a quiz over the full country list; does nothing if [scope] has too few countries. */
-    fun startQuiz(mode: QuizMode, scope: String) {
+    fun startQuiz(mode: QuizMode, scope: String, difficulty: QuizDifficulty = QuizDifficulty.NORMAL) {
         val effectiveScope = QuizEngine.effectiveScope(mode, scope)
         val pool = QuizEngine.poolFor(effectiveScope, repository.allCountries)
-        val questions = QuizEngine.generate(pool, mode)
+        val questions = QuizEngine.generate(pool, mode, difficulty = difficulty)
         if (questions.isEmpty()) return
         _quizSession.value = QuizSession(
             mode = mode,
             scope = effectiveScope,
             questions = questions,
+            difficulty = difficulty,
             questionStartedAt = clock()
         )
     }
