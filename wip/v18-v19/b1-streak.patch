@@ -1,0 +1,1070 @@
+From 78e32fa93ff2a0233465837e929264f641f89f99 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Mon, 5 Oct 2026 16:06:14 +0000
+Subject: [PATCH] feat: daily practice streak on the Progress screen and the
+ score screen
+
+A day counts when at least one quiz was finished on it, by the device's local
+time zone. PracticeStreak works the current run, the best run and today's state
+out of the finish times of the saved quizzes, so nothing new is stored and the
+database schema stays at version 1. The Progress screen gets a streak card, and
+the score screen says whether the quiz started, kept or only repeated the day.
+
+Saving a finished quiz now returns the earlier finish times from the same
+transaction, so the outcome never depends on another save slipping in between.
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01W1k2QnbmNmY8jdQT8nphjW
+---
+ README.md                                     |   4 +-
+ .../com/example/data/local/UserProgressDao.kt |  15 ++
+ .../example/data/model/CountryRepository.kt   |   9 +-
+ .../com/example/progress/PracticeStreak.kt    |  64 ++++++
+ .../java/com/example/ui/screens/QuizScreen.kt |  18 ++
+ .../com/example/ui/screens/StatsScreen.kt     |  54 +++++
+ .../example/ui/viewmodel/CountryViewModel.kt  |  28 ++-
+ .../com/example/CountryViewModelStreakTest.kt | 212 ++++++++++++++++++
+ .../com/example/QuizAndFlashcardUiTest.kt     |  85 +++++++
+ .../test/java/com/example/ScreenshotsTest.kt  |  38 +++-
+ .../java/com/example/UserProgressDaoTest.kt   |  31 +++
+ .../example/progress/PracticeStreakTest.kt    | 173 ++++++++++++++
+ .../java/com/example/support/PixelSupport.kt  |  13 ++
+ .../java/com/example/support/UiTestSupport.kt |   9 +-
+ 14 files changed, 744 insertions(+), 9 deletions(-)
+ create mode 100644 app/src/main/java/com/example/progress/PracticeStreak.kt
+ create mode 100644 app/src/test/java/com/example/CountryViewModelStreakTest.kt
+ create mode 100644 app/src/test/java/com/example/progress/PracticeStreakTest.kt
+
+diff --git a/README.md b/README.md
+index 1bc7090..cd03ebb 100644
+--- a/README.md
++++ b/README.md
+@@ -14,7 +14,8 @@ drill them with flashcards, and test yourself with quizzes. Everything runs on t
+   (as many flags as you can). Ten questions or fewer, with a streak bonus. *Answers: Normal* puts one
+   look-alike flag among the wrong answers, *Hard* as many as exist (the choice is remembered). The *Weak spots* scope quizzes you on
+   the ten countries you know least.
+-- **Stats** – mastery per continent and a log of recent quizzes.
++- **Stats** – a daily practice streak (a day counts when you finish one quiz; days follow the device's time zone),
++  mastery per continent and a log of recent quizzes.
+ 
+ ## Build
+ 
+@@ -64,6 +65,7 @@ are then kept as a workflow artifact for a week.
+ | Path | What lives there |
+ | --- | --- |
+ | `quiz/` | Pure quiz rules (`QuizEngine`) and the immutable `QuizSession`; no Android types. |
++| `progress/` | Pure practice-streak rules (`PracticeStreak`), computed from when quizzes finished. |
+ | `flashcards/` | Deck ordering for the flashcard screen. |
+ | `speech/` | Text-to-speech behind a small `Speech` interface. |
+ | `data/model/` | The country catalog, one file per continent (`EuropeCatalog.kt`…, alphabetical), and `CountryRepository`. |
+diff --git a/app/src/main/java/com/example/data/local/UserProgressDao.kt b/app/src/main/java/com/example/data/local/UserProgressDao.kt
+index 73d3ff0..1c1dc4d 100644
+--- a/app/src/main/java/com/example/data/local/UserProgressDao.kt
++++ b/app/src/main/java/com/example/data/local/UserProgressDao.kt
+@@ -23,6 +23,21 @@ abstract class UserProgressDao {
+     @Insert(onConflict = OnConflictStrategy.REPLACE)
+     abstract suspend fun insertQuizScore(score: QuizScoreEntity)
+ 
++    /** When each finished quiz was saved; the practice streak is worked out from these. */
++    @Query("SELECT timestamp FROM quiz_scores")
++    abstract suspend fun quizTimestamps(): List<Long>
++
++    /**
++     * Saves a finished quiz and returns when the quizzes before it were saved. Both happen in one transaction, so no
++     * other save can slip in between and the list is exactly what came before this quiz.
++     */
++    @Transaction
++    open suspend fun insertQuizScoreAfterReading(score: QuizScoreEntity): List<Long> {
++        val earlier = quizTimestamps()
++        insertQuizScore(score)
++        return earlier
++    }
++
+     /** Flips the bookmark for [code], creating its row first if the country was never touched. */
+     @Transaction
+     open suspend fun toggleFavorite(code: String, now: Long) {
+diff --git a/app/src/main/java/com/example/data/model/CountryRepository.kt b/app/src/main/java/com/example/data/model/CountryRepository.kt
+index 6014dff..221a69c 100644
+--- a/app/src/main/java/com/example/data/model/CountryRepository.kt
++++ b/app/src/main/java/com/example/data/model/CountryRepository.kt
+@@ -12,7 +12,8 @@ import kotlinx.coroutines.flow.Flow
+ class CountryRepository(
+     private val progressDao: UserProgressDao,
+     val allCountries: List<Country> = CountryCatalog.all,
+-    private val now: () -> Long = System::currentTimeMillis
++    /** Wall-clock milliseconds; public so the view model works out days on the same clock the scores are stamped with. */
++    val now: () -> Long = System::currentTimeMillis
+ ) {
+ 
+     // Folded once per country: search ignores case and accents, so "Brasilia" finds Brasília.
+@@ -48,8 +49,9 @@ class CountryRepository(
+     suspend fun recordReview(code: String, isCorrect: Boolean) =
+         progressDao.recordReview(code, isCorrect, now())
+ 
+-    suspend fun saveQuizScore(mode: String, score: Int, total: Int, continent: String) {
+-        progressDao.insertQuizScore(
++    /** Saves a finished quiz and returns when the quizzes saved before it finished. */
++    suspend fun saveQuizScore(mode: String, score: Int, total: Int, continent: String): List<Long> =
++        progressDao.insertQuizScoreAfterReading(
+             QuizScoreEntity(
+                 mode = mode,
+                 score = score,
+@@ -58,7 +60,6 @@ class CountryRepository(
+                 timestamp = now()
+             )
+         )
+-    }
+ 
+     companion object {
+         /** Alphabetical by name, ignoring accents and case. */
+diff --git a/app/src/main/java/com/example/progress/PracticeStreak.kt b/app/src/main/java/com/example/progress/PracticeStreak.kt
+new file mode 100644
+index 0000000..2c91d79
+--- /dev/null
++++ b/app/src/main/java/com/example/progress/PracticeStreak.kt
+@@ -0,0 +1,64 @@
++package com.example.progress
++
++import java.util.TimeZone
++
++/**
++ * The daily practice streak: a day counts when at least one quiz was finished on it, by the clock on the wall of
++ * the device's current time zone. Pure rules over the finish times of the quizzes; nothing is stored apart from them.
++ * Built on [TimeZone] because java.time needs core-library desugaring on the lowest supported Android version.
++ */
++object PracticeStreak {
++    private const val DAY_MILLIS = 86_400_000L
++
++    /** [current] days in a row up to today (or up to yesterday while today is still open), the [best] run ever. */
++    data class Summary(val current: Int, val best: Int, val practicedToday: Boolean)
++
++    /** What finishing one more quiz does to the streak, for the line on the score screen. */
++    enum class Kind { STARTED, KEPT, ALREADY_COUNTED }
++
++    data class Outcome(val kind: Kind, val days: Int)
++
++    val NONE = Summary(current = 0, best = 0, practicedToday = false)
++
++    /** The calendar day of [epochMillis] in [zone], counted in days from 1 January 1970 on that zone's own clock. */
++    fun localDay(epochMillis: Long, zone: TimeZone): Long =
++        Math.floorDiv(epochMillis + zone.getOffset(epochMillis), DAY_MILLIS)
++
++    /**
++     * The streak after quizzes finished at [timestamps], seen at [now]. Quizzes dated after [now] (a clock that was set
++     * back) count for nothing. The current run may end yesterday: today is still open, so the streak is not lost yet.
++     */
++    fun summary(timestamps: Collection<Long>, now: Long, zone: TimeZone): Summary {
++        val today = localDay(now, zone)
++        val days = timestamps.asSequence().map { localDay(it, zone) }.filter { it <= today }.toSortedSet()
++        if (days.isEmpty()) return NONE
++
++        val practicedToday = today in days
++        var current = 0
++        var day = if (practicedToday) today else today - 1
++        while (day in days) {
++            current++
++            day--
++        }
++
++        var best = 0
++        var run = 0
++        var previous: Long? = null
++        for (d in days) {
++            run = if (previous != null && d == previous + 1) run + 1 else 1
++            best = maxOf(best, run)
++            previous = d
++        }
++        return Summary(current, best, practicedToday)
++    }
++
++    /** What a quiz finished at [now] does to the streak made by [previous], the finish times before it. */
++    fun outcome(previous: Collection<Long>, now: Long, zone: TimeZone): Outcome {
++        val before = summary(previous, now, zone)
++        return when {
++            before.practicedToday -> Outcome(Kind.ALREADY_COUNTED, before.current)
++            before.current == 0 -> Outcome(Kind.STARTED, 1)
++            else -> Outcome(Kind.KEPT, before.current + 1)
++        }
++    }
++}
+diff --git a/app/src/main/java/com/example/ui/screens/QuizScreen.kt b/app/src/main/java/com/example/ui/screens/QuizScreen.kt
+index 31d8563..8951c66 100644
+--- a/app/src/main/java/com/example/ui/screens/QuizScreen.kt
++++ b/app/src/main/java/com/example/ui/screens/QuizScreen.kt
+@@ -78,6 +78,7 @@ import androidx.compose.ui.text.font.FontWeight
+ import androidx.compose.ui.text.style.TextAlign
+ import androidx.compose.ui.unit.dp
+ import androidx.compose.ui.unit.sp
++import com.example.progress.PracticeStreak
+ import com.example.quiz.QuizDifficulty
+ import com.example.quiz.QuizEngine
+ import com.example.quiz.QuizMode
+@@ -739,6 +740,7 @@ fun QuizScreen(
+ 
+     // Finish Celebration Dialog
+     if (active?.isFinished == true) {
++        val streakOutcome by viewModel.finishOutcome.collectAsState()
+         AlertDialog(
+             onDismissRequest = { viewModel.endQuiz() },
+             title = {
+@@ -770,6 +772,22 @@ fun QuizScreen(
+                             modifier = Modifier.testTag("quiz_finish_difficulty")
+                         )
+                     }
++                    streakOutcome?.let { outcome ->
++                        Text(
++                            text = when (outcome.kind) {
++                                PracticeStreak.Kind.STARTED -> "Streak started: day 1"
++                                PracticeStreak.Kind.KEPT -> "Streak kept: ${outcome.days} days"
++                                PracticeStreak.Kind.ALREADY_COUNTED -> "${outcome.days}-day streak, already counted today"
++                            },
++                            style = MaterialTheme.typography.bodyMedium,
++                            fontWeight = FontWeight.Bold,
++                            color = MaterialTheme.colorScheme.secondary,
++                            textAlign = TextAlign.Center,
++                            modifier = Modifier
++                                .padding(top = 8.dp, bottom = 4.dp)
++                                .testTag("quiz_finish_streak")
++                        )
++                    }
+                     Text(
+                         text = "Great job expanding your geographical knowledge!",
+                         style = MaterialTheme.typography.bodyMedium,
+diff --git a/app/src/main/java/com/example/ui/screens/StatsScreen.kt b/app/src/main/java/com/example/ui/screens/StatsScreen.kt
+index 421d719..f373308 100644
+--- a/app/src/main/java/com/example/ui/screens/StatsScreen.kt
++++ b/app/src/main/java/com/example/ui/screens/StatsScreen.kt
+@@ -38,10 +38,13 @@ import androidx.compose.ui.draw.clip
+ import androidx.compose.ui.graphics.Color
+ import androidx.compose.ui.platform.LocalLocale
+ import androidx.compose.ui.platform.testTag
++import androidx.compose.ui.semantics.semantics
+ import androidx.compose.ui.text.font.FontWeight
+ import androidx.compose.ui.unit.dp
+ import androidx.compose.ui.unit.sp
++import androidx.lifecycle.compose.LifecycleResumeEffect
+ import com.example.data.model.WeakSpots
++import com.example.progress.PracticeStreak
+ import com.example.quiz.QuizMode
+ import com.example.ui.components.StatBadge
+ import com.example.ui.components.getContinentColor
+@@ -55,6 +58,12 @@ fun StatsScreen(
+     modifier: Modifier = Modifier
+ ) {
+     val progressMap by viewModel.userProgressMap.collectAsState()
++    val streak by viewModel.streak.collectAsState()
++    // A day can end while this screen sits open in the background; work the streak out again on every return.
++    LifecycleResumeEffect(viewModel) {
++        viewModel.refreshStreak()
++        onPauseOrDispose { }
++    }
+     val quizHistory by viewModel.quizHistory.collectAsState()
+     // Antarctica cannot be quizzed, so it is not part of the mastery totals.
+     val allCountries = viewModel.repository.allCountries.filter { it.isSovereign }
+@@ -93,6 +102,8 @@ fun StatsScreen(
+             }
+         }
+ 
++        item { StreakCard(streak) }
++
+         // Top Metric Grid
+         item {
+             Row(modifier = Modifier.fillMaxWidth()) {
+@@ -270,3 +281,46 @@ fun StatsScreen(
+         }
+     }
+ }
++
++private fun days(n: Int) = if (n == 1) "1 day" else "$n days"
++
++/** The daily practice streak: how long it is, the best one so far, and whether today already counts. */
++@Composable
++private fun StreakCard(streak: PracticeStreak.Summary, modifier: Modifier = Modifier) {
++    val title = if (streak.current == 0) "No streak yet" else "${streak.current}-day streak"
++    val detail = if (streak.best == 0) {
++        "Finish a quiz today to start one"
++    } else {
++        "Best: ${days(streak.best)} · ${if (streak.practicedToday) "Practiced today" else "Not yet today"}"
++    }
++    Card(
++        modifier = modifier
++            .fillMaxWidth()
++            .semantics(mergeDescendants = true) {}
++            .testTag("stats_streak"),
++        shape = RoundedCornerShape(16.dp),
++        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
++        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
++    ) {
++        Row(
++            modifier = Modifier.padding(16.dp),
++            verticalAlignment = Alignment.CenterVertically
++        ) {
++            Icon(
++                imageVector = Icons.Default.LocalFireDepartment,
++                contentDescription = null,
++                tint = if (streak.practicedToday) Color(0xFFE67E22) else MaterialTheme.colorScheme.outline,
++                modifier = Modifier.size(36.dp)
++            )
++            Spacer(modifier = Modifier.width(12.dp))
++            Column {
++                Text(text = title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
++                Text(
++                    text = detail,
++                    style = MaterialTheme.typography.bodyMedium,
++                    color = MaterialTheme.colorScheme.onSurfaceVariant
++                )
++            }
++        }
++    }
++}
+diff --git a/app/src/main/java/com/example/ui/viewmodel/CountryViewModel.kt b/app/src/main/java/com/example/ui/viewmodel/CountryViewModel.kt
+index 30955ba..4ff10a1 100644
+--- a/app/src/main/java/com/example/ui/viewmodel/CountryViewModel.kt
++++ b/app/src/main/java/com/example/ui/viewmodel/CountryViewModel.kt
+@@ -17,16 +17,19 @@ import com.example.data.model.WeakSpots
+ import com.example.data.settings.InMemoryUserSettings
+ import com.example.data.settings.PrefsUserSettings
+ import com.example.data.settings.UserSettings
++import com.example.progress.PracticeStreak
+ import com.example.quiz.QuizDifficulty
+ import com.example.quiz.QuizEngine
+ import com.example.quiz.QuizMode
+ import com.example.quiz.QuizSession
+ import com.example.speech.AndroidSpeech
+ import com.example.speech.Speech
++import java.util.TimeZone
+ import kotlinx.coroutines.flow.MutableStateFlow
+ import kotlinx.coroutines.flow.SharingStarted
+ import kotlinx.coroutines.flow.StateFlow
+ import kotlinx.coroutines.flow.combine
++import kotlinx.coroutines.flow.update
+ import kotlinx.coroutines.flow.map
+ import kotlinx.coroutines.flow.stateIn
+ import kotlinx.coroutines.launch
+@@ -40,6 +43,8 @@ class CountryViewModel(
+     private val speech: Speech,
+     /** Monotonic milliseconds, used to time Speed Round questions. Injected so tests can control time. */
+     private val clock: () -> Long = SystemClock::elapsedRealtime,
++    /** The time zone whose midnights end a practice day. Injected so tests can pin it. */
++    private val zone: () -> TimeZone = TimeZone::getDefault,
+     /** Settings that outlive the app process; in tests an in-memory copy. */
+     private val settings: UserSettings = InMemoryUserSettings()
+ ) : ViewModel() {
+@@ -80,6 +85,21 @@ class CountryViewModel(
+         .map { WeakSpots.select(it, repository.allCountries) }
+         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+ 
++    private val streakRefresh = MutableStateFlow(0)
++
++    /** The daily practice streak, worked out from when quizzes finished; see [refreshStreak] for the day rolling over. */
++    val streak: StateFlow<PracticeStreak.Summary> = combine(repository.quizHistory, streakRefresh) { history, _ ->
++        PracticeStreak.summary(history.map { it.timestamp }, repository.now(), zone())
++    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PracticeStreak.NONE)
++
++    /** Works the streak out again against the current time: a day can end while the Progress screen is open. */
++    fun refreshStreak() = streakRefresh.update { it + 1 }
++
++    private val _finishOutcome = MutableStateFlow<PracticeStreak.Outcome?>(null)
++
++    /** What the quiz that just finished did to the streak, for its score screen; null until it is known. */
++    val finishOutcome: StateFlow<PracticeStreak.Outcome?> = _finishOutcome
++
+     val filteredCountries: StateFlow<List<Country>> = combine(
+         searchQuery,
+         selectedContinent,
+@@ -168,6 +188,7 @@ class CountryViewModel(
+             QuizEngine.generate(pool, mode, difficulty = difficulty)
+         }
+         if (questions.isEmpty()) return
++        _finishOutcome.value = null
+         _quizSession.value = QuizSession(
+             mode = mode,
+             scope = effectiveScope,
+@@ -218,11 +239,16 @@ class CountryViewModel(
+     /** Fixed-length quizzes are scored out of the best possible; an endless one by how many were right. */
+     private fun onQuizFinished(session: QuizSession) {
+         val total = if (session.mode.isEndless) session.correct else session.maxScore
+-        saveQuizResult(session.mode.name, session.score, total, session.scope)
++        // The save hands back the finish times before this one, so "already counted today" means an earlier quiz.
++        viewModelScope.launch {
++            val earlier = repository.saveQuizScore(session.mode.name, session.score, total, session.scope)
++            _finishOutcome.value = PracticeStreak.outcome(earlier, repository.now(), zone())
++        }
+     }
+ 
+     fun endQuiz() {
+         _quizSession.value = null
++        _finishOutcome.value = null
+     }
+ 
+     fun saveQuizResult(mode: String, score: Int, total: Int, continent: String) {
+diff --git a/app/src/test/java/com/example/CountryViewModelStreakTest.kt b/app/src/test/java/com/example/CountryViewModelStreakTest.kt
+new file mode 100644
+index 0000000..ffe2064
+--- /dev/null
++++ b/app/src/test/java/com/example/CountryViewModelStreakTest.kt
+@@ -0,0 +1,212 @@
++package com.example
++
++import android.os.Looper
++import com.example.data.local.AppDatabase
++import com.example.data.local.QuizScoreEntity
++import com.example.data.model.CountryCatalog
++import com.example.data.model.CountryRepository
++import com.example.progress.PracticeStreak
++import com.example.progress.PracticeStreak.Kind
++import com.example.progress.PracticeStreak.Outcome
++import com.example.quiz.QuizMode
++import com.example.support.FakeSpeech
++import com.example.support.awaitPendingWrites
++import com.example.support.closeWhenIdle
++import com.example.support.inMemoryDatabase
++import com.example.ui.viewmodel.CountryViewModel
++import java.time.ZoneId
++import java.time.ZonedDateTime
++import java.util.TimeZone
++import kotlinx.coroutines.CoroutineScope
++import kotlinx.coroutines.Dispatchers
++import kotlinx.coroutines.flow.first
++import kotlinx.coroutines.launch
++import kotlinx.coroutines.runBlocking
++import org.junit.After
++import org.junit.Assert.assertEquals
++import org.junit.Assert.assertNull
++import org.junit.Before
++import org.junit.Test
++import org.junit.runner.RunWith
++import org.robolectric.RobolectricTestRunner
++import org.robolectric.Shadows.shadowOf
++import org.robolectric.annotation.Config
++
++/** The practice streak through the view model: a pinned wall clock and time zone, quizzes finished through its actions. */
++@RunWith(RobolectricTestRunner::class)
++@Config(sdk = [36])
++class CountryViewModelStreakTest {
++
++    private lateinit var db: AppDatabase
++    private val berlin = TimeZone.getTimeZone("Europe/Berlin")
++
++    private fun berlinTime(day: Int, hour: Int) =
++        ZonedDateTime.of(2026, 10, day, hour, 0, 0, 0, ZoneId.of("Europe/Berlin")).toInstant().toEpochMilli()
++
++    /** The wall clock the repository stamps scores with; tests move it by hand. */
++    private var wall = berlinTime(day = 5, hour = 15)
++
++    @Before
++    fun setUp() {
++        db = inMemoryDatabase()
++    }
++
++    @After
++    fun tearDown() {
++        db.closeWhenIdle()
++    }
++
++    private fun newViewModel() = CountryViewModel(
++        CountryRepository(db.userProgressDao(), CountryCatalog.all, now = { wall }),
++        FakeSpeech(),
++        clock = { 0L },
++        zone = { berlin }
++    )
++
++    private fun seedQuiz(timestamp: Long) =
++        runBlocking {
++            db.userProgressDao().insertQuizScore(
++                QuizScoreEntity(mode = "FLAG_NAME", score = 10, total = 190, continentFilter = "Global", timestamp = timestamp)
++            )
++        }
++
++    private fun savedQuizzes() = runBlocking { db.userProgressDao().quizTimestamps() }.size
++
++    /**
++     * Plays a quiz to its end, then waits for what finishing sets going: the outcome is worked out and the score saved by
++     * a coroutine that hops to Room's threads and back, so a single look at the database right away is too early.
++     */
++    private fun CountryViewModel.finishAQuiz() {
++        val before = savedQuizzes()
++        startQuiz(QuizMode.FLAG_NAME, "Global")
++        var guard = 0
++        while (quizSession.value?.isFinished == false) {
++            answerQuiz(quizSession.value!!.current.correctAnswerIndex)
++            nextQuizQuestion()
++            check(++guard <= 20) { "quiz never finished" }
++        }
++        val deadline = System.currentTimeMillis() + 10_000
++        while (finishOutcome.value == null || savedQuizzes() == before) {
++            check(System.currentTimeMillis() < deadline) { "the finished quiz was never saved" }
++            shadowOf(Looper.getMainLooper()).idle()
++            Thread.sleep(10)
++        }
++        db.awaitPendingWrites()
++    }
++
++    /** Collects the streak the way the Progress screen does, long enough for Room to deliver. */
++    private fun CountryViewModel.awaitStreak(expected: PracticeStreak.Summary) {
++        val deadline = System.currentTimeMillis() + 10_000
++        val job = CoroutineScope(Dispatchers.Unconfined).launch { streak.collect { } }
++        try {
++            while (streak.value != expected) {
++                check(System.currentTimeMillis() < deadline) { "streak stayed at ${streak.value}, wanted $expected" }
++                shadowOf(Looper.getMainLooper()).idle()
++                Thread.sleep(10)
++            }
++        } finally {
++            job.cancel()
++        }
++    }
++
++    @Test
++    fun streak_startsEmpty() {
++        assertEquals(PracticeStreak.NONE, newViewModel().streak.value)
++    }
++
++    @Test
++    fun streak_followsTheQuizzesInTheDatabase() {
++        seedQuiz(berlinTime(day = 3, hour = 20))
++        seedQuiz(berlinTime(day = 4, hour = 8))
++        val vm = newViewModel()
++
++        vm.awaitStreak(PracticeStreak.Summary(current = 2, best = 2, practicedToday = false))
++    }
++
++    @Test
++    fun streak_isWorkedOutAgainWhenTheDayRollsOver() {
++        seedQuiz(berlinTime(day = 5, hour = 10))
++        val vm = newViewModel()
++        vm.awaitStreak(PracticeStreak.Summary(current = 1, best = 1, practicedToday = true))
++
++        wall = berlinTime(day = 6, hour = 9) // the next morning, nothing practiced yet
++        vm.refreshStreak()
++
++        vm.awaitStreak(PracticeStreak.Summary(current = 1, best = 1, practicedToday = false))
++    }
++
++    @Test
++    fun theFirstFinishedQuiz_startsAStreak() {
++        val vm = newViewModel()
++
++        vm.finishAQuiz()
++
++        assertEquals(Outcome(Kind.STARTED, 1), vm.finishOutcome.value)
++    }
++
++    @Test
++    fun aQuizTheDayAfterOne_keepsTheStreak() {
++        seedQuiz(berlinTime(day = 3, hour = 20))
++        seedQuiz(berlinTime(day = 4, hour = 20))
++        val vm = newViewModel()
++
++        vm.finishAQuiz()
++
++        assertEquals(Outcome(Kind.KEPT, 3), vm.finishOutcome.value)
++    }
++
++    @Test
++    fun aSecondQuizOnTheSameDay_isAlreadyCounted() {
++        val vm = newViewModel()
++        vm.finishAQuiz()
++        vm.endQuiz()
++
++        vm.finishAQuiz()
++
++        assertEquals(Outcome(Kind.ALREADY_COUNTED, 1), vm.finishOutcome.value)
++    }
++
++    @Test
++    fun aQuizTwoDaysAfterTheLast_startsAgain() {
++        seedQuiz(berlinTime(day = 3, hour = 20))
++        val vm = newViewModel()
++
++        vm.finishAQuiz()
++
++        assertEquals(Outcome(Kind.STARTED, 1), vm.finishOutcome.value)
++    }
++
++    @Test
++    fun endingOrRestartingAQuiz_clearsTheOutcome() {
++        val vm = newViewModel()
++        vm.finishAQuiz()
++
++        vm.endQuiz()
++        assertNull(vm.finishOutcome.value)
++
++        vm.finishAQuiz()
++        vm.startQuiz(QuizMode.FLAG_NAME, "Global")
++        assertNull(vm.finishOutcome.value)
++    }
++
++    @Test
++    fun anAbandonedQuiz_doesNotCountForTheStreak() {
++        val vm = newViewModel()
++        vm.startQuiz(QuizMode.FLAG_NAME, "Global")
++        vm.answerQuiz(vm.quizSession.value!!.current.correctAnswerIndex)
++        vm.endQuiz()
++
++        db.awaitPendingWrites()
++        assertEquals(emptyList<Long>(), runBlocking { db.userProgressDao().quizTimestamps() })
++    }
++
++    @Test
++    fun theFinishedQuiz_isStampedWithTheWallClock() {
++        val vm = newViewModel()
++
++        vm.finishAQuiz()
++
++        assertEquals(listOf(wall), runBlocking { db.userProgressDao().quizTimestamps() })
++        assertEquals(1, runBlocking { db.userProgressDao().getQuizHistory().first() }.size)
++    }
++}
+diff --git a/app/src/test/java/com/example/QuizAndFlashcardUiTest.kt b/app/src/test/java/com/example/QuizAndFlashcardUiTest.kt
+index 78dc053..3ba2393 100644
+--- a/app/src/test/java/com/example/QuizAndFlashcardUiTest.kt
++++ b/app/src/test/java/com/example/QuizAndFlashcardUiTest.kt
+@@ -23,6 +23,7 @@ import androidx.compose.ui.test.performTextInput
+ import androidx.test.core.app.ApplicationProvider
+ import androidx.test.ext.junit.rules.ActivityScenarioRule
+ import com.example.data.local.AppDatabase
++import com.example.data.local.QuizScoreEntity
+ import com.example.quiz.QuizEngine
+ import kotlinx.coroutines.runBlocking
+ import android.speech.tts.TextToSpeech
+@@ -793,4 +794,88 @@ class QuizAndFlashcardUiTest {
+         rule.onNodeWithText("Question 1 of 5").assertIsDisplayed()
+         assertEquals(setOf("FR", "DE", "ES", "JP", "BR"), viewModel.quizSession.value!!.questions.map { it.targetCountry.code }.toSet())
+     }
++
++    // --- Practice streak ---------------------------------------------------------------------------------------------
++
++    /** A moment [days] calendar days before now at 09:00 on the device's own clock, so DST changes cannot shift it a day. */
++    private fun daysAgo(days: Int): Long =
++        java.util.Calendar.getInstance().apply {
++            add(java.util.Calendar.DAY_OF_YEAR, -days)
++            set(java.util.Calendar.HOUR_OF_DAY, 9)
++            set(java.util.Calendar.MINUTE, 0)
++        }.timeInMillis.coerceAtMost(System.currentTimeMillis())
++
++    private fun savedQuizOn(timestamp: Long) = runBlocking {
++        AppDatabase.getDatabase(ApplicationProvider.getApplicationContext()).userProgressDao().insertQuizScore(
++            QuizScoreEntity(mode = "FLAG_NAME", score = 10, total = 190, continentFilter = "Global", timestamp = timestamp)
++        )
++    }
++
++    private fun finishAfricaQuiz() {
++        startQuiz("Africa")
++        for (n in 1..questionsFor("Africa")) {
++            answerFirstOption()
++            goNext()
++        }
++        rule.onNodeWithText("Quiz Complete!").assertIsDisplayed()
++    }
++
++    @Test
++    fun stats_streakCard_invitesTheFirstQuiz() {
++        tab("stats")
++
++        rule.onNodeWithTag("stats_streak").assertIsDisplayed()
++        rule.onNodeWithText("No streak yet").assertIsDisplayed()
++        rule.onNodeWithText("Finish a quiz today to start one").assertIsDisplayed()
++    }
++
++    @Test
++    fun stats_streakCard_showsTheCurrentRunAndTheBestOne() {
++        // Today, yesterday and the day before, a gap, then four days in a row.
++        listOf(0, 1, 2, 4, 5, 6, 7).forEach { savedQuizOn(daysAgo(it)) }
++
++        tab("stats")
++
++        rule.eventually("the streak") {
++            rule.onNodeWithText("3-day streak").assertIsDisplayed()
++            rule.onNodeWithText("Best: 4 days · Practiced today").assertIsDisplayed()
++        }
++    }
++
++    @Test
++    fun stats_streakCard_saysWhenTodayDoesNotCountYet() {
++        listOf(1, 2).forEach { savedQuizOn(daysAgo(it)) }
++
++        tab("stats")
++
++        rule.eventually("the streak") {
++            rule.onNodeWithText("2-day streak").assertIsDisplayed()
++            rule.onNodeWithText("Best: 2 days · Not yet today").assertIsDisplayed()
++        }
++    }
++
++    @Test
++    fun finishingAQuiz_saysWhatItDidForTheStreak() {
++        finishAfricaQuiz()
++
++        rule.eventually("the streak line") { rule.onNodeWithTag("quiz_finish_streak").assertIsDisplayed() }
++        rule.onNodeWithText("Streak started: day 1").assertIsDisplayed()
++
++        rule.onNodeWithTag("quiz_finish_done_btn").performClick()
++        rule.waitForIdle()
++        finishAfricaQuiz()
++
++        rule.eventually("the streak line") {
++            rule.onNodeWithText("1-day streak, already counted today").assertIsDisplayed()
++        }
++    }
++
++    @Test
++    fun finishingAQuizTheDayAfterOne_keepsTheStreak() {
++        savedQuizOn(daysAgo(1))
++
++        finishAfricaQuiz()
++
++        rule.eventually("the streak line") { rule.onNodeWithText("Streak kept: 2 days").assertIsDisplayed() }
++    }
+ }
+diff --git a/app/src/test/java/com/example/ScreenshotsTest.kt b/app/src/test/java/com/example/ScreenshotsTest.kt
+index 742f3f6..3636fc7 100644
+--- a/app/src/test/java/com/example/ScreenshotsTest.kt
++++ b/app/src/test/java/com/example/ScreenshotsTest.kt
+@@ -1,5 +1,11 @@
+ package com.example
+ 
++import androidx.compose.ui.test.onNodeWithText
++import kotlinx.coroutines.runBlocking
++import com.example.support.drawLatestDialog
++import com.example.data.local.QuizScoreEntity
++import com.example.data.local.AppDatabase
++import androidx.compose.ui.test.assertIsDisplayed
+ import android.graphics.Bitmap
+ import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+ import androidx.compose.ui.test.onNodeWithTag
+@@ -7,6 +13,7 @@ import androidx.compose.ui.test.performClick
+ import androidx.compose.ui.test.performScrollToNode
+ import androidx.compose.ui.test.hasTestTag
+ import com.example.support.FreshDatabaseRule
++import com.example.support.awaitDelivered
+ import com.example.support.awaitWeakSpotsWhere
+ import com.example.support.drawWindow
+ import com.example.support.openTab
+@@ -39,9 +46,11 @@ class ScreenshotsTest {
+ 
+     private val rule get() = composeRule
+ 
+-    private fun save(name: String) {
++    private fun save(name: String) = saveBitmap(name, rule.drawWindow())
++
++    private fun saveBitmap(name: String, bitmap: Bitmap) {
+         val dir = File("build/screenshots").apply { mkdirs() }
+-        File(dir, "$name.png").outputStream().use { rule.drawWindow().compress(Bitmap.CompressFormat.PNG, 100, it) }
++        File(dir, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+     }
+ 
+     @Test
+@@ -103,7 +112,32 @@ class ScreenshotsTest {
+         rule.waitForIdle()
+         save("flashcards_weak_spots")
+ 
++        // Finishing a quiz: the score screen says what it did for the streak. Two earlier days give the Progress screen a run.
++        rule.openTab("quiz")
++        viewModel.startQuiz(QuizMode.FLAG_NAME, "Africa")
++        rule.waitForIdle()
++        while (viewModel.quizSession.value?.isFinished == false) {
++            viewModel.answerQuiz(viewModel.quizSession.value!!.current.correctAnswerIndex)
++            viewModel.nextQuizQuestion()
++        }
++        rule.awaitDelivered { viewModel.finishOutcome.value != null }
++        rule.onNodeWithTag("quiz_finish_streak").assertIsDisplayed()
++        saveBitmap("quiz_finish_streak", drawLatestDialog())
++        viewModel.endQuiz()
++        rule.waitForIdle()
++        listOf(1, 2).forEach { daysAgo ->
++            val day = java.util.Calendar.getInstance().apply { add(java.util.Calendar.DAY_OF_YEAR, -daysAgo) }.timeInMillis
++            runBlocking {
++                AppDatabase.getDatabase(rule.activity).userProgressDao().insertQuizScore(
++                    QuizScoreEntity(mode = "FLAG_NAME", score = 120, total = 190, continentFilter = "Global", timestamp = day)
++                )
++            }
++        }
++
+         rule.openTab("stats")
++        rule.awaitDelivered { viewModel.streak.value.current == 3 }
++        // Asserting on the screen lets it recompose first; drawing right after the state changes would show the old card.
++        rule.onNodeWithText("3-day streak").assertIsDisplayed()
+         save("stats")
+     }
+ }
+diff --git a/app/src/test/java/com/example/UserProgressDaoTest.kt b/app/src/test/java/com/example/UserProgressDaoTest.kt
+index 84be880..1705c1d 100644
+--- a/app/src/test/java/com/example/UserProgressDaoTest.kt
++++ b/app/src/test/java/com/example/UserProgressDaoTest.kt
+@@ -1,6 +1,7 @@
+ package com.example
+ 
+ import com.example.data.local.AppDatabase
++import com.example.data.local.QuizScoreEntity
+ import com.example.data.local.UserProgressEntity
+ import com.example.data.model.CountryRepository
+ import com.example.support.inMemoryDatabase
+@@ -168,4 +169,34 @@ class UserProgressDaoTest {
+         assertEquals(777L, row("FR")!!.lastReviewed)
+         assertEquals(777L, runBlocking { dao.getQuizHistory().first() }.single().timestamp)
+     }
++
++    @Test
++    fun quizTimestamps_listsWhenEveryQuizWasSaved() {
++        runBlocking {
++            dao.insertQuizScore(QuizScoreEntity(mode = "FLAG_NAME", score = 10, total = 190, continentFilter = "Global", timestamp = 300L))
++            dao.insertQuizScore(QuizScoreEntity(mode = "BLITZ", score = 50, total = 4, continentFilter = "Global", timestamp = 100L))
++            dao.insertQuizScore(QuizScoreEntity(mode = "CAPITAL", score = 0, total = 190, continentFilter = "Asia", timestamp = 200L))
++        }
++
++        assertEquals(listOf(100L, 200L, 300L), runBlocking { dao.quizTimestamps() }.sorted())
++    }
++
++    @Test
++    fun quizTimestamps_isEmptyBeforeTheFirstQuiz() {
++        assertTrue(runBlocking { dao.quizTimestamps() }.isEmpty())
++    }
++
++    @Test
++    fun insertQuizScoreAfterReading_returnsTheEarlierQuizzesAndSavesTheNewOne() {
++        fun quiz(at: Long) = QuizScoreEntity(mode = "FLAG_NAME", score = 10, total = 190, continentFilter = "Global", timestamp = at)
++
++        val first = runBlocking { dao.insertQuizScoreAfterReading(quiz(100L)) }
++        val second = runBlocking { dao.insertQuizScoreAfterReading(quiz(200L)) }
++        val third = runBlocking { dao.insertQuizScoreAfterReading(quiz(300L)) }
++
++        assertEquals(emptyList<Long>(), first)
++        assertEquals(listOf(100L), second)
++        assertEquals(listOf(100L, 200L), third.sorted())
++        assertEquals(listOf(100L, 200L, 300L), runBlocking { dao.quizTimestamps() }.sorted())
++    }
+ }
+diff --git a/app/src/test/java/com/example/progress/PracticeStreakTest.kt b/app/src/test/java/com/example/progress/PracticeStreakTest.kt
+new file mode 100644
+index 0000000..4036b5d
+--- /dev/null
++++ b/app/src/test/java/com/example/progress/PracticeStreakTest.kt
+@@ -0,0 +1,173 @@
++package com.example.progress
++
++import com.example.progress.PracticeStreak.Kind
++import com.example.progress.PracticeStreak.Outcome
++import com.example.progress.PracticeStreak.Summary
++import java.time.ZoneId
++import java.time.ZonedDateTime
++import java.util.TimeZone
++import org.junit.Assert.assertEquals
++import org.junit.Assert.assertNotEquals
++import org.junit.Test
++
++class PracticeStreakTest {
++
++    private val berlin = TimeZone.getTimeZone("Europe/Berlin")
++    private val utc = TimeZone.getTimeZone("UTC")
++
++    /** A moment on the Berlin wall clock. */
++    private fun at(year: Int, month: Int, day: Int, hour: Int = 12, minute: Int = 0): Long =
++        ZonedDateTime.of(year, month, day, hour, minute, 0, 0, ZoneId.of("Europe/Berlin")).toInstant().toEpochMilli()
++
++    /** Monday 5 October 2026, mid-afternoon in Berlin. */
++    private val now = at(2026, 10, 5, 15)
++
++    private fun daysBefore(n: Int, hour: Int = 9) =
++        ZonedDateTime.of(2026, 10, 5, hour, 0, 0, 0, ZoneId.of("Europe/Berlin")).minusDays(n.toLong()).toInstant().toEpochMilli()
++
++    private fun summary(vararg timestamps: Long, at: Long = now) = PracticeStreak.summary(timestamps.toList(), at, berlin)
++
++    @Test
++    fun localDay_isTheCalendarDayOnTheZonesOwnClock() {
++        // 15:00 on 5 October 2026 in Berlin, and day 20731 counting from 1 January 1970.
++        assertEquals(20_731L, PracticeStreak.localDay(1_791_205_200_000L, berlin))
++        assertEquals(20_731L, PracticeStreak.localDay(1_791_205_200_000L, utc))
++    }
++
++    @Test
++    fun localDay_changesAtLocalMidnightNotAtUtcMidnight() {
++        val beforeMidnight = 1_791_237_540_000L // 23:59 in Berlin
++        val midnight = 1_791_237_600_000L // 00:00 the next day in Berlin
++        assertEquals(20_731L, PracticeStreak.localDay(beforeMidnight, berlin))
++        assertEquals(20_732L, PracticeStreak.localDay(midnight, berlin))
++        assertEquals(20_731L, PracticeStreak.localDay(midnight - 1, berlin))
++    }
++
++    @Test
++    fun theSameMomentIsOnDifferentDaysInDifferentZones() {
++        val lateInUtc = 1_791_243_000_000L // 23:30 UTC on 5 October, 01:30 on 6 October in Berlin
++        assertEquals(20_731L, PracticeStreak.localDay(lateInUtc, utc))
++        assertEquals(20_732L, PracticeStreak.localDay(lateInUtc, berlin))
++        assertNotEquals(PracticeStreak.localDay(lateInUtc, utc), PracticeStreak.localDay(lateInUtc, berlin))
++    }
++
++    @Test
++    fun noQuizzes_noStreak() {
++        assertEquals(Summary(0, 0, false), summary())
++    }
++
++    @Test
++    fun aQuizToday_isAStreakOfOne() {
++        assertEquals(Summary(1, 1, true), summary(daysBefore(0)))
++    }
++
++    @Test
++    fun todayAndYesterday_isTwo() {
++        assertEquals(Summary(2, 2, true), summary(daysBefore(0), daysBefore(1)))
++    }
++
++    @Test
++    fun onlyYesterday_keepsTheStreakAliveUntilTodayEnds() {
++        assertEquals(Summary(1, 1, false), summary(daysBefore(1)))
++        assertEquals(Summary(3, 3, false), summary(daysBefore(1), daysBefore(2), daysBefore(3)))
++    }
++
++    @Test
++    fun twoDaysAgo_hasBrokenTheStreakButNotTheBest() {
++        assertEquals(Summary(0, 1, false), summary(daysBefore(2)))
++    }
++
++    @Test
++    fun gapsSplitRuns_andTheBestRunIsRemembered() {
++        // Today, yesterday, the day before: three. A gap. Then four days in a row, a week ago.
++        val s = summary(
++            daysBefore(0), daysBefore(1), daysBefore(2),
++            daysBefore(4), daysBefore(5), daysBefore(6), daysBefore(7)
++        )
++        assertEquals(Summary(3, 4, true), s)
++    }
++
++    @Test
++    fun severalQuizzesOnOneDay_countOnce() {
++        assertEquals(Summary(1, 1, true), summary(daysBefore(0, 8), daysBefore(0, 12), daysBefore(0, 14)))
++        assertEquals(Summary(2, 2, true), summary(daysBefore(0, 8), daysBefore(0, 12), daysBefore(1, 7), daysBefore(1, 23)))
++    }
++
++    @Test
++    fun theOrderOfTheQuizzesDoesNotMatter() {
++        val stamps = listOf(daysBefore(3), daysBefore(0), daysBefore(1), daysBefore(6), daysBefore(2))
++        val expected = PracticeStreak.summary(stamps, now, berlin)
++        assertEquals(Summary(4, 4, true), expected)
++        assertEquals(expected, PracticeStreak.summary(stamps.reversed(), now, berlin))
++    }
++
++    @Test
++    fun theLastSecondOfADayAndTheFirstOfTheNextAreConsecutiveDays() {
++        val s = PracticeStreak.summary(listOf(at(2026, 10, 4, 23, 59), at(2026, 10, 5, 0, 0)), now, berlin)
++        assertEquals(Summary(2, 2, true), s)
++    }
++
++    @Test
++    fun theDayTheClocksGoForward_isStillOneDay() {
++        // 29 March 2026 has 23 hours in Berlin. A quiz in its first minutes and one the evening before are consecutive days.
++        val timestamps = listOf(at(2026, 3, 28, 23, 30), at(2026, 3, 29, 0, 30), at(2026, 3, 30, 0, 10))
++        val s = PracticeStreak.summary(timestamps, at(2026, 3, 30, 12), berlin)
++        assertEquals(Summary(3, 3, true), s)
++    }
++
++    @Test
++    fun theDayTheClocksGoBack_isStillOneDay() {
++        // 25 October 2026 has 25 hours in Berlin.
++        val timestamps = listOf(at(2026, 10, 24, 23, 30), at(2026, 10, 25, 12), at(2026, 10, 26, 0, 30))
++        val s = PracticeStreak.summary(timestamps, at(2026, 10, 26, 9), berlin)
++        assertEquals(Summary(3, 3, true), s)
++    }
++
++    @Test
++    fun aWholeStreakCountsThroughADaylightSavingChange() {
++        val timestamps = (24..31).map { at(2026, 3, it, 20) } // 24 to 31 March, across the change on the 29th
++        val s = PracticeStreak.summary(timestamps, at(2026, 3, 31, 21), berlin)
++        assertEquals(Summary(8, 8, true), s)
++    }
++
++    @Test
++    fun aQuizDatedAfterNow_countsForNothing() {
++        assertEquals(Summary(1, 1, true), summary(daysBefore(0), at(2026, 10, 9)))
++        assertEquals(Summary(0, 0, false), summary(at(2026, 10, 9)))
++    }
++
++    @Test
++    fun theSameQuizzesGiveADifferentStreakInAnotherZone() {
++        // 23:30 UTC on 4 October is already the 5th in Berlin: with 4 and 5 October (Berlin) it is two days there, one in UTC.
++        val lateOnThe4th = 1_791_156_600_000L // 2026-10-04T23:30:00Z, 01:30 on the 5th in Berlin
++        val morningOfThe5th = at(2026, 10, 5, 9)
++        assertEquals(Summary(1, 1, true), PracticeStreak.summary(listOf(lateOnThe4th, morningOfThe5th), now, berlin))
++        assertEquals(Summary(2, 2, true), PracticeStreak.summary(listOf(lateOnThe4th, morningOfThe5th), now, utc))
++    }
++
++    // --- What the next finished quiz does -------------------------------------------------------------------------
++
++    private fun outcome(vararg previous: Long) = PracticeStreak.outcome(previous.toList(), now, berlin)
++
++    @Test
++    fun theFirstQuizEver_startsAStreak() {
++        assertEquals(Outcome(Kind.STARTED, 1), outcome())
++    }
++
++    @Test
++    fun aQuizAfterAGap_startsAStreakAgain() {
++        assertEquals(Outcome(Kind.STARTED, 1), outcome(daysBefore(2), daysBefore(3), daysBefore(4)))
++    }
++
++    @Test
++    fun aQuizTheDayAfterOne_keepsTheStreak() {
++        assertEquals(Outcome(Kind.KEPT, 2), outcome(daysBefore(1)))
++        assertEquals(Outcome(Kind.KEPT, 4), outcome(daysBefore(1), daysBefore(2), daysBefore(3)))
++    }
++
++    @Test
++    fun aSecondQuizToday_isAlreadyCounted() {
++        assertEquals(Outcome(Kind.ALREADY_COUNTED, 1), outcome(daysBefore(0, 8)))
++        assertEquals(Outcome(Kind.ALREADY_COUNTED, 3), outcome(daysBefore(0, 8), daysBefore(1), daysBefore(2)))
++    }
++}
+diff --git a/app/src/test/java/com/example/support/PixelSupport.kt b/app/src/test/java/com/example/support/PixelSupport.kt
+index 06610b6..6ac9d4c 100644
+--- a/app/src/test/java/com/example/support/PixelSupport.kt
++++ b/app/src/test/java/com/example/support/PixelSupport.kt
+@@ -7,6 +7,7 @@ import android.os.Looper
+ import androidx.compose.ui.geometry.Rect
+ import androidx.compose.ui.test.junit4.AndroidComposeTestRule
+ import org.robolectric.Shadows.shadowOf
++import org.robolectric.shadows.ShadowDialog
+ 
+ /**
+  * The window drawn into a plain bitmap. This works under native graphics. Compose's captureToImage does
+@@ -20,6 +21,18 @@ fun AndroidComposeTestRule<*, *>.drawWindow(): Bitmap {
+     return bitmap
+ }
+ 
++/**
++ * The newest dialog drawn into a plain bitmap. A dialog is a window of its own, so [drawWindow] leaves it out; the
++ * dialog's content is sized as it would be on screen (the dialog window is narrower than the activity's).
++ */
++fun drawLatestDialog(): Bitmap {
++    shadowOf(Looper.getMainLooper()).idle()
++    val view = ShadowDialog.getLatestDialog().window!!.decorView
++    val bitmap = Bitmap.createBitmap(view.width.coerceAtLeast(1), view.height.coerceAtLeast(1), Bitmap.Config.ARGB_8888)
++    view.draw(Canvas(bitmap))
++    return bitmap
++}
++
+ /** The part of the bitmap inside [area], which is in pixels, like a node's bounds. */
+ fun Bitmap.crop(area: Rect): Bitmap =
+     Bitmap.createBitmap(this, area.left.toInt(), area.top.toInt(), area.width.toInt(), area.height.toInt())
+diff --git a/app/src/test/java/com/example/support/UiTestSupport.kt b/app/src/test/java/com/example/support/UiTestSupport.kt
+index 02b1412..26a4b6f 100644
+--- a/app/src/test/java/com/example/support/UiTestSupport.kt
++++ b/app/src/test/java/com/example/support/UiTestSupport.kt
+@@ -57,7 +57,14 @@ fun ComposeTestRule.awaitWeakSpots(viewModel: CountryViewModel, count: Int, time
+ 
+ /** Waits until the number of weak spots satisfies [accept], handing Room's results to the main thread meanwhile. */
+ fun ComposeTestRule.awaitWeakSpotsWhere(viewModel: CountryViewModel, timeoutMillis: Long = 10_000, accept: (Int) -> Boolean) =
++    awaitDelivered(timeoutMillis) { accept(viewModel.weakSpots.value.size) }
++
++/**
++ * Waits until [condition] holds. Values that come out of Room reach the main thread through its message queue, which
++ * [ComposeTestRule.waitUntil] alone does not always run, so each check first lets the queue deliver what it holds.
++ */
++fun ComposeTestRule.awaitDelivered(timeoutMillis: Long = 10_000, condition: () -> Boolean) =
+     waitUntil(timeoutMillis) {
+         shadowOf(Looper.getMainLooper()).idle()
+-        accept(viewModel.weakSpots.value.size)
++        condition()
+     }
+-- 
+2.43.0
+

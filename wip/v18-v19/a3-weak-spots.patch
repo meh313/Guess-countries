@@ -1,0 +1,1151 @@
+From a0890b44cfef071dbb1c7bad22ddadb577625cd5 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Mon, 5 Oct 2026 15:52:45 +0000
+Subject: [PATCH] feat: weak spots quiz scope and flashcard deck; version 1.8
+
+Weak spots are the sovereign countries reviewed at least once and still below
+75 mastery, weakest first. The quiz gets a "Weak spots" scope chip (second in the
+row, locked with an explanation under four countries) that asks about the
+weakest ten with answers from the whole world; the blitz cycles through all of
+them. Flashcards get a "Weak spots deck" button that snapshots the list so
+grading does not reorder the deck, and a notice with "Show all".
+
+Also: the Stats screen shares the mastery threshold, README feature list and
+build notes are brought up to date, versionName 1.8.
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01W1k2QnbmNmY8jdQT8nphjW
+---
+ README.md                                     |  16 ++-
+ app/build.gradle.kts                          |   2 +-
+ .../java/com/example/data/model/WeakSpots.kt  |  31 ++++
+ .../main/java/com/example/quiz/QuizEngine.kt  |  15 +-
+ .../com/example/ui/screens/FlashcardScreen.kt | 119 ++++++++++++++--
+ .../java/com/example/ui/screens/QuizScreen.kt |  67 +++++++--
+ .../com/example/ui/screens/StatsScreen.kt     |   5 +-
+ .../example/ui/viewmodel/CountryViewModel.kt  |  28 +++-
+ .../com/example/CountryViewModelQuizTest.kt   | 134 ++++++++++++++++++
+ .../com/example/QuizAndFlashcardUiTest.kt     | 110 ++++++++++++++
+ .../java/com/example/QuizSetupScreenTest.kt   |  71 ++++++++++
+ .../test/java/com/example/ScreenshotsTest.kt  |  21 +++
+ .../java/com/example/data/WeakSpotsTest.kt    |  68 +++++++++
+ .../java/com/example/quiz/QuizEngineTest.kt   |  27 ++++
+ .../java/com/example/support/UiTestSupport.kt |  12 ++
+ 15 files changed, 686 insertions(+), 40 deletions(-)
+ create mode 100644 app/src/main/java/com/example/data/model/WeakSpots.kt
+ create mode 100644 app/src/test/java/com/example/data/WeakSpotsTest.kt
+
+diff --git a/README.md b/README.md
+index e8128ef..97d09ef 100644
+--- a/README.md
++++ b/README.md
+@@ -8,13 +8,17 @@ drill them with flashcards, and test yourself with quizzes. Everything runs on t
+ - **Explore** – search, filter by continent or Saved, sort by name, population, area or continent, open a detail
+   sheet and have it read aloud.
+ - **Flashcards** – flip through the deck (it follows the Explore filters), shuffle it, and grade yourself.
+-- **Quiz** – flag → country, country → capital, flag → continent (always the whole world), and a
+-  10-second-per-question speed round. Ten questions or fewer, with a streak bonus.
++  A *Weak spots* deck holds the countries you have practiced but not yet mastered, weakest first.
++- **Quiz** – flag → country, country → flag (pick the right flag out of four), country → capital,
++  flag → continent (always the whole world), a 10-second-per-question speed round and a 60-second blitz
++  (as many flags as you can). Ten questions or fewer, with a streak bonus. *Answers: Normal* puts one
++  look-alike flag among the wrong answers, *Hard* as many as exist. The *Weak spots* scope quizzes you on
++  the ten countries you know least.
+ - **Stats** – mastery per continent and a log of recent quizzes.
+ 
+ ## Build
+ 
+-Requires JDK 21 and the Android SDK (compileSdk 36.1). The Gradle wrapper picks the right Gradle version.
++Requires JDK 21 and the Android SDK (compileSdk 37, targetSdk 36). The Gradle wrapper picks the right Gradle version.
+ 
+ ```sh
+ ./gradlew assembleDebug        # debug APK
+@@ -82,6 +86,6 @@ packaged into the APK's assets.
+ 
+ ## Dependencies
+ 
+-The versions in `gradle/libs.versions.toml` are the newest that build against compileSdk 36. Compose BOM 2026.08+, navigation 2.10+, lifecycle 2.11+ and core 1.19+ need compileSdk 37, so
+-Dependabot updates to those fail until compileSdk (and probably AGP) is raised on purpose. androidx.test 1.7
+-breaks Robolectric 4.16, so core and runner stay on 1.6.
++The versions in `gradle/libs.versions.toml` are the newest that build against compileSdk 37; targetSdk stays
++at 36 so Robolectric keeps running at a supported level. androidx.test 1.7 breaks Robolectric's setup, so
++core and runner stay on 1.6 (see `.github/dependabot.yml`).
+diff --git a/app/build.gradle.kts b/app/build.gradle.kts
+index 2151343..cdd081c 100644
+--- a/app/build.gradle.kts
++++ b/app/build.gradle.kts
+@@ -33,7 +33,7 @@ android {
+     minSdk = 24
+     targetSdk = 36
+     versionCode = versionCodeFromEnv ?: 1
+-    versionName = "1.6"
++    versionName = "1.8"
+ 
+     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+   }
+diff --git a/app/src/main/java/com/example/data/model/WeakSpots.kt b/app/src/main/java/com/example/data/model/WeakSpots.kt
+new file mode 100644
+index 0000000..7028d51
+--- /dev/null
++++ b/app/src/main/java/com/example/data/model/WeakSpots.kt
+@@ -0,0 +1,31 @@
++package com.example.data.model
++
++import com.example.data.local.UserProgressEntity
++
++/**
++ * The countries a player has practiced but not yet mastered, weakest first. Quizzes and flashcards can be limited to
++ * them, so the review time goes where it helps.
++ */
++object WeakSpots {
++    /** A country at or above this mastery score counts as learned. */
++    const val MASTERED = 75
++
++    /**
++     * Sovereign countries that were reviewed at least once and sit below [MASTERED]. The lowest mastery comes
++     * first, then the one practiced longest ago, then the country code, so the order is the same on every call.
++     * Countries never reviewed (a bookmark alone creates a progress row) are not weak spots, they are unseen.
++     */
++    fun select(progress: Collection<UserProgressEntity>, countries: List<Country>): List<Country> {
++        val byCode = progress.associateBy { it.countryCode }
++        return countries.asSequence()
++            .filter { it.isSovereign }
++            .mapNotNull { country -> byCode[country.code]?.takeIf { it.timesReviewed >= 1 && it.masteryScore < MASTERED }?.let { country to it } }
++            .sortedWith(
++                compareBy<Pair<Country, UserProgressEntity>> { it.second.masteryScore }
++                    .thenBy { it.second.lastReviewed }
++                    .thenBy { it.first.code }
++            )
++            .map { it.first }
++            .toList()
++    }
++}
+diff --git a/app/src/main/java/com/example/quiz/QuizEngine.kt b/app/src/main/java/com/example/quiz/QuizEngine.kt
+index 48bcc2e..6ca1787 100644
+--- a/app/src/main/java/com/example/quiz/QuizEngine.kt
++++ b/app/src/main/java/com/example/quiz/QuizEngine.kt
+@@ -67,12 +67,21 @@ object QuizEngine {
+ 
+     val SCOPES = listOf("Global", "Africa", "Americas", "Asia", "Europe", "Oceania")
+ 
++    /** A scope that is not a place: the countries the player practiced and has not mastered yet. */
++    const val WEAK_SPOTS = "Weak spots"
++
+     private const val DISTRACTORS = 3
+     private val ANSWER_CONTINENTS = listOf("Africa", "Americas", "Asia", "Europe", "Oceania")
+ 
+-    /** The scope a quiz of [mode] actually uses: [requested], except modes that always cover the world. */
+-    fun effectiveScope(mode: QuizMode, requested: String): String =
+-        if (mode.usesWholeWorld) "Global" else requested
++    /**
++     * The scope a quiz of [mode] actually uses: [requested], except modes that always cover the world, and the weak
++     * spots once there are too few of them left to ask about.
++     */
++    fun effectiveScope(mode: QuizMode, requested: String, weakSpotsAvailable: Boolean = true): String = when {
++        mode.usesWholeWorld -> "Global"
++        requested == WEAK_SPOTS && !weakSpotsAvailable -> "Global"
++        else -> requested
++    }
+ 
+     /** The countries a quiz in [scope] can ask about. Non-sovereign entries such as Antarctica never appear. */
+     fun poolFor(scope: String, countries: List<Country>): List<Country> {
+diff --git a/app/src/main/java/com/example/ui/screens/FlashcardScreen.kt b/app/src/main/java/com/example/ui/screens/FlashcardScreen.kt
+index d15d91b..f193203 100644
+--- a/app/src/main/java/com/example/ui/screens/FlashcardScreen.kt
++++ b/app/src/main/java/com/example/ui/screens/FlashcardScreen.kt
+@@ -27,6 +27,7 @@ import androidx.compose.material.icons.Icons
+ import androidx.compose.material.icons.filled.CheckCircle
+ import androidx.compose.material.icons.filled.Check
+ import androidx.compose.material.icons.filled.FilterList
++import androidx.compose.material.icons.filled.FitnessCenter
+ import androidx.compose.material.icons.filled.Close
+ import androidx.compose.material.icons.filled.Flip
+ import androidx.compose.material.icons.filled.LocationCity
+@@ -42,6 +43,7 @@ import androidx.compose.material3.CardDefaults
+ import androidx.compose.material3.Icon
+ import androidx.compose.material3.IconButton
+ import androidx.compose.material3.LinearProgressIndicator
++import androidx.compose.material3.LocalContentColor
+ import androidx.compose.material3.MaterialTheme
+ import androidx.compose.material3.Surface
+ import androidx.compose.material3.Text
+@@ -73,6 +75,7 @@ import androidx.compose.ui.unit.dp
+ import androidx.compose.ui.unit.sp
+ import com.example.data.model.Country
+ import com.example.data.model.SortOption
++import com.example.quiz.QuizEngine
+ import com.example.flashcards.FlashcardDeck
+ import com.example.ui.components.FlagView
+ import com.example.ui.components.getContinentColor
+@@ -93,7 +96,9 @@ fun FlashcardScreen(
+     viewModel: CountryViewModel,
+     modifier: Modifier = Modifier
+ ) {
+-    val countries by viewModel.filteredCountries.collectAsState()
++    val exploreCountries by viewModel.filteredCountries.collectAsState()
++    val weakSpots by viewModel.weakSpots.collectAsState()
++    val weakSpotsAvailable = weakSpots.size >= QuizEngine.MIN_POOL
+     val speechAvailable by viewModel.speechAvailable.collectAsState()
+     // Bind the speech engine only once a screen that can speak is shown.
+     LaunchedEffect(Unit) { viewModel.prepareSpeech() }
+@@ -106,6 +111,17 @@ fun FlashcardScreen(
+     var currentCode by rememberSaveable { mutableStateOf<String?>(null) }
+     var flippedCode by rememberSaveable { mutableStateOf<String?>(null) }
+     var shuffleSeed by rememberSaveable { mutableStateOf<Long?>(null) }
++    // The weak-spots deck is a snapshot taken when it is switched on (country codes, weakest first): grading a card
++    // changes its mastery and must not reorder the deck underneath the player.
++    var weakDeckCodes by rememberSaveable { mutableStateOf<String?>(null) }
++    var showLockedHint by rememberSaveable { mutableStateOf(false) }
++    if (weakSpotsAvailable && showLockedHint) showLockedHint = false
++    val countriesByCode = remember(viewModel) { viewModel.repository.allCountries.associateBy { it.code } }
++    val weakDeck = remember(weakDeckCodes, countriesByCode) {
++        weakDeckCodes?.split(',')?.mapNotNull { countriesByCode[it] }
++    }
++    // Explore's filters do not apply to the weak-spots deck.
++    val countries = weakDeck ?: exploreCountries
+ 
+     // The deck is shared with Explore's filters and sort order, so say so and offer a way out.
+     val filterSummary = listOfNotNull(
+@@ -114,7 +130,8 @@ fun FlashcardScreen(
+         searchQuery.takeIf { it.isNotBlank() }?.let { "\"$it\"" },
+         "Sorted by ${sortBy.name.lowercase()}".takeIf { sortBy != SortOption.NAME }
+     ).joinToString(" · ")
+-    val filtersActive = filterSummary.isNotEmpty()
++    val exploreFiltersSet = filterSummary.isNotEmpty()
++    val filtersActive = exploreFiltersSet && weakDeck == null
+ 
+     if (countries.isEmpty()) {
+         Column(
+@@ -176,6 +193,18 @@ fun FlashcardScreen(
+         currentCode = FlashcardDeck.nextCode(deck, index)
+         flippedCode = null
+     }
++    val onWeakSpotsToggle = {
++        if (weakDeckCodes != null || weakSpotsAvailable) {
++            viewModel.stopSpeaking()
++            weakDeckCodes = if (weakDeckCodes != null) null else weakSpots.joinToString(",") { it.code }
++            shuffleSeed = null
++            currentCode = null
++            flippedCode = null
++        } else {
++            showLockedHint = !showLockedHint
++        }
++    }
++    val weakDeckActive = weakDeck != null
+     val flipCard: @Composable (Modifier, Boolean) -> Unit = { cardModifier, compact ->
+         FlipCard(
+             country = currentCountry,
+@@ -213,8 +242,10 @@ fun FlashcardScreen(
+                         .verticalScroll(rememberScrollState()),
+                     verticalArrangement = Arrangement.spacedBy(10.dp)
+                 ) {
+-                    DeckHeader(index, deck.size, onShuffle, onReset)
++                    DeckHeader(index, deck.size, onShuffle, onReset, weakDeckActive, onWeakSpotsToggle)
+                     if (filtersActive) FilterNotice(filterSummary) { viewModel.clearFilters() }
++                    if (weakDeckActive) WeakDeckNotice(deck.size, exploreFiltersSet) { onWeakSpotsToggle() }
++                    if (showLockedHint) WeakSpotsLockedNotice(weakSpots.size) { showLockedHint = false }
+                     DeckProgress((index + 1).toFloat() / deck.size)
+                     GradeButtons(stacked = true, onGrade = onGrade)
+                 }
+@@ -226,12 +257,20 @@ fun FlashcardScreen(
+                     .padding(20.dp),
+                 horizontalAlignment = Alignment.CenterHorizontally
+             ) {
+-                DeckHeader(index, deck.size, onShuffle, onReset)
++                DeckHeader(index, deck.size, onShuffle, onReset, weakDeckActive, onWeakSpotsToggle)
+ 
+                 if (filtersActive) {
+                     Spacer(modifier = Modifier.height(8.dp))
+                     FilterNotice(filterSummary) { viewModel.clearFilters() }
+                 }
++                if (weakDeckActive) {
++                    Spacer(modifier = Modifier.height(8.dp))
++                    WeakDeckNotice(deck.size, exploreFiltersSet) { onWeakSpotsToggle() }
++                }
++                if (showLockedHint) {
++                    Spacer(modifier = Modifier.height(8.dp))
++                    WeakSpotsLockedNotice(weakSpots.size) { showLockedHint = false }
++                }
+ 
+                 Spacer(modifier = Modifier.height(10.dp))
+                 DeckProgress((index + 1).toFloat() / deck.size)
+@@ -252,7 +291,9 @@ private fun DeckHeader(
+     index: Int,
+     total: Int,
+     onShuffle: () -> Unit,
+-    onReset: () -> Unit
++    onReset: () -> Unit,
++    weakDeckActive: Boolean,
++    onWeakSpotsToggle: () -> Unit
+ ) {
+     Row(
+         modifier = Modifier.fillMaxWidth(),
+@@ -273,6 +314,18 @@ private fun DeckHeader(
+         }
+ 
+         Row {
++            IconButton(
++                onClick = onWeakSpotsToggle,
++                modifier = Modifier
++                    .semantics { stateDescription = if (weakDeckActive) "On" else "Off" }
++                    .testTag("flashcard_weak_spots_btn")
++            ) {
++                Icon(
++                    imageVector = Icons.Default.FitnessCenter,
++                    contentDescription = "Weak spots deck",
++                    tint = if (weakDeckActive) MaterialTheme.colorScheme.primary else LocalContentColor.current
++                )
++            }
+             IconButton(onClick = onShuffle) {
+                 Icon(imageVector = Icons.Default.Shuffle, contentDescription = "Shuffle Cards")
+             }
+@@ -284,13 +337,55 @@ private fun DeckHeader(
+ }
+ 
+ @Composable
+-private fun FilterNotice(summary: String, onClear: () -> Unit) {
++private fun FilterNotice(summary: String, onClear: () -> Unit) =
++    DeckNotice(
++        text = "Deck filtered by Explore: $summary",
++        actionLabel = "Clear",
++        noticeTag = "flashcard_filter_notice",
++        actionTag = "flashcard_clear_filters_btn",
++        onAction = onClear
++    )
++
++/** Says the deck is the weak spots instead of Explore's list, and offers the way back. */
++@Composable
++private fun WeakDeckNotice(count: Int, exploreFiltersSet: Boolean, onShowAll: () -> Unit) =
++    DeckNotice(
++        text = "Weak spots deck: $count ${if (count == 1) "country" else "countries"}, weakest first" +
++            if (exploreFiltersSet) " · Explore filters not applied" else "",
++        actionLabel = "Show all",
++        noticeTag = "flashcard_weak_spots_notice",
++        actionTag = "flashcard_weak_spots_off_btn",
++        onAction = onShowAll,
++        maxLines = 3
++    )
++
++/** Explains why the weak-spots deck is not available yet. */
++@Composable
++private fun WeakSpotsLockedNotice(count: Int, onDismiss: () -> Unit) =
++    DeckNotice(
++        text = "Weak spots unlocks once ${QuizEngine.MIN_POOL} reviewed countries are below mastery (you have $count)",
++        actionLabel = "OK",
++        noticeTag = "flashcard_weak_spots_locked_notice",
++        actionTag = "flashcard_weak_spots_locked_ok_btn",
++        onAction = onDismiss,
++        maxLines = 4
++    )
++
++@Composable
++private fun DeckNotice(
++    text: String,
++    actionLabel: String,
++    noticeTag: String,
++    actionTag: String,
++    onAction: () -> Unit,
++    maxLines: Int = 2
++) {
+     Surface(
+         shape = RoundedCornerShape(12.dp),
+         color = MaterialTheme.colorScheme.secondaryContainer,
+         modifier = Modifier
+             .fillMaxWidth()
+-            .testTag("flashcard_filter_notice")
++            .testTag(noticeTag)
+     ) {
+         Row(
+             modifier = Modifier.padding(start = 12.dp, end = 4.dp),
+@@ -304,18 +399,18 @@ private fun FilterNotice(summary: String, onClear: () -> Unit) {
+             )
+             Spacer(modifier = Modifier.width(8.dp))
+             Text(
+-                text = "Deck filtered by Explore: $summary",
++                text = text,
+                 style = MaterialTheme.typography.bodySmall,
+                 color = MaterialTheme.colorScheme.onSecondaryContainer,
+-                maxLines = 2,
++                maxLines = maxLines,
+                 overflow = TextOverflow.Ellipsis,
+                 modifier = Modifier.weight(1f)
+             )
+             TextButton(
+-                onClick = onClear,
+-                modifier = Modifier.testTag("flashcard_clear_filters_btn")
++                onClick = onAction,
++                modifier = Modifier.testTag(actionTag)
+             ) {
+-                Text("Clear")
++                Text(actionLabel)
+             }
+         }
+     }
+diff --git a/app/src/main/java/com/example/ui/screens/QuizScreen.kt b/app/src/main/java/com/example/ui/screens/QuizScreen.kt
+index 0916817..3bb8c90 100644
+--- a/app/src/main/java/com/example/ui/screens/QuizScreen.kt
++++ b/app/src/main/java/com/example/ui/screens/QuizScreen.kt
+@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.Cancel
+ import androidx.compose.material.icons.filled.CheckCircle
+ import androidx.compose.material.icons.filled.Close
+ import androidx.compose.material.icons.filled.EmojiEvents
++import androidx.compose.material.icons.filled.FitnessCenter
+ import androidx.compose.material.icons.filled.Flag
+ import androidx.compose.material.icons.filled.GridView
+ import androidx.compose.material.icons.filled.LocalFireDepartment
+@@ -99,6 +100,9 @@ private val QuizMode.icon: ImageVector
+         QuizMode.BLITZ -> Icons.Default.Timer
+     }
+ 
++/** The scope chips in order: Global, then the weak spots (second, so the row does not hide them), then the continents. */
++private val SETUP_SCOPES = listOf(QuizEngine.SCOPES.first(), QuizEngine.WEAK_SPOTS) + QuizEngine.SCOPES.drop(1)
++
+ @Composable
+ fun QuizScreen(
+     viewModel: CountryViewModel,
+@@ -110,6 +114,12 @@ fun QuizScreen(
+     var selectedMode by rememberSaveable { mutableStateOf(QuizMode.FLAG_NAME) }
+     var selectedContinentScope by rememberSaveable { mutableStateOf("Global") }
+     var selectedDifficulty by rememberSaveable { mutableStateOf(QuizDifficulty.NORMAL) }
++    val weakSpots by viewModel.weakSpots.collectAsState()
++    val weakSpotsAvailable = weakSpots.size >= QuizEngine.MIN_POOL
++    // Once practice lifts the weak spots out of reach, the choice goes back to Global instead of reviving by itself.
++    LaunchedEffect(weakSpotsAvailable) {
++        if (!weakSpotsAvailable && selectedContinentScope == QuizEngine.WEAK_SPOTS) selectedContinentScope = "Global"
++    }
+     val countriesByCode = remember(allCountries) { allCountries.associateBy { it.code } }
+     val quizScrollState = rememberScrollState()
+     var showQuitConfirm by rememberSaveable { mutableStateOf(false) }
+@@ -210,7 +220,7 @@ fun QuizScreen(
+ 
+             // Some modes always cover the whole world; their scope chips show "Global" and are inactive.
+             val scopeApplies = !selectedMode.usesWholeWorld
+-            val shownScope = QuizEngine.effectiveScope(selectedMode, selectedContinentScope)
++            val shownScope = QuizEngine.effectiveScope(selectedMode, selectedContinentScope, weakSpotsAvailable)
+             if (!scopeApplies) {
+                 Text(
+                     text = "The continent quiz always covers the whole world",
+@@ -222,30 +232,62 @@ fun QuizScreen(
+                 )
+             }
+             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+-                items(QuizEngine.SCOPES) { scope ->
++                items(SETUP_SCOPES) { scope ->
++                    val isWeakSpots = scope == QuizEngine.WEAK_SPOTS
+                     val isSelected = shownScope == scope
++                    val chipEnabled = scopeApplies && (!isWeakSpots || weakSpotsAvailable)
++                    val contentColor = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                     Surface(
+                         shape = RoundedCornerShape(16.dp),
+                         color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                         modifier = Modifier
+-                            .alpha(if (scopeApplies) 1f else 0.5f)
++                            .alpha(if (chipEnabled) 1f else 0.5f)
+                             .selectable(
+                                 selected = isSelected,
+-                                enabled = scopeApplies,
++                                enabled = chipEnabled,
+                                 role = Role.RadioButton,
+                                 onClick = { selectedContinentScope = scope }
+                             )
+-                            .testTag("quiz_scope_${scope.lowercase()}")
++                            .testTag("quiz_scope_${scope.lowercase().replace(' ', '_')}")
+                     ) {
+-                        Text(
+-                            text = scope,
+-                            color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+-                            fontWeight = FontWeight.Bold,
+-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+-                        )
++                        Row(
++                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
++                            verticalAlignment = Alignment.CenterVertically
++                        ) {
++                            if (isWeakSpots) {
++                                Icon(
++                                    imageVector = Icons.Default.FitnessCenter,
++                                    contentDescription = null,
++                                    tint = contentColor,
++                                    modifier = Modifier.size(16.dp)
++                                )
++                                Spacer(modifier = Modifier.width(6.dp))
++                            }
++                            Text(text = scope, color = contentColor, fontWeight = FontWeight.Bold)
++                        }
+                     }
+                 }
+             }
++            // The weak-spots chip explains itself: why it is locked, or what it will ask about.
++            val weakSpotsNote = when {
++                !scopeApplies -> null
++                !weakSpotsAvailable ->
++                    "Weak spots unlocks once ${QuizEngine.MIN_POOL} reviewed countries are below mastery (you have ${weakSpots.size})"
++                shownScope == QuizEngine.WEAK_SPOTS ->
++                    "Your ${minOf(weakSpots.size, QuizEngine.MAX_QUESTIONS)} weakest countries, with answers from the whole world"
++                else -> null
++            }
++            if (weakSpotsNote != null) {
++                Text(
++                    text = weakSpotsNote,
++                    style = MaterialTheme.typography.bodySmall,
++                    color = MaterialTheme.colorScheme.onSurfaceVariant,
++                    modifier = Modifier
++                        .align(Alignment.Start)
++                        .padding(top = 8.dp)
++                        .testTag("quiz_weak_spots_note")
++                )
++            }
+ 
+             Spacer(modifier = Modifier.height(20.dp))
+ 
+@@ -299,7 +341,8 @@ fun QuizScreen(
+             Spacer(modifier = Modifier.height(32.dp))
+ 
+             // Start Quiz Button
+-            val scopePoolSize = QuizEngine.poolFor(shownScope, allCountries).size
++            val scopePoolSize =
++                if (shownScope == QuizEngine.WEAK_SPOTS) weakSpots.size else QuizEngine.poolFor(shownScope, allCountries).size
+             val canStart = scopePoolSize >= QuizEngine.MIN_POOL
+             Button(
+                 onClick = { viewModel.startQuiz(selectedMode, selectedContinentScope, selectedDifficulty) },
+diff --git a/app/src/main/java/com/example/ui/screens/StatsScreen.kt b/app/src/main/java/com/example/ui/screens/StatsScreen.kt
+index 84d7631..421d719 100644
+--- a/app/src/main/java/com/example/ui/screens/StatsScreen.kt
++++ b/app/src/main/java/com/example/ui/screens/StatsScreen.kt
+@@ -41,6 +41,7 @@ import androidx.compose.ui.platform.testTag
+ import androidx.compose.ui.text.font.FontWeight
+ import androidx.compose.ui.unit.dp
+ import androidx.compose.ui.unit.sp
++import com.example.data.model.WeakSpots
+ import com.example.quiz.QuizMode
+ import com.example.ui.components.StatBadge
+ import com.example.ui.components.getContinentColor
+@@ -63,7 +64,7 @@ fun StatsScreen(
+ 
+     val bookmarkedCount = progressMap.values.count { it.isFavorite }
+     val sovereignCodes = allCountries.map { it.code }.toSet()
+-    val masteredCount = progressMap.values.count { it.countryCode in sovereignCodes && it.masteryScore >= 75 }
++    val masteredCount = progressMap.values.count { it.countryCode in sovereignCodes && it.masteryScore >= WeakSpots.MASTERED }
+     val totalQuizzes = quizHistory.size
+     // A blitz runs as long as the clock allows, so its points would swamp the 190-point maximum of the others.
+     val maxScore = quizHistory.filter { it.mode != QuizMode.BLITZ.name }.maxOfOrNull { it.score } ?: 0
+@@ -145,7 +146,7 @@ fun StatsScreen(
+         items(continents) { continent ->
+             val continentCountries = allCountries.filter { it.continent.equals(continent, ignoreCase = true) }
+             val total = continentCountries.size
+-            val masteredInContinent = continentCountries.count { (progressMap[it.code]?.masteryScore ?: 0) >= 75 }
++            val masteredInContinent = continentCountries.count { (progressMap[it.code]?.masteryScore ?: 0) >= WeakSpots.MASTERED }
+             val progressRatio = if (total > 0) masteredInContinent.toFloat() / total else 0f
+             val continentColor = getContinentColor(continent)
+ 
+diff --git a/app/src/main/java/com/example/ui/viewmodel/CountryViewModel.kt b/app/src/main/java/com/example/ui/viewmodel/CountryViewModel.kt
+index 9edd777..2591e0a 100644
+--- a/app/src/main/java/com/example/ui/viewmodel/CountryViewModel.kt
++++ b/app/src/main/java/com/example/ui/viewmodel/CountryViewModel.kt
+@@ -13,6 +13,7 @@ import com.example.data.local.UserProgressEntity
+ import com.example.data.model.Country
+ import com.example.data.model.CountryRepository
+ import com.example.data.model.SortOption
++import com.example.data.model.WeakSpots
+ import com.example.quiz.QuizDifficulty
+ import com.example.quiz.QuizEngine
+ import com.example.quiz.QuizMode
+@@ -56,6 +57,14 @@ class CountryViewModel(
+     val quizHistory: StateFlow<List<QuizScoreEntity>> = repository.quizHistory
+         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+ 
++    /**
++     * The countries practiced but not yet mastered, weakest first. Kept up to date for the life of the ViewModel
++     * (one observer on a table of at most 197 rows) so a quiz can start from it the moment the button is tapped.
++     */
++    val weakSpots: StateFlow<List<Country>> = repository.progress
++        .map { WeakSpots.select(it, repository.allCountries) }
++        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
++
+     val filteredCountries: StateFlow<List<Country>> = combine(
+         searchQuery,
+         selectedContinent,
+@@ -127,11 +136,22 @@ class CountryViewModel(
+         viewModelScope.launch { repository.recordReview(countryCode, isCorrect) }
+     }
+ 
+-    /** Starts a quiz over the full country list; does nothing if [scope] has too few countries. */
++    /**
++     * Starts a quiz over the full country list; does nothing if [scope] has too few countries. The weak-spots scope
++     * asks about the weakest ten (every weak spot in the endless blitz) but takes the wrong answers, look-alike flags
++     * included, from the whole world.
++     */
+     fun startQuiz(mode: QuizMode, scope: String, difficulty: QuizDifficulty = QuizDifficulty.NORMAL) {
+-        val effectiveScope = QuizEngine.effectiveScope(mode, scope)
+-        val pool = QuizEngine.poolFor(effectiveScope, repository.allCountries)
+-        val questions = QuizEngine.generate(pool, mode, difficulty = difficulty)
++        val weak = weakSpots.value
++        val effectiveScope = QuizEngine.effectiveScope(mode, scope, weakSpotsAvailable = weak.size >= QuizEngine.MIN_POOL)
++        val questions = if (effectiveScope == QuizEngine.WEAK_SPOTS) {
++            val targets = if (mode.isEndless) weak else weak.take(QuizEngine.MAX_QUESTIONS)
++            val world = QuizEngine.poolFor("Global", repository.allCountries)
++            QuizEngine.generate(targets, mode, difficulty = difficulty, answerPool = world)
++        } else {
++            val pool = QuizEngine.poolFor(effectiveScope, repository.allCountries)
++            QuizEngine.generate(pool, mode, difficulty = difficulty)
++        }
+         if (questions.isEmpty()) return
+         _quizSession.value = QuizSession(
+             mode = mode,
+diff --git a/app/src/test/java/com/example/CountryViewModelQuizTest.kt b/app/src/test/java/com/example/CountryViewModelQuizTest.kt
+index bca542b..cd67b29 100644
+--- a/app/src/test/java/com/example/CountryViewModelQuizTest.kt
++++ b/app/src/test/java/com/example/CountryViewModelQuizTest.kt
+@@ -437,4 +437,138 @@ class CountryViewModelQuizTest {
+         assertEquals(4_321L, vm.quizSession.value!!.startedAt)
+         assertEquals(QuizEngine.BLITZ_QUESTIONS, vm.quizSession.value!!.questions.size)
+     }
++
++    // --- Weak spots -------------------------------------------------------------------------------------------------
++
++    /** Reviews [codes] one after another at [now] ticks, wrong answers each, so the first one is the one practiced longest ago. */
++    private fun reviewWrong(codes: List<String>) {
++        codes.forEach { code ->
++            now += 10
++            runBlocking { db.userProgressDao().recordReview(code, false, now) }
++        }
++    }
++
++    /** The weak spots follow the database through Room's invalidation, which needs the main looper to deliver. */
++    private fun CountryViewModel.awaitWeakSpots(count: Int) {
++        val deadline = System.currentTimeMillis() + 10_000
++        while (weakSpots.value.size != count) {
++            check(System.currentTimeMillis() < deadline) { "weak spots stayed at ${weakSpots.value.size}, wanted $count" }
++            shadowOf(Looper.getMainLooper()).idle()
++            Thread.sleep(10)
++        }
++    }
++
++    private val twelveWeak = sovereign.map { it.code }.take(12)
++
++    @Test
++    fun weakSpots_listsReviewedCountriesBelowMasteryWeakestFirst() {
++        runBlocking {
++            val dao = db.userProgressDao()
++            dao.recordReview("FR", true, 10L)
++            dao.recordReview("FR", true, 11L) // 50
++            dao.recordReview("DE", false, 12L) // 0
++            dao.recordReview("JP", true, 13L) // 25
++            repeat(3) { dao.recordReview("BR", true, 14L + it) } // 75, learned
++            dao.recordReview("AQ", false, 20L) // not a country
++        }
++        val vm = newViewModel()
++
++        vm.awaitWeakSpots(3)
++
++        assertEquals(listOf("DE", "JP", "FR"), vm.weakSpots.value.map { it.code })
++    }
++
++    @Test
++    fun startQuiz_weakSpots_asksAboutTheWeakestTenWithAnswersFromTheWholeWorld() {
++        reviewWrong(twelveWeak)
++        val vm = newViewModel()
++        vm.awaitWeakSpots(12)
++
++        vm.startQuiz(QuizMode.FLAG_NAME, QuizEngine.WEAK_SPOTS)
++
++        val s = vm.quizSession.value!!
++        assertEquals(QuizEngine.WEAK_SPOTS, s.scope)
++        assertEquals(10, s.questions.size)
++        // Mastery is 0 for all twelve, so the ten practiced longest ago are the weakest.
++        assertEquals(twelveWeak.take(10).toSet(), s.questions.map { it.targetCountry.code }.toSet())
++        val weakNames = sovereign.filter { it.code in twelveWeak }.map { it.name }.toSet()
++        assertTrue("wrong answers come from the whole world", s.questions.any { q -> q.options.any { it !in weakNames } })
++    }
++
++    @Test
++    fun startQuiz_weakSpots_inThePickFlagModeUsesFlagsFromTheWholeWorld() {
++        reviewWrong(twelveWeak)
++        val vm = newViewModel()
++        vm.awaitWeakSpots(12)
++
++        vm.startQuiz(QuizMode.PICK_FLAG, QuizEngine.WEAK_SPOTS, QuizDifficulty.HARD)
++
++        val s = vm.quizSession.value!!
++        assertEquals(QuizEngine.WEAK_SPOTS, s.scope)
++        assertTrue(s.questions.any { q -> q.options.any { it !in twelveWeak } })
++    }
++
++    @Test
++    fun startQuiz_weakSpots_inTheBlitzCyclesThroughEveryWeakSpot() {
++        reviewWrong(twelveWeak)
++        val vm = newViewModel()
++        vm.awaitWeakSpots(12)
++
++        vm.startQuiz(QuizMode.BLITZ, QuizEngine.WEAK_SPOTS)
++
++        val s = vm.quizSession.value!!
++        assertEquals(QuizEngine.BLITZ_QUESTIONS, s.questions.size)
++        assertEquals(twelveWeak.toSet(), s.questions.map { it.targetCountry.code }.toSet())
++    }
++
++    @Test
++    fun startQuiz_weakSpots_withFewerThanFourFallsBackToGlobal() {
++        reviewWrong(twelveWeak.take(3))
++        val vm = newViewModel()
++        vm.awaitWeakSpots(3)
++
++        vm.startQuiz(QuizMode.FLAG_NAME, QuizEngine.WEAK_SPOTS)
++
++        assertEquals("Global", vm.quizSession.value!!.scope)
++    }
++
++    @Test
++    fun startQuiz_weakSpots_isIgnoredByTheContinentQuiz() {
++        reviewWrong(twelveWeak)
++        val vm = newViewModel()
++        vm.awaitWeakSpots(12)
++
++        vm.startQuiz(QuizMode.CONTINENT, QuizEngine.WEAK_SPOTS)
++
++        assertEquals("Global", vm.quizSession.value!!.scope)
++    }
++
++    @Test
++    fun aFinishedWeakSpotsQuiz_isLoggedUnderWeakSpots() {
++        reviewWrong(twelveWeak)
++        val vm = newViewModel()
++        vm.awaitWeakSpots(12)
++        vm.startQuiz(QuizMode.FLAG_NAME, QuizEngine.WEAK_SPOTS)
++
++        vm.playToTheEnd()
++
++        db.awaitPendingWrites()
++        val rows = runBlocking { db.userProgressDao().getQuizHistory().first() }
++        assertEquals(listOf(QuizEngine.WEAK_SPOTS), rows.map { it.continentFilter })
++    }
++
++    @Test
++    fun weakSpots_shrinkAsTheQuizLiftsCountriesToMastery() {
++        reviewWrong(twelveWeak.take(4))
++        val vm = newViewModel()
++        vm.awaitWeakSpots(4)
++        // Three right answers take a country from 0 to 75, which is learned.
++        repeat(3) {
++            vm.startQuiz(QuizMode.FLAG_NAME, QuizEngine.WEAK_SPOTS)
++            vm.playToTheEnd()
++            db.awaitPendingWrites()
++        }
++
++        vm.awaitWeakSpots(0)
++    }
+ }
+diff --git a/app/src/test/java/com/example/QuizAndFlashcardUiTest.kt b/app/src/test/java/com/example/QuizAndFlashcardUiTest.kt
+index f957a0d..78dc053 100644
+--- a/app/src/test/java/com/example/QuizAndFlashcardUiTest.kt
++++ b/app/src/test/java/com/example/QuizAndFlashcardUiTest.kt
+@@ -20,7 +20,11 @@ import androidx.compose.ui.test.onNodeWithText
+ import androidx.compose.ui.test.performClick
+ import androidx.compose.ui.test.performScrollTo
+ import androidx.compose.ui.test.performTextInput
++import androidx.test.core.app.ApplicationProvider
+ import androidx.test.ext.junit.rules.ActivityScenarioRule
++import com.example.data.local.AppDatabase
++import com.example.quiz.QuizEngine
++import kotlinx.coroutines.runBlocking
+ import android.speech.tts.TextToSpeech
+ import androidx.compose.ui.test.onAllNodesWithContentDescription
+ import androidx.compose.ui.test.onNodeWithContentDescription
+@@ -40,6 +44,7 @@ import org.junit.Assert.assertTrue
+ import org.robolectric.Shadows.shadowOf
+ import org.robolectric.shadows.ShadowTextToSpeech
+ import com.example.support.FreshDatabaseRule
++import com.example.support.awaitWeakSpots
+ import com.example.support.boundsOf
+ import com.example.support.eventually
+ import com.example.ui.components.FlagAspectRatio
+@@ -683,4 +688,109 @@ class QuizAndFlashcardUiTest {
+         rule.onNodeWithText("60-Second Blitz • Global").assertIsDisplayed()
+         rule.onAllNodesWithText("340 pts", substring = false).assertCountEquals(0)
+     }
++
++    // --- Weak spots deck ---------------------------------------------------------------------------------------------
++
++    /** Writes reviews straight to the database, one after another, so the order of their effects is certain. */
++    private fun review(code: String, vararg results: Boolean) = runBlocking {
++        val dao = AppDatabase.getDatabase(ApplicationProvider.getApplicationContext()).userProgressDao()
++        results.forEachIndexed { i, correct -> dao.recordReview(code, correct, 1_000L + i) }
++    }
++
++    @Test
++    fun flashcards_weakSpotsDeck_isLockedUntilFourCountriesAreWeak() {
++        tab("flashcards")
++
++        rule.onNodeWithTag("flashcard_weak_spots_btn").performClick()
++        rule.waitForIdle()
++
++        rule.onNodeWithTag("flashcard_weak_spots_locked_notice").assertIsDisplayed()
++        rule.onNodeWithText("Weak spots unlocks once 4 reviewed countries are below mastery (you have 0)").assertIsDisplayed()
++        rule.onNodeWithText("Card 1 of ${allCountries.size}").assertIsDisplayed()
++
++        rule.onNodeWithTag("flashcard_weak_spots_locked_ok_btn").performClick()
++        rule.waitForIdle()
++        rule.onNodeWithTag("flashcard_weak_spots_locked_notice").assertDoesNotExist()
++    }
++
++    @Test
++    fun flashcards_weakSpotsDeck_holdsTheWeakCountriesWeakestFirstAndKeepsItsOrderWhileGrading() {
++        review("FR", false) // 0
++        review("DE", true, false) // 15
++        review("ES", true, true, false) // 40
++        review("JP", true, true) // 50
++        review("BR", true, true, true) // 75: learned
++        review("AQ", false) // not a country
++        viewModel.toggleFavorite("IT") // a bookmark is not a review
++        rule.awaitWeakSpots(viewModel, 4)
++        tab("flashcards")
++
++        rule.onNodeWithTag("flashcard_weak_spots_btn").performClick()
++        rule.waitForIdle()
++
++        rule.onNodeWithTag("flashcard_weak_spots_notice").assertIsDisplayed()
++        rule.onNodeWithText("Weak spots deck: 4 countries, weakest first").assertIsDisplayed()
++        rule.onNodeWithText("Card 1 of 4").assertIsDisplayed()
++        rule.onNodeWithTag("flashcard_flip_card").performClick()
++        rule.waitForIdle()
++        rule.onNodeWithText("France").assertIsDisplayed()
++
++        // Mastering France lifts it out of the weak spots, but the deck in hand keeps its four cards and its order.
++        rule.onNodeWithTag("grade_mastered_btn").performClick()
++        rule.waitForIdle()
++        rule.onNodeWithText("Card 2 of 4").assertIsDisplayed()
++        rule.onNodeWithTag("flashcard_flip_card").performClick()
++        rule.waitForIdle()
++        rule.onNodeWithText("Germany").assertIsDisplayed()
++    }
++
++    @Test
++    fun flashcards_weakSpotsDeck_showAllReturnsToTheExploreDeck() {
++        listOf("FR", "DE", "ES", "JP").forEach { review(it, false) }
++        rule.awaitWeakSpots(viewModel, 4)
++        tab("flashcards")
++        rule.onNodeWithTag("flashcard_weak_spots_btn").performClick()
++        rule.waitForIdle()
++        rule.onNodeWithText("Card 1 of 4").assertIsDisplayed()
++
++        rule.onNodeWithTag("flashcard_weak_spots_off_btn").performClick()
++        rule.waitForIdle()
++
++        rule.onNodeWithTag("flashcard_weak_spots_notice").assertDoesNotExist()
++        rule.onNodeWithText("Card 1 of ${allCountries.size}").assertIsDisplayed()
++    }
++
++    @Test
++    fun flashcards_weakSpotsDeck_ignoresExploresFilters() {
++        listOf("FR", "DE", "ES", "JP").forEach { review(it, false) }
++        rule.awaitWeakSpots(viewModel, 4)
++        tab("explore")
++        rule.onNodeWithTag("sort_menu_btn").performClick()
++        rule.onNodeWithText("Sort by Population").performClick()
++        rule.waitForIdle()
++        tab("flashcards")
++        rule.onNodeWithTag("flashcard_filter_notice").assertIsDisplayed()
++
++        rule.onNodeWithTag("flashcard_weak_spots_btn").performClick()
++        rule.waitForIdle()
++
++        rule.onNodeWithTag("flashcard_filter_notice").assertDoesNotExist()
++        rule.onNodeWithText("Weak spots deck: 4 countries, weakest first · Explore filters not applied").assertIsDisplayed()
++        rule.onNodeWithText("Card 1 of 4").assertIsDisplayed()
++    }
++
++    @Test
++    fun quiz_weakSpotsScope_startsAQuizAboutTheWeakCountries() {
++        listOf("FR", "DE", "ES", "JP", "BR").forEach { review(it, false) }
++        rule.awaitWeakSpots(viewModel, 5)
++        tab("quiz")
++
++        clickSetup("quiz_scope_weak_spots")
++        rule.onNodeWithText("Start 5-Question Quiz").assertIsDisplayed()
++        rule.onNodeWithTag("start_quiz_btn").performScrollTo().performClick()
++        rule.waitForIdle()
++
++        rule.onNodeWithText("Question 1 of 5").assertIsDisplayed()
++        assertEquals(setOf("FR", "DE", "ES", "JP", "BR"), viewModel.quizSession.value!!.questions.map { it.targetCountry.code }.toSet())
++    }
+ }
+diff --git a/app/src/test/java/com/example/QuizSetupScreenTest.kt b/app/src/test/java/com/example/QuizSetupScreenTest.kt
+index 7e21359..ab45a34 100644
+--- a/app/src/test/java/com/example/QuizSetupScreenTest.kt
++++ b/app/src/test/java/com/example/QuizSetupScreenTest.kt
+@@ -15,12 +15,15 @@ import com.example.data.model.CountryRepository
+ import com.example.quiz.QuizEngine
+ import com.example.quiz.sovereign
+ import com.example.support.FakeSpeech
++import com.example.support.awaitWeakSpots
+ import com.example.support.closeWhenIdle
+ import com.example.support.inMemoryDatabase
+ import com.example.ui.screens.QuizScreen
+ import com.example.ui.theme.WorldFlagsTheme
+ import com.example.ui.viewmodel.CountryViewModel
++import kotlinx.coroutines.runBlocking
+ import org.junit.After
++import org.junit.Assert.assertEquals
+ import org.junit.Before
+ import org.junit.Rule
+ import org.junit.Test
+@@ -136,4 +139,72 @@ class QuizSetupScreenTest {
+         // It uses flags, so the Answers row still applies.
+         rule.onNodeWithTag("quiz_difficulty_hard").performScrollTo().assertIsEnabled()
+     }
++
++    /** Gives four countries of the small world a wrong review each, so four weak spots exist before the screen opens. */
++    private fun fourWeakSpots(): List<String> {
++        val codes = smallWorld.take(4).map { it.code }
++        runBlocking { codes.forEachIndexed { i, code -> db.userProgressDao().recordReview(code, false, 100L + i) } }
++        return codes
++    }
++
++    private fun showWithWeakSpots(count: Int): CountryViewModel {
++        val vm = CountryViewModel(CountryRepository(db.userProgressDao(), smallWorld), FakeSpeech())
++        rule.setContent { WorldFlagsTheme { QuizScreen(vm) } }
++        rule.awaitWeakSpots(vm, count)
++        rule.waitForIdle()
++        return vm
++    }
++
++    @Test
++    fun theWeakSpotsChip_isLockedAndExplainsItselfUntilFourCountriesAreWeak() {
++        show()
++
++        rule.onNodeWithTag("quiz_scope_weak_spots").performScrollTo().assertIsNotEnabled()
++        rule.onNodeWithTag("quiz_weak_spots_note").performScrollTo()
++        rule.onNodeWithText("Weak spots unlocks once 4 reviewed countries are below mastery (you have 0)").assertIsDisplayed()
++    }
++
++    @Test
++    fun theWeakSpotsChip_countsTheCountriesItIsStillShortOf() {
++        runBlocking { smallWorld.take(3).forEachIndexed { i, c -> db.userProgressDao().recordReview(c.code, false, 100L + i) } }
++
++        showWithWeakSpots(3)
++
++        rule.onNodeWithTag("quiz_scope_weak_spots").performScrollTo().assertIsNotEnabled()
++        rule.onNodeWithTag("quiz_weak_spots_note").performScrollTo()
++        rule.onNodeWithText("Weak spots unlocks once 4 reviewed countries are below mastery (you have 3)").assertIsDisplayed()
++    }
++
++    @Test
++    fun theWeakSpotsChip_unlocksOnceFourCountriesAreWeakAndStartsAQuizAboutThem() {
++        val weak = fourWeakSpots()
++        val vm = showWithWeakSpots(4)
++
++        clickSetup("quiz_scope_weak_spots")
++
++        rule.onNodeWithTag("quiz_scope_weak_spots").assertIsSelected()
++        rule.onNodeWithTag("quiz_weak_spots_note").performScrollTo()
++        rule.onNodeWithText("Your 4 weakest countries, with answers from the whole world").assertIsDisplayed()
++        rule.onNodeWithTag("start_quiz_btn").performScrollTo().assertIsEnabled()
++        rule.onNodeWithText("Start 4-Question Quiz").assertIsDisplayed()
++
++        rule.onNodeWithTag("start_quiz_btn").performClick()
++        rule.waitForIdle()
++
++        val session = vm.quizSession.value!!
++        assertEquals(QuizEngine.WEAK_SPOTS, session.scope)
++        assertEquals(weak.toSet(), session.questions.map { it.targetCountry.code }.toSet())
++    }
++
++    @Test
++    fun theWeakSpotsChip_isInactiveInTheContinentQuizEvenWhenUnlocked() {
++        fourWeakSpots()
++        showWithWeakSpots(4)
++
++        clickSetup("quiz_mode_continent")
++
++        rule.onNodeWithTag("quiz_scope_weak_spots").performScrollTo().assertIsNotEnabled()
++        rule.onNodeWithText("The continent quiz always covers the whole world").assertIsDisplayed()
++        rule.onNodeWithTag("quiz_weak_spots_note").assertDoesNotExist()
++    }
+ }
+diff --git a/app/src/test/java/com/example/ScreenshotsTest.kt b/app/src/test/java/com/example/ScreenshotsTest.kt
+index e363228..742f3f6 100644
+--- a/app/src/test/java/com/example/ScreenshotsTest.kt
++++ b/app/src/test/java/com/example/ScreenshotsTest.kt
+@@ -7,6 +7,7 @@ import androidx.compose.ui.test.performClick
+ import androidx.compose.ui.test.performScrollToNode
+ import androidx.compose.ui.test.hasTestTag
+ import com.example.support.FreshDatabaseRule
++import com.example.support.awaitWeakSpotsWhere
+ import com.example.support.drawWindow
+ import com.example.support.openTab
+ import java.io.File
+@@ -55,6 +56,12 @@ class ScreenshotsTest {
+         rule.onNodeWithTag("flashcard_flip_card").performClick()
+         rule.waitForIdle()
+         save("flashcards_back")
++        // Nothing practiced yet, so the weak-spots deck says what it needs.
++        rule.onNodeWithTag("flashcard_weak_spots_btn").performClick()
++        rule.waitForIdle()
++        save("flashcards_weak_spots_locked")
++        rule.onNodeWithTag("flashcard_weak_spots_locked_ok_btn").performClick()
++        rule.waitForIdle()
+ 
+         rule.openTab("quiz")
+         save("quiz_setup")
+@@ -82,6 +89,20 @@ class ScreenshotsTest {
+         viewModel.endQuiz()
+         rule.waitForIdle()
+ 
++        // Six countries answered wrong (and the two quizzes above left their own marks): the weak-spots scope unlocks
++        // and so does the deck.
++        listOf("FR", "DE", "ES", "JP", "BR", "IT").forEach { viewModel.updateMastery(it, false) }
++        rule.awaitWeakSpotsWhere(viewModel) { it >= 6 }
++        rule.openTab("quiz")
++        rule.onNodeWithTag("start_quiz_btn").performScrollTo()
++        rule.onNodeWithTag("quiz_scope_weak_spots").performScrollTo().performClick()
++        rule.waitForIdle()
++        save("quiz_setup_weak_spots")
++        rule.openTab("flashcards")
++        rule.onNodeWithTag("flashcard_weak_spots_btn").performClick()
++        rule.waitForIdle()
++        save("flashcards_weak_spots")
++
+         rule.openTab("stats")
+         save("stats")
+     }
+diff --git a/app/src/test/java/com/example/data/WeakSpotsTest.kt b/app/src/test/java/com/example/data/WeakSpotsTest.kt
+new file mode 100644
+index 0000000..56fda03
+--- /dev/null
++++ b/app/src/test/java/com/example/data/WeakSpotsTest.kt
+@@ -0,0 +1,68 @@
++package com.example.data
++
++import com.example.data.local.UserProgressEntity
++import com.example.data.model.WeakSpots
++import com.example.quiz.allCountries
++import org.junit.Assert.assertEquals
++import org.junit.Assert.assertTrue
++import org.junit.Test
++
++class WeakSpotsTest {
++
++    private fun row(code: String, mastery: Int, reviewed: Int = 1, last: Long = 0L) =
++        UserProgressEntity(countryCode = code, masteryScore = mastery, timesReviewed = reviewed, lastReviewed = last)
++
++    private fun codes(vararg rows: UserProgressEntity) = WeakSpots.select(rows.toList(), allCountries).map { it.code }
++
++    @Test
++    fun theLowestMasteryComesFirst() {
++        assertEquals(listOf("JP", "FR", "DE"), codes(row("FR", 25), row("DE", 50), row("JP", 0)))
++    }
++
++    @Test
++    fun equalMastery_putsTheCountryPracticedLongestAgoFirst() {
++        assertEquals(listOf("DE", "JP", "FR"), codes(row("FR", 15, last = 300), row("DE", 15, last = 100), row("JP", 15, last = 200)))
++    }
++
++    @Test
++    fun equalMasteryAndTime_fallsBackToTheCode() {
++        assertEquals(listOf("DE", "FR", "JP"), codes(row("JP", 0, last = 5), row("FR", 0, last = 5), row("DE", 0, last = 5)))
++    }
++
++    @Test
++    fun theOrderDoesNotDependOnTheOrderOfTheInput() {
++        val rows = listOf(row("FR", 25), row("DE", 25), row("JP", 0), row("BR", 50), row("IT", 25))
++        val expected = WeakSpots.select(rows, allCountries).map { it.code }
++        repeat(20) { seed ->
++            val shuffled = rows.shuffled(kotlin.random.Random(seed))
++            assertEquals(expected, WeakSpots.select(shuffled, allCountries.shuffled(kotlin.random.Random(seed))).map { it.code })
++        }
++    }
++
++    @Test
++    fun aCountryAtTheMasteryLineIsLearned_oneBelowItIsNot() {
++        assertEquals(75, WeakSpots.MASTERED)
++        assertEquals(listOf("FR"), codes(row("FR", WeakSpots.MASTERED - 1), row("DE", WeakSpots.MASTERED), row("JP", 100)))
++    }
++
++    @Test
++    fun aCountryNeverReviewedIsNotAWeakSpot() {
++        // A bookmark alone creates a progress row with no review in it.
++        assertEquals(listOf("DE"), codes(row("FR", 0, reviewed = 0), row("DE", 0, reviewed = 1)))
++    }
++
++    @Test
++    fun antarcticaIsNeverAWeakSpot() {
++        assertEquals(emptyList<String>(), codes(row("AQ", 0)))
++    }
++
++    @Test
++    fun aRowForACodeNotInTheCatalogIsIgnored() {
++        assertEquals(listOf("FR"), codes(row("ZZ", 0), row("FR", 10)))
++    }
++
++    @Test
++    fun noProgressMeansNoWeakSpots() {
++        assertTrue(WeakSpots.select(emptyList(), allCountries).isEmpty())
++    }
++}
+diff --git a/app/src/test/java/com/example/quiz/QuizEngineTest.kt b/app/src/test/java/com/example/quiz/QuizEngineTest.kt
+index c2d3d80..ba845ce 100644
+--- a/app/src/test/java/com/example/quiz/QuizEngineTest.kt
++++ b/app/src/test/java/com/example/quiz/QuizEngineTest.kt
+@@ -139,6 +139,33 @@ class QuizEngineTest {
+         }
+     }
+ 
++    @Test
++    fun effectiveScope_keepsTheWeakSpotsOnlyWhileThereAreEnoughOfThem() {
++        for (mode in QuizMode.entries) {
++            val expected = if (mode == QuizMode.CONTINENT) "Global" else QuizEngine.WEAK_SPOTS
++            assertEquals("mode=$mode", expected, QuizEngine.effectiveScope(mode, QuizEngine.WEAK_SPOTS, weakSpotsAvailable = true))
++            assertEquals("mode=$mode", "Global", QuizEngine.effectiveScope(mode, QuizEngine.WEAK_SPOTS, weakSpotsAvailable = false))
++        }
++        // A real place never depends on the weak spots.
++        assertEquals("Asia", QuizEngine.effectiveScope(QuizMode.FLAG_NAME, "Asia", weakSpotsAvailable = false))
++    }
++
++    @Test
++    fun theWeakSpotsAreNotAPlace_soNoCountryBelongsToThem() {
++        assertTrue(QuizEngine.WEAK_SPOTS !in QuizEngine.SCOPES)
++        assertTrue(QuizEngine.poolFor(QuizEngine.WEAK_SPOTS, allCountries).isEmpty())
++    }
++
++    @Test
++    fun generate_withAnAnswerPool_asksAboutThePoolButAnswersFromTheWiderWorld() {
++        val targets = sovereign.filter { it.continent == "Oceania" }.take(5)
++        val questions = QuizEngine.generate(targets, QuizMode.FLAG_NAME, Random(7), QuizDifficulty.NORMAL, sovereign)
++
++        assertEquals(targets.map { it.code }.toSet(), questions.map { it.targetCountry.code }.toSet())
++        val oceania = targets.map { it.name }.toSet()
++        assertTrue("answers come from outside the five targets", questions.any { q -> q.options.any { it !in oceania } })
++    }
++
+     @Test
+     fun continentQuestions_neverNameTheCountryTheyAskAbout() {
+         // The old prompt said "Which continent is <country> in?" over a flag, so the flag was redundant.
+diff --git a/app/src/test/java/com/example/support/UiTestSupport.kt b/app/src/test/java/com/example/support/UiTestSupport.kt
+index 47708bd..02b1412 100644
+--- a/app/src/test/java/com/example/support/UiTestSupport.kt
++++ b/app/src/test/java/com/example/support/UiTestSupport.kt
+@@ -1,5 +1,6 @@
+ package com.example.support
+ 
++import com.example.ui.viewmodel.CountryViewModel
+ import android.os.Looper
+ import androidx.compose.ui.geometry.Rect
+ import androidx.compose.ui.graphics.Color
+@@ -49,3 +50,14 @@ fun contrastRatio(a: Color, b: Color): Double {
+     val l2 = b.luminance().toDouble()
+     return (maxOf(l1, l2) + 0.05) / (minOf(l1, l2) + 0.05)
+ }
++
++/** Waits until the weak spots number [count], handing Room's results to the main thread while it waits. */
++fun ComposeTestRule.awaitWeakSpots(viewModel: CountryViewModel, count: Int, timeoutMillis: Long = 10_000) =
++    awaitWeakSpotsWhere(viewModel, timeoutMillis) { it == count }
++
++/** Waits until the number of weak spots satisfies [accept], handing Room's results to the main thread meanwhile. */
++fun ComposeTestRule.awaitWeakSpotsWhere(viewModel: CountryViewModel, timeoutMillis: Long = 10_000, accept: (Int) -> Boolean) =
++    waitUntil(timeoutMillis) {
++        shadowOf(Looper.getMainLooper()).idle()
++        accept(viewModel.weakSpots.value.size)
++    }
+-- 
+2.43.0
+
