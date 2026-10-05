@@ -6,9 +6,14 @@ updates:
       interval: "weekly"
     open-pull-requests-limit: 5
     groups:
+      # One PR per family instead of one per library.
       androidx:
         patterns:
           - "androidx.*"
+      kotlin:
+        patterns:
+          - "org.jetbrains.kotlin*"
+          - "com.google.devtools.ksp"
     ignore:
       # androidx.test 1.7.x breaks Robolectric 4.16.1's setup ("Failed to interact with raw
       # FileDescriptor internals"). Revisit when Robolectric supports it.
@@ -16,10 +21,23 @@ updates:
         versions: [">= 1.7.0"]
       - dependency-name: "androidx.test:runner"
         versions: [">= 1.7.0"]
-    # Note: Compose BOM 2026.08+, navigation 2.10+, lifecycle 2.11+ and core 1.19+ need compileSdk 37.
-    # Updates to them will fail the build until compileSdk (and likely AGP) is raised on purpose.
+      # These need compileSdk 37 (their AAR metadata says so; the build fails at checkAarMetadata).
+      # Drop these four entries when the project moves to compileSdk 37.
+      - dependency-name: "androidx.compose:compose-bom"
+        versions: [">= 2026.08.00"]
+      - dependency-name: "androidx.navigation:navigation-compose"
+        versions: [">= 2.10.0"]
+      - dependency-name: "androidx.lifecycle:*"
+        versions: [">= 2.11.0"]
+      - dependency-name: "androidx.core:core-ktx"
+        versions: [">= 1.19.0"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      # All action bumps in one PR.
+      actions:
+        patterns:
+          - "*"

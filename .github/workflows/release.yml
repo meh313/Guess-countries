@@ -45,7 +45,7 @@ jobs:
       EXPECTED_CERT: 151c68bfdc8dba3cfdba818ff827309344382e268dc45cd5bc3ac88460189d7a
       DRY_RUN: ${{ inputs.dry_run == true }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Check the signing secrets
         env:
@@ -98,7 +98,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
           echo "Building World Flags $version as $tag, versionCode $code (dry run: $DRY_RUN)"
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 21
@@ -108,7 +108,7 @@ jobs:
           SDKMANAGER=$(ls "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager | head -1)
           yes | "$SDKMANAGER" --licenses > /dev/null || true
 
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
 
       - name: Build the signed release APK
         env:
@@ -167,7 +167,7 @@ jobs:
 
       - name: Keep the files as a workflow artifact (dry run)
         if: env.DRY_RUN == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-${{ steps.version.outputs.tag }}-dry-run
           path: dist/
