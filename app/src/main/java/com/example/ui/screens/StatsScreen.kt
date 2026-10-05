@@ -38,10 +38,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.example.data.model.WeakSpots
+import com.example.progress.PracticeStreak
 import com.example.quiz.QuizMode
 import com.example.ui.components.StatBadge
 import com.example.ui.components.getContinentColor
@@ -55,6 +58,12 @@ fun StatsScreen(
     modifier: Modifier = Modifier
 ) {
     val progressMap by viewModel.userProgressMap.collectAsState()
+    val streak by viewModel.streak.collectAsState()
+    // A day can end while this screen sits open in the background; work the streak out again on every return.
+    LifecycleResumeEffect(viewModel) {
+        viewModel.refreshStreak()
+        onPauseOrDispose { }
+    }
     val quizHistory by viewModel.quizHistory.collectAsState()
     // Antarctica cannot be quizzed, so it is not part of the mastery totals.
     val allCountries = viewModel.repository.allCountries.filter { it.isSovereign }
@@ -92,6 +101,8 @@ fun StatsScreen(
                 )
             }
         }
+
+        item { StreakCard(streak) }
 
         // Top Metric Grid
         item {
@@ -266,6 +277,49 @@ fun StatsScreen(
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+private fun days(n: Int) = if (n == 1) "1 day" else "$n days"
+
+/** The daily practice streak: how long it is, the best one so far, and whether today already counts. */
+@Composable
+private fun StreakCard(streak: PracticeStreak.Summary, modifier: Modifier = Modifier) {
+    val title = if (streak.current == 0) "No streak yet" else "${streak.current}-day streak"
+    val detail = if (streak.best == 0) {
+        "Finish a quiz today to start one"
+    } else {
+        "Best: ${days(streak.best)} · ${if (streak.practicedToday) "Practiced today" else "Not yet today"}"
+    }
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .semantics(mergeDescendants = true) {}
+            .testTag("stats_streak"),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.LocalFireDepartment,
+                contentDescription = null,
+                tint = if (streak.practicedToday) Color(0xFFE67E22) else MaterialTheme.colorScheme.outline,
+                modifier = Modifier.size(36.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column {
+                Text(text = title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text(
+                    text = detail,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }

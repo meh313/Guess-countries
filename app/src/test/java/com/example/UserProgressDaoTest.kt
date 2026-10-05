@@ -1,6 +1,7 @@
 package com.example
 
 import com.example.data.local.AppDatabase
+import com.example.data.local.QuizScoreEntity
 import com.example.data.local.UserProgressEntity
 import com.example.data.model.CountryRepository
 import com.example.support.inMemoryDatabase
@@ -167,5 +168,35 @@ class UserProgressDaoTest {
 
         assertEquals(777L, row("FR")!!.lastReviewed)
         assertEquals(777L, runBlocking { dao.getQuizHistory().first() }.single().timestamp)
+    }
+
+    @Test
+    fun quizTimestamps_listsWhenEveryQuizWasSaved() {
+        runBlocking {
+            dao.insertQuizScore(QuizScoreEntity(mode = "FLAG_NAME", score = 10, total = 190, continentFilter = "Global", timestamp = 300L))
+            dao.insertQuizScore(QuizScoreEntity(mode = "BLITZ", score = 50, total = 4, continentFilter = "Global", timestamp = 100L))
+            dao.insertQuizScore(QuizScoreEntity(mode = "CAPITAL", score = 0, total = 190, continentFilter = "Asia", timestamp = 200L))
+        }
+
+        assertEquals(listOf(100L, 200L, 300L), runBlocking { dao.quizTimestamps() }.sorted())
+    }
+
+    @Test
+    fun quizTimestamps_isEmptyBeforeTheFirstQuiz() {
+        assertTrue(runBlocking { dao.quizTimestamps() }.isEmpty())
+    }
+
+    @Test
+    fun insertQuizScoreAfterReading_returnsTheEarlierQuizzesAndSavesTheNewOne() {
+        fun quiz(at: Long) = QuizScoreEntity(mode = "FLAG_NAME", score = 10, total = 190, continentFilter = "Global", timestamp = at)
+
+        val first = runBlocking { dao.insertQuizScoreAfterReading(quiz(100L)) }
+        val second = runBlocking { dao.insertQuizScoreAfterReading(quiz(200L)) }
+        val third = runBlocking { dao.insertQuizScoreAfterReading(quiz(300L)) }
+
+        assertEquals(emptyList<Long>(), first)
+        assertEquals(listOf(100L), second)
+        assertEquals(listOf(100L, 200L), third.sorted())
+        assertEquals(listOf(100L, 200L, 300L), runBlocking { dao.quizTimestamps() }.sorted())
     }
 }

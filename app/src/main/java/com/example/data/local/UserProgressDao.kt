@@ -23,6 +23,21 @@ abstract class UserProgressDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun insertQuizScore(score: QuizScoreEntity)
 
+    /** When each finished quiz was saved; the practice streak is worked out from these. */
+    @Query("SELECT timestamp FROM quiz_scores")
+    abstract suspend fun quizTimestamps(): List<Long>
+
+    /**
+     * Saves a finished quiz and returns when the quizzes before it were saved. Both happen in one transaction, so no
+     * other save can slip in between and the list is exactly what came before this quiz.
+     */
+    @Transaction
+    open suspend fun insertQuizScoreAfterReading(score: QuizScoreEntity): List<Long> {
+        val earlier = quizTimestamps()
+        insertQuizScore(score)
+        return earlier
+    }
+
     /** Flips the bookmark for [code], creating its row first if the country was never touched. */
     @Transaction
     open suspend fun toggleFavorite(code: String, now: Long) {

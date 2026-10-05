@@ -23,6 +23,7 @@ import androidx.compose.ui.test.performTextInput
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.example.data.local.AppDatabase
+import com.example.data.local.QuizScoreEntity
 import com.example.quiz.QuizEngine
 import kotlinx.coroutines.runBlocking
 import android.speech.tts.TextToSpeech
@@ -792,5 +793,89 @@ class QuizAndFlashcardUiTest {
 
         rule.onNodeWithText("Question 1 of 5").assertIsDisplayed()
         assertEquals(setOf("FR", "DE", "ES", "JP", "BR"), viewModel.quizSession.value!!.questions.map { it.targetCountry.code }.toSet())
+    }
+
+    // --- Practice streak ---------------------------------------------------------------------------------------------
+
+    /** A moment [days] calendar days before now at 09:00 on the device's own clock, so DST changes cannot shift it a day. */
+    private fun daysAgo(days: Int): Long =
+        java.util.Calendar.getInstance().apply {
+            add(java.util.Calendar.DAY_OF_YEAR, -days)
+            set(java.util.Calendar.HOUR_OF_DAY, 9)
+            set(java.util.Calendar.MINUTE, 0)
+        }.timeInMillis.coerceAtMost(System.currentTimeMillis())
+
+    private fun savedQuizOn(timestamp: Long) = runBlocking {
+        AppDatabase.getDatabase(ApplicationProvider.getApplicationContext()).userProgressDao().insertQuizScore(
+            QuizScoreEntity(mode = "FLAG_NAME", score = 10, total = 190, continentFilter = "Global", timestamp = timestamp)
+        )
+    }
+
+    private fun finishAfricaQuiz() {
+        startQuiz("Africa")
+        for (n in 1..questionsFor("Africa")) {
+            answerFirstOption()
+            goNext()
+        }
+        rule.onNodeWithText("Quiz Complete!").assertIsDisplayed()
+    }
+
+    @Test
+    fun stats_streakCard_invitesTheFirstQuiz() {
+        tab("stats")
+
+        rule.onNodeWithTag("stats_streak").assertIsDisplayed()
+        rule.onNodeWithText("No streak yet").assertIsDisplayed()
+        rule.onNodeWithText("Finish a quiz today to start one").assertIsDisplayed()
+    }
+
+    @Test
+    fun stats_streakCard_showsTheCurrentRunAndTheBestOne() {
+        // Today, yesterday and the day before, a gap, then four days in a row.
+        listOf(0, 1, 2, 4, 5, 6, 7).forEach { savedQuizOn(daysAgo(it)) }
+
+        tab("stats")
+
+        rule.eventually("the streak") {
+            rule.onNodeWithText("3-day streak").assertIsDisplayed()
+            rule.onNodeWithText("Best: 4 days · Practiced today").assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun stats_streakCard_saysWhenTodayDoesNotCountYet() {
+        listOf(1, 2).forEach { savedQuizOn(daysAgo(it)) }
+
+        tab("stats")
+
+        rule.eventually("the streak") {
+            rule.onNodeWithText("2-day streak").assertIsDisplayed()
+            rule.onNodeWithText("Best: 2 days · Not yet today").assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun finishingAQuiz_saysWhatItDidForTheStreak() {
+        finishAfricaQuiz()
+
+        rule.eventually("the streak line") { rule.onNodeWithTag("quiz_finish_streak").assertIsDisplayed() }
+        rule.onNodeWithText("Streak started: day 1").assertIsDisplayed()
+
+        rule.onNodeWithTag("quiz_finish_done_btn").performClick()
+        rule.waitForIdle()
+        finishAfricaQuiz()
+
+        rule.eventually("the streak line") {
+            rule.onNodeWithText("1-day streak, already counted today").assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun finishingAQuizTheDayAfterOne_keepsTheStreak() {
+        savedQuizOn(daysAgo(1))
+
+        finishAfricaQuiz()
+
+        rule.eventually("the streak line") { rule.onNodeWithText("Streak kept: 2 days").assertIsDisplayed() }
     }
 }

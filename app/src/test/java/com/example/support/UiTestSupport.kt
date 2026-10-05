@@ -57,7 +57,14 @@ fun ComposeTestRule.awaitWeakSpots(viewModel: CountryViewModel, count: Int, time
 
 /** Waits until the number of weak spots satisfies [accept], handing Room's results to the main thread meanwhile. */
 fun ComposeTestRule.awaitWeakSpotsWhere(viewModel: CountryViewModel, timeoutMillis: Long = 10_000, accept: (Int) -> Boolean) =
+    awaitDelivered(timeoutMillis) { accept(viewModel.weakSpots.value.size) }
+
+/**
+ * Waits until [condition] holds. Values that come out of Room reach the main thread through its message queue, which
+ * [ComposeTestRule.waitUntil] alone does not always run, so each check first lets the queue deliver what it holds.
+ */
+fun ComposeTestRule.awaitDelivered(timeoutMillis: Long = 10_000, condition: () -> Boolean) =
     waitUntil(timeoutMillis) {
         shadowOf(Looper.getMainLooper()).idle()
-        accept(viewModel.weakSpots.value.size)
+        condition()
     }

@@ -12,7 +12,8 @@ import kotlinx.coroutines.flow.Flow
 class CountryRepository(
     private val progressDao: UserProgressDao,
     val allCountries: List<Country> = CountryCatalog.all,
-    private val now: () -> Long = System::currentTimeMillis
+    /** Wall-clock milliseconds; public so the view model works out days on the same clock the scores are stamped with. */
+    val now: () -> Long = System::currentTimeMillis
 ) {
 
     // Folded once per country: search ignores case and accents, so "Brasilia" finds Brasília.
@@ -48,8 +49,9 @@ class CountryRepository(
     suspend fun recordReview(code: String, isCorrect: Boolean) =
         progressDao.recordReview(code, isCorrect, now())
 
-    suspend fun saveQuizScore(mode: String, score: Int, total: Int, continent: String) {
-        progressDao.insertQuizScore(
+    /** Saves a finished quiz and returns when the quizzes saved before it finished. */
+    suspend fun saveQuizScore(mode: String, score: Int, total: Int, continent: String): List<Long> =
+        progressDao.insertQuizScoreAfterReading(
             QuizScoreEntity(
                 mode = mode,
                 score = score,
@@ -58,7 +60,6 @@ class CountryRepository(
                 timestamp = now()
             )
         )
-    }
 
     companion object {
         /** Alphabetical by name, ignoring accents and case. */

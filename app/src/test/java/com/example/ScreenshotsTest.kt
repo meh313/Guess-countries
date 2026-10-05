@@ -1,5 +1,11 @@
 package com.example
 
+import androidx.compose.ui.test.onNodeWithText
+import kotlinx.coroutines.runBlocking
+import com.example.support.drawLatestDialog
+import com.example.data.local.QuizScoreEntity
+import com.example.data.local.AppDatabase
+import androidx.compose.ui.test.assertIsDisplayed
 import android.graphics.Bitmap
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -7,6 +13,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.hasTestTag
 import com.example.support.FreshDatabaseRule
+import com.example.support.awaitDelivered
 import com.example.support.awaitWeakSpotsWhere
 import com.example.support.drawWindow
 import com.example.support.openTab
@@ -39,9 +46,11 @@ class ScreenshotsTest {
 
     private val rule get() = composeRule
 
-    private fun save(name: String) {
+    private fun save(name: String) = saveBitmap(name, rule.drawWindow())
+
+    private fun saveBitmap(name: String, bitmap: Bitmap) {
         val dir = File("build/screenshots").apply { mkdirs() }
-        File(dir, "$name.png").outputStream().use { rule.drawWindow().compress(Bitmap.CompressFormat.PNG, 100, it) }
+        File(dir, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
     }
 
     @Test
@@ -103,7 +112,32 @@ class ScreenshotsTest {
         rule.waitForIdle()
         save("flashcards_weak_spots")
 
+        // Finishing a quiz: the score screen says what it did for the streak. Two earlier days give the Progress screen a run.
+        rule.openTab("quiz")
+        viewModel.startQuiz(QuizMode.FLAG_NAME, "Africa")
+        rule.waitForIdle()
+        while (viewModel.quizSession.value?.isFinished == false) {
+            viewModel.answerQuiz(viewModel.quizSession.value!!.current.correctAnswerIndex)
+            viewModel.nextQuizQuestion()
+        }
+        rule.awaitDelivered { viewModel.finishOutcome.value != null }
+        rule.onNodeWithTag("quiz_finish_streak").assertIsDisplayed()
+        saveBitmap("quiz_finish_streak", drawLatestDialog())
+        viewModel.endQuiz()
+        rule.waitForIdle()
+        listOf(1, 2).forEach { daysAgo ->
+            val day = java.util.Calendar.getInstance().apply { add(java.util.Calendar.DAY_OF_YEAR, -daysAgo) }.timeInMillis
+            runBlocking {
+                AppDatabase.getDatabase(rule.activity).userProgressDao().insertQuizScore(
+                    QuizScoreEntity(mode = "FLAG_NAME", score = 120, total = 190, continentFilter = "Global", timestamp = day)
+                )
+            }
+        }
+
         rule.openTab("stats")
+        rule.awaitDelivered { viewModel.streak.value.current == 3 }
+        // Asserting on the screen lets it recompose first; drawing right after the state changes would show the old card.
+        rule.onNodeWithText("3-day streak").assertIsDisplayed()
         save("stats")
     }
 }
