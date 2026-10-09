@@ -1,6 +1,7 @@
 package com.example.data.settings
 
 import android.content.Context
+import androidx.core.content.edit
 import com.example.quiz.QuizDifficulty
 
 /**
@@ -21,7 +22,7 @@ class PrefsUserSettings(context: Context) : UserSettings {
         get() = prefs.getString(KEY_DIFFICULTY, null)
             ?.let { stored -> QuizDifficulty.entries.firstOrNull { it.name == stored } }
             ?: QuizDifficulty.NORMAL
-        set(value) = prefs.edit().putString(KEY_DIFFICULTY, value.name).apply()
+        set(value) = prefs.edit { putString(KEY_DIFFICULTY, value.name) }
 
     companion object {
         const val FILE = "settings"
