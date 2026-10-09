@@ -9,13 +9,19 @@ enum class QuizMode(
     /** Seconds allowed per question, or null when the mode is untimed. */
     val timeLimitSeconds: Int? = null,
     /** Extra line under the title on the setup screen. */
-    val hint: String? = null
+    val hint: String? = null,
+    /** Seconds for the whole quiz when the mode runs against one clock until it ends, else null. */
+    val totalTimeSeconds: Int? = null
 ) {
     FLAG_NAME("Flag -> Country"),
     PICK_FLAG("Country -> Flag", hint = "Pick the right flag out of four"),
     CAPITAL("Country -> Capital"),
     CONTINENT("Flag -> Continent", hint = "Covers the whole world"),
-    SPEED_MATCH("Speed Round", timeLimitSeconds = 10, hint = "10 seconds per question");
+    SPEED_MATCH("Speed Round", timeLimitSeconds = 10, hint = "10 seconds per question"),
+    BLITZ("60-Second Blitz", hint = "As many flags as you can in one minute", totalTimeSeconds = 60);
+
+    /** Runs until the clock does, not for a fixed number of questions. */
+    val isEndless: Boolean get() = totalTimeSeconds != null
 
     /** The question card shows the flag, except in the capital quiz and where the flags are the answers. */
     val showsFlag: Boolean get() = this != CAPITAL && this != PICK_FLAG
@@ -49,6 +55,9 @@ data class QuizQuestion(
 /** Pure quiz rules: which countries are eligible, how questions are built and how answers score. */
 object QuizEngine {
     const val MAX_QUESTIONS = 10
+
+    /** Questions lined up for an endless quiz; far more than anyone answers in a minute. */
+    const val BLITZ_QUESTIONS = 100
 
     /** A question needs the right answer plus three distractors. */
     const val MIN_POOL = 4
@@ -99,7 +108,22 @@ object QuizEngine {
     ): List<QuizQuestion> {
         if (pool.size < MIN_POOL) return emptyList()
         val lookAlikes = if (mode.usesLookAlikes) difficulty.lookAlikes else 0
-        return pool.shuffled(random).take(MAX_QUESTIONS).map { target -> question(answerPool, target, mode, lookAlikes, random) }
+        val targets = if (mode.isEndless) endlessOrder(pool, BLITZ_QUESTIONS, random) else pool.shuffled(random).take(MAX_QUESTIONS)
+        return targets.map { target -> question(answerPool, target, mode, lookAlikes, random) }
+    }
+
+    /**
+     * [count] targets taken from successive shuffles of [pool]: nobody comes up twice before every other country
+     * has, and the same country never follows itself across two shuffles.
+     */
+    private fun endlessOrder(pool: List<Country>, count: Int, random: Random): List<Country> {
+        val order = ArrayList<Country>(count)
+        while (order.size < count) {
+            val round = pool.shuffled(random).toMutableList()
+            if (order.isNotEmpty() && round[0] == order.last()) java.util.Collections.swap(round, 0, 1)
+            order.addAll(round)
+        }
+        return order.take(count)
     }
 
     private fun question(pool: List<Country>, target: Country, mode: QuizMode, lookAlikes: Int, random: Random): QuizQuestion =
@@ -118,6 +142,8 @@ object QuizEngine {
                     (ANSWER_CONTINENTS - target.continent).shuffled(random).take(DISTRACTORS),
                     random
                 )
+            QuizMode.BLITZ ->
+                choice(target, "Which country is this?", target.name, wrongAnswers(pool, target, random, lookAlikes) { it.name }, random)
             QuizMode.SPEED_MATCH ->
                 choice(target, "Identify the country for this flag:", target.name, wrongAnswers(pool, target, random, lookAlikes) { it.name }, random)
         }

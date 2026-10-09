@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.LocationCity
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -85,6 +86,9 @@ import com.example.ui.theme.StreakColor
 import com.example.ui.viewmodel.CountryViewModel
 import kotlinx.coroutines.delay
 
+/** How long a blitz answer stays on screen before the next flag, in milliseconds. */
+internal const val BLITZ_ADVANCE_MS = 800L
+
 private val QuizMode.icon: ImageVector
     get() = when (this) {
         QuizMode.FLAG_NAME -> Icons.Default.Flag
@@ -92,6 +96,7 @@ private val QuizMode.icon: ImageVector
         QuizMode.CAPITAL -> Icons.Default.LocationCity
         QuizMode.CONTINENT -> Icons.Default.Public
         QuizMode.SPEED_MATCH -> Icons.Default.Speed
+        QuizMode.BLITZ -> Icons.Default.Timer
     }
 
 @Composable
@@ -308,7 +313,8 @@ fun QuizScreen(
             ) {
                 Text(
                     text = if (canStart) {
-                        "Start ${QuizEngine.questionCount(scopePoolSize)}-Question Quiz"
+                        if (selectedMode.isEndless) "Start ${selectedMode.totalTimeSeconds}-Second Blitz"
+                        else "Start ${QuizEngine.questionCount(scopePoolSize)}-Question Quiz"
                     } else {
                         "Needs at least ${QuizEngine.MIN_POOL} countries"
                     },
@@ -343,13 +349,36 @@ fun QuizScreen(
                 }
             }
         }
+        // An endless quiz (the blitz) runs against one clock from its start; answering never stops it.
+        val totalMs = active.mode.totalTimeSeconds?.let { it * 1000L }
+        var totalRemainingMs by remember(active.startedAt) { mutableLongStateOf(totalMs ?: 0L) }
+        if (totalMs != null) {
+            LaunchedEffect(active.startedAt, active.isFinished) {
+                while (!active.isFinished) {
+                    val left = totalMs - (viewModel.clockMillis() - active.startedAt)
+                    totalRemainingMs = left.coerceIn(0L, totalMs)
+                    if (left <= 0L) {
+                        viewModel.finishQuiz()
+                        break
+                    }
+                    delay(100)
+                }
+            }
+            // After an answer the next flag follows by itself; the Next button is there for the impatient.
+            LaunchedEffect(active.currentIndex, active.hasAnswered) {
+                if (active.hasAnswered && !active.isFinished) {
+                    delay(BLITZ_ADVANCE_MS)
+                    viewModel.nextQuizQuestion()
+                }
+            }
+        }
         val questionCount = active.questions.size
 
         // Each new question starts at the top so the flag is visible.
         LaunchedEffect(active.currentIndex) { quizScrollState.scrollTo(0) }
         // After answering, bring the explanation and Next button into view on small screens.
         LaunchedEffect(active.hasAnswered) {
-            if (active.hasAnswered) {
+            if (active.hasAnswered && !active.mode.isEndless) {
                 withFrameNanos { } // wait one frame so the explanation card has been measured
                 quizScrollState.animateScrollTo(quizScrollState.maxValue)
             }
@@ -371,7 +400,8 @@ fun QuizScreen(
             ) {
                 Column {
                     Text(
-                        text = "Question ${active.currentIndex + 1} of $questionCount",
+                        text = if (active.mode.isEndless) "Question ${active.currentIndex + 1} · Correct ${active.correct}"
+                        else "Question ${active.currentIndex + 1} of $questionCount",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -419,14 +449,38 @@ fun QuizScreen(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            LinearProgressIndicator(
-                progress = { (active.currentIndex + 1).toFloat() / questionCount },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(8.dp)
-                    .clip(RoundedCornerShape(4.dp)),
-                color = MaterialTheme.colorScheme.primary
-            )
+            if (totalMs != null) {
+                // One quiet description for TalkBack; a ticking bar would be announced constantly.
+                Column(
+                    modifier = Modifier
+                        .testTag("quiz_timer")
+                        .clearAndSetSemantics { contentDescription = "${totalMs / 1000} seconds in total" }
+                ) {
+                    val urgent = totalRemainingMs <= 10_000L
+                    LinearProgressIndicator(
+                        progress = { totalRemainingMs / totalMs.toFloat() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(8.dp)
+                            .clip(RoundedCornerShape(4.dp)),
+                        color = if (urgent) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary
+                    )
+                    Text(
+                        text = "${(totalRemainingMs + 999) / 1000}s left",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (urgent) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            } else {
+                LinearProgressIndicator(
+                    progress = { (active.currentIndex + 1).toFloat() / questionCount },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(8.dp)
+                        .clip(RoundedCornerShape(4.dp)),
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
 
             if (limitMs != null && !active.hasAnswered) {
                 // One quiet description for TalkBack; a ticking bar would be announced constantly.
@@ -587,16 +641,19 @@ fun QuizScreen(
                                 .padding(bottom = 6.dp)
                                 .testTag("quiz_result")
                         )
-                        Text(
-                            text = "💡 ${q.targetCountry.name}: ${q.targetCountry.capital}",
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                        Text(
-                            text = q.targetCountry.funFact,
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
+                        // A blitz moves on in under a second: no time for the capital and the fun fact.
+                        if (!active.mode.isEndless) {
+                            Text(
+                                text = "💡 ${q.targetCountry.name}: ${q.targetCountry.capital}",
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Text(
+                                text = q.targetCountry.funFact,
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
                         Spacer(modifier = Modifier.height(10.dp))
                         Button(
                             onClick = { viewModel.nextQuizQuestion() },
@@ -650,13 +707,14 @@ fun QuizScreen(
                         modifier = Modifier.size(56.dp)
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("Quiz Complete!", fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                    Text(if (active.mode.isEndless) "Time's up!" else "Quiz Complete!", fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                 }
             },
             text = {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                     Text(
-                        text = "Your Score: ${active.score} Points",
+                        text = if (active.mode.isEndless) "${active.correct} correct · ${active.score} points"
+                        else "Your Score: ${active.score} Points",
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary

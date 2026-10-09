@@ -669,4 +669,18 @@ class QuizAndFlashcardUiTest {
         rule.onNodeWithText("Quiz Complete!").assertIsDisplayed()
         rule.onNodeWithTag("quiz_finish_difficulty").assert(hasText("Answers: Hard"))
     }
+
+    @Test
+    fun stats_listsABlitzByItsCorrectCountAndKeepsItOutOfTheHighestScore() {
+        viewModel.saveQuizResult(QuizMode.BLITZ.name, 340, 14, "Global")
+        viewModel.saveQuizResult(QuizMode.FLAG_NAME.name, 120, 190, "Global")
+        tab("stats")
+        rule.waitUntil(10_000) { viewModel.quizHistory.value.size == 2 }
+
+        rule.onNodeWithText("120 pts").assertIsDisplayed()
+        rule.onNode(hasScrollAction()).performScrollToNode(hasText("14 correct · 340 pts"))
+        rule.onNodeWithText("14 correct · 340 pts").assertIsDisplayed()
+        rule.onNodeWithText("60-Second Blitz • Global").assertIsDisplayed()
+        rule.onAllNodesWithText("340 pts", substring = false).assertCountEquals(0)
+    }
 }

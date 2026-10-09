@@ -65,7 +65,8 @@ fun StatsScreen(
     val sovereignCodes = allCountries.map { it.code }.toSet()
     val masteredCount = progressMap.values.count { it.countryCode in sovereignCodes && it.masteryScore >= 75 }
     val totalQuizzes = quizHistory.size
-    val maxScore = quizHistory.maxOfOrNull { it.score } ?: 0
+    // A blitz runs as long as the clock allows, so its points would swamp the 190-point maximum of the others.
+    val maxScore = quizHistory.filter { it.mode != QuizMode.BLITZ.name }.maxOfOrNull { it.score } ?: 0
 
     val continents = listOf("Africa", "Americas", "Asia", "Europe", "Oceania")
 
@@ -256,7 +257,7 @@ fun StatsScreen(
                             color = MaterialTheme.colorScheme.primaryContainer
                         ) {
                             Text(
-                                text = "${entry.score} pts",
+                                text = if (entry.mode == QuizMode.BLITZ.name) "${entry.total} correct · ${entry.score} pts" else "${entry.score} pts",
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)

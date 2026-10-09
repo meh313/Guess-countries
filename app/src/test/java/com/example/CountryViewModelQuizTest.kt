@@ -134,6 +134,19 @@ class CountryViewModelQuizTest {
                 val vm = newViewModel()
                 vm.startQuiz(mode, scope)
                 val started = vm.quizSession.value ?: continue
+                if (mode.isEndless) {
+                    // An endless quiz ends when its clock does: answer a few, then stop it.
+                    repeat(3) {
+                        vm.answerQuiz(vm.quizSession.value!!.current.correctAnswerIndex)
+                        vm.nextQuizQuestion()
+                    }
+                    vm.finishQuiz()
+                    val ended = vm.quizSession.value!!
+                    assertTrue("scope=$scope mode=$mode", ended.isFinished)
+                    assertEquals("scope=$scope mode=$mode", 3, ended.correct)
+                    assertEquals("scope=$scope mode=$mode", QuizEngine.maxScore(3), ended.score)
+                    continue
+                }
 
                 vm.playToTheEnd()
 
@@ -365,5 +378,63 @@ class CountryViewModelQuizTest {
         s.questions.forEach { q -> assertTrue(q.options.toString(), europe.containsAll(q.options)) }
         vm.playToTheEnd()
         assertTrue(vm.quizSession.value!!.isFinished)
+    }
+
+    @Test
+    fun finishQuiz_savesABlitzByItsCorrectCountAndPoints() {
+        val vm = newViewModel()
+        vm.startQuiz(QuizMode.BLITZ, "Global")
+        repeat(2) {
+            vm.answerQuiz(vm.quizSession.value!!.current.correctAnswerIndex)
+            vm.nextQuizQuestion()
+        }
+        vm.answerQuiz((vm.quizSession.value!!.current.correctAnswerIndex + 1) % 4)
+
+        vm.finishQuiz()
+
+        assertTrue(vm.quizSession.value!!.isFinished)
+        db.awaitPendingWrites()
+        val row = runBlocking { db.userProgressDao().getQuizHistory().first() }.single()
+        assertEquals("BLITZ", row.mode)
+        assertEquals(22, row.score) // 10 + 12 for a streak of one
+        assertEquals(2, row.total)
+        assertEquals("Global", row.continentFilter)
+    }
+
+    @Test
+    fun finishQuiz_isIgnoredWithoutAQuizOrOnceItIsOver() {
+        val vm = newViewModel()
+        vm.finishQuiz()
+        assertNull(vm.quizSession.value)
+
+        vm.startQuiz(QuizMode.BLITZ, "Global")
+        vm.finishQuiz()
+        vm.finishQuiz()
+        db.awaitPendingWrites()
+
+        assertEquals(1, runBlocking { db.userProgressDao().getQuizHistory().first() }.size)
+    }
+
+    @Test
+    fun aFixedLengthQuizIsStillSavedOutOfItsBestPossibleScore() {
+        val vm = newViewModel()
+        vm.startQuiz(QuizMode.FLAG_NAME, "Global")
+        vm.playToTheEnd()
+        db.awaitPendingWrites()
+
+        val row = runBlocking { db.userProgressDao().getQuizHistory().first() }.single()
+        assertEquals(QuizEngine.maxScore(10), row.total)
+        assertEquals(row.total, row.score)
+    }
+
+    @Test
+    fun theBlitzSessionRemembersWhenItStarted() {
+        now = 4_321L
+        val vm = newViewModel()
+
+        vm.startQuiz(QuizMode.BLITZ, "Global")
+
+        assertEquals(4_321L, vm.quizSession.value!!.startedAt)
+        assertEquals(QuizEngine.BLITZ_QUESTIONS, vm.quizSession.value!!.questions.size)
     }
 }

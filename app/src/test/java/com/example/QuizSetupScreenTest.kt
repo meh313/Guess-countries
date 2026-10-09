@@ -54,6 +54,15 @@ class QuizSetupScreenTest {
     private val smallWorld =
         sovereign.filter { it.continent == "Oceania" }.take(3) + sovereign.filter { it.continent == "Africa" }.take(6)
 
+    /**
+     * Clicks a setup control. A chip near the bottom can count as visible without being reachable, so scrolling to
+     * the Start button first brings every control above it into clear view.
+     */
+    private fun clickSetup(tag: String) {
+        rule.onNodeWithTag("start_quiz_btn").performScrollTo()
+        rule.onNodeWithTag(tag).performScrollTo().performClick()
+    }
+
     private fun show() {
         val vm = CountryViewModel(CountryRepository(db.userProgressDao(), smallWorld), FakeSpeech())
         rule.setContent { WorldFlagsTheme { QuizScreen(vm) } }
@@ -64,7 +73,7 @@ class QuizSetupScreenTest {
     fun aScopeWithTooFewCountries_disablesStartAndExplainsWhy() {
         show()
 
-        rule.onNodeWithTag("quiz_scope_oceania").performScrollTo().performClick()
+        clickSetup("quiz_scope_oceania")
 
         rule.onNodeWithTag("start_quiz_btn").performScrollTo().assertIsNotEnabled()
         rule.onNodeWithText("Needs at least ${QuizEngine.MIN_POOL} countries").assertIsDisplayed()
@@ -74,7 +83,7 @@ class QuizSetupScreenTest {
     fun aScopeWithFewerThanTenCountries_offersAShorterQuiz() {
         show()
 
-        rule.onNodeWithTag("quiz_scope_africa").performScrollTo().performClick()
+        clickSetup("quiz_scope_africa")
 
         rule.onNodeWithTag("start_quiz_btn").performScrollTo().assertIsEnabled()
         rule.onNodeWithText("Start 6-Question Quiz").assertIsDisplayed()
@@ -95,7 +104,7 @@ class QuizSetupScreenTest {
         rule.onNodeWithTag("quiz_difficulty_normal").performScrollTo().assertIsSelected()
         rule.onNodeWithText("One look-alike flag among the answers").assertIsDisplayed()
 
-        rule.onNodeWithTag("quiz_difficulty_hard").performScrollTo().performClick()
+        clickSetup("quiz_difficulty_hard")
 
         rule.onNodeWithTag("quiz_difficulty_hard").assertIsSelected()
         rule.onNodeWithText("Look-alike flags wherever they exist").assertIsDisplayed()
@@ -105,13 +114,26 @@ class QuizSetupScreenTest {
     fun theAnswersRow_isInactiveForQuestionsWithoutLookAlikeFlags() {
         show()
 
-        rule.onNodeWithTag("quiz_mode_capital").performScrollTo().performClick()
+        clickSetup("quiz_mode_capital")
 
         rule.onNodeWithTag("quiz_difficulty_hard").performScrollTo().assertIsNotEnabled()
         rule.onNodeWithText("Look-alike answers apply to flag questions").assertIsDisplayed()
 
-        rule.onNodeWithTag("quiz_mode_pick_flag").performScrollTo().performClick()
+        clickSetup("quiz_mode_pick_flag")
 
+        rule.onNodeWithTag("quiz_difficulty_hard").performScrollTo().assertIsEnabled()
+    }
+
+    @Test
+    fun theBlitz_offersAOneMinuteQuizInsteadOfAQuestionCount() {
+        show()
+
+        clickSetup("quiz_mode_blitz")
+
+        rule.onNodeWithText("As many flags as you can in one minute").assertIsDisplayed()
+        rule.onNodeWithTag("start_quiz_btn").performScrollTo().assertIsEnabled()
+        rule.onNodeWithText("Start 60-Second Blitz").assertIsDisplayed()
+        // It uses flags, so the Answers row still applies.
         rule.onNodeWithTag("quiz_difficulty_hard").performScrollTo().assertIsEnabled()
     }
 }
