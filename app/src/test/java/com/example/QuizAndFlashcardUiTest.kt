@@ -25,6 +25,7 @@ import android.speech.tts.TextToSpeech
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.lifecycle.ViewModelProvider
+import com.example.quiz.QuizDifficulty
 import com.example.quiz.QuizMode
 import com.example.quiz.sovereign
 import com.example.quiz.questionsFor
@@ -68,9 +69,19 @@ class QuizAndFlashcardUiTest {
         rule.waitForIdle()
     }
 
+    /**
+     * Clicks a quiz setup control. The setup screen scrolls under the bottom bar, so a chip near the bottom can
+     * count as visible while the bar covers it and swallows the tap; scrolling to the Start button first lifts
+     * every control above it clear of the bar.
+     */
+    private fun clickSetup(tag: String) {
+        rule.onNodeWithTag("start_quiz_btn").performScrollTo()
+        rule.onNodeWithTag(tag).performScrollTo().performClick()
+    }
+
     private fun startQuiz(scope: String) {
         tab("quiz")
-        rule.onNodeWithTag("quiz_scope_${scope.lowercase()}").performClick()
+        clickSetup("quiz_scope_${scope.lowercase()}")
         // The setup screen scrolls; on a small window the Start button starts below the fold.
         rule.onNodeWithTag("start_quiz_btn").performScrollTo().performClick()
         rule.waitForIdle()
@@ -118,12 +129,12 @@ class QuizAndFlashcardUiTest {
     fun startButton_countsTheQuestionsTheScopeWillHave() {
         tab("quiz")
 
-        rule.onNodeWithTag("quiz_scope_africa").performClick()
+        clickSetup("quiz_scope_africa")
         rule.onNodeWithTag("start_quiz_btn").performScrollTo()
         rule.onNodeWithText("Start ${questionsFor("Africa")}-Question Quiz").assertIsDisplayed()
         rule.onNodeWithTag("start_quiz_btn").assertIsEnabled()
 
-        rule.onNodeWithTag("quiz_scope_global").performScrollTo().performClick()
+        clickSetup("quiz_scope_global")
         rule.onNodeWithTag("start_quiz_btn").performScrollTo()
         rule.onNodeWithText("Start ${questionsFor("Global")}-Question Quiz").assertIsDisplayed()
     }
@@ -132,8 +143,8 @@ class QuizAndFlashcardUiTest {
 
     private fun startQuizIn(mode: QuizMode, scope: String = "Global") {
         tab("quiz")
-        rule.onNodeWithTag("quiz_scope_${scope.lowercase()}").performScrollTo().performClick()
-        rule.onNodeWithTag("quiz_mode_${mode.name.lowercase()}").performScrollTo().performClick()
+        clickSetup("quiz_scope_${scope.lowercase()}")
+        clickSetup("quiz_mode_${mode.name.lowercase()}")
         rule.onNodeWithTag("start_quiz_btn").performScrollTo().performClick()
         rule.waitForIdle()
     }
@@ -149,11 +160,11 @@ class QuizAndFlashcardUiTest {
     @Test
     fun continentMode_makesTheScopeChipsInactiveAndSaysWhy() {
         tab("quiz")
-        rule.onNodeWithTag("quiz_scope_africa").performClick()
+        clickSetup("quiz_scope_africa")
         rule.onNodeWithTag("start_quiz_btn").performScrollTo()
         rule.onNodeWithText("Start ${questionsFor("Africa")}-Question Quiz").assertIsDisplayed()
 
-        rule.onNodeWithTag("quiz_mode_continent").performScrollTo().performClick()
+        clickSetup("quiz_mode_continent")
 
         rule.onNodeWithText("The continent quiz always covers the whole world").performScrollTo().assertIsDisplayed()
         rule.onNodeWithTag("quiz_scope_africa").assertIsNotEnabled()
@@ -165,10 +176,10 @@ class QuizAndFlashcardUiTest {
     @Test
     fun leavingContinentMode_bringsBackTheChosenScope() {
         tab("quiz")
-        rule.onNodeWithTag("quiz_scope_africa").performClick()
-        rule.onNodeWithTag("quiz_mode_continent").performScrollTo().performClick()
+        clickSetup("quiz_scope_africa")
+        clickSetup("quiz_mode_continent")
 
-        rule.onNodeWithTag("quiz_mode_flag_name").performScrollTo().performClick()
+        clickSetup("quiz_mode_flag_name")
 
         rule.onNodeWithTag("quiz_scope_africa").performScrollTo().assertIsEnabled().assertIsSelected()
         rule.onNodeWithTag("start_quiz_btn").performScrollTo()
@@ -344,8 +355,8 @@ class QuizAndFlashcardUiTest {
     @Test
     fun quizSetupChoices_surviveRotation() {
         tab("quiz")
-        rule.onNodeWithTag("quiz_mode_capital").performClick()
-        rule.onNodeWithTag("quiz_scope_europe").performClick()
+        clickSetup("quiz_mode_capital")
+        clickSetup("quiz_scope_europe")
 
         rotate()
 
@@ -389,7 +400,7 @@ class QuizAndFlashcardUiTest {
 
         rule.onNodeWithTag("start_quiz_btn").performScrollTo().assertIsDisplayed()
         // Free to choose something else again.
-        rule.onNodeWithTag("quiz_scope_europe").performScrollTo().performClick()
+        clickSetup("quiz_scope_europe")
         rule.onNodeWithTag("start_quiz_btn").performScrollTo()
         rule.onNodeWithText("Start ${questionsFor("Europe")}-Question Quiz").assertIsDisplayed()
     }
@@ -590,5 +601,72 @@ class QuizAndFlashcardUiTest {
         rule.onNodeWithTag("flashcard_empty_clear_filters_btn").performClick()
         rule.waitForIdle()
         rule.onNodeWithText("Card 1 of ${allCountries.size}").assertIsDisplayed()
+    }
+
+    @Test
+    fun pickTheFlag_showsFourFlagsAsTheAnswersAndNeverNamesThemBeforeTheAnswer() {
+        startQuizIn(QuizMode.PICK_FLAG)
+        val q = viewModel.quizSession.value!!.current
+
+        rule.onNodeWithText("Which of these is the flag of ${q.targetCountry.name}?").assertIsDisplayed()
+        rule.onNodeWithTag("quiz_flag").assertDoesNotExist()
+        for (i in 0..3) {
+            rule.onNodeWithTag("quiz_option_$i").performScrollTo().assertIsDisplayed()
+            rule.onNodeWithTag("quiz_option_$i").assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.StateDescription))
+            rule.onNodeWithContentDescription("Option ${i + 1} of 4").assertIsDisplayed()
+        }
+        // Neither a country name nor an emoji may leak which flag is which.
+        q.options.forEach { code ->
+            val shown = allCountries.single { it.code == code }
+            rule.onAllNodesWithContentDescription(shown.name, substring = true).assertCountEquals(0)
+            rule.onAllNodesWithText(shown.flagEmoji).assertCountEquals(0)
+        }
+    }
+
+    @Test
+    fun pickTheFlag_rightAnswerIsMarkedAndEveryFlagIsNamedAfterwards() {
+        startQuizIn(QuizMode.PICK_FLAG)
+        val q = viewModel.quizSession.value!!.current
+
+        rule.onNodeWithTag("quiz_option_${q.correctAnswerIndex}").performScrollTo().performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithTag("quiz_result").assert(hasText("Correct! +10 points"))
+        rule.onNodeWithTag("quiz_option_${q.correctAnswerIndex}").assert(stateDescriptionIs("Correct answer"))
+        q.options.forEachIndexed { i, code ->
+            val name = allCountries.single { it.code == code }.name
+            rule.onNodeWithContentDescription("Option ${i + 1}, the flag of $name").assertExists()
+        }
+    }
+
+    @Test
+    fun pickTheFlag_aWrongAnswerNamesTheRightCountry() {
+        startQuizIn(QuizMode.PICK_FLAG)
+        val q = viewModel.quizSession.value!!.current
+        val wrong = (q.correctAnswerIndex + 1) % q.options.size
+
+        rule.onNodeWithTag("quiz_option_$wrong").performScrollTo().performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithTag("quiz_result").assert(hasText("Not quite. The answer is ${q.targetCountry.name}"))
+        rule.onNodeWithTag("quiz_option_$wrong").assert(stateDescriptionIs("Your answer, incorrect"))
+        rule.onNodeWithTag("quiz_option_${q.correctAnswerIndex}").assert(stateDescriptionIs("Correct answer"))
+    }
+
+    @Test
+    fun theDifficultyChosenOnTheSetupScreenReachesTheQuizAndTheScoreDialog() {
+        tab("quiz")
+        rule.onNodeWithTag("quiz_difficulty_hard").performScrollTo().performClick()
+        rule.onNodeWithTag("start_quiz_btn").performScrollTo().performClick()
+        rule.waitForIdle()
+
+        assertEquals(QuizDifficulty.HARD, viewModel.quizSession.value!!.difficulty)
+
+        repeat(10) {
+            answerFirstOption()
+            goNext()
+        }
+        rule.onNodeWithText("Quiz Complete!").assertIsDisplayed()
+        rule.onNodeWithTag("quiz_finish_difficulty").assert(hasText("Answers: Hard"))
     }
 }

@@ -1,5 +1,6 @@
 package com.example.quiz
 
+import com.example.data.model.FlagLookAlikes
 import kotlin.random.Random
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -82,6 +83,7 @@ class QuizEngineTest {
                         when (mode) {
                             QuizMode.CAPITAL -> q.targetCountry.quizCapital
                             QuizMode.CONTINENT -> q.targetCountry.continent
+                            QuizMode.PICK_FLAG -> q.targetCountry.code
                             QuizMode.FLAG_NAME,
                             QuizMode.SPEED_MATCH -> q.targetCountry.name
                         }
@@ -191,7 +193,7 @@ class QuizEngineTest {
             for (mode in QuizMode.entries) {
                 QuizEngine.generate(pool, mode).forEach { q ->
                     assertTrue("mode=$mode asked about Antarctica", q.targetCountry.code != "AQ")
-                    assertTrue("mode=$mode offered Antarctica", "Antarctica" !in q.options)
+                    assertTrue("mode=$mode offered Antarctica", "Antarctica" !in q.options && "AQ" !in q.options)
                 }
             }
         }
@@ -218,5 +220,142 @@ class QuizEngineTest {
                 assertTrue("options ${q.options} contain South Africa's long capital", za.capital !in q.options)
             }
         }
+    }
+
+    // --- look-alike flags, difficulty and the flag-picking mode ---
+
+    private fun country(code: String) = allCountries.single { it.code == code }
+
+    /** One question about [code], built over a world where [answerPool] supplies the wrong answers. */
+    private fun questionAbout(
+        code: String,
+        difficulty: QuizDifficulty,
+        seed: Int,
+        mode: QuizMode = QuizMode.FLAG_NAME,
+        answerPool: List<com.example.data.model.Country> = sovereign
+    ): QuizQuestion {
+        val targets = listOf(country(code)) + answerPool.filter { it.code != code }.take(3)
+        return QuizEngine.generate(targets, mode, Random(seed), difficulty, answerPool).single { it.targetCountry.code == code }
+    }
+
+    private fun wrongNames(q: QuizQuestion) = q.options.filterIndexed { i, _ -> i != q.correctAnswerIndex }
+
+    private fun lookAlikeNames(code: String, among: List<com.example.data.model.Country> = sovereign) =
+        FlagLookAlikes.of(code).mapNotNull { c -> among.firstOrNull { it.code == c }?.name }.toSet()
+
+    @Test
+    fun normalDifficulty_alwaysOffersALookAlikeFlagWhenTheTargetHasOne() {
+        val similar = lookAlikeNames("IE")
+        assertTrue("Ireland needs look-alikes for this test", similar.size >= 3)
+        for (seed in 1..40) {
+            val q = questionAbout("IE", QuizDifficulty.NORMAL, seed)
+            assertTrue("seed=$seed ${q.options}", wrongNames(q).any { it in similar })
+        }
+    }
+
+    @Test
+    fun normalDifficulty_keepsTheOtherWrongAnswersRandom() {
+        val similar = lookAlikeNames("IE")
+        // With three look-alikes available, Normal must still sometimes offer fewer than three of them.
+        val counts = (1..40).map { seed -> wrongNames(questionAbout("IE", QuizDifficulty.NORMAL, seed)).count { it in similar } }
+        assertTrue("counts=$counts", counts.any { it < 3 })
+    }
+
+    @Test
+    fun hardDifficulty_makesEveryWrongAnswerALookAlikeWhenThereAreEnough() {
+        val similar = lookAlikeNames("IE")
+        for (seed in 1..40) {
+            val q = questionAbout("IE", QuizDifficulty.HARD, seed)
+            assertEquals("seed=$seed ${q.options}", similar, wrongNames(q).toSet())
+        }
+    }
+
+    @Test
+    fun hardDifficulty_fillsWithRandomCountriesWhenFewerLookAlikesExist() {
+        val similar = lookAlikeNames("IN")
+        assertEquals(1, similar.size)
+        for (seed in 1..20) {
+            val q = questionAbout("IN", QuizDifficulty.HARD, seed)
+            assertEquals(4, q.options.distinct().size)
+            assertTrue("seed=$seed ${q.options}", similar.single() in q.options)
+        }
+    }
+
+    @Test
+    fun lookAlikesOutsideTheAnswerPoolAreNeverOffered() {
+        val europe = QuizEngine.poolFor("Europe", allCountries)
+        val chad = country("TD").name
+        assertTrue("Romania's look-alikes include Chad", chad in lookAlikeNames("RO"))
+        for (seed in 1..40) {
+            val q = questionAbout("RO", QuizDifficulty.HARD, seed, answerPool = europe)
+            val europeanNames = europe.map { it.name }.toSet()
+            assertTrue("seed=$seed ${q.options}", europeanNames.containsAll(q.options))
+            assertTrue("seed=$seed ${q.options}", chad !in q.options)
+        }
+    }
+
+    @Test
+    fun capitalAndContinentQuestions_ignoreTheDifficulty() {
+        for (mode in listOf(QuizMode.CAPITAL, QuizMode.CONTINENT)) {
+            assertTrue(!mode.usesLookAlikes)
+            val normal = QuizEngine.generate(sovereign, mode, Random(5), QuizDifficulty.NORMAL)
+            val hard = QuizEngine.generate(sovereign, mode, Random(5), QuizDifficulty.HARD)
+            assertEquals("mode=$mode", normal, hard)
+        }
+    }
+
+    @Test
+    fun generate_isDeterministicForAGivenSeedAndDifficulty() {
+        for (difficulty in QuizDifficulty.entries) {
+            val a = QuizEngine.generate(sovereign, QuizMode.FLAG_NAME, Random(9), difficulty)
+            val b = QuizEngine.generate(sovereign, QuizMode.FLAG_NAME, Random(9), difficulty)
+            assertEquals(difficulty.name, a, b)
+        }
+    }
+
+    @Test
+    fun answerPool_suppliesTheWrongAnswersWhileTheTargetsComeFromThePool() {
+        val targets = QuizEngine.poolFor("Oceania", allCountries).take(5)
+        val world = sovereign
+        val codes = targets.map { it.code }.toSet()
+        QuizEngine.generate(targets, QuizMode.CAPITAL, Random(3), answerPool = world).forEach { q ->
+            assertTrue(q.targetCountry.code in codes)
+            assertTrue(q.options.all { option -> world.any { it.quizCapital == option } })
+        }
+        // Some wrong answer must come from outside the five targets, or the answer pool did nothing.
+        val outside = QuizEngine.generate(targets, QuizMode.CAPITAL, Random(3), answerPool = world)
+            .flatMap { it.options }.any { option -> targets.none { it.quizCapital == option } }
+        assertTrue(outside)
+    }
+
+    @Test
+    fun pickFlagQuestions_askForTheFlagByCountryAndAnswerWithCountryCodes() {
+        val mode = QuizMode.PICK_FLAG
+        assertTrue(mode.answersAreFlags && !mode.showsFlag && mode.usesLookAlikes)
+        val codes = allCountries.map { it.code }.toSet()
+        QuizEngine.generate(sovereign, mode, Random(11)).forEach { q ->
+            assertEquals(q.targetCountry.code, q.correctOption())
+            assertTrue(q.options.toString(), codes.containsAll(q.options))
+            assertTrue(q.questionText, q.questionText.contains(q.targetCountry.name))
+        }
+    }
+
+    @Test
+    fun pickFlagQuestions_offerLookAlikeFlagsAsWrongAnswers() {
+        val similarCodes = FlagLookAlikes.of("IE").toSet()
+        for (seed in 1..20) {
+            val q = questionAbout("IE", QuizDifficulty.HARD, seed, QuizMode.PICK_FLAG)
+            assertEquals("seed=$seed ${q.options}", similarCodes, q.options.filter { it != "IE" }.toSet())
+        }
+    }
+
+    @Test
+    fun onlyFlagBasedModesUseLookAlikes() {
+        assertEquals(
+            setOf(QuizMode.FLAG_NAME, QuizMode.PICK_FLAG, QuizMode.SPEED_MATCH),
+            QuizMode.entries.filter { it.usesLookAlikes }.toSet()
+        )
+        assertEquals(listOf(QuizDifficulty.NORMAL, QuizDifficulty.HARD), QuizDifficulty.entries)
+        assertEquals(listOf(1, 3), QuizDifficulty.entries.map { it.lookAlikes })
     }
 }

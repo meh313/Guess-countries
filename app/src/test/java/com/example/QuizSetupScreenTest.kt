@@ -4,6 +4,7 @@ import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -85,5 +86,32 @@ class QuizSetupScreenTest {
 
         rule.onNodeWithTag("start_quiz_btn").performScrollTo()
         rule.onNodeWithText("Start ${QuizEngine.questionCount(smallWorld.size)}-Question Quiz").assertIsDisplayed()
+    }
+
+    @Test
+    fun theAnswersRow_choosesTheDifficultyForFlagQuestions() {
+        show()
+
+        rule.onNodeWithTag("quiz_difficulty_normal").performScrollTo().assertIsSelected()
+        rule.onNodeWithText("One look-alike flag among the answers").assertIsDisplayed()
+
+        rule.onNodeWithTag("quiz_difficulty_hard").performScrollTo().performClick()
+
+        rule.onNodeWithTag("quiz_difficulty_hard").assertIsSelected()
+        rule.onNodeWithText("Look-alike flags wherever they exist").assertIsDisplayed()
+    }
+
+    @Test
+    fun theAnswersRow_isInactiveForQuestionsWithoutLookAlikeFlags() {
+        show()
+
+        rule.onNodeWithTag("quiz_mode_capital").performScrollTo().performClick()
+
+        rule.onNodeWithTag("quiz_difficulty_hard").performScrollTo().assertIsNotEnabled()
+        rule.onNodeWithText("Look-alike answers apply to flag questions").assertIsDisplayed()
+
+        rule.onNodeWithTag("quiz_mode_pick_flag").performScrollTo().performClick()
+
+        rule.onNodeWithTag("quiz_difficulty_hard").performScrollTo().assertIsEnabled()
     }
 }

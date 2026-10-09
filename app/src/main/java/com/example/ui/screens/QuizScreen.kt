@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.LocationCity
 import androidx.compose.material.icons.filled.Public
@@ -75,8 +76,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.quiz.QuizDifficulty
 import com.example.quiz.QuizEngine
 import com.example.quiz.QuizMode
+import com.example.ui.components.FlagOptionGrid
 import com.example.ui.components.FlagView
 import com.example.ui.theme.StreakColor
 import com.example.ui.viewmodel.CountryViewModel
@@ -85,6 +88,7 @@ import kotlinx.coroutines.delay
 private val QuizMode.icon: ImageVector
     get() = when (this) {
         QuizMode.FLAG_NAME -> Icons.Default.Flag
+        QuizMode.PICK_FLAG -> Icons.Default.GridView
         QuizMode.CAPITAL -> Icons.Default.LocationCity
         QuizMode.CONTINENT -> Icons.Default.Public
         QuizMode.SPEED_MATCH -> Icons.Default.Speed
@@ -100,6 +104,8 @@ fun QuizScreen(
     val session by viewModel.quizSession.collectAsState()
     var selectedMode by rememberSaveable { mutableStateOf(QuizMode.FLAG_NAME) }
     var selectedContinentScope by rememberSaveable { mutableStateOf("Global") }
+    var selectedDifficulty by rememberSaveable { mutableStateOf(QuizDifficulty.NORMAL) }
+    val countriesByCode = remember(allCountries) { allCountries.associateBy { it.code } }
     val quizScrollState = rememberScrollState()
     var showQuitConfirm by rememberSaveable { mutableStateOf(false) }
 
@@ -236,13 +242,62 @@ fun QuizScreen(
                 }
             }
 
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Normal or Hard: how many look-alike flags are among the wrong answers.
+            Text(
+                text = "Answers",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.align(Alignment.Start)
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            val difficultyApplies = selectedMode.usesLookAlikes
+            Text(
+                text = if (difficultyApplies) selectedDifficulty.hint else "Look-alike answers apply to flag questions",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .align(Alignment.Start)
+                    .padding(bottom = 8.dp)
+                    .testTag("quiz_difficulty_hint")
+            )
+            Row(
+                modifier = Modifier.align(Alignment.Start),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                QuizDifficulty.entries.forEach { difficulty ->
+                    val isSelected = selectedDifficulty == difficulty
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                        modifier = Modifier
+                            .alpha(if (difficultyApplies) 1f else 0.5f)
+                            .selectable(
+                                selected = isSelected,
+                                enabled = difficultyApplies,
+                                role = Role.RadioButton,
+                                onClick = { selectedDifficulty = difficulty }
+                            )
+                            .testTag("quiz_difficulty_${difficulty.name.lowercase()}")
+                    ) {
+                        Text(
+                            text = difficulty.title,
+                            color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                        )
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(32.dp))
 
             // Start Quiz Button
             val scopePoolSize = QuizEngine.poolFor(shownScope, allCountries).size
             val canStart = scopePoolSize >= QuizEngine.MIN_POOL
             Button(
-                onClick = { viewModel.startQuiz(selectedMode, selectedContinentScope) },
+                onClick = { viewModel.startQuiz(selectedMode, selectedContinentScope, selectedDifficulty) },
                 enabled = canStart,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -434,7 +489,19 @@ fun QuizScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             // 4 Options Grid
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            if (active.mode.answersAreFlags) {
+                FlagOptionGrid(
+                    optionCodes = q.options,
+                    countriesByCode = countriesByCode,
+                    correctIndex = q.correctAnswerIndex,
+                    selectedIndex = active.selectedAnswerIndex,
+                    answered = active.hasAnswered,
+                    onPick = { index ->
+                        viewModel.answerQuiz(index)
+                        view.performAnswerHaptic(correct = index == q.correctAnswerIndex)
+                    }
+                )
+            } else Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 q.options.forEachIndexed { index, optionText ->
                     val isSelected = active.selectedAnswerIndex == index
                     val isCorrect = index == q.correctAnswerIndex
@@ -497,7 +564,8 @@ fun QuizScreen(
 
             // Post-Answer Explanation & Next Button
             if (active.hasAnswered) {
-                val answerText = q.options[q.correctAnswerIndex]
+                // For "pick the flag" the options are country codes, so say the country instead.
+                val answerText = if (active.mode.answersAreFlags) q.targetCountry.name else q.options[q.correctAnswerIndex]
                 val result = when {
                     active.timedOut -> "Time's up! The answer is $answerText"
                     active.selectedAnswerIndex == q.correctAnswerIndex ->
@@ -593,6 +661,14 @@ fun QuizScreen(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
+                    if (active.mode.usesLookAlikes) {
+                        Text(
+                            text = "Answers: ${active.difficulty.title}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.testTag("quiz_finish_difficulty")
+                        )
+                    }
                     Text(
                         text = "Great job expanding your geographical knowledge!",
                         style = MaterialTheme.typography.bodyMedium,

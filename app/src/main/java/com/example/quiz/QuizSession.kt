@@ -13,6 +13,8 @@ data class QuizSession(
     val streak: Int = 0,
     val selectedAnswerIndex: Int? = null,
     val isFinished: Boolean = false,
+    /** How many look-alike flags the questions were built with; shown on the score screen. */
+    val difficulty: QuizDifficulty = QuizDifficulty.NORMAL,
     /** When the current question was shown, in the ViewModel's clock (milliseconds), for timed modes. */
     val questionStartedAt: Long = 0L
 ) {
