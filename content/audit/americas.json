@@ -1,0 +1,501 @@
+{
+ "continent": "Americas",
+ "batchesRun": 11,
+ "batchesMissing": [],
+ "fixes": [
+  {
+   "code": "AG",
+   "field": "flagDescription",
+   "current": "Reginald Samuel won a contest of more than 600 entries, and the flag was adopted on 27 February 1967 when Antigua gained self-government. Officially the rising sun marks the dawn of a new era, black the African ancestry of the people, blue hope and red their energy; the V made by the red stands for victory, and yellow, blue and white recall sun, sea and sand. The sun's seven points are often said to stand for the six parishes plus Barbuda.",
+   "value": "Reginald Samuel won a contest of more than 600 entries, and the flag was adopted on 27 February 1967 when Antigua gained self-government. The rising sun is usually said to mark the dawn of a new era, black the soil and African heritage of the people, blue hope and red their energy; the V made by the red stands for victory, and gold, blue and white recall sun, sea and sand. The sun's seven points are often said to be the six parishes plus Barbuda.",
+   "reason": "Two confirmed problems. (1) The sentence about the sun's seven points contradicts the shipped image: a radial scan of /tmp/flagwork/out/ag.png finds seven full rays plus two sharp half-points at the base, so a child counting the points sees nine, which is also how Wikipedia's infobox describes the flag (a half-sun with nine rays); FOTW adds that the designer did not intend the parish meaning. The replacement drops that sentence rather than asserting a count. (2) The word Officially is not backed by any government page: Wikipedia cites Britannica and the CIA World Factbook, FOTW quotes the island museum, and Britannica gives different readings (black for the majority population and the soil, blue for the sea, the sun for the climate). The replacement hedges with the usual explanation, adds the soil reading carried by both FOTW and Britannica, and keeps the facts all sources agree on (artist and sculptor, 600+ entries, 27 February 1967, new era, hope, energy, V for victory, sun sea and sand). 418 characters, one paragraph, no jargon, no double quotes, American spelling. [Edited after review: The seven-points sentence was kept: Wikipedia states that the seven points stand for the six parishes and Barbuda, and the shipped sentence already hedges it (often said); the unsupported word Officially and the missing soil reading are fixed as proposed.]",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Antigua_and_Barbuda",
+    "https://www.crwflags.com/fotw/flags/ag.html",
+    "https://www.britannica.com/topic/flag-of-Antigua-and-Barbuda"
+   ],
+   "confidence": "medium",
+   "from": "am01"
+  },
+  {
+   "code": "GD",
+   "field": "areaSqKm",
+   "current": "344.0",
+   "value": "345.0",
+   "reason": "The field rule takes total area from Wikipedia's list of countries by area; I opened that list and its Grenada row (rank 185) reads total 345 km2 (land 340, water 0). The shipped 344 comes from the Grenada article lead and infobox, which the prior pass used because its list fetch was truncated. The list row is internally odd (340 + 0 does not give 345), so confidence is only medium, but the stated rule points to 345.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/List_of_countries_and_dependencies_by_area",
+    "https://en.wikipedia.org/wiki/Grenada"
+   ],
+   "confidence": "medium",
+   "from": "am03"
+  },
+  {
+   "code": "HT",
+   "field": "landmarks",
+   "current": "[\"Citadelle Laferrière\", \"Sans-Souci Palace\", \"Bassin Bleu\"]",
+   "value": "[\"Citadelle Laferrière\", \"Sans-Souci Palace\", \"Bassin Bleu (Jacmel)\"]",
+   "reason": "Confirmed: the Wikipedia title Bassin Bleu redirects to the Bassin-Bleu commune in the Port-de-Paix arrondissement, Nord-Ouest department, while the well-known pools and waterfall are the separate article Bassin Bleu (Jacmel), 12 km northwest of Jacmel in the Sud-Est department. The field rule asks for Name (Place) when a qualifier is needed, so adding (Jacmel) removes the ambiguity. No comma or ampersand inside the landmark.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Bassin_Bleu",
+    "https://en.wikipedia.org/wiki/Bassin_Bleu_(Jacmel)"
+   ],
+   "confidence": "high",
+   "from": "am03"
+  },
+  {
+   "code": "HT",
+   "field": "flagDescription",
+   "current": "Tradition says in 1803 rebel leader Jean-Jacques Dessalines tore the white out of a French flag and Catherine Flon sewed the blue and red together. Blue is often said to stand for Haitians of African descent and red for those of mixed descent; the law gives no meaning. The white square holds the coat of arms fixed by the 1987 constitution: a palm tree topped by a liberty cap over cannons and flags, with the motto Unity Makes Strength.",
+   "value": "Tradition says in 1803 Jean-Jacques Dessalines tore the white, linked to the white colonists, out of a French flag and Catherine Flon sewed the blue and red together. Blue is often said to stand for Black Haitians and red for those of mixed descent; the law gives no meaning. The white square holds the coat of arms fixed by the 1987 constitution: a palm tree topped by a liberty cap over cannons and flags, with the motto Unity Makes Strength.",
+   "reason": "The shipped text (438 characters) says the white was torn out but never says why, which is the reason the flag is blue over red. Wikipedia's Flag of Haiti article states the white was removed because of its association with the white Europeans. The replacement adds that clause inside the hedged tradition sentence, drops 'rebel leader' and shortens 'Haitians of African descent' to 'Black Haitians' (Wikipedia's reading: blue for the Black Africans, red for the mulattos) to stay within the limit: 444 characters, one paragraph, no jargon, no double quotes. I kept 'fixed by the 1987 constitution' because Article 3 of that constitution prescribes the arms; Wikipedia cites the 2012 readopted text, which is the same article. Confidence medium because the change is an improvement in explanation, not a correction of an error.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Haiti"
+   ],
+   "confidence": "medium",
+   "from": "am03"
+  },
+  {
+   "code": "LC",
+   "field": "areaSqKm",
+   "current": "617.0",
+   "value": "616.0",
+   "reason": "The field rule ties areaSqKm to Wikipedia's 'List of countries and dependencies by area'; I read that table's Saint Lucia row myself (second half of the page) and it gives total 616 km2 (land 610, water 10). The shipped 617 is the country infobox figure. Both verifiers' sources and my own read agree.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/List_of_countries_and_dependencies_by_area"
+   ],
+   "confidence": "high",
+   "from": "am04"
+  },
+  {
+   "code": "LC",
+   "field": "flagColors",
+   "current": "[\"Blue\", \"White\", \"Black\", \"Gold\"]",
+   "value": "[\"Light Blue\", \"White\", \"Black\", \"Gold\"]",
+   "reason": "The Saint Lucia government flag page names the background 'Cerulean Blue', Wikipedia's flag article describes the field as cerulean blue, and the shipped image (app/src/main/res/drawable-nodpi/flag_lc.webp) is unmistakably a light sky blue, so this is a case where the flag clearly uses the lighter shade. The app's own flagDescription already says the blue was lightened to a sky shade, so 'Blue' contradicts the picture and the text. 'Light Blue' is an established term elsewhere in the catalog (12 uses across the five continent files).",
+   "sources": [
+    "https://www.govt.lc/stluciaflag",
+    "https://en.wikipedia.org/wiki/Flag_of_Saint_Lucia"
+   ],
+   "confidence": "high",
+   "from": "am04"
+  },
+  {
+   "code": "NI",
+   "field": "flagDescription",
+   "current": "The three bands come from the flag of the Federal Republic of Central America, which Nicaragua once joined. It was adopted in 1908 and made law in 1971. The blue is often said to be the two oceans, the white the land between. By law the triangle means equality, the five volcanoes the union of the five Central American states, the rainbow peace and the red cap liberty. Sun rays are often read as a bright future; gold letters name the country.",
+   "value": "The three bands come from the flag of the Federal Republic of Central America, which Nicaragua once joined. The flag was adopted in 1908 and made law in 1971. By law, blue means justice and loyalty and white means purity and integrity. The triangle is traditionally said to mean equality, the five volcanoes the five Central American states, the rainbow peace, the red cap liberty and the sun rays a bright future; gold letters name the country.",
+   "reason": "I opened the 1971 law (Decreto No. 1908 of 25 Aug 1971, La Gaceta No. 194 of 27 Aug 1971). Article 2 states official color meanings the shipped text omits: 'El color Azul significa Justicia y Lealtad. El color Blanco simboliza Pureza e Integridad.' Articles 42-44 only describe the arms (triangle, five volcanoes, rainbow, 'gorro de la libertad', 'luces') and assign no meaning; the words igualdad, fraternidad, union and porvenir do not occur, and paz appears only in the anthem lyrics. So 'By law the triangle means equality ... the rainbow peace' is a wrong attribution and must be hedged, while the legal color meanings should be stated plainly. Replacement is 445 characters, one paragraph, no double quotes, no flag jargon, keeps the shared Central American origin clause and the 1908/1971 dates (both verifiers and prior provenance agree on those).",
+   "sources": [
+    "https://nicaragua.justia.com/nacionales/leyes/ley-sobre-caracteristicas-y-uso-de-los-simbolos-patrios-aug-27-1971/gdoc/"
+   ],
+   "confidence": "high",
+   "from": "am07"
+  },
+  {
+   "code": "PA",
+   "field": "flagDescription",
+   "current": "María de la Ossa de Amador, wife of Panama's first president, sewed the flag in 1903 from a sketch by his son, and it flew that November as Panama separated from Colombia. A 1949 law gives its meaning: blue is the Conservative Party, red the Liberal Party, the two main parties of the day, and white the peace between them. The blue star stands for purity and honesty, the red star for authority and law. A 1925 law made it permanent.",
+   "value": "María de la Ossa de Amador, wife of Panama's first president, sewed the flag in 1903 from a sketch by his son, and it flew that November as Panama separated from Colombia. A 1949 law gives its meaning: blue is the Conservative Party and red the Liberal Party, the two rival parties of the day, while white is the peace of the new nation. The blue star stands for purity and honesty, the red star for authority and law. A 1925 law made it official.",
+   "reason": "The current text attributes to the 1949 law that white means 'the peace between them', but the law's own wording (Law 34 of 1949, Article 6, consolidated text reproduced by Flags of the World) says white 'represents the field of peace of the new nation'; Wikipedia gives 'peace and purity'. The peace-between-the-parties idea is a gloss, so an official claim was stated with words the law does not use. Both verifiers flagged this independently and I confirmed it against both sources. 'Made it permanent' is also replaced by 'made it official', matching Wikipedia's statement that Law 48 of 25 March 1925 officially adopted the flag. Everything else (sketch by the president's son Manuel Encarnación Amador, sewn 1 November 1903, first flown 3 November 1903, blue = Conservative, red = Liberal, blue star = purity and honesty, red star = authority and law) checks out against both sources. Replacement is 447 characters, one paragraph, no jargon, no double quotes, American spelling.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Panama",
+    "https://www.crwflags.com/fotw/flags/pa_law.html"
+   ],
+   "confidence": "medium",
+   "from": "am08"
+  },
+  {
+   "code": "BO",
+   "field": "flagDescription",
+   "current": "Bolivia's red, yellow and green bands date from 1851, under President Manuel Belzu. An 1888 decree gave their official meaning: red for the blood shed by the heroes of the republic, yellow for wealth and resources, green for the richness of nature and hope. The state flag adds the coat of arms: the silver mountain of Potosí under a rising sun, a llama, a tree and wheat for the land's riches, ten stars for the departments and a condor above.",
+   "value": "Bolivia's red, yellow and green bands date from 1851. An 1888 decree gave their official meaning: red for the blood shed by the heroes of the republic, yellow for wealth and resources, green for the richness of nature and hope. The state flag adds the coat of arms: Potosí's silver mountain under a rising sun, a llama, a palm and wheat for the land's riches, a condor, and ten stars for the nine departments plus the coast lost to Chile.",
+   "reason": "Bolivia has nine departments, so 'ten stars for the departments' misleads: Spanish Wikipedia (quoting Supreme Decree 241 of 2009, article 21, and the 1961 change) explains the tenth star stands for the Litoral department lost to Chile; English Wikipedia confirms a tenth star was added in 1961. Both articles name the plant a palm (DS 27630 of 2004 replaced the breadfruit tree with a palm) and the animal a llama (alpaca replaced in 2004), settling the prior doubt. 438 characters, no jargon, Belzu's name dropped to stay under 450.",
+   "sources": [
+    "https://es.wikipedia.org/wiki/Escudo_de_Bolivia",
+    "https://en.wikipedia.org/wiki/Coat_of_arms_of_Bolivia"
+   ],
+   "confidence": "high",
+   "from": "am09"
+  },
+  {
+   "code": "GY",
+   "field": "flagDescription",
+   "current": "Guyana's Golden Arrowhead flag was adopted at independence from Britain on 26 May 1966. American flag scholar Whitney Smith designed it; Britain's College of Arms added the white and black edges and swapped his red and green areas. The government says green stands for farmland and forests, white for the many rivers, the golden arrow for mineral wealth, black for the endurance of the people, and red for the energy of building a new nation.",
+   "value": "Guyana's Golden Arrowhead flag was adopted at independence from Britain on 26 May 1966. US flag scholar Whitney Smith designed it; the red and green were swapped and white and black edges added before adoption, often credited to Britain's College of Arms. Officially, green stands for farmland and forests, white for its many rivers, the gold arrow for mineral wealth, black for the people's endurance, and red for the energy of nation building.",
+   "reason": "The shipped text states as fact that the College of Arms both added the borders and swapped the colours. English Wikipedia only says the black and white borders were 'suggested by the College of Arms' and never mentions a colour swap; on FOTW the attribution is contested (DK/Stilling credit the College, while Hemendra Bhola relays a design committee member saying the committee reversed red and green and the College never added the black and white). The replacement hedges the attribution and keeps the official colour meanings. 445 characters.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Guyana",
+    "https://www.crwflags.com/fotw/flags/gy.html"
+   ],
+   "confidence": "medium",
+   "from": "am09"
+  },
+  {
+   "code": "GY",
+   "field": "funFact",
+   "current": "Guyana's Kaieteur Falls drops about 226 meters in a single plunge, more than four times the height of Niagara Falls, deep in the rainforest.",
+   "value": "Guyana's Kaieteur Falls drops about 226 meters in a single plunge, around four times the height of Niagara Falls, deep in the rainforest.",
+   "reason": "Wikipedia gives Horseshoe Falls as about 57 m high, so 226 m is 3.96 times that, which makes 'more than four times' false against the main cataract; against the 51 m overall figure it is 4.4 times. 'Around four times' is true on either measure. 137 characters.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Kaieteur_Falls",
+    "https://en.wikipedia.org/wiki/Niagara_Falls"
+   ],
+   "confidence": "medium",
+   "from": "am09"
+  },
+  {
+   "code": "SR",
+   "field": "flagDescription",
+   "current": "Suriname adopted this flag at independence from the Netherlands on 25 November 1975, after a design contest won by art teacher Jack Pinas. The independence decree explains it: green for the fertile land and hope, white for justice and freedom, red for progress and renewal, and the yellow star for the unity of the nation and a golden future. One star replaced the five stars of the 1959 flag, which stood for separate ethnic groups.",
+   "value": "Suriname adopted this flag at independence from the Netherlands on 25 November 1975, after a design contest won by art teacher Jack Pinas. The flag decree explains it: green for fertile land and hope, white for justice and freedom, red for renewal and the love that leads to deeds, and the yellow star for national unity, sacrifices made and a golden future. One star replaced the five stars of the 1959 flag, which stood for separate ethnic groups.",
+   "reason": "The text attributes 'progress' to the decree, but the FOTW translation of Governor Ferrier's decree of 25 November 1975 (Government Gazette No. 160) gives red as renewal (vermilion) and the love which leads to deeds (carmine); 'progress' is only Wikipedia's and Britannica's own gloss. The decree does say the star stands for the unity of the nation, that yellow is the sacrifices made, and that the star points to a golden future, so 'golden future' is kept (the verifier's draft dropped it) and 'sacrifices made' is added. 'Independence decree' is replaced by 'flag decree' since it is a flag decree issued on independence day. 449 characters, one paragraph, no jargon, American spelling.",
+   "sources": [
+    "https://www.crwflags.com/Fotw/Flags/sr.html",
+    "https://en.wikipedia.org/wiki/Flag_of_Suriname",
+    "https://www.britannica.com/topic/flag-of-Suriname"
+   ],
+   "confidence": "medium",
+   "from": "am10"
+  },
+  {
+   "code": "VE",
+   "field": "funFact",
+   "current": "Angel Falls in Venezuela is the world's tallest uninterrupted waterfall, plunging about 979 meters from the flat-topped mountain Auyán-tepui.",
+   "value": "Angel Falls in Venezuela is the world's tallest uninterrupted waterfall, dropping about 979 meters in total from the flat-topped mountain Auyán-tepui.",
+   "reason": "Confirmed against the Angel Falls Wikipedia article: 979 m is the total height (infobox 'Total height'), while the single uninterrupted plunge ('Longest drop') is 807 m; the remaining height is sloped cascade and rapids plus a 30 m plunge. The current wording 'plunging about 979 meters' implies a 979 m free drop. The replacement keeps the verified total height and the tallest-uninterrupted-waterfall status, is one sentence of 150 characters, neutral and durable.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Angel_Falls"
+   ],
+   "confidence": "high",
+   "from": "am11"
+  },
+  {
+   "code": "VE",
+   "field": "flagDescription",
+   "current": "Independence hero Francisco de Miranda flew the yellow, blue and red bands in 1806; Colombia and Ecuador, once joined with Venezuela in Gran Colombia, share the colors. Yellow is often said to mean riches, blue the sea and red blood shed for freedom, but no law says so. Seven stars, added in 1817, honor the provinces that declared independence in 1811. A 2006 law added an eighth for Guayana province, as Simón Bolívar had ordered in 1817.",
+   "value": "Francisco de Miranda flew the yellow, blue and red bands in 1806; Colombia and Ecuador, once joined with Venezuela in Gran Colombia, share the colors. Yellow is often said to mean riches, blue the sea and red blood shed for freedom, but no law says so. Seven stars, used since the early 1800s, honor the seven provinces that declared independence in 1811. A 2006 law added an eighth for Guayana province, as Simón Bolívar had ordered in 1817.",
+   "reason": "The text dates the seven stars to 1817, but Wikipedia's flag article only says they were added in the first half of the 19th century, and Bolívar's 20 November 1817 decree already treats the seven as existing when it orders the eighth. Hedged wording avoids a date that is not supported; 442 characters.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Venezuela"
+   ],
+   "confidence": "medium",
+   "from": "critic"
+  },
+  {
+   "code": "DO",
+   "field": "flagDescription",
+   "current": "Juan Pablo Duarte's secret society La Trinitaria made the flag for the 1844 uprising against Haitian rule, keeping Haiti's blue and red but adding a white cross for Christian faith. Officially, blue stands for the sky and God's protection, red for the blood shed by the patriots, and white for peace and unity. The center carries the coat of arms: an open Bible, a cross, flags, laurel and palm branches, and the motto God, Fatherland, Liberty.",
+   "value": "Juan Pablo Duarte's secret society La Trinitaria made the flag for the 1844 uprising against Haitian rule, keeping Haiti's blue and red but adding a white cross for Christian faith. The Presidency explains blue as God's protection, red as the blood shed by patriots, and the white cross as peace and unity. The center carries the coat of arms: an open Bible, a cross, flags, laurel and palm branches, and the motto God, Fatherland, Liberty.",
+   "reason": "Neither the constitution (Article 31) nor Law 210-19 gives the colors a meaning; the meanings come from the Presidency's Símbolos Patrios page, which says blue is God's protection (no mention of the sky), red the patriots' blood and the white cross peace and unity. Naming the source keeps the claim accurate and matches how Bahamas, Grenada and Guyana attribute their meanings; 440 characters.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_the_Dominican_Republic"
+   ],
+   "confidence": "medium",
+   "from": "critic"
+  }
+ ],
+ "ownerDecisions": [
+  {
+   "code": "PA",
+   "field": "currency",
+   "issue": "Field rule is a single Name (symbol or ISO code); every other Americas entry, including the dollarized Ecuador and El Salvador, uses one currency string. The balboa is Panama's own legal currency and its parity with the US dollar can be a fun fact rather than a second currency in this field. Low confidence because the two-currency string is factually true. (proposed: Panamanian Balboa (B/.))",
+   "sources": [],
+   "from": "critic"
+  }
+ ],
+ "doubts": [
+  {
+   "code": "AG",
+   "field": "languages",
+   "issue": "Wikipedia's infobox now lists Spanish as an official language beside English on the strength of a 13 May 2026 Cabinet decision reported by Caribbean press, but neither the constitution nor any Act of Parliament names an official language and no statute or government text confirming Spanish's status was found, so the list stays English only until the owner decides whether a Cabinet decision counts or a law appears.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Antigua_and_Barbuda",
+    "https://en.wikipedia.org/wiki/Languages_of_Antigua_and_Barbuda",
+    "https://en.wikipedia.org/wiki/Spanish_language_in_Antigua_and_Barbuda",
+    "https://canadacaribbeaninstitute.org/2026/05/19/antigua-and-barbuda-to-make-spanish-the-nations-official-second-language/"
+   ],
+   "from": "am01"
+  },
+  {
+   "code": "CU",
+   "field": "flagDescription",
+   "issue": "A search-engine summary states that Article 6 of Cuba's Ley 128/2019 (Ley de los Símbolos Nacionales) itself assigns meanings (star = free, independent and sovereign republic and unity of Cubans; equilateral triangle = liberty, equality and fraternity; its red = blood shed in the struggle; white stripes = purity of ideals and virtue; blue stripes = aspirations of the patriots and the colonial-era administrative division), which would make the current hedged wording ('are said to') an understatement of an official basis and would leave the triangle's liberty-equality-fraternity meaning out; however every host carrying the law (gacetaoficial.gob.cu, instituciones.sld.cu, ecured.cu, dpej.rae.es, aulavirtual.sld.cu, cubadebate.cu, diariodecuba.com, cubanet.org) returned 503/403/DNS failure in this pass, the leybook.com PDF that search listed turned out to be a Nicaraguan decree, and the Spanish Wikipedia article cites the law only for the flag's status as a national symbol, so the claim stays unverified and no replacement is proposed; the shipped text is not false either way.",
+   "sources": [
+    "https://www.gacetaoficial.gob.cu/sites/default/files/goc-2019-o71.pdf",
+    "https://www.ecured.cu/Ley_de_los_S%C3%ADmbolos_Nacionales",
+    "https://www.ecured.cu/Bandera_cubana",
+    "https://www.leybook.com/doc/6958/pdf",
+    "https://dpej.rae.es/eli/cu/l/2019/07/13/128",
+    "https://instituciones.sld.cu/facultadfinlayalbarran/files/2020/01/ley-128-sobre-los-simbolos.pdf",
+    "https://es.wikipedia.org/wiki/Bandera_de_Cuba",
+    "https://aulavirtual.sld.cu/mod/resource/view.php?id=163921",
+    "https://www.cubanet.org/proyecto-ley-cuba-busca-administrar-los-simbolos-patrios/",
+    "https://diariodecuba.com/cuba/1562711971_47430.html",
+    "http://www.cubadebate.cu/noticias/2019/07/13/aprueban-ley-de-los-simbolos-nacionales/"
+   ],
+   "from": "am02"
+  },
+  {
+   "code": "GD",
+   "field": "areaSqKm",
+   "issue": "Wikipedia's area list (345) and the Grenada article infobox (344) disagree by 1 km2, and the list row does not add up (340 land + 0 water); the fix follows the stated rule (the list) but the owner may prefer the infobox value.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/List_of_countries_and_dependencies_by_area",
+    "https://en.wikipedia.org/wiki/Grenada"
+   ],
+   "from": "am03"
+  },
+  {
+   "code": "GD",
+   "field": "landmarks",
+   "issue": "Grand Anse Beach was still not confirmed in any opened page (the Grenada article text I fetched did not mention it in the first 100,000 characters); it is widely known as Grenada's main beach, so I did not treat this as an error.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Grenada"
+   ],
+   "from": "am03"
+  },
+  {
+   "code": "LC",
+   "field": "flagDescription",
+   "issue": "The closing sentence 'The blue was lightened to a sky shade in 2002' rests on FOTW's account; the government flag page says nothing about a 2002 change and Wikipedia only records that the flag was 'last modified in 2002' without saying what changed, so the specific claim that the 2002 change was a lightening of the blue is unconfirmed by an authoritative source (not wrong, just unverified).",
+   "sources": [
+    "https://www.govt.lc/stluciaflag",
+    "https://en.wikipedia.org/wiki/Flag_of_Saint_Lucia"
+   ],
+   "from": "am04"
+  },
+  {
+   "code": "PA",
+   "field": "population",
+   "issue": "The WPP 2024 mid-2024 figure 4,515,577 (rounds to 4,520,000) is confirmed only from third-party reproductions of WPP 2024 (Worldometers, StatisticsTimes) and is consistent with Wikipedia's WPP 2024 mid-2023 figure; the UN data portal itself was not opened by either pass. The value is very likely correct; no replacement.",
+   "sources": [
+    "https://www.worldometers.info/world-population/panama-population/",
+    "https://en.wikipedia.org/wiki/List_of_countries_by_population_(United_Nations)"
+   ],
+   "from": "am08"
+  },
+  {
+   "code": "PA",
+   "field": "flagDescription",
+   "issue": "The text says 'A 1949 law gives its meaning', but the Flags of the World reproduction marks Article 6 (the colour meanings) as '[added]' in the consolidated text of Law 34 of 1949 as amended by Law 2 of 2012, so the meanings may have been written into the law only in 2012; the original 1949 Gaceta text (No. 11085) is a scanned PDF I could not read. Law 34 of 1949 as amended is the law in force, so the sentence remains defensible, but if the owner wants exactness it could read 'The national-symbols law gives its meaning'.",
+   "sources": [
+    "https://www.crwflags.com/fotw/flags/pa_law.html",
+    "https://docs.panama.justia.com/federales/leyes/34-de-1949-feb-25-1950.pdf",
+    "https://en.wikipedia.org/wiki/Flag_of_Panama"
+   ],
+   "from": "am08"
+  },
+  {
+   "code": "EC",
+   "field": "flagDescription",
+   "issue": "The text calls the Guayas 'South America's first steamboat', but English Wikipedia's Coat of arms of Ecuador article only says it was 'the first seaworthy steamship built in both Ecuador and in all of South America' (in service 9 October 1841); earlier imported or river steamboats may have operated on the continent, and I found no independent historical source for either claim (the Spanish Wikipedia title tried returned 404, and web results only repeat the same statement), so no replacement is proposed; a tighter wording such as 'the first steamship built in South America' would push the paragraph to about 455 characters and need other trimming.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Coat_of_arms_of_Ecuador"
+   ],
+   "from": "am09"
+  },
+  {
+   "code": "SR",
+   "field": "flagDescription",
+   "issue": "Britannica says the flag was adopted four days before independence (about 21 November 1975), while Wikipedia says it was legally adopted on 25 November 1975 and FOTW dates the decree to 25 November 1975 in Government Gazette No. 160; the text keeps 25 November, which the decree date supports, but the gazette itself was not opened.",
+   "sources": [
+    "https://www.britannica.com/topic/flag-of-Suriname",
+    "https://en.wikipedia.org/wiki/Flag_of_Suriname",
+    "https://www.crwflags.com/Fotw/Flags/sr.html"
+   ],
+   "from": "am10"
+  }
+ ],
+ "rejected": [
+  {
+   "code": "AG",
+   "field": "flagDescription",
+   "why": "The separate doubt about the word Officially is superseded by the accepted flagDescription fix, which removes the word and hedges the meanings; no government page could be opened (no ab.gov.ag result surfaced in search).",
+   "from": "am01"
+  },
+  {
+   "code": "BS",
+   "field": "flagDescription",
+   "why": "Stylistic only. The current text matches the government wording as relayed by Wikipedia, FOTW and Britannica (black for the strength of a united people, triangle for the drive to develop the riches of land and sea, gold for sun and sand and land resources, aquamarine for the surrounding water), is 441 characters and contains no factual error; the proposed rewrite is a readability preference the verifier itself rated low confidence, and the official government page (403) was not opened by anyone.",
+   "from": "am01"
+  },
+  {
+   "code": "BB",
+   "field": "funFact",
+   "why": "Wording preference, not an error. Elizabeth II reigned as Queen of Barbados, so the phrase the British monarch is a simplification, but it is the common description and the sentence's facts (republic on 30 November 2021, 55 years after independence on 30 November 1966, a president as head of state) are confirmed by Wikipedia; the owner may adopt the softer wording if preferred.",
+   "from": "am01"
+  },
+  {
+   "code": "GT",
+   "field": "flagColors",
+   "why": "Low-confidence shade call that does not meet the rule's 'clearly uses the other shade' bar. The Flag of Guatemala article says 'sky blue' and 'Maya blue', but its colour table (tagged as lacking citations) gives RGB 73-151-208 / #4997D0, a medium blue, while naming Pantone 297, a lighter tone; the sources are internally inconsistent and the shade sits between the app's 'Blue' and 'Light Blue'. Keeping 'Blue' is defensible; the owner may revisit if the app wants a consistent policy for sky-blue flags.",
+   "from": "am07"
+  },
+  {
+   "code": "PA",
+   "field": "flagDescription",
+   "why": "The facts-lens proposal ('white is peace and purity, often read as peace between them') was superseded by the texts-lens wording, which follows the law text itself ('peace of the new nation') rather than Wikipedia's paraphrase; only one flagDescription fix is kept.",
+   "from": "am08"
+  },
+  {
+   "code": "PE",
+   "field": "funFact",
+   "why": "The current sentence is supported by Britannica, which states the site escaped detection by Spanish explorers. The Wikipedia passage the verifier relies on only records 16th-century Spaniards hearing locals mention Huayna Picchu and Baltasar de Ocampo's notes on a fortress called Pitcos (generally identified with Vitcos, a different site); the article nowhere says the Spanish reached Machu Picchu, so the claim is not shown to be wrong and the proposed 'never destroyed it' is not what any opened source states either.",
+   "from": "am10"
+  }
+ ],
+ "notes": [
+  "am01: Batch AG, BS, BB. One fix accepted (AG flagDescription, 418 characters): the shipped flag image shows seven full rays plus two half-points at the base (nine visible points), so the seven-points sentence was removed, and the unbacked word Officially was hedged; the museum attribution in the verifier's draft was not used because the museum page itself was not opened. No capital, population, area, currency, landmark or driveSide change was proposed by either verifier and none of the checks I ran (Wikipedia Barbados article: English official, independence 30 November 1966, president replaced Elizabeth II as Queen of Barbados on 30 November 2021) contradicted the current values. No owner decision is touched. Sources opened: https://en.wikipedia.org/wiki/Flag_of_Antigua_and_Barbuda, https://www.crwflags.com/fotw/flags/ag.html, https://www.britannica.com/topic/flag-of-Antigua-and-Barbuda, https://en.wikipedia.org/wiki/Flag_of_the_Bahamas, https://www.britannica.com/topic/flag-of-the-Bahamas, https://en.wikipedia.org/wiki/Barbados, plus the local image /tmp/flagwork/out/ag.png.",
+  "am02: Batch /tmp/claude-0/-home-user-Guess-countries/7a65ca18-cc05-5533-a221-2dfd9a54698a/scratchpad/audit/americas/batch-02.json (CU, DM, DO). The verifiers raised a single finding, a doubt on Cuba's flagDescription. I tried eleven direct fetches of the Ley 128/2019 text and of pages quoting it; all Cuban hosts and their mirrors were unreachable (503/403/DNS), the one PDF that downloaded (leybook.com doc 6958) is Nicaragua's 2006 ministerial agreement on national symbols, not the Cuban law, and es.wikipedia's Bandera de Cuba article cites Ley 128 only for the flag's status as a symbol, with the color meanings sourced to a 2018 news piece and to Masonic readings. The finding therefore remains a doubt: if a later pass can open the law and confirm Article 6, the text could state the meanings plainly and add liberty, equality and fraternity for the triangle (keeping it within 450 characters), but nothing in the current 418-character text is contradicted by any source opened. No fixes, owner decisions or rejections for DM and DO, which had no findings.",
+  "am03: Batch GD, HT, JM adjudicated. All three verifier findings were confirmed against pages I opened myself (Wikipedia area list offset 100000 for the Grenada row; Bassin Bleu commune article vs Bassin Bleu (Jacmel); Flag of Haiti for the white-removal reading and Article 3). Jamaica received no findings and nothing in its entry conflicted with the sources listed in priorProvenance; the area list row for Jamaica (10,991 total) and Haiti (27,750 total) matched the shipped values. No owner decision was touched; no capital changed so no quizCapital fix is needed. Tool calls used: 8.",
+  "am04: Both verifier findings confirmed and kept as fixes. Cross-checks done in passing: the Wikipedia area list gives Saint Kitts and Nevis 261 km2 and Saint Vincent and the Grenadines 389 km2, matching the shipped values, so the earlier 'list page truncated' doubts for KN and VC area are resolved with no change. The Wikipedia UN population table (WPP 2024 revision) shows Saint Kitts and Nevis 46,709 (2022) and 46,758 (2023), Saint Lucia 179,285 (2023) and Saint Vincent 101,323 (2023); these are consistent with the shipped mid-2024 roundings 46,800 / 180,000 / 101,000, so the earlier Worldometer-only population doubts are reduced, though the 1 July 2024 column itself was not on that page. No owner decision is touched by any of these entries. The government flag page's colour meanings (cerulean blue for fidelity, gold for sunshine and prosperity, black and white for the two cultures living and working in unity) match the shipped LC flagDescription.",
+  "am05: no findings from either lens",
+  "am06: no findings from either lens",
+  "am07: Batch GT/HN/NI adjudicated. Only two findings were submitted. The Nicaragua flag text fix is confirmed directly against the 1971 law text on Justia and is kept; the Honduras entry (owner decision: navy blue, shade-neutral text) was not challenged by either verifier and is untouched. The Guatemala Light Blue suggestion is rejected as not clearly supported. Sources opened: the Justia copy of Nicaragua's Ley sobre Caracteristicas y Uso de los Simbolos Patrios (1971) and https://en.wikipedia.org/wiki/Flag_of_Guatemala.",
+  "am08: Batch PA (Panama): one fix kept (flagDescription wording of the white colour and the 1925 law), two doubts (population UN source not opened; whether the colour meanings were added to Law 34 in 2012), no owner-decision conflicts. Sources opened: https://en.wikipedia.org/wiki/Flag_of_Panama, https://www.crwflags.com/fotw/flags/pa_law.html, https://docs.panama.justia.com/federales/leyes/34-de-1949-feb-25-1950.pdf (scanned, unreadable). Batch file: /tmp/claude-0/-home-user-Guess-countries/7a65ca18-cc05-5533-a221-2dfd9a54698a/scratchpad/audit/americas/batch-08.json. No repository files were edited.",
+  "am09: Three findings confirmed and kept as fixes (BO flagDescription, GY flagDescription, GY funFact); the EC steamship wording stays a doubt because neither the broad nor the narrow claim could be verified beyond Wikipedia. No owner decisions were touched (Bolivia's capital/quizCapital Sucre and the Ecuador currency and language rules are unchanged). Character counts verified by script: BO 438, GY flagDescription 445, GY funFact 137. All sources listed are URLs opened in this pass.",
+  "am10: Both findings were checked against sources I opened: Wikipedia Machu Picchu (first 100,000 characters, lead and history sections), Britannica Machu Picchu, FOTW Suriname (decree translation by Andre van de Loo, with the full symbolism sentences), Wikipedia Flag of Suriname and Britannica flag of Suriname. Paraguay received no findings and was not re-audited. No owner decision is touched; Suriname's capital, language and left-hand driving are unchanged. Character counts were done with Python: Suriname replacement 449 characters.",
+  "am11: Batch /tmp/claude-0/-home-user-Guess-countries/7a65ca18-cc05-5533-a221-2dfd9a54698a/scratchpad/audit/americas/batch-11.json (UY, VE). Only one finding was submitted by the verifiers (VE funFact); it was confirmed by opening the Angel Falls Wikipedia article (total height 979 m, longest drop 807 m, drops from Auyán-tepui). The replacement sentence was character-counted at 150. Note for the owner: the same article remarks that the overall ranking against South Africa's Tugela Falls is debated, but the lead still states Angel Falls as the world's tallest uninterrupted waterfall, so the claim is kept as the standard reference figure. No finding touched an owner decision (capital Caracas, languages Spanish, eight stars explained, neutral wording all intact). No findings were raised for Uruguay.",
+  "critic: Whole-continent checks run with a script over all 35 entries: no duplicate quizCapital (Kingston/Kingstown and St. John's/St. George's are distinct), every quizCapital is contained in its capital string, all flagDescriptions are 150 to 450 characters with no double quotes, line breaks, flag jargon, British spellings or dated words, all funFacts are at most 160 characters, all landmark lists have exactly three items without ', ' or ' & ', and every population is rounded per the 3/4 significant-figure rule (United States 345,400,000 is the correct 4-figure case).",
+  "critic: Shared currencies are consistent: all six OECS members use exactly 'East Caribbean Dollar (EC$)'; Ecuador, El Salvador and the United States use exactly 'US Dollar (US$)'.",
+  "critic: Shared motifs are handled consistently: the Gran Colombia yellow-blue-red origin is named in Colombia, Ecuador and Venezuela; the Central American blue-white-blue origin is named in Costa Rica, El Salvador, Guatemala, Honduras and Nicaragua (Costa Rica and El Salvador call it 'the Central American federation of 1823', the other three 'the Federal Republic of Central America'; both are correct, aligning the wording is optional). Uruguay and Argentina both explain the Sun of May.",
+  "critic: Areas that looked off against memory were checked against Wikipedia's list of countries by area and all match the list: Bahamas 13,880; Belize 22,965; Costa Rica 51,180; Dominican Republic 48,670; Panama 75,320; Trinidad and Tobago 5,127; Venezuela 912,050; reference entries Colombia 1,138,910 and Brazil 8,510,346 also match. Barbados (431) and Dominica (750) were beyond the fetched part of the page and were not verified.",
+  "critic: Guatemala's 'Officially' wording for blue and white is supported: Wikipedia attributes the strength/justice/truth/loyalty and purity/integrity/firmness/light meanings to a decree via the Congress of Guatemala's website, and the 17 August 1871 restoration date is confirmed. Saint Vincent's adoption date of 12 October 1985 and Julien van der Wal as designer are confirmed.",
+  "critic: Hedging is consistent across the batch: Chile, Costa Rica, Cuba, El Salvador, Honduras, Mexico, Paraguay, Peru, Venezuela hedge unofficial meanings; Bahamas, Barbados, Dominica, Grenada, Guyana, Jamaica, Saint Kitts, Saint Lucia, Saint Vincent, Trinidad state government-published meanings plainly, which matches the field rules.",
+  "critic: Subregions follow the UN M49 geoscheme (Mexico under Central America, Canada and the United States under Northern America, Bahamas and Trinidad under Caribbean); consistent, though some families may expect Mexico under North America.",
+  "critic: Doubt, no fix proposed: Bolivia lists four languages while its constitution makes Spanish and all 36 Indigenous languages official; the four shown are the most spoken and the list is consistent with Peru's selective approach.",
+  "critic: Fun facts do not repeat across countries; Guyana (Kaieteur, single plunge) and Venezuela (Angel Falls, tallest uninterrupted) remain distinct after the decided fixes. Brazil and Argentina both list Iguazu Falls as a landmark, which is correct since the falls straddle the border.",
+  "critic: Jamaica's claim of being the only national flag without red, white or blue is true now (Mauritania added red in 2017) but is the kind of superlative that could change if any country adopts a new flag; left in place since it is a well-known fact about the flag itself.",
+  "critic: No owner decisions were touched; Bolivia's capital string and quizCapital Sucre are as agreed."
+ ],
+ "duplicates": [],
+ "perBatch": [
+  {
+   "id": "am01",
+   "codes": [
+    "AG",
+    "BS",
+    "BB"
+   ],
+   "factsFindings": 2,
+   "textsFindings": 3,
+   "fixes": 1
+  },
+  {
+   "id": "am02",
+   "codes": [
+    "CU",
+    "DM",
+    "DO"
+   ],
+   "factsFindings": 0,
+   "textsFindings": 1,
+   "fixes": 0
+  },
+  {
+   "id": "am03",
+   "codes": [
+    "GD",
+    "HT",
+    "JM"
+   ],
+   "factsFindings": 2,
+   "textsFindings": 1,
+   "fixes": 3
+  },
+  {
+   "id": "am04",
+   "codes": [
+    "KN",
+    "LC",
+    "VC"
+   ],
+   "factsFindings": 1,
+   "textsFindings": 1,
+   "fixes": 2
+  },
+  {
+   "id": "am05",
+   "codes": [
+    "TT"
+   ],
+   "factsFindings": 0,
+   "textsFindings": 0,
+   "fixes": 0
+  },
+  {
+   "id": "am06",
+   "codes": [
+    "BZ",
+    "CR",
+    "SV"
+   ],
+   "factsFindings": 0,
+   "textsFindings": 0,
+   "fixes": 0
+  },
+  {
+   "id": "am07",
+   "codes": [
+    "GT",
+    "HN",
+    "NI"
+   ],
+   "factsFindings": 0,
+   "textsFindings": 2,
+   "fixes": 1
+  },
+  {
+   "id": "am08",
+   "codes": [
+    "PA"
+   ],
+   "factsFindings": 2,
+   "textsFindings": 1,
+   "fixes": 1
+  },
+  {
+   "id": "am09",
+   "codes": [
+    "BO",
+    "EC",
+    "GY"
+   ],
+   "factsFindings": 1,
+   "textsFindings": 3,
+   "fixes": 3
+  },
+  {
+   "id": "am10",
+   "codes": [
+    "PY",
+    "PE",
+    "SR"
+   ],
+   "factsFindings": 1,
+   "textsFindings": 1,
+   "fixes": 1
+  },
+  {
+   "id": "am11",
+   "codes": [
+    "UY",
+    "VE"
+   ],
+   "factsFindings": 0,
+   "textsFindings": 1,
+   "fixes": 1
+  }
+ ],
+ "droppedOrderOnly": [],
+ "rejectedAfterReview": [],
+ "editedAfterReview": [
+  {
+   "code": "AG",
+   "field": "flagDescription",
+   "why": "The seven-points sentence was kept: Wikipedia states that the seven points stand for the six parishes and Barbuda, and the shipped sentence already hedges it (often said); the unsupported word Officially and the missing soil reading are fixed as proposed.",
+   "proposedValue": "Reginald Samuel, an artist and sculptor, won a contest of more than 600 entries, and the flag was adopted on 27 February 1967 when Antigua gained self-government. The usual explanation is that the rising sun marks the dawn of a new era, black the soil and African heritage of the people, blue hope and red their energy; the V shape made by the red stands for victory, and gold, blue and white recall sun, sea and sand."
+  }
+ ]
+}
