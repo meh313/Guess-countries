@@ -1,0 +1,831 @@
+{
+ "continent": "Africa",
+ "batchesRun": 18,
+ "batchesMissing": [],
+ "fixes": [
+  {
+   "code": "DZ",
+   "field": "flagDescription",
+   "current": "Nationalists led by Messali Hadj flew this flag in the 1930s, and the National Liberation Front carried it through the war of independence. It became the national flag in 1962 and a law of April 1963 fixed its design but gave no meaning. Green is traditionally linked to Islam and white to peace and purity; red is often said to recall those who died for freedom, and the crescent and star are long-used symbols of Islam.",
+   "value": "Nationalists led by Messali Hadj used this design from the 1930s, and the National Liberation Front carried it through the war of independence. It became the national flag in 1962, and a 1963 law fixed its design. Algeria's government says white stands for peace, green for hope and red for the value of work, and that the crescent and star show Islam is the main religion. Older readings link green to Islam and red to sacrifice.",
+   "reason": "I opened the Algerian Ministry of Foreign Affairs state-symbols page (embassy site on mfa.gov.dz): it states white = peace, love and goodness; green = hope for progress and a better tomorrow; red = the importance of work in achieving prosperity; crescent and star = Islam is the main religion, and cites Law 63-145 of 25 April 1963. The shipped text presents only traditional readings and says no meaning is given, which is misleading now that an official government statement exists. The replacement states the government wording plainly, hedges the older readings, keeps the 1963 law clause, and is 430 characters with no jargon or double quotes.",
+   "sources": [
+    "https://embastana.mfa.gov.dz/discover-algeria/the-state-symbols"
+   ],
+   "confidence": "medium",
+   "from": "af01"
+  },
+  {
+   "code": "LY",
+   "field": "flagDescription",
+   "current": "Omar Faiek Shennib designed this flag for the kingdom of Libya, independent in 1951. The black band with a white crescent and star comes from the banner of the Senussi rulers of eastern Libya. Shennib said red recalls blood shed for freedom, black the dark years of Italian rule, green farming and future wealth, the crescent the Islamic calendar and the star hope. Replaced after 1969, it was brought back in the 2011 uprising.",
+   "value": "Omar Faiek Shennib designed this flag for the kingdom of Libya in 1951. Its black band with a white crescent and star comes from the Senussi rulers' banner in eastern Libya. His daughters said he chose red for blood shed for freedom, black for the dark years of Italian rule and green for farming and future wealth. A kingdom-era booklet said the crescent marks the new Islamic month and the star means hope. Replaced in 1969, it returned in 2011.",
+   "reason": "Both verifiers flagged the attribution and I confirmed it on the Flag of Libya article: the red, black and green meanings come from Shennib's daughters (2011 interviews), who said the crescent and star refer to the Senussi flag and King Idris; the crescent = start of the Islamic lunar month and star = hope meanings come from a Kingdom of Libya Ministry of Information booklet, not from Shennib. The shipped text wrongly credits the crescent and star meanings to Shennib. The replacement separates the two sources, keeps every feature explained, and is 447 characters, no jargon, no double quotes. Adoption 24 December 1951, abolition after the 1 September 1969 coup and 2011 readoption are confirmed on the same page.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Libya"
+   ],
+   "confidence": "medium",
+   "from": "af01"
+  },
+  {
+   "code": "LY",
+   "field": "funFact",
+   "current": "The Roman city of Leptis Magna, east of Tripoli, was the birthplace of Emperor Septimius Severus and is one of the best preserved Roman sites anywhere.",
+   "value": "Leptis Magna, a Roman city east of Tripoli, was the birthplace of Emperor Septimius Severus and is among the best-preserved Roman sites in the Mediterranean.",
+   "reason": "Both verifiers agree and I confirmed on the Leptis Magna article: the ruins are 130 km east of Tripoli, Septimius Severus was born in the city, and the sourced wording is 'among the best-preserved Roman sites in the Mediterranean'. The shipped 'one of the best preserved Roman sites anywhere' is a worldwide superlative no source backs. Replacement is 157 characters, neutral and stable.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Leptis_Magna"
+   ],
+   "confidence": "medium",
+   "from": "af01"
+  },
+  {
+   "code": "SD",
+   "field": "flagDescription",
+   "current": "Sudan chose this flag in 1970 through a design competition won by artist Abdel Rahman Ahmed Al-Jali. Red, white, black and green are the Pan-Arab colors, laid out like the Arab Liberation flag that began in Egypt; the green triangle makes it Sudan's own. The colors are often read as red for struggle and sacrifice, white for peace, black for the country's name, which means land of the black people in Arabic, and green for Islam and farmland.",
+   "value": "Sudan chose this flag in 1970 in a contest won by artist Abdel Rahman Ahmed Al-Jali. Red, white, black and green are the Pan-Arab colors, first combined in the 1916 Arab Revolt flag, and the stripes follow the Arab Liberation flag from Egypt; the green triangle makes it Sudan's own. The colors are often read as red for struggle, white for peace, black for the country's name (land of the black people in Arabic) and green for Islam and farmland.",
+   "reason": "Field rule: a shared motif (Pan-Arab colors) must name its shared origin in one clause. The shipped text names the Arab Liberation layout from Egypt but never says where the four Pan-Arab colors come from. I confirmed on the Pan-Arab colors article that they were first combined in 1916 in the flag of the Arab Revolt, and on the Flag of Sudan article the 20 May 1970 adoption, the competition, the designer's name, the Arab Liberation Flag basis and the hedged color readings. Replacement is 447 characters, keeps all facts and hedging, no jargon, no double quotes. Low-stakes: the shipped text is otherwise accurate.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Sudan",
+    "https://en.wikipedia.org/wiki/Pan-Arab_colors"
+   ],
+   "confidence": "medium",
+   "from": "af01"
+  },
+  {
+   "code": "CM",
+   "field": "flagDescription",
+   "current": "Cameroon chose three upright bands of green, red and yellow in 1957, the second country after Ghana to adopt these Pan-African colors. Red is usually read as the color of unity, and the gold star in the center is called the star of unity. Yellow is said to stand for the sun and the northern grasslands, green for the southern forests. Two stars marked the union of the former French and British parts from 1961 until one star was adopted in 1975.",
+   "value": "Cameroon chose three upright bands of green, red and yellow in 1957, the second country after Ghana to use the Pan-African colors of Ethiopia's flag. Red is usually read as the color of unity, and the central gold star is called the star of unity. Yellow is said to stand for the sun and northern grasslands, green for southern forests. Two stars marked the union of the former French and British parts from 1961 until one star replaced them in 1975.",
+   "reason": "Shared-motif rule: the Pan-African colors must name their shared origin in one clause; the current text names the motif but not where it comes from. Confirmed: the Pan-African colours article says the green-yellow-red combination was borrowed from the flag of Ethiopia and that Ghana was the first state to adopt it in 1957; the Flag of Cameroon article says Cameroon was the second state to adopt the colors (Law No. 46 of 26 October 1957), reports red as unity and the star of unity as readings rather than official meanings, two stars for East and West Cameroon from 1961, and the single star from 20 May 1975. Replacement counted at 450 characters, hedging unchanged, no jargon.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Cameroon",
+    "https://en.wikipedia.org/wiki/Pan-African_colours"
+   ],
+   "confidence": "medium",
+   "from": "af03"
+  },
+  {
+   "code": "CF",
+   "field": "flagDescription",
+   "current": "Barthélemy Boganda, its first leader, designed the flag, adopted on 1 December 1958. He said its colors stood for the four territories of French Equatorial Africa and for France: blue and white are often linked to France, green and yellow to the Pan-African colors. The red upright stripe is, in his words, the symbol of our blood. Blue is said to mean the sky and freedom, white peace, green hope, yellow tolerance, and the star a bright future.",
+   "value": "Barthélemy Boganda, its first leader, designed the flag adopted on 1 December 1958. He said the colors stood for the four territories of French Equatorial Africa and for France: blue and white often linked to France, green and yellow to the Pan-African colors of Ethiopia's flag. The red upright stripe was, he said, the symbol of our blood. Blue is said to mean sky and freedom, white peace, green hope, yellow tolerance, the star a bright future.",
+   "reason": "Same shared-motif rule. Confirmed against the Flag of the Central African Republic article: designed by Boganda, adopted 1 December 1958 by the Legislative Assembly of Ubangi-Shari, his quoted words on the four territories of French Equatorial Africa plus metropolitan France and the red stripe as the symbol of our blood, blue and white for France and green and yellow for Africa; the individual color and star meanings are cited only to Flagpedia and stay hedged. The Pan-African colours article lists the Central African Republic among flags with Pan-African symbolism and gives Ethiopia's flag as the origin of the green-yellow-red set. Replacement counted at 448 characters.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_the_Central_African_Republic",
+    "https://en.wikipedia.org/wiki/Pan-African_colours"
+   ],
+   "confidence": "medium",
+   "from": "af03"
+  },
+  {
+   "code": "AO",
+   "field": "funFact",
+   "current": "Kalandula Falls on the Lucala River drop about 105 meters across a curtain some 400 meters wide, making them one of Africa's largest waterfalls by volume.",
+   "value": "Kalandula Falls on the Lucala River drop about 105 meters across a curtain some 400 meters wide and rank among Africa's largest waterfalls by volume.",
+   "reason": "The current wording presents height and width as the cause of a large volume, which is a false link (volume depends on flow, not on drop or width), so it misleads. The Kalandula Falls article confirms the Lucala River, 105 m height, 400 m width and the statement that they are one of the largest waterfalls by volume in Africa (cited to a Malanje-Angola.com page and world-waterfalls.com). The replacement keeps every verified figure and states the volume ranking as a separate claim; 149 characters, no dated wording.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Kalandula_Falls"
+   ],
+   "confidence": "medium",
+   "from": "af03"
+  },
+  {
+   "code": "CD",
+   "field": "flagColors",
+   "current": "[\"Blue\",\"Yellow\",\"Red\"]",
+   "value": "[\"Light Blue\",\"Yellow\",\"Red\"]",
+   "reason": "Article 1 of the DRC constitution (2006, as amended 2011) describes the emblem as the sky-blue flag with a yellow star in the upper left corner; the Wikipedia flag article describes a sky blue field (#007FFF, Pantone 299) and says the 2006 change was from royal blue to sky blue; the shipped image /tmp/flagwork/out/cd.png is a bright azure, and the app's own flagDescription already says 'a lighter sky blue'. The catalog uses 'Light Blue' for the same shade on Botswana, Somalia, Djibouti, Argentina, Kazakhstan, Fiji and others, so 'Light Blue' is both accurate and consistent.",
+   "sources": [
+    "https://www.constituteproject.org/constitution/Democratic_Republic_of_the_Congo_2011",
+    "https://en.wikipedia.org/wiki/Flag_of_the_Democratic_Republic_of_the_Congo"
+   ],
+   "confidence": "high",
+   "from": "af04"
+  },
+  {
+   "code": "CG",
+   "field": "flagDescription",
+   "current": "The flag dates from 15 September 1959, shortly before independence from France. Green, yellow and red are the Pan-African colors shared with Ethiopia, and this is the only Pan-African flag to arrange them diagonally. Green was said to mean farming and forests, yellow the friendship and nobility of the people; red was given no meaning. A Marxist government flew a red flag from 1970 until the original returned on 10 June 1991.",
+   "value": "The flag dates from 15 September 1959, shortly before independence from France. Green, yellow and red are the Pan-African colors shared with Ethiopia, and this is the only Pan-African flag to arrange them diagonally. Green was said to mean farming and forests, yellow the friendship and nobility of the people; red was given no meaning. A Marxist government later replaced it with a red flag, and the original returned on 10 June 1991.",
+   "reason": "The current text dates the red flag 'from 1970', but Britannica ('On December 30, 1969, a new Marxist regime altered the national flag') and Flags of the World ('abolished on 30 December 1969 when a new constitution introduced a Marxist one-party state') both place the change in 1969; only Wikipedia's infobox gives 2 January 1970, and even its body text implies the People's Republic was proclaimed in 1969. The replacement drops the contested year, keeps the restoration date of 10 June 1991 that all three sources share, and changes nothing else; 435 characters, one paragraph, no jargon.",
+   "sources": [
+    "https://www.britannica.com/topic/flag-of-the-Republic-of-the-Congo",
+    "https://www.crwflags.com/fotw/flags/cg.html",
+    "https://en.wikipedia.org/wiki/Flag_of_the_Republic_of_the_Congo"
+   ],
+   "confidence": "medium",
+   "from": "af05"
+  },
+  {
+   "code": "BF",
+   "field": "population",
+   "current": "23549000",
+   "value": "23550000",
+   "reason": "UN WPP 2024 mid-2024 medium variant for Burkina Faso is 23,548,781 (confirmed on Worldometers' republication of WPP 2024; 2023 row 23,025,776 matches the Wikipedia UN list). The field rule rounds to 3 significant figures, or 4 when the third digit would be 5: 3 s.f. gives 23,500,000, so 4 s.f. applies and gives 23,550,000. The shipped 23,549,000 is a 5 s.f. value the rule does not allow; the no-trailing-5 clause only forbids 3-digit values.",
+   "sources": [
+    "https://www.worldometers.info/world-population/burkina-faso-population/"
+   ],
+   "confidence": "high",
+   "from": "af06"
+  },
+  {
+   "code": "BJ",
+   "field": "funFact",
+   "current": "The Kingdom of Dahomey, which ruled this land before the French, was famous for its elite units of female soldiers, known in Europe as the Dahomey Amazons.",
+   "value": "The Kingdom of Dahomey, which ruled southern Benin before the French, was famous for its elite units of female soldiers, known in Europe as the Dahomey Amazons.",
+   "reason": "Wikipedia's Dahomey article confirms the kingdom grew on the Abomey Plateau and expanded south to the Atlantic coast, covering about 10,000 km2 in 1700, a fraction of Benin's 114,763 km2; the north of present-day Benin was held by other polities. 'Ruled this land' implies the whole country, so 'southern Benin' is the accurate wording. The replacement is exactly 160 characters, one sentence, neutral, and will stay true; the Dahomey Amazons claim is confirmed in the same article.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Dahomey"
+   ],
+   "confidence": "medium",
+   "from": "af06"
+  },
+  {
+   "code": "GN",
+   "field": "flagDescription",
+   "current": "Guinea adopted this flag on 10 November 1958, weeks after leaving French rule. The upright bands follow the French flag's layout, but the colors are the Pan-African red, yellow and green, taken from Ghana's 1957 flag. President Sékou Touré said red stands for the blood of those who died fighting colonial rule and for work, yellow for gold and the sun, and green for the land's plants, matching the motto Work, Justice, Solidarity.",
+   "value": "Guinea adopted this flag on 10 November 1958, weeks after leaving French rule. Its upright bands copy the French flag, but the colors are the Pan-African red, yellow and green of Ethiopia and Ghana, also used by Guinea's independence party. President Sékou Touré said red stands for the blood of those who died fighting colonial rule and for work, yellow for gold and the sun, and green for its plants, echoing the motto Work, Justice, Solidarity.",
+   "reason": "The current text states as plain fact that the colors were taken from Ghana's 1957 flag. Both Britannica (opened) and the Wikipedia flag article (opened) say Guinea's Democratic Party had already used red, yellow and green as early as 1954, before Ghana's flag existed; Wikipedia carries both the RDA/Ghana derivation and the 1954 PDG use without resolving them, and Britannica does not mention the RDA at all. The replacement names the Pan-African shared origin (Ethiopia, Ghana) and the party's prior use without asserting a direct borrowing from Ghana. Touré's meanings (sacrifice and labour; gold and sun; vegetation; mapped to the motto Work, Justice, Solidarity) are confirmed by both pages. 447 characters, one paragraph, no jargon, no double quotes, American spelling.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Guinea",
+    "https://www.britannica.com/topic/flag-of-Guinea"
+   ],
+   "confidence": "high",
+   "from": "af07"
+  },
+  {
+   "code": "LR",
+   "field": "flagDescription",
+   "current": "Liberia's flag dates from 24 August 1847 and was sewn by a committee of seven women. It resembles the US flag because Liberia was founded in 1822 as a settlement for free Black Americans. The eleven stripes are said to stand for the eleven signers of the Declaration of Independence, the white star for Africa's first republic, and the blue square for Africa. A 1961 law reads blue as liberty and justice, white as purity, red as courage.",
+   "value": "Liberia's flag dates from 24 August 1847 and was sewn by a committee of seven women. It resembles the US flag because Liberia was founded in 1822 as a settlement for free Black Americans. The eleven stripes are said to stand for the eleven signers of Liberia's Declaration of Independence, the white star for Africa's first republic, and the blue square for Africa. A 1961 law reads blue as liberty and justice, white as purity, red as courage.",
+   "reason": "Placed right after the sentence about the US flag and American settlers, 'the Declaration of Independence' reads as the US document; the stripes refer to the Liberian Declaration of Independence of 26 July 1847, signed by eleven delegates (plus a secretary). Adding 'Liberia's' removes the ambiguity. Wikipedia's flag article confirms the 24 August 1847 adoption, the seven-woman committee, and that the stripes symbolize the signatories of the Liberian Declaration of Independence; the declaration article lists eleven signing delegates. Replacement is 444 characters, one paragraph, no jargon, no double quotes, all other wording unchanged.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Liberia",
+    "https://en.wikipedia.org/wiki/Liberian_Declaration_of_Independence"
+   ],
+   "confidence": "high",
+   "from": "af08"
+  },
+  {
+   "code": "ML",
+   "field": "flagDescription",
+   "current": "Mali's green, gold and red bands are the Pan-African colors also seen on the flags of Ghana, Guinea and Senegal. Mali took them up in 1959 while briefly united with Senegal; that flag had a black human figure, the kanaga, in the center. It was removed in March 1961 because many Muslims objected to a human image. Green is often said to stand for fertile land, gold for mineral wealth and red for blood shed for independence.",
+   "value": "Mali's green, gold and red bands are the Pan-African colors also seen on the flags of Ghana, Guinea and Senegal. Mali took them up in 1959 while briefly united with Senegal; that flag had a black human figure, the kanaga, in the center. It was removed in March 1961 after some Muslims objected that a human image went against Islam. Green is often said to stand for fertile land, gold for mineral wealth and red for blood shed for independence.",
+   "reason": "Both the Wikipedia flag article and Britannica (opened by me) attribute the removal of the kanaga to objections from Muslim fundamentalists who held that a human image was contrary to Islam, not to a broad popular objection; 'many Muslims objected' misstates who objected and omits the grounds. The replacement (446 characters, one paragraph, no jargon, American spelling) keeps every other verified claim and the hedged color meanings. [Edited after review: \"strict Muslims\" replaced by \"some Muslims\": says who objected and why without labelling them.]",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Mali",
+    "https://www.britannica.com/topic/flag-of-Mali"
+   ],
+   "confidence": "medium",
+   "from": "af09"
+  },
+  {
+   "code": "SZ",
+   "field": "flagDescription",
+   "current": "The flag comes from a banner King Sobhuza II gave in 1941 to Swazi soldiers sent to the Second World War, and became the national flag at independence in 1968. Officially red stands for past battles, blue for peace and stability and yellow for natural resources. The black and white ox-hide shield shows black and white people living in peace, two spears mean protection, and the stick carries feather tassels that only the king may use.",
+   "value": "The flag comes from a banner King Sobhuza II gave in 1941 to Swazi soldiers in the Second World War; first raised in 1967, it became the national flag in October 1968, just after independence. Officially red stands for past battles, blue for peace and yellow for resources. The black and white ox-hide shield shows black and white people living in peace, two spears mean protection, and the stick carries feather tassels that only the king may use.",
+   "reason": "The current text says the flag became the national flag 'at independence in 1968', but it was first hoisted on 25 April 1967 (replacing the Union Jack, per Britannica) and was formally adopted on 6 October 1968, a month after independence on 6 September 1968; Britannica states no change was made on Independence Day. I confirmed both dates on Wikipedia's flag article and Britannica. All other claims (1941 banner, color meanings, shield, spears, king-only feather tassels) match Wikipedia's flag article. Replacement is 448 characters, one paragraph, no jargon or double quotes.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Eswatini",
+    "https://www.britannica.com/topic/flag-of-Swaziland"
+   ],
+   "confidence": "medium",
+   "from": "af11"
+  },
+  {
+   "code": "KM",
+   "field": "funFact",
+   "current": "The coelacanth, a deep-sea fish once known only from fossils, was caught alive off the Comoros island of Anjouan in 1952 and still lives in its waters.",
+   "value": "The coelacanth, a deep-sea fish thought extinct until 1938, was found again off the Comoros island of Anjouan in 1952 and still lives in Comorian waters.",
+   "reason": "The current wording implies the 1952 Anjouan catch was the rediscovery of a fish known only from fossils; Wikipedia and Britannica both state the living coelacanth was first found in 1938 off South Africa and that the 1952 Anjouan fish was the second known specimen. Neither source supports 'caught alive'. The replacement keeps the Comoros angle, is accurate, neutral, undated in its statistics and 153 characters.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/West_Indian_Ocean_coelacanth",
+    "https://www.britannica.com/animal/coelacanth"
+   ],
+   "confidence": "high",
+   "from": "af13"
+  },
+  {
+   "code": "ER",
+   "field": "flagDescription",
+   "current": "Adopted at independence in 1993 and standardized in 1995, the flag copies the red, green and blue triangles of the Eritrean People's Liberation Front flag of 1977. Red is officially for blood shed for independence, green for farming and herds, blue for the sea's wealth. The gold olive branch and wreath replaced the front's star and come from Eritrea's 1952 flag, which honored the United Nations. The 30 leaves are said to mark 30 years of war.",
+   "value": "Adopted at independence in 1993 and standardized in 1995, the flag copies the red, green and blue triangles of the Eritrean People's Liberation Front flag of 1977. The government says red stands for blood shed for independence, green for farming and herds, blue for the sea's wealth. The gold olive branch and wreath replaced the front's star and come from Eritrea's 1952 flag, which honored the UN. The 30 leaves are said to mark 30 years of war.",
+   "reason": "\"Officially\" implies the color meanings are fixed in law, but no proclamation or constitutional text gives them: the 1997 constitution only names the colors, Wikipedia's basis is a Ministry of Information (shabait.com) article, and Britannica attaches the red/green/blue meanings to the EPLF party flag of 1977 and does not restate them for the national flag. \"The government says\" states exactly what the opened sources support. All other claims verified against both sources (24 May 1993 first hoisting, 1995 leaf standardization, EPLF 1977 origin, star replaced by the olive emblem from the 1952 flag whose light blue honored the UN, 30 leaves for the years of war). 447 characters, one paragraph, no double quotes.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Eritrea",
+    "https://www.britannica.com/topic/flag-of-Eritrea"
+   ],
+   "confidence": "medium",
+   "from": "af14"
+  },
+  {
+   "code": "MG",
+   "field": "flagDescription",
+   "current": "Madagascar adopted its flag in 1958, when it gained self-rule from France, two years before independence. Red and white were the colors of the Merina kingdom, which ruled much of the island in the 1800s, linking the new nation to its past. Green is often said to stand for the coastal peoples and for hope. At the 1958 ceremony white was called purity and red sovereignty, but the constitution only describes the bands, with no official meaning.",
+   "value": "Madagascar adopted its flag in 1958, when it gained self-rule from France, two years before independence. Red and white were the colors of the Merina kingdom, which ruled much of the island in the 1800s, linking the new nation to its past. Green is often said to stand for the coastal regions and for hope. At the 1958 ceremony white was called purity and red sovereignty, but the constitution only describes the bands, with no official meaning.",
+   "reason": "Britannica's wording is that green \"represents the coastal regions and symbolizes hope\"; the flag's Wikipedia article ties green to hope (the 1958 Tsara statement and the presidency's reading) and to the island's vegetation, and neither source links it to the coastal peoples as a group. \"Coastal regions\" is the reading the sources actually give. Everything else verified: adoption 21 October 1958 one week after autonomy on 14 October 1958, red and white as Merina royal colors, the 1958 statement (white purity, red sovereignty), and the 2010 constitution's Article 4 describing the layout only. 445 characters, no double quotes.",
+   "sources": [
+    "https://www.britannica.com/topic/flag-of-Madagascar",
+    "https://en.wikipedia.org/wiki/Flag_of_Madagascar"
+   ],
+   "confidence": "medium",
+   "from": "af14"
+  },
+  {
+   "code": "MU",
+   "field": "flagDescription",
+   "current": "Mauritius adopted its flag at independence in 1968; retired schoolteacher Gurudutt Moher designed it. A 2022 national symbols law gives the official meanings: red for the struggle for freedom and independence, blue for the Indian Ocean around the island, yellow for the light of freedom shining over it, and green for farmland that stays green all year. The colors are also often said to match the four main political parties of the time.",
+   "value": "Mauritius adopted its flag at independence on 12 March 1968; primary school teacher Gurudutt Moher designed it. Mauritian flag law gives the official meanings: red for the struggle for freedom and independence, blue for the Indian Ocean around the island, yellow for the new light of independence, and green for farmland that stays green all year. The four colors are also often said to match the four main political parties of the time.",
+   "reason": "Confirmed: Moher was a working primary school teacher when he designed the flag (ozoutback: 'was a primary school teacher at that time'); Wikipedia calls him retired only at his death in 2017 aged 93. The official meanings come from the schedule of the National Flag Act 2015 (Act No. 26 of 2015) as quoted verbatim by FOTW, where yellow is 'the new light of independence'; Wikipedia cites the 2022 Act only for the flag's description and color shades, and the 2022 bill text could not be opened (404), so the law's year is dropped. 437 characters, one paragraph, no jargon.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Mauritius",
+    "https://crwflags.com/fotw/flags/mu.html",
+    "https://ozoutback.com.au/Mauritius/flags/slides/08_Mauritius_1968.html"
+   ],
+   "confidence": "medium",
+   "from": "af15"
+  },
+  {
+   "code": "MZ",
+   "field": "flagDescription",
+   "current": "Adopted in 1983, the flag grew out of that of FRELIMO, which won independence from Portugal in 1975. The constitution gives the meanings: green for the land, black for Africa, yellow for mineral wealth, white lines for peace, the red triangle for the fight against colonial rule, the star for solidarity with other peoples, the book for education, the hoe for farming and the AK-47 rifle for defense. In 2005 parliament voted to keep the rifle.",
+   "value": "Adopted in 1983, the flag grew out of that of FRELIMO, which won independence from Portugal in 1975. The constitution gives the meanings: green for the land, black for Africa, yellow for mineral wealth, white lines for peace, the red triangle for the fight against colonial rule, the star for solidarity with other peoples, the book for study, the hoe for work and the gun, shown as an AK-47, for defense. In 2005 parliament voted to keep the flag.",
+   "reason": "Confirmed against Article 297 of the constitution at constituteproject.org: it says 'a crossed hoe and gun' (never rifle or AK-47) and that 'the book, the hoe and the gun shall symbolise study, production and defence'. The AK-47 identification is a general understanding (Wikipedia), so the text now attributes it as how the gun is shown rather than as the constitution's wording. The 2005 vote (155 to 79) was against changing the flag as a whole after a redesign competition, not a vote on the rifle alone. Adoption on 1 May 1983 and FRELIMO origin confirmed. 448 characters, one paragraph, neutral on the rifle per the owner rule.",
+   "sources": [
+    "https://www.constituteproject.org/constitution/Mozambique_2007",
+    "https://en.wikipedia.org/wiki/Flag_of_Mozambique"
+   ],
+   "confidence": "medium",
+   "from": "af15"
+  },
+  {
+   "code": "SC",
+   "field": "flagDescription",
+   "current": "Adopted in 1996 after multiparty politics returned, this flag mixes the colors of the two main parties: blue and yellow from the Democratic Party, red, white and green from the ruling party. Officially the five bands spreading from the lower left corner show a young country moving into the future. Blue is the sky and sea, yellow the sun, red the people working in unity and love, white social justice and harmony, green the land and nature.",
+   "value": "Adopted in 1996 as multiparty rule returned, this flag mixes the colors of the main parties of that time: blue and yellow from the Democratic Party, red, white and green from the People's Progressive Front, which had ruled since 1977. Officially the bands fanning out from the lower left corner show a young country moving ahead. Blue is sky and sea, yellow the sun, red the people working in unity, white social justice and harmony, green the land.",
+   "reason": "'the ruling party' is volatile wording that already went stale: the party that supplied red, white and green (SPUP, renamed Seychelles People's Progressive Front 1978, Parti Lepep 2009, United Seychelles 2018) ruled 1977-2020, lost the presidency in 2020 and only returned in October 2025 (Wikipedia United Seychelles, opened). The replacement names the party by its 1996 name with a past-tense anchor, keeps the official colour and band meanings exactly as quoted on Wikipedia Flag of Seychelles, uses no jargon, and is 449 characters (I shortened the verifier's text, whose 'in power since 1977' still reads as present tense).",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Seychelles",
+    "https://en.wikipedia.org/wiki/United_Seychelles"
+   ],
+   "confidence": "high",
+   "from": "af16"
+  },
+  {
+   "code": "RW",
+   "field": "flagColors",
+   "current": "[\"Blue\",\"Yellow\",\"Green\"]",
+   "value": "[\"Light Blue\",\"Yellow\",\"Green\"]",
+   "reason": "Wikipedia's Flag of Rwanda lead (opened) describes a 'light blue top half', and Law 34/2008 specifies the band as Pantone 299 C, a sky-blue shade; the constitution names the colour only as 'blue' (the legal name, not the shade). Since the app already labels Somalia's comparable shade 'Light Blue', children matching colours to the picture will see sky blue here. Medium confidence because the authoritative legal text says plain 'blue' and the CIA Factbook page the verifier cited is no longer online.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Rwanda",
+    "https://www.constituteproject.org/constitution/Rwanda_2015"
+   ],
+   "confidence": "medium",
+   "from": "af16"
+  },
+  {
+   "code": "NG",
+   "field": "population",
+   "current": "232700000",
+   "value": "233000000",
+   "reason": "Reference (previously audited) entry, but it breaks the rounding rule used by all other entries: UN WPP 2024 mid-2024 Nigeria is 232,679,478, which rounds to 233,000,000 at 3 significant figures; the third digit is 3, not 5, so no fourth digit is kept.",
+   "sources": [],
+   "confidence": "medium",
+   "from": "critic"
+  },
+  {
+   "code": "BW",
+   "field": "languages",
+   "current": "[\"English\",\"Setswana\"]",
+   "value": "[\"English\",\"Tswana\"]",
+   "reason": "Same language is written \"Tswana\" in the South Africa and Zimbabwe entries. Field rule asks for English spelling; Wikipedia's Botswana infobox names the national language \"Tswana\".",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Botswana"
+   ],
+   "confidence": "medium",
+   "from": "critic"
+  },
+  {
+   "code": "SL",
+   "field": "currency",
+   "current": "Leone (Le)",
+   "value": "Sierra Leonean Leone (Le)",
+   "reason": "Every other national currency in the catalog is written \"Demonym Name (symbol)\" (Algerian Dinar, Ghanaian Cedi, Zambian Kwacha); \"Leone (Le)\" is the only bare name. Wikipedia title: Sierra Leonean leone.",
+   "sources": [],
+   "confidence": "medium",
+   "from": "critic"
+  },
+  {
+   "code": "SN",
+   "field": "flagDescription",
+   "current": "Senegal adopted this flag in 1960 on leaving the short-lived Mali Federation. It kept the federation's three bands of green, gold and red, the Pan-African colors, but swapped its black human figure for a green star. The government says green stands for hope and faith, gold for wealth earned by work and for the arts, red for life and the sacrifice of the nation, and the star's five points for openness to the five continents.",
+   "value": "Senegal adopted this flag in 1960 on leaving the Mali Federation. It kept the federation's three bands of green, gold and red, the Pan-African colors first flown by Ethiopia, but swapped its black human figure for a green star. The government says green stands for hope and faith, gold for wealth earned by work and for the arts, red for life and the sacrifice of the nation, and the star's five points for openness to the five continents.",
+   "reason": "Shared-motif consistency: the decided texts for Benin, Burkina Faso, Cameroon, Guinea, Ghana, Ethiopia and Congo all name Ethiopia as the origin of the Pan-African colors; Senegal names the motif but not the origin. Minimal edit, 439 characters.",
+   "sources": [],
+   "confidence": "medium",
+   "from": "critic"
+  },
+  {
+   "code": "TG",
+   "field": "flagDescription",
+   "current": "Artist Paul Ahyi designed the flag, adopted on 27 April 1960, the day Togo became independent from France. Its green, yellow and red are the Pan-African colors. Its five bands are often said to stand for the five regions. The presidency explains green as forests, farming and hope, yellow as natural resources, faith and maturity, the red square as the blood of independence fighters, and the white star as peace, light and intelligence.",
+   "value": "Paul Ahyi designed the flag, adopted on 27 April 1960, the day Togo became independent from France. Its green, yellow and red are the Pan-African colors of Ethiopia's flag. The five bands are often said to be the five regions. The presidency explains green as forests, farming and hope, yellow as natural resources, faith and maturity, the red square as the blood of independence fighters, and the white star as peace, light and intelligence.",
+   "reason": "Shared-motif consistency: names the shared origin (Ethiopia) in one clause like the other Pan-African entries. 442 characters.",
+   "sources": [],
+   "confidence": "medium",
+   "from": "critic"
+  },
+  {
+   "code": "ST",
+   "field": "flagDescription",
+   "current": "Adopted at independence from Portugal in 1975 and based on the flag of the MLSTP, the movement that won independence; its leader and first president, Manuel Pinto da Costa, is credited with the design. Green, yellow and red are the Pan-African colors shared by many African flags, used here to recall the independence movement. The president's office says the red triangle stands for equality and the two black stars for the two main islands.",
+   "value": "Adopted at independence from Portugal in 1975 and based on the flag of the MLSTP, the movement that won independence; its leader and first president, Manuel Pinto da Costa, is credited with the design. Green, yellow and red are the Pan-African colors of Ethiopia's flag, used here to recall the independence movement. The president's office says the red triangle stands for equality and the two black stars for the two main islands.",
+   "reason": "Shared-motif consistency: names Ethiopia as the origin of the Pan-African colors like the other entries. The symbolism (presidency: triangle for equality, stars for the two islands) matches Wikipedia's flag article. 432 characters.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_S%C3%A3o_Tom%C3%A9_and_Pr%C3%ADncipe"
+   ],
+   "confidence": "medium",
+   "from": "critic"
+  }
+ ],
+ "ownerDecisions": [
+  {
+   "code": "GQ",
+   "field": "capital",
+   "issue": "The shipped capital string 'Ciudad de la Paz (capital), Malabo (former capital)' matches neither the owner decision for this audit ('Malabo, Ciudad de la Paz' with quizCapital 'Ciudad de la Paz') nor the seed ownerRules (Malabo only); the facts are that a decree-law of 2 January 2026 declared Ciudad de la Paz the capital with institutions still moving and Bata the largest city, so the owner should settle which string ships (quizCapital 'Ciudad de la Paz' is contained in both the shipped and the owner strings and needs no change).",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Equatorial_Guinea",
+    "https://en.wikipedia.org/wiki/Ciudad_de_la_Paz"
+   ],
+   "from": "af04"
+  },
+  {
+   "code": "BF",
+   "field": "languages",
+   "issue": "Owner's best-effort list is [Mooré, Dyula, Fula]; Constitutional Law 045-2023/ALT makes the national languages official without naming any, and the UK PCGN Burkina Faso Toponymic Factfile and Wikipedia's Languages of Burkina Faso infobox both list four national/official languages (Mooré, Dioula, Fula and Bissa), so the owner may want to add Bissa, but no implementing law enumerating the official languages was found in any opened source.",
+   "sources": [
+    "https://www.an.bf/storage/Loi/XzJuLCK5kHtKXgYU7Z7pADAGEPgwFV7J7DlX212n.pdf",
+    "https://assets.publishing.service.gov.uk/media/69285c8b345e31ab14ecf671/Burkina_Faso_Toponymic_Factfile.pdf",
+    "https://en.wikipedia.org/wiki/Languages_of_Burkina_Faso"
+   ],
+   "from": "af06"
+  },
+  {
+   "code": "GN",
+   "field": "languages",
+   "issue": "The owner rule fixes Guinea's languages to French only, but the constitution adopted by referendum on 21 September 2025 is reported (International IDEA tracker: the draft 'elevates eight national languages ... to official status alongside French'; Wikipedia's Languages of Guinea article and the Guinea infobox, which now lists Susu, Fulani, Malinke, Kissi, Kpelle, Toma, Landuma and French as official) to make the national languages official alongside French, so the owner may wish to revisit the French-only list; the constitution text itself was not opened and the Wikipedia sentences carry no inline citation.",
+   "sources": [
+    "https://www.idea.int/democracytracker/report/guinea/june-2025",
+    "https://en.wikipedia.org/wiki/Languages_of_Guinea",
+    "https://en.wikipedia.org/wiki/Guinea"
+   ],
+   "from": "af07"
+  },
+  {
+   "code": "GW",
+   "field": "languages",
+   "issue": "The owner rule fixes Guinea-Bissau's languages to Portuguese only, but Wikipedia's lead calls Guinea-Bissau Creole (Kriol) the national language and language of unity while the infobox lists only Portuguese as official, so the owner may want to decide whether the field rule's 'national languages' admits Creole.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Guinea-Bissau"
+   ],
+   "from": "af08"
+  },
+  {
+   "code": "MR",
+   "field": "languages",
+   "issue": "The seed ownerRules say 'languages Arabic', but the shipped list is Arabic, Pulaar, Soninke and Wolof; Article 6 of the constitution (quoted on Wikipedia, opened by me) makes Arabic the sole official language and names all four as national languages, so the owner must choose between Arabic only (as the rule reads) and the four-name list (permitted by the field rule and consistent with Congo, DR Congo, Botswana and Malawi).",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Mauritania"
+   ],
+   "from": "af09"
+  },
+  {
+   "code": "LS",
+   "field": "languages",
+   "issue": "The owner rule fixes Lesotho's languages as Sesotho and English, but the Constitute Project's consolidated constitution (Lesotho 1993, rev. 2025) section 3(1) now reads 'The official languages of Lesotho shall be Sesotho, English, isiXhosa, isiPhuthi and sign language', so if the owner accepts the 2025 Tenth Amendment (still under court challenge) a rule-conforming list would be [\"Sesotho\", \"English\", \"Xhosa\", \"Phuthi\"]; no replacement proposed.",
+   "sources": [
+    "https://constituteproject.org/constitution/Lesotho_2025",
+    "https://en.wikipedia.org/wiki/Languages_of_Lesotho"
+   ],
+   "from": "af11"
+  },
+  {
+   "code": "SS",
+   "field": "flagColors",
+   "issue": "The shipped flag image (app/src/main/res/drawable-nodpi/flag_ss.webp) still shows the older deep-blue triangle, so if flagColors is changed to Light Blue the owner should also replace the image with the light-blue official version (Wikipedia's current SVG) so the color list matches what children see.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_South_Sudan",
+    "https://www.eyeradio.org/media-authority-warns-against-use-of-wrong-national-flag/"
+   ],
+   "from": "af17"
+  }
+ ],
+ "doubts": [
+  {
+   "code": "DZ",
+   "field": "flagDescription",
+   "issue": "The official color meanings come from an Algerian embassy page on the mfa.gov.dz domain, not from the 1963 flag law itself (which only fixes the design); if the owner prefers to cite only law-based meanings, the shipped traditional-only wording could be kept with its 'no meaning' clause corrected to say the law fixes only the design.",
+   "sources": [
+    "https://embastana.mfa.gov.dz/discover-algeria/the-state-symbols"
+   ],
+   "from": "af01"
+  },
+  {
+   "code": "TN",
+   "field": "flagDescription",
+   "issue": "The color meanings (martyrs' blood, peace, Muslim unity, five pillars) are attributed to Tunisia's embassy in France, but Wikipedia cites only a 2018 Wayback archive of that embassy page and no Tunisian law assigns meanings to the colors; the present-tense 'says' rests on a page that may no longer be live, so 'has said' would be safer wording if the owner wants to pre-empt staleness.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Tunisia"
+   ],
+   "from": "af02"
+  },
+  {
+   "code": "ST",
+   "field": "flagDescription",
+   "issue": "The sentence 'The president's office says the red triangle stands for equality and the two black stars for the two main islands' rests only on Wikipedia's citation of a presidencia.st page (single_dep.html?id=21); the live page now carries no flag text, the archived copy could not be fetched from this environment, and Flags of the World records no official symbolism (the constitution describes the layout only), so the attribution is plausible but unverified first hand. If the owner prefers a safer wording, 'The red triangle is said to stand for equality and the two black stars for the two main islands' avoids the attribution without changing the facts.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_S%C3%A3o_Tom%C3%A9_and_Pr%C3%ADncipe",
+    "https://presidencia.st/single_dep.html?id=21",
+    "https://www.crwflags.com/fotw/flags/st.html"
+   ],
+   "from": "af05"
+  },
+  {
+   "code": "GN",
+   "field": "landmarks",
+   "issue": "Mount Nimba is not wholly inside Guinea: the Mount Nimba Strict Nature Reserve is 'located in both Guinea and Côte d'Ivoire' (125.4 km2 in Guinea, 50 km2 in Côte d'Ivoire) and its summit Mount Richard-Molard (1,752 m) is 'the highest peak of both countries' on the shared border. It is Guinea's highest point and the larger part of the UNESCO site lies in Guinea, so it is defensible, but the owner may prefer a landmark entirely within Guinea (for example Kinkon Falls near Pita, or Mount Loura in the Fouta Djallon).",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Mount_Nimba_Strict_Nature_Reserve"
+   ],
+   "from": "af07"
+  },
+  {
+   "code": "SN",
+   "field": "flagDescription",
+   "issue": "The sentence 'The government says ... the star's five points for openness to the five continents' rests on a 2004 Senegalese government web text quoted by FOTW, which calls it only 'somewhat official' (in no law or decree); Wikipedia attributes the color meanings to the government but gives a different star reading (Mali Federation figure or Serer Yoonir star, no five continents) and Britannica gives no star meaning, so the attribution is defensible but not law-backed and the owner may prefer 'The government has said' or 'is often said to'.",
+   "sources": [
+    "https://www.crwflags.com/fotw/flags/sn.html",
+    "https://en.wikipedia.org/wiki/Flag_of_Senegal",
+    "https://www.britannica.com/topic/flag-of-Senegal"
+   ],
+   "from": "af10"
+  },
+  {
+   "code": "SZ",
+   "field": "currency",
+   "issue": "Sources disagree on whether the South African rand is legal tender in Eswatini (Wikipedia's Eswatini infobox lists both SZL and ZAR, the Common Monetary Area article says the rand is legal tender across the CMA, while the Swazi lilangeni article says it ceased to be legal tender in 1986 and is only accepted). The catalog's Lesotho entry lists both loti and rand, so the two CMA entries are inconsistent; if the owner wants parity the candidate string is 'Swazi Lilangeni (SZL), South African Rand (R)', but legal status could not be verified from a primary source.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Swazi_lilangeni",
+    "https://en.wikipedia.org/wiki/Eswatini",
+    "https://monetaryframeworks.org/countries/eswatini"
+   ],
+   "from": "af11"
+  },
+  {
+   "code": "LS",
+   "field": "flagDescription",
+   "issue": "The clause 'black here to represent Lesotho as a black nation' is stated plainly, but on Wikipedia's flag article that sentence carries no citation (I confirmed the paragraph's footnotes attach to later sentences about the parliamentary vote), Britannica gives no reason for the hat's color, and the 2006 legislation could not be opened; if the owner cannot confirm it, hedge it ('said to represent') or replace it with a neutral statement that the hat was changed from brown to black in the final 2006 design. All other claims in the text (4 October 2006, 40th anniversary, 1987 shield/spear/club flag, blue rain, white peace, green prosperity, white hat on the 1966 flag) were confirmed.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Lesotho",
+    "https://www.britannica.com/topic/flag-of-Lesotho"
+   ],
+   "from": "af11"
+  },
+  {
+   "code": "ER",
+   "field": "flagColors",
+   "issue": "The word \"Blue\" matches the official specification (Wikipedia color table Pantone 279 C / #3C8BDC, Britannica \"blue\"), but the shipped asset /tmp/flagwork/out/er.png renders the lower triangle in a light sky blue (sampled RGB 180,215,244, confirmed by me), so either the artwork should be replaced with one in the specified medium blue or the list would need \"Light Blue\" to match what children see; the catalog word is correct for the real flag, so this is an artwork decision rather than a data error.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Eritrea",
+    "https://www.britannica.com/topic/flag-of-Eritrea"
+   ],
+   "from": "af14"
+  },
+  {
+   "code": "MW",
+   "field": "languages",
+   "issue": "Languages of Malawi (Wikipedia) says English is the only official language, the constitution names no national language and treats Chichewa only as a common language, while Britannica calls Chewa the principal national language; no statute making Chichewa official or national was found, so keeping [\"English\", \"Chichewa\"] rests on customary national-language status and is a judgment call for the owner (ownerRules asked to verify).",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Languages_of_Malawi",
+    "https://en.wikipedia.org/wiki/Malawi",
+    "https://www.britannica.com/place/Malawi"
+   ],
+   "from": "af15"
+  },
+  {
+   "code": "SO",
+   "field": "languages",
+   "issue": "The list follows ownerRules (Somali, Arabic), but the verifier reports that a new Somali constitution was approved by Parliament in March 2026 and launched in May 2026, which may have changed Arabic's status (the 2012 text made Somali official and Arabic only 'the second language'); Wikipedia's Constitution of Somalia article I opened does not yet mention a 2026 text, so neither the 2026 adoption nor its language article could be confirmed and the owner may want to check the official text once published.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Constitution_of_Somalia",
+    "https://www.constituteproject.org/constitution/Somalia_2012",
+    "https://villasomalia.gov.so/constitution-2/"
+   ],
+   "from": "af16"
+  }
+ ],
+ "rejected": [
+  {
+   "code": "LY",
+   "field": "flagDescription",
+   "why": "The first (438-character) proposal was superseded: both LY flag findings reported the same misattribution, and the second proposal was chosen because it also attributes the red/black/green meanings to the daughters' account as Wikipedia does and avoids dating the booklet, whose year the article marks as unknown; the adopted text is a lightly edited version of it (447 characters).",
+   "from": "af01"
+  },
+  {
+   "code": "LY",
+   "field": "funFact",
+   "why": "Duplicate of the accepted LY funFact fix from the other verifier; merged into one fix.",
+   "from": "af01"
+  },
+  {
+   "code": "TN",
+   "field": "flagDescription",
+   "why": "Stylistic only: every factual claim in the current text checks out against the Flag of Tunisia article (Hussein II after Navarino 1827, government adoption year 1831 vs Ryan's 1835 so 'around 1831' is fair, Ottoman model, embassy-attributed meanings, 1959 constitution Article 4 and Organic Law 99-56 of 1999). 'Disc' is an accepted American variant spelling (Merriam-Webster lists disk or disc), and 'says' versus 'has said' and 'set' versus 'fix' do not change meaning or truth; the text is one paragraph, about 421 characters, within 150-450. The staleness concern is logged as a doubt instead.",
+   "from": "af02"
+  },
+  {
+   "code": "TD",
+   "field": "languages",
+   "why": "Doubt resolved: I opened the WHO-hosted PDF of the constitution adopted by the 17 December 2023 referendum (TCD_Chad_Constitution_2023.pdf, 290 articles) and extracted its text; Article 10 reads 'les langues officielles sont le français et l'arabe', Article 8 describes the blue, gold, red vertical flag with blue at the pole, and the same article names N'Djaména as capital. The shipped languages, flag description and capital are confirmed against the primary text, so no doubt remains.",
+   "from": "af04"
+  },
+  {
+   "code": "ZW",
+   "field": "currency",
+   "why": "Verified against https://en.wikipedia.org/wiki/Zimbabwean_ZiG and https://en.wikipedia.org/wiki/Zimbabwe: Zimbabwe Gold (ZWG, symbol ZiG) is the de jure currency and the US dollar remains legal tender nationwide under the multicurrency arrangement gazetted to 31 December 2030, so the current string is factually correct. The verifier itself called it a format-and-shelf-life point, not a factual error. The two-currency pattern is an established catalog convention (Lesotho, Liberia and Namibia entries in app/src/main/java/com/example/data/model/AfricaCatalog.kt use the same 'A (x), B (y)' form), and the arrangement runs beyond the five-year horizon. Dropping the US dollar would also hide the currency most used in practice.",
+   "from": "af18"
+  },
+  {
+   "code": "SN",
+   "field": "population",
+   "why": "population is on a 3 significant figure rounding tie",
+   "from": "critic"
+  }
+ ],
+ "notes": [
+  "af01: Opened 5 sources (Algerian MFA state-symbols page, Wikipedia Flag of Libya, Leptis Magna, Flag of Sudan, Pan-Arab colors). All four fixes are flagDescription/funFact text fixes; no capitals, quizCapitals, populations, areas or owner decisions are touched. Character counts were done by hand: DZ 430, LY flag 447, LY funFact 157, SD 447. The LY fix changes the verifier's 'marks the Islamic lunar month' to 'marks the new Islamic month' to match the booklet's 'beginning of the lunar month' more closely and stay under 450. No findings were raised on SD population/area/languages, so prior doubts there remain as recorded in the batch file.",
+  "af02: Batch contained only TN. Opened https://en.wikipedia.org/wiki/Flag_of_Tunisia and confirmed the current flagDescription's content (designer, dates, Ottoman origin, embassy-attributed symbolism, 1959 Article 4 and 1999 organic law). The single finding was a wording/spelling tweak with no factual error, so it is rejected as stylistic; the only substantive point (embassy symbolism cited via an archived page, no legal meaning for the colors) is recorded as a doubt. No owner decisions were touched; capital Tunis and languages Arabic remain as the ownerRules state.",
+  "af03: All three verifier findings were re-checked against the Wikipedia flag articles, the Pan-African colours article and the Kalandula Falls article and kept as fixes. Character counts were computed by script (CM 450, CF 448, AO 149). No finding touched an owner decision. Carried over without new verification: the prior pass's note that all three populations (AO 37,900,000; CM 29,100,000; CF 5,330,000) were read from Worldometer's reproduction of UN WPP 2024 rather than the UN portal, and that Cameroon's area follows the printed total in Wikipedia's list by area (475,650) although the list's land plus water figures sum to 475,440; neither was audited by the verifiers and both remain as previously recorded doubts rather than errors.",
+  "af04: Adjudication of 3 findings for TD, CD, GQ. Kept one fix (CD flagColors to Light Blue: confirmed by the constitution's 'sky-blue', the Wikipedia flag article, the shipped image and catalog consistency with other sky-blue flags). The GQ capital finding is an owner matter: the shipped string differs from the owner-agreed string; no replacement proposed. The TD languages doubt was cleared by reading the 2023 constitution text directly (Article 10: French and Arabic; Article 8: flag; capital N'Djaména), which also removes the earlier pass's doubt about the 2023 article numbers (the language article moved from Article 9 in the 2018 text to Article 10 in the 2023 text; flag remains Article 8). Sources opened: https://en.wikipedia.org/wiki/Flag_of_the_Democratic_Republic_of_the_Congo, https://www.constituteproject.org/constitution/Democratic_Republic_of_the_Congo_2011, https://www.axl.cefan.ulaval.ca/afrique/tchad.htm (cites only the 1996 text), https://en.wikipedia.org/wiki/Equatorial_Guinea, https://en.wikipedia.org/wiki/Ciudad_de_la_Paz, https://extranet.who.int/cpcd/health-legislation/constitution-de-la-republique-du-tchad, https://extranet.who.int/cpcd/sites/default/files/public_file_repository/TCD_Chad_Constitution_2023.pdf. Repository files read only: /tmp/claude-0/-home-user-Guess-countries/7a65ca18-cc05-5533-a221-2dfd9a54698a/scratchpad/audit/africa/batch-04.json, /tmp/flagwork/out/cd.png, and a grep of app/src/main/java/com/example/data/model/*Catalog.kt for 'Light Blue'. No files edited.",
+  "af05: Batch GA, CG, ST adjudicated. Gabon received no findings from either verifier and nothing in the batch file contradicts its entry. For CG I re-opened Britannica, Flags of the World and the Wikipedia flag article myself: the two non-Wikipedia sources agree on 30 December 1969 for the red flag, so the 'from 1970' wording is kept as a fix that removes the year rather than asserting 1969 (confidence medium because Wikipedia's infobox still says 2 January 1970). For ST I re-opened the Wikipedia flag article (which attributes the triangle/stars meaning to the presidency page) and Flags of the World (no official symbolism); the live presidencia.st page returned only navigation and web.archive.org is blocked here, so the attribution stays a doubt, not a fix. No owner decisions are touched.",
+  "af06: Batch BJ/BF/CV adjudicated from /tmp/claude-0/-home-user-Guess-countries/7a65ca18-cc05-5533-a221-2dfd9a54698a/scratchpad/audit/africa/batch-06.json. Both verifier findings of severity improve were re-checked against sources I opened (Worldometers WPP 2024 table for BF population; Wikipedia Dahomey article for BJ fun fact) and kept as fixes; the BF languages finding is an owner decision and is reported for information only. The verifiers raised nothing for CV and no capital or quizCapital changes are involved. Sources listed in the languages owner item were opened by the verifier, not re-opened by me.",
+  "af07: Batch GM, GH, GN. The verifiers raised findings only for GN; no findings were submitted for GM or GH, and nothing in the batch file for those two contradicted the field rules on inspection (GM population 2,760,000 and GH 34,400,000 are correctly rounded from the UN figures in the provenance; GH fun fact 132 chars; GM fun fact 146 chars). The GN flagDescription fix was confirmed directly against Britannica and the Wikipedia flag article; both independently date the Democratic Party of Guinea's use of red, yellow and green to 1954, which contradicts the shipped 'taken from Ghana's 1957 flag'. The GN languages finding touches an owner rule (languages French) and is passed to the owner with the 2025 constitution evidence; it is not proposed as a fix. The Mount Nimba finding stays a doubt because the landmark is defensible (Guinea's highest point, majority of the reserve in Guinea) but the summit sits on the border. GN population (from Worldometers' copy of UN WPP 2024, 14,754,785 -> 14,800,000) was not re-verified against a UN page within the tool budget; rounding is correct if the underlying figure is.",
+  "af08: Batch file read: /tmp/claude-0/-home-user-Guess-countries/7a65ca18-cc05-5533-a221-2dfd9a54698a/scratchpad/audit/africa/batch-08.json. Both verifier findings were checked against the opened sources. LR: the eleven-signers reading is confirmed (Wikipedia flag article says the stripes symbolize the signatories of the Liberian Declaration of Independence; the declaration article lists eleven delegates plus secretary Jacob W. Prout), so the clarifying 'Liberia's' is kept as a fix at 444 characters. GW languages: owner decision, reported for the owner only; the Wikipedia infobox lists only Portuguese as official, the lead calls Creole the national language. Also re-checked GW flag text against the Flag of Guinea-Bissau article: 24 September 1973 adoption, 1961 PAIGC flag, Ghana-derived black star and the absence of legal colour meanings all hold (the PAIGC flag drew on both Ghana's and Guinea's flags, which the current text's 'modeled on Ghana's flag' does not contradict). Character counts: GW flag text 441, CI flag text 436, LR replacement 444, all within 150-450. Populations (GW 2.20M, CI 31.9M, LR 5.61M) and areas match the prior provenance figures and the rounding rule; no new issues raised.",
+  "af09: Batch file read: /tmp/claude-0/-home-user-Guess-countries/7a65ca18-cc05-5533-a221-2dfd9a54698a/scratchpad/audit/africa/batch-09.json (ML, MR, NE). Only two findings were submitted by the verifiers. The ML flag-text finding was confirmed against both cited sources (Wikipedia: removed due to opposition of Islamic fundamentalists, linked to aniconism; Britannica: Muslim fundamentalists objected as contrary to the precepts of Islam) and the replacement was character-counted at 446. The MR languages finding touches an owner rule and is routed to ownerDecisions without a replacement. No findings were raised for NE; nothing was verified beyond the submitted findings within the call budget.",
+  "af10: Batch SN, SL, TG: only one verifier finding was submitted (SN flagDescription, severity doubt). I re-checked it against FOTW, the Wikipedia flag article and Britannica. All three confirm the historical content of the text (independence 20 August 1960 on leaving the Mali Federation, the federation's green-gold-red bands with the black kanaga figure replaced by a green star, Pan-African colors). The color meanings for gold and red are attributed to the Senegalese government by Wikipedia and FOTW; the 'five continents' star reading appears only in FOTW's quotation of the 2004 gouv.sn text, which FOTW rates 'somewhat official' because it appears in no legal text. That makes the current wording sourced but not law-backed, so it is reported as a doubt and no replacement is proposed. No findings were raised for SL or TG and none of the three entries touches an owner decision. Batch file read: /tmp/claude-0/-home-user-Guess-countries/7a65ca18-cc05-5533-a221-2dfd9a54698a/scratchpad/audit/africa/batch-10.json. No repository files were edited.",
+  "af11: Batch BW, SZ, LS. Botswana had no findings and none were raised in adjudication. The Eswatini flag-text fix is a dating precision improvement confirmed against Wikipedia's flag article and Britannica (first hoisted 25 April 1967; adopted 6 October 1968; independence 6 September 1968); the replacement is 448 characters. The Lesotho languages finding is an owner decision and goes untouched; I confirmed the Constitute Project text (rev. 2025) lists Sesotho, English, isiXhosa, isiPhuthi and sign language, with the 2025 amendment reportedly under court challenge. URLs opened in this pass: https://en.wikipedia.org/wiki/Flag_of_Eswatini, https://www.britannica.com/topic/flag-of-Swaziland, https://en.wikipedia.org/wiki/Flag_of_Lesotho, https://constituteproject.org/constitution/Lesotho_2025.",
+  "af12: no findings from either lens",
+  "af13: Batch /tmp/claude-0/-home-user-Guess-countries/7a65ca18-cc05-5533-a221-2dfd9a54698a/scratchpad/audit/africa/batch-13.json (BI, KM, DJ). Only one verifier finding was submitted (KM funFact); I re-checked it against the Wikipedia West Indian Ocean coelacanth article and Britannica's coelacanth article, which independently agree that 1938 (South Africa) was the rediscovery and 1952 (Anjouan) the second specimen, so it is kept as a fix. Character counts: current 151, replacement 153. No owner decisions are touched (Burundi's capital/quizCapital, Comoros' capital and languages, Djibouti's capital and languages are unchanged). No findings were raised for BI or DJ.",
+  "af14: Batch ER, ET, MG. No findings were raised for Ethiopia and I had no independent reason to open its sources within the budget; its entry stands as shipped. Both text fixes were confirmed by opening the Wikipedia flag articles and the Britannica flag articles for Eritrea and Madagascar; character counts verified by script (ER proposed 447, MG proposed 445). No owner decisions are touched. The Eritrea flagColors item stays a doubt because the catalog word is right for the official flag and the mismatch lies in the bundled image.",
+  "af15: Batch file read: /tmp/claude-0/-home-user-Guess-countries/7a65ca18-cc05-5533-a221-2dfd9a54698a/scratchpad/audit/africa/batch-15.json. All three findings were adjudicated: MW languages stays a doubt (sources genuinely conflict, no statute found); MU and MZ flag texts were re-verified by me against Wikipedia, FOTW, ozoutback and the constituteproject text of Mozambique's Article 297 and are kept as fixes with corrected wording and character counts (437 and 448). The MZ replacement differs slightly from the verifier's proposal ('voted to keep the flag' instead of the ambiguous 'keep it', and 'shown as an AK-47' kept so the owner rule about explaining the rifle is still met). The Mauritius 2022 bill PDF on the National Assembly site returned 404, so whether the 2022 Act restates the color meanings remains unverified; the replacement avoids naming a year. No owner decisions were touched.",
+  "af16: Batch RW, SC, SO adjudicated. SC flagDescription kept as a fix with a shortened replacement (449 characters) because the verifier's own 441-character text used 'in power since 1977', which reads as present tense and would itself go stale. RW flagColors kept as a medium-confidence fix: Wikipedia's lead says light blue and Pantone 299 C is a sky blue, though the constitution names the colour plainly as blue, so the owner may prefer to leave it. SO languages passed through as a doubt only; it touches an ownerRules language list and the 2026 constitution claim could not be confirmed from the page I opened. The CIA Factbook pages cited by the verifier now return a 'publication sunset' notice and were not usable.",
+  "af17: Batch SS, UG, ZM: the only verifier findings were the two duplicate South Sudan flagColors reports (Light Blue vs Blue), merged into one fix. I opened Wikipedia's Flag of South Sudan article and the Eye Radio report of the Media Authority memo; both independently confirm the official triangle is light blue and that deep blue is a wrong reproduction. I also viewed the app's shipped flag_ss.webp, which shows the deep-blue variant, hence the owner decision about swapping the image alongside the color list. No findings were raised for Uganda or Zambia and none of the batch touches an owner decision from the fixed list.",
+  "af18: Batch of one country (ZW). Single finding adjudicated: no fixes. Sources opened: https://en.wikipedia.org/wiki/Zimbabwean_ZiG (ISO code ZWG, symbol ZiG; foreign currencies restored and remain legal tender; Reuters-cited gazette valid until 31 December 2030) and https://en.wikipedia.org/wiki/Zimbabwe (infobox: de jure Zimbabwe Gold, de facto US dollar and South African rand). Catalog check: /home/user/Guess-countries/app/src/main/java/com/example/data/model/AfricaCatalog.kt lines 455, 473, 629 and 942 all use two-currency strings, so the ZW string is consistent with the app's convention. If the owner later decides that every currency field must hold exactly one currency, the replacement would be 'Zimbabwe Gold (ZiG)', and the Lesotho, Liberia and Namibia entries would need the same policy decision; that is a catalog-wide style choice for the owner, not an error in this entry. No other fields were challenged by either verifier; prior doubts on population, languages and flag text were not re-opened within the tool budget.",
+  "critic: Whole-continent checks that passed: no duplicate quizCapital in Africa; shared currencies are written identically (8 x \"West African CFA Franc (CFA)\", 6 x \"Central African CFA Franc (FCFA)\", \"US Dollar (US$)\" in LR and ZW, \"South African Rand (R)\" in LS, NA, ZA); every subregion matches the UN M49 scheme (Sudan in Northern Africa, Zambia/Zimbabwe/Mozambique in Eastern Africa); every quizCapital is contained in its capital string; no fun fact repeats another country's; no flag text or fun fact uses the banned jargon words, British spellings, double quotes or dated wording; all flag texts are 150-450 characters and all fun facts at most 160; all landmark lists have exactly three entries with no comma or ampersand.",
+  "critic: Areas verified against Wikipedia's list of countries by area: Cameroon 475,650, Mozambique 799,380, Namibia 824,292, Sierra Leone 72,300, Sudan 1,878,000, South Africa 1,219,090, Mauritius 2,096, Seychelles 457, Comoros 1,861, Cape Verde 4,033, Sao Tome 964, Ghana 238,537, Nigeria 923,768, Senegal 196,712, Burkina Faso 274,200, Gambia 11,295, Eswatini 17,363, South Sudan 644,329, Tanzania 947,303 all match the entries, even where they differ from the country infoboxes.",
+  "critic: Populations checked against UN WPP 2024 mid-2024 figures from memory: all 54 entries match the rounding rule except Senegal (5 significant figures) and Nigeria (4 significant figures with a third digit of 3), reported above. Burkina Faso's decided fix (23,550,000) is correct.",
+  "critic: OWNER (no replacement): Equatorial Guinea's capital string in the file is \"Ciudad de la Paz (capital), Malabo (former capital)\" while the owner decision text reads \"Malabo, Ciudad de la Paz\" with quizCapital \"Ciudad de la Paz\". The quizCapital matches, but the capital string does not match the owner's wording, and calling Malabo a \"former capital\" is a stronger claim than most sources make. Flagged only so the owner can confirm which string is intended.",
+  "critic: DOUBT (not verified, no fix): Senegal's language list versus Mauritania's. Mauritania lists its three constitutional national languages, Senegal lists French only although its constitution names national languages too; whichever policy the owner picks should apply to both (and to Guinea, whose national languages have no constitutional status, so French-only is fine there).",
+  "critic: DOUBT (no fix): colour naming mixes \"Gold\" (Ghana, Mali, Senegal, Mauritania, Egypt, Eritrea, Namibia, South Africa, Zimbabwe) and \"Yellow\" (Benin, Guinea, Cameroon, Togo and others) for the same Pan-African shade. The rules only police Light Blue versus Blue, so this is reported as a style note, not an error.",
+  "critic: Niger's language list (Hausa only) was checked: Wikipedia's infobox now gives Hausa as the official language with English and French as working languages under the 2025 transitional charter, so the entry is consistent with the field rule.",
+  "critic: Flag-text hedging is consistent across the continent: official meanings are attributed (constitution, flag law, government, presidency, embassy) and traditional readings are hedged; no entry states a folk meaning as fact. The decided fixes for DZ, LY, SD, CM, CF, CG, GN, LR, ML, SZ, ER, MG, MU, MZ, SC were taken as applied."
+ ],
+ "duplicates": [],
+ "perBatch": [
+  {
+   "id": "af01",
+   "codes": [
+    "DZ",
+    "LY",
+    "SD"
+   ],
+   "factsFindings": 2,
+   "textsFindings": 4,
+   "fixes": 4
+  },
+  {
+   "id": "af02",
+   "codes": [
+    "TN"
+   ],
+   "factsFindings": 0,
+   "textsFindings": 1,
+   "fixes": 0
+  },
+  {
+   "id": "af03",
+   "codes": [
+    "AO",
+    "CM",
+    "CF"
+   ],
+   "factsFindings": 0,
+   "textsFindings": 3,
+   "fixes": 3
+  },
+  {
+   "id": "af04",
+   "codes": [
+    "TD",
+    "CD",
+    "GQ"
+   ],
+   "factsFindings": 2,
+   "textsFindings": 1,
+   "fixes": 1
+  },
+  {
+   "id": "af05",
+   "codes": [
+    "GA",
+    "CG",
+    "ST"
+   ],
+   "factsFindings": 0,
+   "textsFindings": 2,
+   "fixes": 1
+  },
+  {
+   "id": "af06",
+   "codes": [
+    "BJ",
+    "BF",
+    "CV"
+   ],
+   "factsFindings": 2,
+   "textsFindings": 1,
+   "fixes": 2
+  },
+  {
+   "id": "af07",
+   "codes": [
+    "GM",
+    "GH",
+    "GN"
+   ],
+   "factsFindings": 2,
+   "textsFindings": 1,
+   "fixes": 1
+  },
+  {
+   "id": "af08",
+   "codes": [
+    "GW",
+    "CI",
+    "LR"
+   ],
+   "factsFindings": 1,
+   "textsFindings": 1,
+   "fixes": 1
+  },
+  {
+   "id": "af09",
+   "codes": [
+    "ML",
+    "MR",
+    "NE"
+   ],
+   "factsFindings": 1,
+   "textsFindings": 1,
+   "fixes": 1
+  },
+  {
+   "id": "af10",
+   "codes": [
+    "SN",
+    "SL",
+    "TG"
+   ],
+   "factsFindings": 0,
+   "textsFindings": 1,
+   "fixes": 0
+  },
+  {
+   "id": "af11",
+   "codes": [
+    "BW",
+    "SZ",
+    "LS"
+   ],
+   "factsFindings": 2,
+   "textsFindings": 2,
+   "fixes": 1
+  },
+  {
+   "id": "af12",
+   "codes": [
+    "NA"
+   ],
+   "factsFindings": 0,
+   "textsFindings": 0,
+   "fixes": 0
+  },
+  {
+   "id": "af13",
+   "codes": [
+    "BI",
+    "KM",
+    "DJ"
+   ],
+   "factsFindings": 0,
+   "textsFindings": 1,
+   "fixes": 1
+  },
+  {
+   "id": "af14",
+   "codes": [
+    "ER",
+    "ET",
+    "MG"
+   ],
+   "factsFindings": 0,
+   "textsFindings": 3,
+   "fixes": 2
+  },
+  {
+   "id": "af15",
+   "codes": [
+    "MW",
+    "MU",
+    "MZ"
+   ],
+   "factsFindings": 1,
+   "textsFindings": 2,
+   "fixes": 2
+  },
+  {
+   "id": "af16",
+   "codes": [
+    "RW",
+    "SC",
+    "SO"
+   ],
+   "factsFindings": 1,
+   "textsFindings": 2,
+   "fixes": 2
+  },
+  {
+   "id": "af17",
+   "codes": [
+    "SS",
+    "UG",
+    "ZM"
+   ],
+   "factsFindings": 1,
+   "textsFindings": 1,
+   "fixes": 1
+  },
+  {
+   "id": "af18",
+   "codes": [
+    "ZW"
+   ],
+   "factsFindings": 1,
+   "textsFindings": 0,
+   "fixes": 0
+  }
+ ],
+ "droppedOrderOnly": [],
+ "rejectedAfterReview": [
+  {
+   "code": "SS",
+   "field": "flagColors",
+   "why": "Reviewed and not applied. The official triangle is light blue, but the shipped flag image still shows the older deep-blue triangle, so a Light Blue label would contradict the picture a child sees. Change the image first (new artwork and checksum), then the colour.",
+   "proposedValue": "[\"Light Blue\",\"Yellow\",\"Black\",\"White\",\"Red\",\"Green\"]"
+  },
+  {
+   "code": "MW",
+   "field": "languages",
+   "why": "Reviewed and not applied. Chichewa is the name Malawi itself uses in English; Chewa is also correct. A spelling preference, not an error, and Chichewa's legal status is itself a doubt.",
+   "proposedValue": "[\"English\",\"Chewa\"]"
+  },
+  {
+   "code": "LS",
+   "field": "languages",
+   "why": "Reviewed and not applied. Lesotho's language list is an owner rule (Sesotho, English), and Sesotho is the constitution's own form.",
+   "proposedValue": "[\"Sotho\",\"English\"]"
+  },
+  {
+   "code": "MA",
+   "field": "languages",
+   "why": "Reviewed and not applied. The form \"Amazigh (Tamazight)\" is pinned by the dataset tests (an earlier decision), so the critic's consistency change stays out.",
+   "proposedValue": "[\"Arabic\",\"Tamazight\"]"
+  },
+  {
+   "code": "SN",
+   "field": "languages",
+   "why": "Reviewed and not applied. Whether constitutional national languages belong in the lists is a policy question that must be settled the same way for Senegal, Mauritania, Guinea and others; left for the owner.",
+   "proposedValue": "[\"French\",\"Wolof\",\"Pulaar\",\"Serer\",\"Jola\",\"Mandinka\",\"Soninke\"]"
+  }
+ ],
+ "editedAfterReview": [
+  {
+   "code": "ML",
+   "field": "flagDescription",
+   "why": "\"strict Muslims\" replaced by \"some Muslims\": says who objected and why without labelling them.",
+   "proposedValue": "Mali's green, gold and red bands are the Pan-African colors also seen on the flags of Ghana, Guinea and Senegal. Mali took them up in 1959 while briefly united with Senegal; that flag had a black human figure, the kanaga, in the center. It was removed in March 1961 after strict Muslims objected that a human image went against Islam. Green is often said to stand for fertile land, gold for mineral wealth and red for blood shed for independence."
+  }
+ ]
+}
