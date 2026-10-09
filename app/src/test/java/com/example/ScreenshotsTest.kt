@@ -1,5 +1,10 @@
 package com.example
 
+import org.robolectric.Shadows.shadowOf
+import com.example.support.TestWorkManagerRule
+import androidx.test.core.app.ApplicationProvider
+import android.app.Application
+import android.Manifest
 import androidx.compose.ui.test.onNodeWithText
 import kotlinx.coroutines.runBlocking
 import com.example.support.drawLatestDialog
@@ -42,7 +47,8 @@ class ScreenshotsTest {
 
     private val composeRule = createAndroidComposeRule<MainActivity>()
 
-    @get:Rule val chain: RuleChain = RuleChain.outerRule(FreshDatabaseRule()).around(composeRule)
+    @get:Rule val chain: RuleChain =
+        RuleChain.outerRule(FreshDatabaseRule()).around(TestWorkManagerRule()).around(composeRule)
 
     private val rule get() = composeRule
 
@@ -139,5 +145,15 @@ class ScreenshotsTest {
         // Asserting on the screen lets it recompose first; drawing right after the state changes would show the old card.
         rule.onNodeWithText("3-day streak").assertIsDisplayed()
         save("stats")
+
+        // The reminder switched on, then its time picker.
+        shadowOf(ApplicationProvider.getApplicationContext<Application>()).grantPermissions(Manifest.permission.POST_NOTIFICATIONS)
+        rule.onNodeWithTag("reminder_switch").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithTag("reminder_time_btn").assertIsDisplayed()
+        save("stats_reminder_on")
+        rule.onNodeWithTag("reminder_time_btn").performClick()
+        rule.waitForIdle()
+        saveBitmap("stats_time_picker", drawLatestDialog())
     }
 }

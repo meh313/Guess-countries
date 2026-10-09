@@ -15,7 +15,8 @@ drill them with flashcards, and test yourself with quizzes. Everything runs on t
   look-alike flag among the wrong answers, *Hard* as many as exist (the choice is remembered). The *Weak spots* scope quizzes you on
   the ten countries you know least.
 - **Stats** – a daily practice streak (a day counts when you finish one quiz; days follow the device's time zone),
-  mastery per continent and a log of recent quizzes.
+  an optional daily reminder (a notification at a time you pick, only on days without a finished quiz; it asks for
+  the notification permission on Android 13 and newer), mastery per continent and a log of recent quizzes.
 
 ## Build
 
@@ -66,6 +67,8 @@ are then kept as a workflow artifact for a week.
 | --- | --- |
 | `quiz/` | Pure quiz rules (`QuizEngine`) and the immutable `QuizSession`; no Android types. |
 | `progress/` | Pure practice-streak rules (`PracticeStreak`), computed from when quizzes finished. |
+| `reminder/` | The daily reminder: pure schedule rules, the WorkManager scheduler and worker, the notification. |
+| `data/settings/` | `UserSettings`: the few preferences kept in SharedPreferences (answers difficulty, reminder). |
 | `flashcards/` | Deck ordering for the flashcard screen. |
 | `speech/` | Text-to-speech behind a small `Speech` interface. |
 | `data/model/` | The country catalog, one file per continent (`EuropeCatalog.kt`…, alphabetical), and `CountryRepository`. |
