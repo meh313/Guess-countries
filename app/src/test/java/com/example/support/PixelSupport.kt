@@ -7,6 +7,7 @@ import android.os.Looper
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import org.robolectric.Shadows.shadowOf
+import org.robolectric.shadows.ShadowDialog
 
 /**
  * The window drawn into a plain bitmap. This works under native graphics. Compose's captureToImage does
@@ -17,6 +18,18 @@ fun AndroidComposeTestRule<*, *>.drawWindow(): Bitmap {
     val window = activity.window.decorView
     val bitmap = Bitmap.createBitmap(window.width, window.height, Bitmap.Config.ARGB_8888)
     window.draw(Canvas(bitmap))
+    return bitmap
+}
+
+/**
+ * The newest dialog drawn into a plain bitmap. A dialog is a window of its own, so [drawWindow] leaves it out; the
+ * dialog's content is sized as it would be on screen (the dialog window is narrower than the activity's).
+ */
+fun drawLatestDialog(): Bitmap {
+    shadowOf(Looper.getMainLooper()).idle()
+    val view = ShadowDialog.getLatestDialog().window!!.decorView
+    val bitmap = Bitmap.createBitmap(view.width.coerceAtLeast(1), view.height.coerceAtLeast(1), Bitmap.Config.ARGB_8888)
+    view.draw(Canvas(bitmap))
     return bitmap
 }
 

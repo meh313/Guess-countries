@@ -78,6 +78,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.progress.PracticeStreak
 import com.example.quiz.QuizDifficulty
 import com.example.quiz.QuizEngine
 import com.example.quiz.QuizMode
@@ -739,6 +740,7 @@ fun QuizScreen(
 
     // Finish Celebration Dialog
     if (active?.isFinished == true) {
+        val streakOutcome by viewModel.finishOutcome.collectAsState()
         AlertDialog(
             onDismissRequest = { viewModel.endQuiz() },
             title = {
@@ -768,6 +770,22 @@ fun QuizScreen(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.testTag("quiz_finish_difficulty")
+                        )
+                    }
+                    streakOutcome?.let { outcome ->
+                        Text(
+                            text = when (outcome.kind) {
+                                PracticeStreak.Kind.STARTED -> "Streak started: day 1"
+                                PracticeStreak.Kind.KEPT -> "Streak kept: ${outcome.days} days"
+                                PracticeStreak.Kind.ALREADY_COUNTED -> "${outcome.days}-day streak, already counted today"
+                            },
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.secondary,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .padding(top = 8.dp, bottom = 4.dp)
+                                .testTag("quiz_finish_streak")
                         )
                     }
                     Text(

@@ -14,7 +14,8 @@ drill them with flashcards, and test yourself with quizzes. Everything runs on t
   (as many flags as you can). Ten questions or fewer, with a streak bonus. *Answers: Normal* puts one
   look-alike flag among the wrong answers, *Hard* as many as exist (the choice is remembered). The *Weak spots* scope quizzes you on
   the ten countries you know least.
-- **Stats** – mastery per continent and a log of recent quizzes.
+- **Stats** – a daily practice streak (a day counts when you finish one quiz; days follow the device's time zone),
+  mastery per continent and a log of recent quizzes.
 
 ## Build
 
@@ -64,6 +65,7 @@ are then kept as a workflow artifact for a week.
 | Path | What lives there |
 | --- | --- |
 | `quiz/` | Pure quiz rules (`QuizEngine`) and the immutable `QuizSession`; no Android types. |
+| `progress/` | Pure practice-streak rules (`PracticeStreak`), computed from when quizzes finished. |
 | `flashcards/` | Deck ordering for the flashcard screen. |
 | `speech/` | Text-to-speech behind a small `Speech` interface. |
 | `data/model/` | The country catalog, one file per continent (`EuropeCatalog.kt`…, alphabetical), and `CountryRepository`. |

@@ -17,16 +17,19 @@ import com.example.data.model.WeakSpots
 import com.example.data.settings.InMemoryUserSettings
 import com.example.data.settings.PrefsUserSettings
 import com.example.data.settings.UserSettings
+import com.example.progress.PracticeStreak
 import com.example.quiz.QuizDifficulty
 import com.example.quiz.QuizEngine
 import com.example.quiz.QuizMode
 import com.example.quiz.QuizSession
 import com.example.speech.AndroidSpeech
 import com.example.speech.Speech
+import java.util.TimeZone
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -40,6 +43,8 @@ class CountryViewModel(
     private val speech: Speech,
     /** Monotonic milliseconds, used to time Speed Round questions. Injected so tests can control time. */
     private val clock: () -> Long = SystemClock::elapsedRealtime,
+    /** The time zone whose midnights end a practice day. Injected so tests can pin it. */
+    private val zone: () -> TimeZone = TimeZone::getDefault,
     /** Settings that outlive the app process; in tests an in-memory copy. */
     private val settings: UserSettings = InMemoryUserSettings()
 ) : ViewModel() {
@@ -79,6 +84,21 @@ class CountryViewModel(
     val weakSpots: StateFlow<List<Country>> = repository.progress
         .map { WeakSpots.select(it, repository.allCountries) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    private val streakRefresh = MutableStateFlow(0)
+
+    /** The daily practice streak, worked out from when quizzes finished; see [refreshStreak] for the day rolling over. */
+    val streak: StateFlow<PracticeStreak.Summary> = combine(repository.quizHistory, streakRefresh) { history, _ ->
+        PracticeStreak.summary(history.map { it.timestamp }, repository.now(), zone())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PracticeStreak.NONE)
+
+    /** Works the streak out again against the current time: a day can end while the Progress screen is open. */
+    fun refreshStreak() = streakRefresh.update { it + 1 }
+
+    private val _finishOutcome = MutableStateFlow<PracticeStreak.Outcome?>(null)
+
+    /** What the quiz that just finished did to the streak, for its score screen; null until it is known. */
+    val finishOutcome: StateFlow<PracticeStreak.Outcome?> = _finishOutcome
 
     val filteredCountries: StateFlow<List<Country>> = combine(
         searchQuery,
@@ -168,6 +188,7 @@ class CountryViewModel(
             QuizEngine.generate(pool, mode, difficulty = difficulty)
         }
         if (questions.isEmpty()) return
+        _finishOutcome.value = null
         _quizSession.value = QuizSession(
             mode = mode,
             scope = effectiveScope,
@@ -218,11 +239,16 @@ class CountryViewModel(
     /** Fixed-length quizzes are scored out of the best possible; an endless one by how many were right. */
     private fun onQuizFinished(session: QuizSession) {
         val total = if (session.mode.isEndless) session.correct else session.maxScore
-        saveQuizResult(session.mode.name, session.score, total, session.scope)
+        // The save hands back the finish times before this one, so "already counted today" means an earlier quiz.
+        viewModelScope.launch {
+            val earlier = repository.saveQuizScore(session.mode.name, session.score, total, session.scope)
+            _finishOutcome.value = PracticeStreak.outcome(earlier, repository.now(), zone())
+        }
     }
 
     fun endQuiz() {
         _quizSession.value = null
+        _finishOutcome.value = null
     }
 
     fun saveQuizResult(mode: String, score: Int, total: Int, continent: String) {

@@ -52,7 +52,7 @@ class QuizSetupScreenTest {
 
     @After
     fun tearDown() {
-        db.closeWhenIdle()
+        db.closeWhenIdle(*created.toTypedArray())
     }
 
     /** Three Oceania countries (too few) and six African ones (fewer than ten). */
@@ -68,8 +68,13 @@ class QuizSetupScreenTest {
         rule.onNodeWithTag(tag).performScrollTo().performClick()
     }
 
+    private val created = mutableListOf<CountryViewModel>()
+
+    private fun newViewModel(settings: InMemoryUserSettings = InMemoryUserSettings()) =
+        CountryViewModel(CountryRepository(db.userProgressDao(), smallWorld), FakeSpeech(), settings = settings).also { created += it }
+
     private fun show() {
-        val vm = CountryViewModel(CountryRepository(db.userProgressDao(), smallWorld), FakeSpeech())
+        val vm = newViewModel()
         rule.setContent { WorldFlagsTheme { QuizScreen(vm) } }
         rule.waitForIdle()
     }
@@ -150,7 +155,7 @@ class QuizSetupScreenTest {
     }
 
     private fun showWithWeakSpots(count: Int): CountryViewModel {
-        val vm = CountryViewModel(CountryRepository(db.userProgressDao(), smallWorld), FakeSpeech())
+        val vm = newViewModel()
         rule.setContent { WorldFlagsTheme { QuizScreen(vm) } }
         rule.awaitWeakSpots(vm, count)
         rule.waitForIdle()
@@ -213,7 +218,7 @@ class QuizSetupScreenTest {
     @Test
     fun theAnswersRow_startsOnTheRememberedDifficultyAndRemembersTheNextChoice() {
         val settings = InMemoryUserSettings(QuizDifficulty.HARD)
-        val vm = CountryViewModel(CountryRepository(db.userProgressDao(), smallWorld), FakeSpeech(), settings = settings)
+        val vm = newViewModel(settings)
         rule.setContent { WorldFlagsTheme { QuizScreen(vm) } }
         rule.waitForIdle()
 
