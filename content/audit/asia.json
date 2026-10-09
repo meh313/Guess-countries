@@ -1,0 +1,684 @@
+{
+ "continent": "Asia",
+ "batchesRun": 15,
+ "batchesMissing": [],
+ "fixes": [
+  {
+   "code": "BT",
+   "field": "flagDescription",
+   "current": "A dragon has stood for Bhutan's name, Druk Yul, land of the thunder dragon, on its flag since 1949; today's design dates from 1969. By the constitution, the upper yellow stands for the king and civil tradition, the lower orange for Buddhist spiritual tradition, and the white dragon for the people's pure thoughts and unity. The jewels in its claws mean wealth and safety, and its snarling mouth the gods said to protect Bhutan.",
+   "value": "A dragon has been on Bhutan's flag since 1949, for the country's name, Druk Yul, land of the thunder dragon; today's design dates from 1969. By the constitution, the upper yellow stands for the king and secular tradition, the lower orange for Buddhist tradition, and the white dragon for the people's pure thoughts and loyalty. The jewels in its claws are often said to mean wealth and safety, and its snarling mouth the gods said to protect Bhutan.",
+   "reason": "Merged both verifiers' findings on this field. Opened the 2008 constitution's First Schedule: the white dragon symbolizes the undefiled thoughts of the people that express their loyalty, patriotism and sense of belonging despite different ethnic and linguistic origins; 'unity' is Wikipedia's paraphrase, not the constitution's wording, and the sentence is attributed to the constitution. Yellow is the secular tradition embodying the King, orange the spiritual tradition of Buddha's teachings, the dragon the name of the Kingdom. Neither the constitution nor the 1972 National Flag Rules (WIPO Lex BT025) mentions the jewels or the snarling mouth; Wikipedia attributes the jewel meaning to a 2008 government National Symbols page and the mouth to the constitution, which it does not contain, so both are now hedged with 'often said to'. 449 characters, one paragraph, no double quotes, no jargon (the constitution's 'fimbriation' is not used).",
+   "sources": [
+    "https://www.constituteproject.org/constitution/Bhutan_2008",
+    "https://www.wipo.int/wipolex/en/text/490663",
+    "https://en.wikipedia.org/wiki/Flag_of_Bhutan"
+   ],
+   "confidence": "high",
+   "from": "as01"
+  },
+  {
+   "code": "BT",
+   "field": "funFact",
+   "current": "Bhutan's constitution requires at least 60 percent of the country to stay under forest cover forever, and it measures progress by Gross National Happiness.",
+   "value": "Bhutan's constitution says at least 60 percent of the land must stay under forest for all time, and the country is guided by Gross National Happiness.",
+   "reason": "As written, 'it' refers back to the constitution, so the sentence claims the constitution measures progress by Gross National Happiness; Article 9(2), which I opened, only says the State shall strive to promote conditions enabling the pursuit of Gross National Happiness. Article 5(3) says a minimum of sixty percent of total land shall be maintained under forest cover for all time, which the new wording follows. 150 characters, one sentence, still true in five years.",
+   "sources": [
+    "https://www.constituteproject.org/constitution/Bhutan_2008"
+   ],
+   "confidence": "medium",
+   "from": "as01"
+  },
+  {
+   "code": "NP",
+   "field": "flagDescription",
+   "current": "Nepal's flag is the only national flag that is not a rectangle: two stacked pennants once flown separately by branches of the ruling family. Crimson, the color of the rhododendron, Nepal's national flower, is often said to mean bravery; the blue border is said to mean peace. The moon and sun had human faces until 1962, when the constitution fixed today's design; they are often read as a wish that Nepal will last as long as they do.",
+   "value": "Nepal's flag is the only national flag that is not a rectangle: two stacked pennants said to be banners once flown by rival branches of the ruling family. Crimson, the color of the rhododendron, the national flower, is often said to mean bravery; the blue border is said to mean peace. The moon and sun had human faces until 1962, when the constitution fixed today's design; they are often read as a wish that Nepal will last as long as they do.",
+   "reason": "The two-pennant origin is stated as plain fact, but the Wikipedia flag article itself says the flag's history is vague with no specific account of its creator and only reports that many accounts credit Prithvi Narayan Shah, while Britannica says only that the sun and moon are associated with different dynasties and that the basic design dates back centuries. A traditional origin must be hedged. Replacement is 445 characters (counted), one paragraph, no jargon; the 1962 constitution date (Britannica: established under the constitution of December 16, 1962), the rhododendron and the hedged color and sun-moon readings are confirmed in both sources and kept unchanged.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Nepal",
+    "https://www.britannica.com/topic/flag-of-Nepal"
+   ],
+   "confidence": "medium",
+   "from": "as02"
+  },
+  {
+   "code": "BH",
+   "field": "flagDescription",
+   "current": "Bahrain long flew a plain red flag, a traditional color of Gulf Arab states. After an 1820 peace treaty with Britain, a white band was added at the left edge to set it apart from pirate flags. The zigzag edge came in the 1930s to tell it from neighbors' flags. A royal decree of 14 February 2002 fixed the white points at five, which the government links to the Five Pillars of Islam. Red is often said to recall past battles, white peace.",
+   "value": "Bahrain long flew a plain red flag, a traditional color of Gulf Arab rulers. After an 1820 peace treaty with Britain, a white band was added at the left edge to set it apart from pirate flags. The zigzag edge came in the 1930s to tell it from neighbors' flags. A royal decree of 14 February 2002 fixed the white points at five; they are widely said to stand for the Five Pillars of Islam. Red is often said to recall past battles, white peace.",
+   "reason": "The shipped text states as a government position something no opened source attributes to the government. Wikipedia's Five Pillars sentence carries no citation and its excerpt of Decree-Law No. 4 of 2002 (Articles I-IX) only describes shape, colors, use and penalties; FOTW's quoted decree article likewise says nothing about pillars, and the only sources on FOTW tying the five points to the pillars are a Bahrain Tribune report and a page author's note. The official Bahrainouna site returned HTTP 503 and no bahrain.bh, mofa.gov.bh or bna.bh page could be found. Under the field rule, an unconfirmed traditional reading must be hedged. Replacement is 443 characters (counted), one paragraph, no jargon, no double quotes, American spelling.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Bahrain",
+    "https://www.fotw.info/flags/bh.html",
+    "https://www.bahrainouna.com/"
+   ],
+   "confidence": "medium",
+   "from": "as04"
+  },
+  {
+   "code": "AZ",
+   "field": "flagColors",
+   "current": "[\"Blue\",\"Red\",\"Green\",\"White\"]",
+   "value": "[\"Light Blue\",\"Red\",\"Green\",\"White\"]",
+   "reason": "The official color standard (amendment of 22 October 2013 to the flag law, per Wikipedia) sets the top band at Pantone 306 C, hex #00B5E2, a sky blue, and the article itself calls it light blue, sky blue and bright blue. The shipped image flag_az.webp (opened) shows the same cyan sky blue. The catalog already labels comparable shades Light Blue (Kazakhstan Pantone-style cyan, Argentina, Botswana, Somalia, Fiji), so plain Blue is both inaccurate for the shade a child sees and inconsistent with the app's own convention. Only the shade word changes; order untouched.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Azerbaijan",
+    "/home/user/Guess-countries/app/src/main/res/drawable-nodpi/flag_az.webp",
+    "/home/user/Guess-countries/app/src/main/java/com/example/data/model/AsiaCatalog.kt"
+   ],
+   "confidence": "medium",
+   "from": "as04"
+  },
+  {
+   "code": "GE",
+   "field": "flagDescription",
+   "current": "Georgia adopted the five-cross flag in 2004 after the Rose Revolution, whose leaders had marched under it. The big red cross on white is the cross of St. George, the country's patron saint, shown for Georgia on a map from 1367. The four smaller crosses are thought to copy the Jerusalem cross, a sign of the medieval kingdom's Christian faith. They are often said to stand for Christ and the four Gospel writers, but the law gives no meaning.",
+   "value": "Georgia adopted this flag in 2004 after the Rose Revolution, whose leaders had marched under it. The big red cross on white is the cross of St. George, the country's patron saint, a sign said to be used by early Georgian kings. The four small crosses are thought to copy the Jerusalem cross, a mark of the medieval kingdom's Christian faith; a map from 1367 shows this five-cross flag over Tbilisi. The law gives the crosses no meaning.",
+   "reason": "The current text attaches the 1367 map to the single St. George cross, but Wikipedia (opened) says the 1367 Pizzigano map shows the flag of Tbilisi as a Jerusalem cross, i.e. the full five-cross design, and FOTW independently quotes a white flag with five red crosses over Tbilisi on the Pizzigani map. The single-cross use by early kings is only 'supposedly' (Vakhtang I) and is now hedged. Replacement is 436 characters, one paragraph, no jargon or double quotes, and keeps the statement that the law assigns no meaning.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Georgia_(country)",
+    "https://www.crwflags.com/fotw/flags/ge.html"
+   ],
+   "confidence": "high",
+   "from": "as05"
+  },
+  {
+   "code": "JO",
+   "field": "flagDescription",
+   "current": "Adopted in 1928, Jordan's flag comes from the flag of the 1916 Arab Revolt against Ottoman rule, the source of the Pan-Arab colors. Officially the black, white and green bands recall the Abbasid, Umayyad and Fatimid dynasties of early Islamic history, and the red triangle the Hashemite royal family that led the revolt. The white seven-pointed star stands for Arab unity, its points linked to the seven verses of the Quran's opening chapter.",
+   "value": "Adopted in 1928, Jordan's flag comes from the flag of the 1916 Arab Revolt against Ottoman rule, the source of the Pan-Arab colors. Officially the black, white and green bands recall the Abbasid, Umayyad and Fatimid dynasties, and the red triangle the Hashemite royal family that led the revolt. The white seven-pointed star officially stands for Arab unity; its points are often said to recall the seven verses of the Quran's opening chapter.",
+   "reason": "The current text presents the seven-verses reading of the star's points as part of the official explanation. FOTW quotes the King Hussein official website as saying only that the star represents the unity of Arab peoples, and attributes the Al-Fatiha reading to Whitney Smith and other secondary writers; Britannica says different interpretations have been given and that the points were originally linked to seven former districts of Syria; Wikipedia cites a non-governmental PDF. The rule requires traditional readings to be hedged, which the replacement does (443 characters).",
+   "sources": [
+    "https://www.crwflags.com/fotw/flags/jo.html",
+    "https://www.britannica.com/topic/flag-of-Jordan",
+    "https://en.wikipedia.org/wiki/Flag_of_Jordan"
+   ],
+   "confidence": "medium",
+   "from": "as06"
+  },
+  {
+   "code": "KW",
+   "field": "flagDescription",
+   "current": "Kuwait adopted this flag by law in 1961, when it became independent, replacing the red flag it had used before. Green, white, red and black are the Pan-Arab colors, and the official explanation takes their meaning from a medieval Arabic poem: white for our deeds, black for our battles, green for our lands and red for our swords. No meaning is recorded for the slanted black shape beside the pole.",
+   "value": "Kuwait adopted this flag by law in 1961, when it became independent, replacing the red flag it had used before. Green, white, red and black are the Pan-Arab colors made famous by the 1916 Arab Revolt flag, and the official explanation takes their meaning from a medieval Arabic poem: white for our deeds, black for our battles, green for our lands and red for our swords. No meaning is recorded for the slanted black shape beside the pole.",
+   "reason": "Field rule: a shared motif (Pan-Arab colors) must name its shared origin in one clause, and the current text only names the motif. FOTW states the Kuwaiti colors are the Pan-Arab colors used in the Arab Revolt of World War I; Britannica dates the first modern Arab use of the four colors to just before World War I. All other claims (1961 law, earlier red flag with white script, Safi al-Din al-Hilli poem as the official explanation, no recorded meaning for the black shape) were confirmed on FOTW and Britannica. Replacement is 439 characters.",
+   "sources": [
+    "https://www.crwflags.com/fotw/flags/kw.html",
+    "https://www.britannica.com/topic/flag-of-Kuwait"
+   ],
+   "confidence": "high",
+   "from": "as06"
+  },
+  {
+   "code": "PS",
+   "field": "population",
+   "current": "5495000",
+   "value": "5500000",
+   "reason": "UN WPP 2024 mid-2024 estimate for State of Palestine is 5,495,443 (confirmed on Worldometers' reproduction of WPP 2024, which names the 2024 revision, medium variant). The third digit of the source figure is 9, not 5, so the plain 3-significant-figure rule applies and gives 5,500,000. The shipped 5,495,000 is a 4-figure rounding that the rule does not call for, and it is itself a value ending in 5 followed by zeros, the pattern the rule is written to avoid.",
+   "sources": [
+    "https://www.worldometers.info/world-population/state-of-palestine-population/"
+   ],
+   "confidence": "medium",
+   "from": "as07"
+  },
+  {
+   "code": "QA",
+   "field": "flagDescription",
+   "current": "Qatar's government says white stands for peace, maroon for blood shed in Qatar's wars of the 1800s, and the zigzag line of nine white points for Qatar as the ninth member of the reconciled emirates after its 1916 treaty with Britain. The flag was once red; its dye darkened in the desert sun, and maroon became standard in 1936. The design became official in 1971, and a 2012 law fixed its exact shade and 11 by 28 shape.",
+   "value": "The maroon is said to come from a local red dye that darkened in the desert sun, and Qatar kept it over plain red in the 1930s. The government says the nine white points mark Qatar as the ninth Gulf emirate to join a treaty with Britain in 1916. White is often said to mean peace and maroon the blood of past wars, though Qatar National Library calls that a misconception. Adopted in 1971; a 2012 law fixed the shade and 11 by 28 shape.",
+   "reason": "Confirmed on the Qatar National Library page (a state institution): it states that, contrary to popular belief, the white and maroon do not represent peace and bloodshed, that the nine points mark Qatar as the 9th member of the 1916 Trucial Coast convention, that the local red dye faded to maroon in the sun, and that when the British Navy proposed red (1932) Qatar chose maroon instead. The shipped text states the peace/bloodshed meaning as the government's position and the 1936 date as fact, while the Flag of Qatar Wikipedia article sources 1936 only to the e-Government portal and QNL gives 1932; the replacement hedges the contested meaning, keeps the nine-points account attributed, uses the safe 1930s wording, is one paragraph of 436 characters with no flag jargon.",
+   "sources": [
+    "https://qnl.qa/en/about/news/qatari-flag-symbol-pride-and-dignity",
+    "https://en.wikipedia.org/wiki/Flag_of_Qatar"
+   ],
+   "confidence": "medium",
+   "from": "as07"
+  },
+  {
+   "code": "PS",
+   "field": "flagDescription",
+   "current": "The three bands and the red triangle at the left copy the flag of the Arab Revolt of 1916 against Ottoman rule, whose Pan-Arab colors many Arab flags share. The colors are often said to recall past Arab dynasties: black for the Abbasids, white for the Umayyads, green for the Fatimids and red for the Hashemites. The Palestine Liberation Organization adopted it in 1964 and declared it the flag of the State of Palestine in 1988.",
+   "value": "The bands and the red triangle come from the flag of the Arab Revolt of 1916 against Ottoman rule, whose Pan-Arab colors many Arab flags share, though the band order differs. The colors are often said to recall past Arab dynasties: black for the Abbasids, white for the Umayyads, green for the Fatimids and red for the Hashemites. The Palestine Liberation Organization adopted it in 1964 and declared it the flag of the State of Palestine in 1988.",
+   "reason": "Confirmed on the Flag of Palestine Wikipedia article: the Arab Revolt flag had the same graphic form but with white at the bottom rather than in the middle, so the Palestinian flag is 'almost identical', not a copy; the modified order has been used in Palestine since the early 1920s and the PLO Executive Committee fixed the standard on 1 December 1964. The 1964 adoption, 15 November 1988 declaration and hedged dynasty reading are all confirmed. The verifier's wording used the bare abbreviation PLO; this replacement keeps the full name and is 447 characters.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Palestine"
+   ],
+   "confidence": "medium",
+   "from": "as07"
+  },
+  {
+   "code": "SY",
+   "field": "flagDescription",
+   "current": "Syria's flag is the independence flag, first flown in the early 1930s under French rule and kept after independence in 1946. Green, white and black are the Pan-Arab colors, often said to recall the Rashidun, Umayyad and Abbasid caliphates. The three red stars are traditionally linked to the regions of Aleppo, Damascus and Deir ez-Zor. Protesters revived it in 2011, and a 2025 constitutional declaration made it official again.",
+   "value": "Syria's flag is the independence flag, first flown in the early 1930s under French rule and kept from independence in 1946 until 1958. Green, white, black and red are the Pan-Arab colors of the 1916 Arab Revolt flag, often said to recall early Islamic caliphates. The three red stars are traditionally linked to Aleppo, Damascus and Deir ez-Zor. Protesters revived it in 2011, and a 2025 constitutional declaration made it official again.",
+   "reason": "The current text names the Pan-Arab colors without naming their shared origin, which the field rule requires in one clause; it also lists only three of the four Pan-Arab colors although red (the stars) is part of the set, and 'kept after independence in 1946' reads as continuous use although the flag was replaced in 1958 under the United Arab Republic. Wikipedia's Flag of Syria article confirms the 1930/1932 first use, use until 1958, the Arab Revolt (Faisal) flag as the first to use the green-red-white-black combination, the hedged caliphate reading, the stars for Aleppo, Damascus and Deir ez-Zor, the 2011 opposition revival and Article 6 of the 2025 Constitutional Declaration. Replacement is 438 characters, one paragraph, no jargon, no double quotes.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Syria",
+    "https://www.britannica.com/topic/flag-of-Syria"
+   ],
+   "confidence": "medium",
+   "from": "as08"
+  },
+  {
+   "code": "LA",
+   "field": "flagDescription",
+   "current": "Lao scholar Maha Sila Viravong designed the flag in 1945 for the Lao Issara independence movement. It became the national flag in 1975, when the monarchy ended and its red flag with a white three-headed elephant was dropped. Red is officially said to stand for blood shed in the fight for freedom, blue for the Mekong River and the nation's wealth, and the white disc for a full moon over the Mekong and the unity of the Lao people.",
+   "value": "Maha Sila Viravong designed the flag in 1945 for the Lao Issara independence movement. It became the national flag in 1975, when the monarchy ended and its red flag with a white three-headed elephant was dropped. The law gives no meanings, but red is usually said to mean blood shed for freedom and blue the Mekong River; the designer said the white disc means the unity of the Lao people, and it is often read as a full moon over the river.",
+   "reason": "'Officially said' has no basis: the constitution only describes the flag physically (FOTW quotes the article: proportions, colours, a white moon, no symbolism) and FOTW records no Lao government statement of meanings, only differing flag-book readings (bright future, unity under communism, reunification). Wikipedia attributes only the white disc's meaning (unity of the Lao people) to the designer Maha Sila Viravong; the red and blue meanings are unattributed there, and the full-moon reading is an unattributed 'it is also said'. The verifier's proposed text credited red and blue to Viravong, which Wikipedia does not do, so the replacement hedges red and blue as 'usually said', keeps the designer's attribution for the disc only, and hedges the full-moon reading. It also drops 'the nation's wealth', which appears only in FOTW's unattributed summary. 441 characters, one paragraph, no jargon.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Laos",
+    "https://www.crwflags.com/fotw/flags/la.html"
+   ],
+   "confidence": "medium",
+   "from": "as11"
+  },
+  {
+   "code": "MM",
+   "field": "flagDescription",
+   "current": "Adopted in 2010 under a Union Flag Law based on the 2008 constitution, this flag replaced the 1974 red flag with 14 small stars in its upper left corner. Its three bands repeat the yellow, green and red of a flag Burma used in the 1940s. By law, yellow stands for unity and wisdom, green for peace, fairness and a green land, red for bravery and decisiveness, and the white star for purity, honesty, compassion and strength.",
+   "value": "Adopted in 2010 under a Union Flag Law based on the 2008 constitution, this flag replaced the 1974 red flag with 14 small stars in its upper left corner. Its yellow, green and red bands echo flags of the independence movement of the 1930s and 1940s. By law, yellow stands for unity and wisdom, green for peace, fairness and a green land, red for bravery and decisiveness, and the white star for purity, honesty, compassion and strength.",
+   "reason": "Wikipedia's Flag of Myanmar article states the yellow, green and red bands are 'meant to honour the tricolours used during the independence struggle' and traces that colour set to the Dobama Asiayone nationalist flag of 1930 (peacock added 1935), with the 1943-45 State of Burma flag as a later use of the same colours. The current 'a flag Burma used in the 1940s' points a reader to the Japanese-sponsored 1943-45 state as the sole origin, which is misleading; the replacement follows the article's own framing. The official colour meanings and the 1974 flag description match the law text as verified in the prior provenance (WIPO Lex, Law No. 8/2010) and the Wikipedia article. 436 characters, one paragraph, no jargon.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Myanmar"
+   ],
+   "confidence": "medium",
+   "from": "as11"
+  },
+  {
+   "code": "SG",
+   "field": "flagDescription",
+   "current": "Toh Chin Chye's committee designed the flag, adopted on 3 December 1959 with self-government, and kept at independence in 1965. Officially, red stands for universal fellowship and equality, white for purity and virtue, the crescent for a young nation on the rise, and the five stars for democracy, peace, progress, justice and equality. Lee Kuan Yew wrote that the Chinese wanted stars and the Malays a crescent, so both were used.",
+   "value": "Toh Chin Chye's committee designed the flag, adopted on 3 December 1959, soon after self-government, and kept at independence in 1965. Officially, red stands for universal fellowship and equality, white for purity and virtue, the crescent for a young nation on the rise, and the five stars for democracy, peace, progress, justice and equality. Lee Kuan Yew wrote that the Chinese wanted stars and the Malays a crescent, so both were used.",
+   "reason": "Singapore became self-governing on 3 June 1959; the flag was adopted on 3 December 1959 (at the installation of Yusof Ishak as head of state). The current phrase 'adopted on 3 December 1959 with self-government' lets a reader take 3 December 1959 as the date self-government arrived, which is wrong. The rewording (438 characters, counted) keeps every other claim, all re-verified on the Wikipedia flag article: committee led by Toh Chin Chye, retained at independence on 9 August 1965, National Symbols Act meanings (red universal fellowship and equality, white purity and virtue, crescent a young nation on the ascendant, five stars democracy, peace, progress, justice and equality) and Lee Kuan Yew's memoir account of stars for the Chinese and a crescent for the Malays.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Singapore"
+   ],
+   "confidence": "medium",
+   "from": "as12"
+  },
+  {
+   "code": "KG",
+   "field": "flagDescription",
+   "current": "Adopted in 1992 after Soviet rule ended, and redrawn by law in 2023 so the sun's rays were straight and looked less like a sunflower. Officially the red stands for bravery and recalls the banner of Manas, hero of the Kyrgyz national epic. The gold sun means peace and wealth, and its forty rays stand for the forty tribes Manas united in legend. The red lines inside it show a tunduk, the round crown of a yurt roof, a symbol of hearth and home.",
+   "value": "Adopted in 1992 as Soviet rule ended, redrawn by law in 2023 so the sun's rays were straight and looked less like a sunflower. The law gives no meanings, but red is traditionally linked to bravery and the banner of Manas, hero of the Kyrgyz epic. The gold sun is said to mean peace and wealth, and its forty rays the forty tribes Manas united in legend. The red lines inside show a tunduk, the round crown of a yurt roof, a sign of hearth and home.",
+   "reason": "The current text presents the color and symbol meanings as official, but the 1992 constitutional article and the 2023 flag law, both reproduced on Flags of the World, describe only the geometry and colors and give no symbolism; Wikipedia's flag article never uses 'officially' and sources the meanings to the CIA Factbook, Britannica and popular references, with the forty-rays reading varying between tribes and followers. The replacement hedges the meanings as traditional, notes briefly that the law gives none, keeps every explained feature, is 448 characters, one paragraph, no jargon or double quotes.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Kyrgyzstan",
+    "https://www.fotw.info/flags/kg.html"
+   ],
+   "confidence": "high",
+   "from": "as13"
+  },
+  {
+   "code": "TM",
+   "field": "flagDescription",
+   "current": "Adopted in 1992, the flag is described by law as a symbol of national unity, independence and neutrality. The red stripe shows five carpet patterns, each said to stand for one of the main Turkmen tribes and their famous weaving. Olive branches were added in 1997 after the United Nations recognized the country as permanently neutral. No official meaning is given for the green, crescent or five stars, often said to be the five provinces.",
+   "value": "Adopted in 1992, the flag is described by law as a symbol of national unity, independence and neutrality. The red stripe shows five carpet patterns, each said to stand for one of the main Turkmen tribes and their weaving. Olive branches were added in 1997 after the United Nations recognized the country as permanently neutral. No official meaning is given for the green, crescent or five stars; the stars are often said to be the five provinces.",
+   "reason": "In the current text the phrase 'often said to be the five provinces' attaches to the whole list (green, crescent and stars), so a child reads that the crescent and the green are also said to be the five provinces. The Wikipedia flag article (re-read now) confirms no official explanation exists for the colors or white symbols, that only the five stars carry the five-provinces reading (Russian Centre of Vexillology and Heraldry), and that the crescent is instead read as a clear sky. All other claims in the text (1992 adoption, law wording, five guls for five major tribes, olive branches added 29 January 1997 after the UN neutrality proclamation of 12 December 1995) were confirmed. Replacement is 446 characters, one paragraph, no jargon or double quotes.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Turkmenistan"
+   ],
+   "confidence": "medium",
+   "from": "as14"
+  },
+  {
+   "code": "TW",
+   "field": "flagDescription",
+   "current": "The white sun on blue in the upper left corner was drawn by Lu Haodong in 1895 for Sun Yat-sen's revolutionary group. Sun added the red in 1906. It became the Kuomintang party emblem and, in 1928, the national flag of the Republic of China. The twelve rays mark the months and the twelve two-hour periods of a traditional day. Sun tied blue to liberty, white to equality and red to brotherhood and the blood of the revolutionaries.",
+   "value": "The white sun on blue in the upper left corner was drawn by Lu Haodong in 1895 for Sun Yat-sen's revolutionary group. Sun added the red in 1906. It became the Kuomintang emblem and, in 1928, the national flag of the Republic of China. The twelve rays stand for the twelve two-hour periods of a traditional day, a sign of unceasing progress. Sun tied blue to liberty, white to equality and red to brotherhood and the blood of the revolutionaries.",
+   "reason": "The ROC Presidential Office's national flag page (opened) explains the twelve points of the sun only as the twelve two-hour periods of a traditional day, symbolizing unceasing progress; the 'twelve months' reading is an uncited sentence on Wikipedia and the shipped text states it as fact. The replacement keeps the official meaning, drops the unverified months claim, and leaves the owner-approved 1895-1928 history, neutral tone and color meanings (consistent with the government page: blue freedom, white equality, crimson sacrifice, bloodshed and brotherly love) unchanged. 445 characters, one paragraph, no jargon.",
+   "sources": [
+    "https://english.president.gov.tw/Page/96",
+    "https://en.wikipedia.org/wiki/Flag_of_the_Republic_of_China"
+   ],
+   "confidence": "medium",
+   "from": "as15"
+  },
+  {
+   "code": "IQ",
+   "field": "flagDescription",
+   "current": "Iraq's red, white and black bands are the Pan-Arab colors, shared with Egypt and Syria and adopted in 1963 for Arab unity. They are often traced to a medieval poem that calls Arab deeds white, battles black, lands green and swords red. The green words Allahu Akbar, God is greatest, were added in 1991 during the Gulf War and redrawn in Kufic script in 2004. In 2008 parliament removed three green stars linked to the Ba'ath party.",
+   "value": "Iraq's red, white and black bands are Pan-Arab colors of the Arab Liberation flag begun in Egypt in 1952, adopted in 1963 for a planned union with Egypt and Syria. They are often traced to a medieval poem calling Arab deeds white, battles black, lands green and swords red. The green words Allahu Akbar were added in 1991 during the Gulf War and redrawn in Kufic script in 2004. In 2008 parliament removed three green stars tied to the Ba'ath party.",
+   "reason": "Cross-batch conflict: the decided Syria fix makes Syria's flag the green-white-black independence flag, so 'shared with Egypt and Syria' is no longer true in the present tense. Rewritten to name the shared origin (Arab Liberation flag, Egypt 1952) and keep the 1963 union context as history. 449 characters.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Iraq"
+   ],
+   "confidence": "high",
+   "from": "critic"
+  },
+  {
+   "code": "YE",
+   "field": "flagDescription",
+   "current": "Adopted on 22 May 1990, when North and South Yemen united, the flag uses the red, white and black bands of the Arab Liberation flag, begun in Egypt in 1952 and shared with Syria and Iraq. North Yemen's flag had a green star and South Yemen's a blue triangle with a red star; the joint flag dropped both. Red is often said to stand for the blood shed for independence and unity, white for a bright future and black for the dark past.",
+   "value": "Adopted on 22 May 1990, when North and South Yemen united, the flag uses the red, white and black bands of the Arab Liberation flag, begun in Egypt in 1952 and shared with Egypt and Iraq. North Yemen's flag had a green star and South Yemen's a blue triangle with a red star; the joint flag dropped both. Red is often said to stand for the blood shed for independence and unity, white for a bright future and black for the dark past.",
+   "reason": "Same cross-batch conflict as Iraq: with the decided Syria fix, Syria no longer flies the red-white-black bands, so 'shared with Syria and Iraq' would be false. Only that clause changes. 432 characters.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Iraq"
+   ],
+   "confidence": "high",
+   "from": "critic"
+  },
+  {
+   "code": "SG",
+   "field": "languages",
+   "current": "[\"English\", \"Malay\", \"Mandarin\", \"Tamil\"]",
+   "value": "[\"English\", \"Malay\", \"Mandarin Chinese\", \"Tamil\"]",
+   "reason": "Consistency across the continent: China (reference entry) and Taiwan both write the language as 'Mandarin Chinese'; Singapore alone writes 'Mandarin'. Same language, one spelling.",
+   "sources": [],
+   "confidence": "high",
+   "from": "critic"
+  }
+ ],
+ "ownerDecisions": [],
+ "doubts": [
+  {
+   "code": "MV",
+   "field": "flagDescription",
+   "issue": "The sentence 'Between 1926 and 1932 a white crescent on a green panel was added' rests on Wikipedia's dating (cited only to worldstatesmen.org), while Britannica says the green-panel flag appeared at an unknown date, probably in the 1930s; no law or official record was found, so the owner may prefer vaguer wording such as 'in the late 1920s or 1930s'. Secondary point: Britannica says the plain red flag was adopted by the Maldives from Arab seafarers on Abdul Majeed Didi's initiative, which sits uneasily with 'Maldivian ships long flew a plain red flag', although Wikipedia (uncited) calls plain red the earliest Maldivian flag.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_the_Maldives",
+    "https://www.britannica.com/topic/flag-of-the-Maldives"
+   ],
+   "from": "as02"
+  },
+  {
+   "code": "BH",
+   "field": "flagDescription",
+   "issue": "Even the hedged Five Pillars reading rests on a 2002 Bahrain Tribune report relayed by FOTW and an uncited Wikipedia sentence; no official Bahraini statement of the meaning could be opened (Bahrainouna returned 503), so a future pass with access to the official flag guide should confirm whether the government itself gives this meaning.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Bahrain",
+    "https://www.fotw.info/flags/bh.html",
+    "https://www.bahrainouna.com/"
+   ],
+   "from": "as04"
+  },
+  {
+   "code": "BH",
+   "field": "areaSqKm",
+   "issue": "Carried forward from the prior pass: Wikipedia's list gives 778 km2 (UN Statistics Division) while Bahrain's official figure is about 786.5 km2 and grows with land reclamation; the entry follows the field rule (Wikipedia list) but the gap was not re-examined here.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/List_of_countries_and_dependencies_by_area"
+   ],
+   "from": "as04"
+  },
+  {
+   "code": "AM",
+   "field": "population",
+   "issue": "Carried forward: the UN WPP 2024 mid-2024 figures for AM, AZ and BH were read from worldometers' reproduction, not the UN portal, and were not re-checked in this adjudication (no verifier finding targeted them).",
+   "sources": [
+    "https://www.worldometers.info/world-population/armenia-population/"
+   ],
+   "from": "as04"
+  },
+  {
+   "code": "GE",
+   "field": "languages",
+   "issue": "Constitution of Georgia, Article 2(3) (opened on matsne.gov.ge): 'The official language of Georgia shall be Georgian, and, in the Autonomous Republic of Abkhazia, also Abkhazian.' Abkhazian is official only regionally; the catalog convention elsewhere (Spain lists only Spanish, Iraq omits Turkmen and Assyrian) omits regional co-official languages, so Georgian alone is consistent, but many references list Abkhazian as a second official language, so the owner should confirm the convention applies here.",
+   "sources": [
+    "https://matsne.gov.ge/en/document/view/30346?publication=36"
+   ],
+   "from": "as05"
+  },
+  {
+   "code": "JO",
+   "field": "flagDescription",
+   "issue": "Britannica attributes the color meanings to the 13th-century poem rather than to dynasties, and the government's dynastic wording (Abbasid, Umayyad, Fatimid) is known only as quoted by FOTW and Wikipedia; the kinghussein.gov.jo page itself was not opened, so the dynastic reading is kept but rests on secondary quotation.",
+   "sources": [
+    "https://www.britannica.com/topic/flag-of-Jordan",
+    "https://www.crwflags.com/fotw/flags/jo.html"
+   ],
+   "from": "as06"
+  },
+  {
+   "code": "KW",
+   "field": "flagDescription",
+   "issue": "Britannica gives the hoisting date of the new flag as 24 October 1961 while FOTW and Wikipedia say 24 November 1961; the text only says 1961, so no change, but the law's own text was not opened.",
+   "sources": [
+    "https://www.britannica.com/topic/flag-of-Kuwait",
+    "https://www.crwflags.com/fotw/flags/kw.html"
+   ],
+   "from": "as06"
+  },
+  {
+   "code": "PS",
+   "field": "population",
+   "issue": "The 2024 figure (5,495,443) was read from Worldometers' reproduction of WPP 2024, not from population.un.org directly; if the owner's reading of the rounding rule is to avoid any value whose rounded form ends in 5 followed by zeros, 5,495,400 would be the alternative to 5,500,000.",
+   "sources": [
+    "https://www.worldometers.info/world-population/state-of-palestine-population/"
+   ],
+   "from": "as07"
+  },
+  {
+   "code": "QA",
+   "field": "flagDescription",
+   "issue": "Qatar's own sources disagree on the colour meanings (the e-Government portal as quoted by Wikipedia gives peace and bloodshed, Qatar National Library calls that a misconception) and on dates (1932 versus 1936 for the maroon choice); the replacement hedges both, but the owner may prefer to drop the peace/blood sentence entirely.",
+   "sources": [
+    "https://qnl.qa/en/about/news/qatari-flag-symbol-pride-and-dignity",
+    "https://en.wikipedia.org/wiki/Flag_of_Qatar"
+   ],
+   "from": "as07"
+  },
+  {
+   "code": "SY",
+   "field": "languages",
+   "issue": "The decree's exact wording ('national language' in Article 3) was read only from news reports and a Kurdish outlet's translation; the SANA page itself and an official gazette text were not opened, and a later Education Ministry decree limits Kurdish to an elective subject, so the owner may prefer to keep Arabic alone if 'national language' is read strictly as constitutional status.",
+   "sources": [
+    "https://www.aljazeera.com/news/2026/1/17/syria-decree-grants-kurds-new-rights-formally-recognising-kurdish-language",
+    "https://www.arabnews.com/node/2629610/middle-east",
+    "https://en.wikipedia.org/wiki/Languages_of_Syria"
+   ],
+   "from": "as08"
+  },
+  {
+   "code": "MM",
+   "field": "population",
+   "issue": "The WPP 2024 figure (54,500,091) was confirmed only on Worldometers' mirror of the UN revision, not on the UN data portal itself.",
+   "sources": [
+    "https://www.worldometers.info/world-population/myanmar-population/"
+   ],
+   "from": "as11"
+  },
+  {
+   "code": "LA",
+   "field": "flagDescription",
+   "issue": "The red and blue meanings rest on a lightly sourced Wikipedia paragraph (Murashima 2015 citation, page tagged as needing more citations) and FOTW's unattributed summary; no Lao government text giving colour meanings was found, which is why the replacement hedges them.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Laos",
+    "https://www.crwflags.com/fotw/flags/la.html"
+   ],
+   "from": "as11"
+  },
+  {
+   "code": "SG",
+   "field": "flagDescription",
+   "issue": "The National Heritage Board national-flag page again returned an empty body, so the official meanings rest on the Wikipedia flag article's rendering of the National Symbols Act (red as 'universal fellowship and equality'); older NHB wording is 'universal brotherhood and equality of man', a wording difference only.",
+   "sources": [
+    "https://www.nhb.gov.sg/what-we-do/our-work/community-engagement/education/resources/national-symbols/national-flag",
+    "https://en.wikipedia.org/wiki/Flag_of_Singapore"
+   ],
+   "from": "as12"
+  },
+  {
+   "code": "PH",
+   "field": "flagDescription",
+   "issue": "Which eight provinces the sun's rays stand for differs between sources (the Wikipedia flag article lists Bulacan, Cavite, Pampanga, Laguna, Batangas, Tarlac, Nueva Ecija and Morong; Ambeth Ocampo's research names a different set including Manila); the app text does not name them, so it stays true, but the Official Gazette page was not opened.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_the_Philippines"
+   ],
+   "from": "as12"
+  },
+  {
+   "code": "PH",
+   "field": "population",
+   "issue": "Population (116,000,000) and the SG and TL populations are WPP 2024 figures as reproduced by Worldometers; population.un.org was not read directly in this pass either, so the rounding is consistent with the quoted values but not independently confirmed against the UN portal.",
+   "sources": [],
+   "from": "as12"
+  },
+  {
+   "code": "TM",
+   "field": "landmarks",
+   "issue": "Darvaza Gas Crater is real and inside Turkmenistan, but the Wikipedia article (re-read now) reports a 2022 presidential plan to extinguish it, a 2025 government statement that the fire had shrunk three-fold, an AFP report of 6 August 2025 that only a few small pockets of flame remained, and 2026 infrared analysis showing heat intensity down more than 75 percent over three years; the burning crater that gives the landmark its fame may not exist in five years, so the owner may wish to swap it for a durable UNESCO site such as Parthian Fortresses of Nisa (Ashgabat). The entry is not wrong today, so no fix is proposed.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Darvaza_gas_crater"
+   ],
+   "from": "as14"
+  },
+  {
+   "code": "KP",
+   "field": "population",
+   "issue": "UN WPP 2024 CSV (opened) gives 26,498.823 thousand for mid-2024, so the vintage is right, but the rounding rule is self-contradictory for this value: 3 or 4 significant figures both give 26,500,000 (a 3-digit value ending in 5 followed by zeros, which the rule says should not occur), and the shipped 26,499,000 is a 5-significant-figure hand edit; the owner must choose between the literal rule (26,500,000) and the current workaround, and apply the same choice to the batch's other tie cases (MM, PS).",
+   "sources": [
+    "https://population.un.org/wpp/assets/Excel%20Files/1_Indicator%20(Standard)/CSV_FILES/WPP2024_TotalPopulationBySex.csv.gz",
+    "https://www.worldometers.info/world-population/north-korea-population/"
+   ],
+   "from": "as15"
+  },
+  {
+   "code": "TW",
+   "field": "flagDescription",
+   "issue": "The Presidential Office page says the flag was officially adopted on 5 May 1921 (Sun's Guangzhou government), while Wikipedia gives 1928 for the nationwide National Emblem and National Flag Act (body text 17 December, infobox 9 December); 1928 is defensible as the nationwide adoption and matches the owner's 1895-1928 framing, so no change is proposed unless the owner prefers to mention 1921.",
+   "sources": [
+    "https://english.president.gov.tw/Page/96",
+    "https://en.wikipedia.org/wiki/Flag_of_the_Republic_of_China"
+   ],
+   "from": "as15"
+  },
+  {
+   "code": "MN",
+   "field": "flagDescription",
+   "issue": "Article 12 of the constitution (opened at constituteproject.org) gives the blue (eternal sky) and red (progress and prosperity) meanings for the flag as written, but the phrase 'independence, sovereignty and spirit' is attached to the golden Soyombo in the Coat of Arms (12.3) rather than in the flag paragraph (12.5); since 12.1-12.2 call all state symbols symbols of independence and sovereignty that express the nation's spirit, the sentence is not wrong, only slightly looser than the law, and the Zanabazar 1686 origin and hedged element readings are consistent with Wikipedia but weakly cited there.",
+   "sources": [
+    "https://www.constituteproject.org/constitution/Mongolia_2001",
+    "https://en.wikipedia.org/wiki/Soyombo_symbol",
+    "https://en.wikipedia.org/wiki/Flag_of_Mongolia"
+   ],
+   "from": "as15"
+  }
+ ],
+ "rejected": [
+  {
+   "code": "AF",
+   "field": "flagDescription",
+   "why": "Stylistic. I opened Article 19 of the 2004 constitution: it lists the emblem's parts (pulpit, two flags, the creed over the rays of a rising sun, the word Afghanistan, the year, sheaves of wheat) and gives no meaning for any colour or element, which the current text already states with 'No law fixes a meaning' placed before the colour readings and the emblem inventory. 'Kept the bands' does not assert that the 1928 flag was vertical, and the mosque, flags and wheat are listed exactly as the constitution lists them, so no claim in the current text is wrong. The proposed rewording is not an improvement worth a change.",
+   "from": "as01"
+  },
+  {
+   "code": "MM",
+   "field": "population",
+   "why": "population is on a 3 significant figure rounding tie",
+   "from": "as11"
+  },
+  {
+   "code": "MM",
+   "field": "population",
+   "why": "population is on a 3 significant figure rounding tie",
+   "from": "critic"
+  },
+  {
+   "code": "KP",
+   "field": "population",
+   "why": "population is on a 3 significant figure rounding tie",
+   "from": "critic"
+  }
+ ],
+ "notes": [
+  "as01: Batch AF, BD, BT. The two BT flagDescription findings were merged into one replacement (449 characters) that both corrects 'unity' to the constitution's 'loyalty' and hedges the jewel and snarling-mouth meanings, which I confirmed are absent from both the 2008 constitution's First Schedule and the 1972 National Flag Rules on WIPO Lex. No verifier raised findings on BD and none of its fields were changed. Sources opened: https://www.constituteproject.org/constitution/Bhutan_2008, https://www.wipo.int/wipolex/en/text/490663, https://www.constituteproject.org/constitution/Afghanistan_2004, https://en.wikipedia.org/wiki/Flag_of_Bhutan. Batch file: /tmp/claude-0/-home-user-Guess-countries/7a65ca18-cc05-5533-a221-2dfd9a54698a/scratchpad/audit/asia/batch-01.json. No repository files were edited.",
+  "as02: Both findings were re-checked against the four cited pages, which I opened myself. The Nepal hedge is kept as a medium-confidence fix: the replacement is 445 characters (the verifier counted 444; both are under the 450 limit) and changes nothing except hedging the pennant origin and dropping a redundant 'Nepal's'. The Maldives dating stays a doubt because the two encyclopedic sources disagree and neither cites a primary record; the rest of that text (plain red origin, black and white pole-side stripe removed at independence, 1965 adoption, hedged meanings) is consistent with both sources, noting only that Britannica dates independence to 26 July 1965 while Wikipedia gives 25 July 1965 for the flag's adoption, which the entry's undated '1965' wording already accommodates. No findings were raised for Iran and none of the owner decisions is touched. Files read: /tmp/claude-0/-home-user-Guess-countries/7a65ca18-cc05-5533-a221-2dfd9a54698a/scratchpad/audit/asia/batch-02.json.",
+  "as03: no findings from either lens",
+  "as04: Both verifier findings were confirmed and kept as fixes. BH: opened Wikipedia and FOTW; neither the decree excerpts nor any government source links the five points to the Five Pillars, so the claim is downgraded to a hedged widespread reading (443 characters, within 150-450). AZ: the 2013 Pantone 306 C standard, the article's own wording and the shipped webp image all show a sky blue, matching the catalog's existing Light Blue convention for Kazakhstan, Argentina, Botswana and others. No owner decisions are touched; Armenia had no findings. Tool calls used: 8.",
+  "as05: Batch CY, GE, IQ: the two verifier findings both concern Georgia. The flagDescription fix is confirmed by two independent sources I opened (Wikipedia flag article and FOTW) and the replacement was character-counted at 436 (a variant that kept the Christ-and-Evangelists reading came to 516 and was dropped as over the 450 limit). The languages finding stays a doubt as a catalog-convention question rather than an error. No findings were raised for Cyprus or Iraq, and nothing touches an owner decision.",
+  "as06: Adjudicated batch /tmp/claude-0/-home-user-Guess-countries/7a65ca18-cc05-5533-a221-2dfd9a54698a/scratchpad/audit/asia/batch-06.json (JO, KW, LB). Both verifier findings were confirmed on the cited FOTW, Britannica and Wikipedia pages opened in this session and are kept as fixes; no finding touched an owner decision. No findings were raised for LB and none were added; its population and area figures were not re-checked within the time limit. Read-only: no repository files were changed.",
+  "as07: Batch OM, PS, QA. No findings were raised for Oman and nothing in its entry contradicted the sources opened. All three verifier findings were confirmed against pages I opened (Worldometers WPP 2024 table, Qatar National Library, Wikipedia Flag of Qatar and Flag of Palestine) and kept as fixes with medium confidence; the two flag replacements were re-counted (QA 436, PS 447 characters) and lightly reworded from the verifier's text for readability (full PLO name kept, smoother nine-points clause). Owner decisions for Palestine (capital, quizCapital, currency wording) were not touched. Batch file: /tmp/claude-0/-home-user-Guess-countries/7a65ca18-cc05-5533-a221-2dfd9a54698a/scratchpad/audit/asia/batch-07.json",
+  "as08: Both verifier findings for SY were kept with adjusted wording. The verifier's proposed flag text (438 characters as revised here; the 'Rashidun, Umayyad and Abbasid' variant ran to 463 and was trimmed to 'early Islamic caliphates', which Wikipedia supports) was checked against the Flag of Syria Wikipedia article and Britannica; Britannica gives no color or star meanings and dates the Arab Revolt flag to 1917, while Wikipedia and the app's UAE text use 1916 for the revolt itself, so '1916 Arab Revolt flag' is kept for consistency with the shared motif string. No findings were submitted for TR or AE and nothing in their entries was contradicted by the pages opened; their prior doubts (unread area footnotes, UAE color-meaning variance) stand as previously recorded. No owner decisions are affected.",
+  "as09: no findings from either lens",
+  "as10: no findings from either lens",
+  "as11: All three verifier findings were kept as fixes after checking them against the sources listed. The Laos flag text was reworded rather than taken verbatim because the verifier's version credited the red and blue meanings to the designer, which the Wikipedia article does not do (it attributes only the white disc to Maha Sila Viravong). Character counts were verified by script: Laos 441, Myanmar 436. The Myanmar population fix is rule-driven; the prior pass hand-edited the value to avoid a compact-display tie, so the owner may choose to keep 54,500,100 instead. Malaysia (MY) had no findings from either verifier and nothing was changed. Sources opened: https://en.wikipedia.org/wiki/Flag_of_Laos, https://www.crwflags.com/fotw/flags/la.html, https://en.wikipedia.org/wiki/Flag_of_Myanmar, https://www.worldometers.info/world-population/myanmar-population/.",
+  "as12: Batch PH, SG, TL. The only verifier finding (SG flagDescription wording about self-government) was confirmed: Wikipedia's Flag of Singapore article gives self-government on 3 June 1959 and flag adoption on 3 December 1959, so the clarified wording is kept as a fix (438 characters, within 150-450, no jargon, no double quotes, American spelling). Independently re-checked: the Timor-Leste constitution PDF (timor-leste.gov.tl, Section 15) reads exactly 'yellow - the traces of colonialism; black - the obscurantism that needs to be overcome; red - the struggle for national liberation; white - peace' and calls the star 'the light that guides', matching the TL text; the Philippines flag article confirms the Hong Kong sewing, the 12 June 1898 unfurling at Kawit, the official meanings used in the PH text, gold as an official colour, and the red-side-up wartime rule. Opened URLs: https://en.wikipedia.org/wiki/Flag_of_Singapore, https://www.nhb.gov.sg/what-we-do/our-work/community-engagement/education/resources/national-symbols/national-flag (empty body), https://timor-leste.gov.tl/wp-content/uploads/2010/03/Constitution_RDTL_ENG.pdf, https://en.wikipedia.org/wiki/Flag_of_the_Philippines. No owner decisions are touched; no files were edited.",
+  "as13: Batch file: /tmp/claude-0/-home-user-Guess-countries/7a65ca18-cc05-5533-a221-2dfd9a54698a/scratchpad/audit/asia/batch-13.json. Only one verifier finding was submitted (KG flagDescription); it was confirmed against the Wikipedia flag article and the Flags of the World page quoting both the 1992 and 2023 law texts, neither of which states any symbolism. A web search for an official Kyrgyz government statement of the flag's meanings turned up nothing from president.kg or the Ministry of Justice legal database, so the hedged wording is the safe choice. No findings were submitted for KZ or TJ and none were adjudicated. No repository files were edited.",
+  "as14: Batch TM, UZ. Two findings adjudicated: the TM flagDescription grammar fix is confirmed against the Wikipedia flag article and kept as a fix (446 chars); the Darvaza crater finding stays a doubt for the owner. No findings were raised for UZ and nothing in its entry conflicted with the batch provenance. No owner decisions touched. Sources opened: https://en.wikipedia.org/wiki/Flag_of_Turkmenistan, https://en.wikipedia.org/wiki/Darvaza_gas_crater.",
+  "as15: Adjudicated 4 findings for MN, KP, TW. Verified directly: UN WPP 2024 CSV mid-2024 medium variant gives Mongolia 3,475,540 (shipped 3,480,000 correct), Taiwan 23,213,962 (shipped 23,200,000 correct) and North Korea 26,498,823 (rounding tie, left as a doubt for the owner since the prior pass recorded a deliberate hand edit). The ROC Presidential Office page was opened and supports the Taiwan flag text fix (twelve two-hour periods, unceasing progress; color meanings consistent). Mongolia's constitution Article 12 was opened; the flag text is consistent with it apart from the minor attribution point recorded as a doubt. No owner decisions are touched: Taiwan's fun fact, language list, name and officialName are unchanged. Downloaded CSV is in the scratchpad dl-wpp folder only; no repository files were edited.",
+  "critic: Scope: whole-continent consistency pass over all 48 Asia entries in /tmp/claude-0/-home-user-Guess-countries/7a65ca18-cc05-5533-a221-2dfd9a54698a/scratchpad/audit/asia-compact.json, taking the 18 decided batch fixes as applied.",
+  "critic: Verified (no fix needed): every areaSqKm value for the 19 riskiest entries (BH 778, JO 89,318, KG 199,949, MY 330,621, MV 300, MM 676,578, NP 147,181, KP 120,538, PK 882,363, SG 745, LK 67,240, TW 35,980, TJ 144,100, UZ 447,400, YE 455,503, TL 14,874, VN 331,340, KR 100,432) matches Wikipedia's list of countries by area as printed today. Japan's catalog value 377,975 versus the list's 377,915 is a reference (non-quickPass) entry; a doubt, not a fix.",
+  "critic: Verified (no fix needed): Oman's flag text 'updated in 2004' matches Wikipedia (royal decree 22 May 2004, proportions 4:7); Cambodia's 'since about 1875' matches Wikipedia's sentence on Angkor Wat.",
+  "critic: Doubt, not a fix: UN WPP 2024 figures were checked only via Worldometer's republication of the UN 2024 revision (Myanmar 54,500,091; North Korea 26,498,823); the UN data portal itself was not opened. All other Asia populations are consistent with the 3/4-significant-figure rule and with my recollection of WPP 2024 (e.g. QA 3,048,000 and TR 87,470,000 correctly use the 4-figure rule).",
+  "critic: No duplicate quizCapital within Asia; no fun fact repeats another country's; subregions follow UN M49 (Iran and Afghanistan in Southern Asia, Cyprus and Turkey in Western Asia); driveSide values all correct; landmarks contain no ', ' or ' & '; shared currency strings (Euro, US Dollar) use the fixed forms.",
+  "critic: Pan-Arab motif after the decided fixes: JO, KW, PS, SY, AE name the 1916 Arab Revolt origin; IQ and YE (red-white-black) are the Arab Liberation branch and now name Egypt 1952 as the shared origin. Hedging is consistent: Jordan's and Kuwait's dynasty/poem meanings are stated as official (both governments publish them), while PS, SY, IQ use 'often said'.",
+  "critic: Owner decisions were left untouched: Afghanistan's tricolour text and the 'Since 2021' sentence, Taiwan languages and fun fact, Palestine capital and currency text, Malaysia and Sri Lanka quizCapitals.",
+  "critic: Minor doubts not reported as fixes: Uzbekistan's flagColors says 'Blue' although its blue is lighter than Kazakhstan's is dark (ambiguous, so left); Turkmenistan's flagColors includes 'Gold' for the carpet-stripe details (plausible, not verified); Kazakhstan's flagColors 'Gold' where the law says yellow (acceptable plain word)."
+ ],
+ "duplicates": [],
+ "perBatch": [
+  {
+   "id": "as01",
+   "codes": [
+    "AF",
+    "BD",
+    "BT"
+   ],
+   "factsFindings": 1,
+   "textsFindings": 3,
+   "fixes": 2
+  },
+  {
+   "id": "as02",
+   "codes": [
+    "IR",
+    "MV",
+    "NP"
+   ],
+   "factsFindings": 0,
+   "textsFindings": 2,
+   "fixes": 1
+  },
+  {
+   "id": "as03",
+   "codes": [
+    "PK",
+    "LK"
+   ],
+   "factsFindings": 0,
+   "textsFindings": 0,
+   "fixes": 0
+  },
+  {
+   "id": "as04",
+   "codes": [
+    "AM",
+    "AZ",
+    "BH"
+   ],
+   "factsFindings": 0,
+   "textsFindings": 2,
+   "fixes": 2
+  },
+  {
+   "id": "as05",
+   "codes": [
+    "CY",
+    "GE",
+    "IQ"
+   ],
+   "factsFindings": 1,
+   "textsFindings": 1,
+   "fixes": 1
+  },
+  {
+   "id": "as06",
+   "codes": [
+    "JO",
+    "KW",
+    "LB"
+   ],
+   "factsFindings": 0,
+   "textsFindings": 2,
+   "fixes": 2
+  },
+  {
+   "id": "as07",
+   "codes": [
+    "OM",
+    "PS",
+    "QA"
+   ],
+   "factsFindings": 1,
+   "textsFindings": 2,
+   "fixes": 3
+  },
+  {
+   "id": "as08",
+   "codes": [
+    "SY",
+    "TR",
+    "AE"
+   ],
+   "factsFindings": 1,
+   "textsFindings": 1,
+   "fixes": 2
+  },
+  {
+   "id": "as09",
+   "codes": [
+    "YE"
+   ],
+   "factsFindings": 0,
+   "textsFindings": 0,
+   "fixes": 0
+  },
+  {
+   "id": "as10",
+   "codes": [
+    "BN",
+    "KH",
+    "ID"
+   ],
+   "factsFindings": 0,
+   "textsFindings": 0,
+   "fixes": 0
+  },
+  {
+   "id": "as11",
+   "codes": [
+    "LA",
+    "MY",
+    "MM"
+   ],
+   "factsFindings": 1,
+   "textsFindings": 2,
+   "fixes": 3
+  },
+  {
+   "id": "as12",
+   "codes": [
+    "PH",
+    "SG",
+    "TL"
+   ],
+   "factsFindings": 1,
+   "textsFindings": 0,
+   "fixes": 1
+  },
+  {
+   "id": "as13",
+   "codes": [
+    "KZ",
+    "KG",
+    "TJ"
+   ],
+   "factsFindings": 0,
+   "textsFindings": 1,
+   "fixes": 1
+  },
+  {
+   "id": "as14",
+   "codes": [
+    "TM",
+    "UZ"
+   ],
+   "factsFindings": 1,
+   "textsFindings": 1,
+   "fixes": 1
+  },
+  {
+   "id": "as15",
+   "codes": [
+    "MN",
+    "KP",
+    "TW"
+   ],
+   "factsFindings": 1,
+   "textsFindings": 3,
+   "fixes": 1
+  }
+ ],
+ "droppedOrderOnly": [],
+ "rejectedAfterReview": [
+  {
+   "code": "SY",
+   "field": "languages",
+   "why": "Reviewed and not applied. Kurdish's status as a national language rests on a January 2026 presidential decree known only from news reports; the constitutional declaration keeps Arabic as the sole official language, a later ministry decree reportedly limits Kurdish to an elective subject, and the catalog elsewhere lists constitutional official languages only. Left for the owner.",
+   "proposedValue": "[\"Arabic\", \"Kurdish\"]"
+  }
+ ],
+ "editedAfterReview": []
+}
