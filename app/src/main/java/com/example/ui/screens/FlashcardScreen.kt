@@ -27,6 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Flip
 import androidx.compose.material.icons.filled.LocationCity
@@ -42,6 +43,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -73,6 +75,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.Country
 import com.example.data.model.SortOption
+import com.example.quiz.QuizEngine
 import com.example.flashcards.FlashcardDeck
 import com.example.ui.components.FlagView
 import com.example.ui.components.getContinentColor
@@ -93,7 +96,9 @@ fun FlashcardScreen(
     viewModel: CountryViewModel,
     modifier: Modifier = Modifier
 ) {
-    val countries by viewModel.filteredCountries.collectAsState()
+    val exploreCountries by viewModel.filteredCountries.collectAsState()
+    val weakSpots by viewModel.weakSpots.collectAsState()
+    val weakSpotsAvailable = weakSpots.size >= QuizEngine.MIN_POOL
     val speechAvailable by viewModel.speechAvailable.collectAsState()
     // Bind the speech engine only once a screen that can speak is shown.
     LaunchedEffect(Unit) { viewModel.prepareSpeech() }
@@ -106,6 +111,17 @@ fun FlashcardScreen(
     var currentCode by rememberSaveable { mutableStateOf<String?>(null) }
     var flippedCode by rememberSaveable { mutableStateOf<String?>(null) }
     var shuffleSeed by rememberSaveable { mutableStateOf<Long?>(null) }
+    // The weak-spots deck is a snapshot taken when it is switched on (country codes, weakest first): grading a card
+    // changes its mastery and must not reorder the deck underneath the player.
+    var weakDeckCodes by rememberSaveable { mutableStateOf<String?>(null) }
+    var showLockedHint by rememberSaveable { mutableStateOf(false) }
+    if (weakSpotsAvailable && showLockedHint) showLockedHint = false
+    val countriesByCode = remember(viewModel) { viewModel.repository.allCountries.associateBy { it.code } }
+    val weakDeck = remember(weakDeckCodes, countriesByCode) {
+        weakDeckCodes?.split(',')?.mapNotNull { countriesByCode[it] }
+    }
+    // Explore's filters do not apply to the weak-spots deck.
+    val countries = weakDeck ?: exploreCountries
 
     // The deck is shared with Explore's filters and sort order, so say so and offer a way out.
     val filterSummary = listOfNotNull(
@@ -114,7 +130,8 @@ fun FlashcardScreen(
         searchQuery.takeIf { it.isNotBlank() }?.let { "\"$it\"" },
         "Sorted by ${sortBy.name.lowercase()}".takeIf { sortBy != SortOption.NAME }
     ).joinToString(" · ")
-    val filtersActive = filterSummary.isNotEmpty()
+    val exploreFiltersSet = filterSummary.isNotEmpty()
+    val filtersActive = exploreFiltersSet && weakDeck == null
 
     if (countries.isEmpty()) {
         Column(
@@ -176,6 +193,18 @@ fun FlashcardScreen(
         currentCode = FlashcardDeck.nextCode(deck, index)
         flippedCode = null
     }
+    val onWeakSpotsToggle = {
+        if (weakDeckCodes != null || weakSpotsAvailable) {
+            viewModel.stopSpeaking()
+            weakDeckCodes = if (weakDeckCodes != null) null else weakSpots.joinToString(",") { it.code }
+            shuffleSeed = null
+            currentCode = null
+            flippedCode = null
+        } else {
+            showLockedHint = !showLockedHint
+        }
+    }
+    val weakDeckActive = weakDeck != null
     val flipCard: @Composable (Modifier, Boolean) -> Unit = { cardModifier, compact ->
         FlipCard(
             country = currentCountry,
@@ -213,8 +242,10 @@ fun FlashcardScreen(
                         .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    DeckHeader(index, deck.size, onShuffle, onReset)
+                    DeckHeader(index, deck.size, onShuffle, onReset, weakDeckActive, onWeakSpotsToggle)
                     if (filtersActive) FilterNotice(filterSummary) { viewModel.clearFilters() }
+                    if (weakDeckActive) WeakDeckNotice(deck.size, exploreFiltersSet) { onWeakSpotsToggle() }
+                    if (showLockedHint) WeakSpotsLockedNotice(weakSpots.size) { showLockedHint = false }
                     DeckProgress((index + 1).toFloat() / deck.size)
                     GradeButtons(stacked = true, onGrade = onGrade)
                 }
@@ -226,11 +257,19 @@ fun FlashcardScreen(
                     .padding(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                DeckHeader(index, deck.size, onShuffle, onReset)
+                DeckHeader(index, deck.size, onShuffle, onReset, weakDeckActive, onWeakSpotsToggle)
 
                 if (filtersActive) {
                     Spacer(modifier = Modifier.height(8.dp))
                     FilterNotice(filterSummary) { viewModel.clearFilters() }
+                }
+                if (weakDeckActive) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    WeakDeckNotice(deck.size, exploreFiltersSet) { onWeakSpotsToggle() }
+                }
+                if (showLockedHint) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    WeakSpotsLockedNotice(weakSpots.size) { showLockedHint = false }
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -252,7 +291,9 @@ private fun DeckHeader(
     index: Int,
     total: Int,
     onShuffle: () -> Unit,
-    onReset: () -> Unit
+    onReset: () -> Unit,
+    weakDeckActive: Boolean,
+    onWeakSpotsToggle: () -> Unit
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -273,6 +314,18 @@ private fun DeckHeader(
         }
 
         Row {
+            IconButton(
+                onClick = onWeakSpotsToggle,
+                modifier = Modifier
+                    .semantics { stateDescription = if (weakDeckActive) "On" else "Off" }
+                    .testTag("flashcard_weak_spots_btn")
+            ) {
+                Icon(
+                    imageVector = Icons.Default.FitnessCenter,
+                    contentDescription = "Weak spots deck",
+                    tint = if (weakDeckActive) MaterialTheme.colorScheme.primary else LocalContentColor.current
+                )
+            }
             IconButton(onClick = onShuffle) {
                 Icon(imageVector = Icons.Default.Shuffle, contentDescription = "Shuffle Cards")
             }
@@ -284,13 +337,55 @@ private fun DeckHeader(
 }
 
 @Composable
-private fun FilterNotice(summary: String, onClear: () -> Unit) {
+private fun FilterNotice(summary: String, onClear: () -> Unit) =
+    DeckNotice(
+        text = "Deck filtered by Explore: $summary",
+        actionLabel = "Clear",
+        noticeTag = "flashcard_filter_notice",
+        actionTag = "flashcard_clear_filters_btn",
+        onAction = onClear
+    )
+
+/** Says the deck is the weak spots instead of Explore's list, and offers the way back. */
+@Composable
+private fun WeakDeckNotice(count: Int, exploreFiltersSet: Boolean, onShowAll: () -> Unit) =
+    DeckNotice(
+        text = "Weak spots deck: $count ${if (count == 1) "country" else "countries"}, weakest first" +
+            if (exploreFiltersSet) " · Explore filters not applied" else "",
+        actionLabel = "Show all",
+        noticeTag = "flashcard_weak_spots_notice",
+        actionTag = "flashcard_weak_spots_off_btn",
+        onAction = onShowAll,
+        maxLines = 3
+    )
+
+/** Explains why the weak-spots deck is not available yet. */
+@Composable
+private fun WeakSpotsLockedNotice(count: Int, onDismiss: () -> Unit) =
+    DeckNotice(
+        text = "Weak spots unlocks once ${QuizEngine.MIN_POOL} reviewed countries are below mastery (you have $count)",
+        actionLabel = "OK",
+        noticeTag = "flashcard_weak_spots_locked_notice",
+        actionTag = "flashcard_weak_spots_locked_ok_btn",
+        onAction = onDismiss,
+        maxLines = 4
+    )
+
+@Composable
+private fun DeckNotice(
+    text: String,
+    actionLabel: String,
+    noticeTag: String,
+    actionTag: String,
+    onAction: () -> Unit,
+    maxLines: Int = 2
+) {
     Surface(
         shape = RoundedCornerShape(12.dp),
         color = MaterialTheme.colorScheme.secondaryContainer,
         modifier = Modifier
             .fillMaxWidth()
-            .testTag("flashcard_filter_notice")
+            .testTag(noticeTag)
     ) {
         Row(
             modifier = Modifier.padding(start = 12.dp, end = 4.dp),
@@ -304,18 +399,18 @@ private fun FilterNotice(summary: String, onClear: () -> Unit) {
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Deck filtered by Explore: $summary",
+                text = text,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSecondaryContainer,
-                maxLines = 2,
+                maxLines = maxLines,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f)
             )
             TextButton(
-                onClick = onClear,
-                modifier = Modifier.testTag("flashcard_clear_filters_btn")
+                onClick = onAction,
+                modifier = Modifier.testTag(actionTag)
             ) {
-                Text("Clear")
+                Text(actionLabel)
             }
         }
     }

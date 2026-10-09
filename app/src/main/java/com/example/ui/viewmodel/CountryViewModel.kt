@@ -13,6 +13,10 @@ import com.example.data.local.UserProgressEntity
 import com.example.data.model.Country
 import com.example.data.model.CountryRepository
 import com.example.data.model.SortOption
+import com.example.data.model.WeakSpots
+import com.example.data.settings.InMemoryUserSettings
+import com.example.data.settings.PrefsUserSettings
+import com.example.data.settings.UserSettings
 import com.example.quiz.QuizDifficulty
 import com.example.quiz.QuizEngine
 import com.example.quiz.QuizMode
@@ -35,7 +39,9 @@ class CountryViewModel(
     val repository: CountryRepository,
     private val speech: Speech,
     /** Monotonic milliseconds, used to time Speed Round questions. Injected so tests can control time. */
-    private val clock: () -> Long = SystemClock::elapsedRealtime
+    private val clock: () -> Long = SystemClock::elapsedRealtime,
+    /** Settings that outlive the app process; in tests an in-memory copy. */
+    private val settings: UserSettings = InMemoryUserSettings()
 ) : ViewModel() {
 
     val searchQuery = MutableStateFlow("")
@@ -43,6 +49,16 @@ class CountryViewModel(
     val sortBy = MutableStateFlow(SortOption.NAME)
     val showOnlyBookmarks = MutableStateFlow(false)
     val selectedCountry = MutableStateFlow<Country?>(null)
+
+    private val _quizDifficulty = MutableStateFlow(settings.quizDifficulty)
+
+    /** The answers difficulty picked on the quiz setup screen, remembered across restarts. */
+    val quizDifficulty: StateFlow<QuizDifficulty> = _quizDifficulty
+
+    fun setQuizDifficulty(difficulty: QuizDifficulty) {
+        settings.quizDifficulty = difficulty
+        _quizDifficulty.value = difficulty
+    }
 
     private val _quizSession = MutableStateFlow<QuizSession?>(null)
 
@@ -55,6 +71,14 @@ class CountryViewModel(
 
     val quizHistory: StateFlow<List<QuizScoreEntity>> = repository.quizHistory
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    /**
+     * The countries practiced but not yet mastered, weakest first. Kept up to date for the life of the ViewModel
+     * (one observer on a table of at most 197 rows) so a quiz can start from it the moment the button is tapped.
+     */
+    val weakSpots: StateFlow<List<Country>> = repository.progress
+        .map { WeakSpots.select(it, repository.allCountries) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val filteredCountries: StateFlow<List<Country>> = combine(
         searchQuery,
@@ -127,11 +151,22 @@ class CountryViewModel(
         viewModelScope.launch { repository.recordReview(countryCode, isCorrect) }
     }
 
-    /** Starts a quiz over the full country list; does nothing if [scope] has too few countries. */
+    /**
+     * Starts a quiz over the full country list; does nothing if [scope] has too few countries. The weak-spots scope
+     * asks about the weakest ten (every weak spot in the endless blitz) but takes the wrong answers, look-alike flags
+     * included, from the whole world.
+     */
     fun startQuiz(mode: QuizMode, scope: String, difficulty: QuizDifficulty = QuizDifficulty.NORMAL) {
-        val effectiveScope = QuizEngine.effectiveScope(mode, scope)
-        val pool = QuizEngine.poolFor(effectiveScope, repository.allCountries)
-        val questions = QuizEngine.generate(pool, mode, difficulty = difficulty)
+        val weak = weakSpots.value
+        val effectiveScope = QuizEngine.effectiveScope(mode, scope, weakSpotsAvailable = weak.size >= QuizEngine.MIN_POOL)
+        val questions = if (effectiveScope == QuizEngine.WEAK_SPOTS) {
+            val targets = if (mode.isEndless) weak else weak.take(QuizEngine.MAX_QUESTIONS)
+            val world = QuizEngine.poolFor("Global", repository.allCountries)
+            QuizEngine.generate(targets, mode, difficulty = difficulty, answerPool = world)
+        } else {
+            val pool = QuizEngine.poolFor(effectiveScope, repository.allCountries)
+            QuizEngine.generate(pool, mode, difficulty = difficulty)
+        }
         if (questions.isEmpty()) return
         _quizSession.value = QuizSession(
             mode = mode,
@@ -208,7 +243,8 @@ class CountryViewModel(
                 val app = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as Application
                 CountryViewModel(
                     repository = CountryRepository(AppDatabase.getDatabase(app).userProgressDao()),
-                    speech = AndroidSpeech(app)
+                    speech = AndroidSpeech(app),
+                    settings = PrefsUserSettings(app)
                 )
             }
         }

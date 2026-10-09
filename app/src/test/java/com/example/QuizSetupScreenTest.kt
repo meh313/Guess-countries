@@ -12,15 +12,20 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import com.example.data.local.AppDatabase
 import com.example.data.model.CountryRepository
+import com.example.data.settings.InMemoryUserSettings
+import com.example.quiz.QuizDifficulty
 import com.example.quiz.QuizEngine
 import com.example.quiz.sovereign
 import com.example.support.FakeSpeech
+import com.example.support.awaitWeakSpots
 import com.example.support.closeWhenIdle
 import com.example.support.inMemoryDatabase
 import com.example.ui.screens.QuizScreen
 import com.example.ui.theme.WorldFlagsTheme
 import com.example.ui.viewmodel.CountryViewModel
+import kotlinx.coroutines.runBlocking
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -135,5 +140,88 @@ class QuizSetupScreenTest {
         rule.onNodeWithText("Start 60-Second Blitz").assertIsDisplayed()
         // It uses flags, so the Answers row still applies.
         rule.onNodeWithTag("quiz_difficulty_hard").performScrollTo().assertIsEnabled()
+    }
+
+    /** Gives four countries of the small world a wrong review each, so four weak spots exist before the screen opens. */
+    private fun fourWeakSpots(): List<String> {
+        val codes = smallWorld.take(4).map { it.code }
+        runBlocking { codes.forEachIndexed { i, code -> db.userProgressDao().recordReview(code, false, 100L + i) } }
+        return codes
+    }
+
+    private fun showWithWeakSpots(count: Int): CountryViewModel {
+        val vm = CountryViewModel(CountryRepository(db.userProgressDao(), smallWorld), FakeSpeech())
+        rule.setContent { WorldFlagsTheme { QuizScreen(vm) } }
+        rule.awaitWeakSpots(vm, count)
+        rule.waitForIdle()
+        return vm
+    }
+
+    @Test
+    fun theWeakSpotsChip_isLockedAndExplainsItselfUntilFourCountriesAreWeak() {
+        show()
+
+        rule.onNodeWithTag("quiz_scope_weak_spots").performScrollTo().assertIsNotEnabled()
+        rule.onNodeWithTag("quiz_weak_spots_note").performScrollTo()
+        rule.onNodeWithText("Weak spots unlocks once 4 reviewed countries are below mastery (you have 0)").assertIsDisplayed()
+    }
+
+    @Test
+    fun theWeakSpotsChip_countsTheCountriesItIsStillShortOf() {
+        runBlocking { smallWorld.take(3).forEachIndexed { i, c -> db.userProgressDao().recordReview(c.code, false, 100L + i) } }
+
+        showWithWeakSpots(3)
+
+        rule.onNodeWithTag("quiz_scope_weak_spots").performScrollTo().assertIsNotEnabled()
+        rule.onNodeWithTag("quiz_weak_spots_note").performScrollTo()
+        rule.onNodeWithText("Weak spots unlocks once 4 reviewed countries are below mastery (you have 3)").assertIsDisplayed()
+    }
+
+    @Test
+    fun theWeakSpotsChip_unlocksOnceFourCountriesAreWeakAndStartsAQuizAboutThem() {
+        val weak = fourWeakSpots()
+        val vm = showWithWeakSpots(4)
+
+        clickSetup("quiz_scope_weak_spots")
+
+        rule.onNodeWithTag("quiz_scope_weak_spots").assertIsSelected()
+        rule.onNodeWithTag("quiz_weak_spots_note").performScrollTo()
+        rule.onNodeWithText("Your 4 weakest countries, with answers from the whole world").assertIsDisplayed()
+        rule.onNodeWithTag("start_quiz_btn").performScrollTo().assertIsEnabled()
+        rule.onNodeWithText("Start 4-Question Quiz").assertIsDisplayed()
+
+        rule.onNodeWithTag("start_quiz_btn").performClick()
+        rule.waitForIdle()
+
+        val session = vm.quizSession.value!!
+        assertEquals(QuizEngine.WEAK_SPOTS, session.scope)
+        assertEquals(weak.toSet(), session.questions.map { it.targetCountry.code }.toSet())
+    }
+
+    @Test
+    fun theWeakSpotsChip_isInactiveInTheContinentQuizEvenWhenUnlocked() {
+        fourWeakSpots()
+        showWithWeakSpots(4)
+
+        clickSetup("quiz_mode_continent")
+
+        rule.onNodeWithTag("quiz_scope_weak_spots").performScrollTo().assertIsNotEnabled()
+        rule.onNodeWithText("The continent quiz always covers the whole world").assertIsDisplayed()
+        rule.onNodeWithTag("quiz_weak_spots_note").assertDoesNotExist()
+    }
+
+    @Test
+    fun theAnswersRow_startsOnTheRememberedDifficultyAndRemembersTheNextChoice() {
+        val settings = InMemoryUserSettings(QuizDifficulty.HARD)
+        val vm = CountryViewModel(CountryRepository(db.userProgressDao(), smallWorld), FakeSpeech(), settings = settings)
+        rule.setContent { WorldFlagsTheme { QuizScreen(vm) } }
+        rule.waitForIdle()
+
+        rule.onNodeWithTag("quiz_difficulty_hard").performScrollTo().assertIsSelected()
+
+        clickSetup("quiz_difficulty_normal")
+
+        rule.onNodeWithTag("quiz_difficulty_normal").assertIsSelected()
+        assertEquals(QuizDifficulty.NORMAL, settings.quizDifficulty)
     }
 }

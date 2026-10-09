@@ -140,6 +140,33 @@ class QuizEngineTest {
     }
 
     @Test
+    fun effectiveScope_keepsTheWeakSpotsOnlyWhileThereAreEnoughOfThem() {
+        for (mode in QuizMode.entries) {
+            val expected = if (mode == QuizMode.CONTINENT) "Global" else QuizEngine.WEAK_SPOTS
+            assertEquals("mode=$mode", expected, QuizEngine.effectiveScope(mode, QuizEngine.WEAK_SPOTS, weakSpotsAvailable = true))
+            assertEquals("mode=$mode", "Global", QuizEngine.effectiveScope(mode, QuizEngine.WEAK_SPOTS, weakSpotsAvailable = false))
+        }
+        // A real place never depends on the weak spots.
+        assertEquals("Asia", QuizEngine.effectiveScope(QuizMode.FLAG_NAME, "Asia", weakSpotsAvailable = false))
+    }
+
+    @Test
+    fun theWeakSpotsAreNotAPlace_soNoCountryBelongsToThem() {
+        assertTrue(QuizEngine.WEAK_SPOTS !in QuizEngine.SCOPES)
+        assertTrue(QuizEngine.poolFor(QuizEngine.WEAK_SPOTS, allCountries).isEmpty())
+    }
+
+    @Test
+    fun generate_withAnAnswerPool_asksAboutThePoolButAnswersFromTheWiderWorld() {
+        val targets = sovereign.filter { it.continent == "Oceania" }.take(5)
+        val questions = QuizEngine.generate(targets, QuizMode.FLAG_NAME, Random(7), QuizDifficulty.NORMAL, sovereign)
+
+        assertEquals(targets.map { it.code }.toSet(), questions.map { it.targetCountry.code }.toSet())
+        val oceania = targets.map { it.name }.toSet()
+        assertTrue("answers come from outside the five targets", questions.any { q -> q.options.any { it !in oceania } })
+    }
+
+    @Test
     fun continentQuestions_neverNameTheCountryTheyAskAbout() {
         // The old prompt said "Which continent is <country> in?" over a flag, so the flag was redundant.
         for (mode in QuizMode.entries.filter { it.showsFlag }) {

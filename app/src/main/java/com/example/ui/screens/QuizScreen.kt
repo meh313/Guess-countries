@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.LocalFireDepartment
@@ -99,6 +100,9 @@ private val QuizMode.icon: ImageVector
         QuizMode.BLITZ -> Icons.Default.Timer
     }
 
+/** The scope chips in order: Global, then the weak spots (second, so the row does not hide them), then the continents. */
+private val SETUP_SCOPES = listOf(QuizEngine.SCOPES.first(), QuizEngine.WEAK_SPOTS) + QuizEngine.SCOPES.drop(1)
+
 @Composable
 fun QuizScreen(
     viewModel: CountryViewModel,
@@ -109,7 +113,13 @@ fun QuizScreen(
     val session by viewModel.quizSession.collectAsState()
     var selectedMode by rememberSaveable { mutableStateOf(QuizMode.FLAG_NAME) }
     var selectedContinentScope by rememberSaveable { mutableStateOf("Global") }
-    var selectedDifficulty by rememberSaveable { mutableStateOf(QuizDifficulty.NORMAL) }
+    val selectedDifficulty by viewModel.quizDifficulty.collectAsState()
+    val weakSpots by viewModel.weakSpots.collectAsState()
+    val weakSpotsAvailable = weakSpots.size >= QuizEngine.MIN_POOL
+    // Once practice lifts the weak spots out of reach, the choice goes back to Global instead of reviving by itself.
+    LaunchedEffect(weakSpotsAvailable) {
+        if (!weakSpotsAvailable && selectedContinentScope == QuizEngine.WEAK_SPOTS) selectedContinentScope = "Global"
+    }
     val countriesByCode = remember(allCountries) { allCountries.associateBy { it.code } }
     val quizScrollState = rememberScrollState()
     var showQuitConfirm by rememberSaveable { mutableStateOf(false) }
@@ -210,7 +220,7 @@ fun QuizScreen(
 
             // Some modes always cover the whole world; their scope chips show "Global" and are inactive.
             val scopeApplies = !selectedMode.usesWholeWorld
-            val shownScope = QuizEngine.effectiveScope(selectedMode, selectedContinentScope)
+            val shownScope = QuizEngine.effectiveScope(selectedMode, selectedContinentScope, weakSpotsAvailable)
             if (!scopeApplies) {
                 Text(
                     text = "The continent quiz always covers the whole world",
@@ -222,29 +232,61 @@ fun QuizScreen(
                 )
             }
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(QuizEngine.SCOPES) { scope ->
+                items(SETUP_SCOPES) { scope ->
+                    val isWeakSpots = scope == QuizEngine.WEAK_SPOTS
                     val isSelected = shownScope == scope
+                    val chipEnabled = scopeApplies && (!isWeakSpots || weakSpotsAvailable)
+                    val contentColor = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
                     Surface(
                         shape = RoundedCornerShape(16.dp),
                         color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
                         modifier = Modifier
-                            .alpha(if (scopeApplies) 1f else 0.5f)
+                            .alpha(if (chipEnabled) 1f else 0.5f)
                             .selectable(
                                 selected = isSelected,
-                                enabled = scopeApplies,
+                                enabled = chipEnabled,
                                 role = Role.RadioButton,
                                 onClick = { selectedContinentScope = scope }
                             )
-                            .testTag("quiz_scope_${scope.lowercase()}")
+                            .testTag("quiz_scope_${scope.lowercase().replace(' ', '_')}")
                     ) {
-                        Text(
-                            text = scope,
-                            color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                        )
+                        Row(
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (isWeakSpots) {
+                                Icon(
+                                    imageVector = Icons.Default.FitnessCenter,
+                                    contentDescription = null,
+                                    tint = contentColor,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                            }
+                            Text(text = scope, color = contentColor, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
+            }
+            // The weak-spots chip explains itself: why it is locked, or what it will ask about.
+            val weakSpotsNote = when {
+                !scopeApplies -> null
+                !weakSpotsAvailable ->
+                    "Weak spots unlocks once ${QuizEngine.MIN_POOL} reviewed countries are below mastery (you have ${weakSpots.size})"
+                shownScope == QuizEngine.WEAK_SPOTS ->
+                    "Your ${minOf(weakSpots.size, QuizEngine.MAX_QUESTIONS)} weakest countries, with answers from the whole world"
+                else -> null
+            }
+            if (weakSpotsNote != null) {
+                Text(
+                    text = weakSpotsNote,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .align(Alignment.Start)
+                        .padding(top = 8.dp)
+                        .testTag("quiz_weak_spots_note")
+                )
             }
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -282,7 +324,7 @@ fun QuizScreen(
                                 selected = isSelected,
                                 enabled = difficultyApplies,
                                 role = Role.RadioButton,
-                                onClick = { selectedDifficulty = difficulty }
+                                onClick = { viewModel.setQuizDifficulty(difficulty) }
                             )
                             .testTag("quiz_difficulty_${difficulty.name.lowercase()}")
                     ) {
@@ -299,7 +341,8 @@ fun QuizScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             // Start Quiz Button
-            val scopePoolSize = QuizEngine.poolFor(shownScope, allCountries).size
+            val scopePoolSize =
+                if (shownScope == QuizEngine.WEAK_SPOTS) weakSpots.size else QuizEngine.poolFor(shownScope, allCountries).size
             val canStart = scopePoolSize >= QuizEngine.MIN_POOL
             Button(
                 onClick = { viewModel.startQuiz(selectedMode, selectedContinentScope, selectedDifficulty) },
