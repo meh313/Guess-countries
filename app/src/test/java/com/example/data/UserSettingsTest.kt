@@ -40,4 +40,47 @@ class UserSettingsTest {
 
         assertEquals(QuizDifficulty.NORMAL, PrefsUserSettings(context).quizDifficulty)
     }
+
+    @Test
+    fun theReminderStartsOffAtSevenInTheEvening() {
+        val settings = PrefsUserSettings(context)
+
+        assertEquals(false, settings.reminderEnabled)
+        assertEquals(19 * 60, settings.reminderMinuteOfDay)
+        assertEquals(false, InMemoryUserSettings().reminderEnabled)
+        assertEquals(19 * 60, InMemoryUserSettings().reminderMinuteOfDay)
+    }
+
+    @Test
+    fun theReminderSettingsAreKeptForTheNextInstance() {
+        PrefsUserSettings(context).apply {
+            reminderEnabled = true
+            reminderMinuteOfDay = 8 * 60 + 5
+        }
+
+        val next = PrefsUserSettings(context)
+        assertEquals(true, next.reminderEnabled)
+        assertEquals(8 * 60 + 5, next.reminderMinuteOfDay)
+        // The reminder and the difficulty do not disturb each other.
+        assertEquals(QuizDifficulty.NORMAL, next.quizDifficulty)
+    }
+
+    @Test
+    fun aStoredMinuteOutsideTheDay_fallsBackToTheDefault() {
+        context.getSharedPreferences(PrefsUserSettings.FILE, Context.MODE_PRIVATE)
+            .edit().putInt("reminder_minute_of_day", 99_999).commit()
+
+        assertEquals(19 * 60, PrefsUserSettings(context).reminderMinuteOfDay)
+    }
+
+    @Test
+    fun aMinuteOutsideTheDayIsHeldToTheDayWhenStored() {
+        val settings = PrefsUserSettings(context)
+
+        settings.reminderMinuteOfDay = 5_000
+        assertEquals(24 * 60 - 1, settings.reminderMinuteOfDay)
+
+        settings.reminderMinuteOfDay = -3
+        assertEquals(0, settings.reminderMinuteOfDay)
+    }
 }

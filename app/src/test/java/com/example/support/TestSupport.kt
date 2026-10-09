@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModelStore
 import androidx.room.Room
 import androidx.room.withTransaction
 import androidx.test.core.app.ApplicationProvider
+import androidx.work.testing.WorkManagerTestInitHelper
 import com.example.data.local.AppDatabase
 import com.example.speech.Speech
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -95,5 +96,15 @@ class FakeSpeech(initiallyAvailable: Boolean = false) : Speech {
 
     override fun shutdown() {
         shutdownCalls++
+    }
+}
+
+/**
+ * Gives tests that launch the real activity a WorkManager in test mode: work is recorded but never run by itself, and
+ * what one test planned is gone for the next. Put it before the activity rule so it is ready when the screen opens.
+ */
+class TestWorkManagerRule : TestWatcher() {
+    override fun starting(description: Description) {
+        WorkManagerTestInitHelper.initializeTestWorkManager(ApplicationProvider.getApplicationContext<Context>())
     }
 }

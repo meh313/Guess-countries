@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- The optional daily reminder posts a notification (a runtime permission from Android 13). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <!-- Package visibility (API 30+): lets TextToSpeech discover installed speech engines. -->
     <queries>
         <intent>

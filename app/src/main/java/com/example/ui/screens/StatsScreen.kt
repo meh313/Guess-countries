@@ -104,6 +104,8 @@ fun StatsScreen(
 
         item { StreakCard(streak) }
 
+        item { ReminderCard(viewModel) }
+
         // Top Metric Grid
         item {
             Row(modifier = Modifier.fillMaxWidth()) {

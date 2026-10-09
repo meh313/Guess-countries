@@ -16,12 +16,16 @@ import com.example.data.model.SortOption
 import com.example.data.model.WeakSpots
 import com.example.data.settings.InMemoryUserSettings
 import com.example.data.settings.PrefsUserSettings
+import com.example.data.settings.ReminderPrefs
 import com.example.data.settings.UserSettings
 import com.example.progress.PracticeStreak
 import com.example.quiz.QuizDifficulty
 import com.example.quiz.QuizEngine
 import com.example.quiz.QuizMode
 import com.example.quiz.QuizSession
+import com.example.reminder.NoReminderScheduler
+import com.example.reminder.ReminderScheduler
+import com.example.reminder.WorkManagerReminderScheduler
 import com.example.speech.AndroidSpeech
 import com.example.speech.Speech
 import java.util.TimeZone
@@ -46,7 +50,9 @@ class CountryViewModel(
     /** The time zone whose midnights end a practice day. Injected so tests can pin it. */
     private val zone: () -> TimeZone = TimeZone::getDefault,
     /** Settings that outlive the app process; in tests an in-memory copy. */
-    private val settings: UserSettings = InMemoryUserSettings()
+    private val settings: UserSettings = InMemoryUserSettings(),
+    /** Plans the daily reminder; does nothing unless the app supplies the WorkManager one. */
+    private val reminderScheduler: ReminderScheduler = NoReminderScheduler
 ) : ViewModel() {
 
     val searchQuery = MutableStateFlow("")
@@ -63,6 +69,32 @@ class CountryViewModel(
     fun setQuizDifficulty(difficulty: QuizDifficulty) {
         settings.quizDifficulty = difficulty
         _quizDifficulty.value = difficulty
+    }
+
+    private val _reminder = MutableStateFlow(ReminderPrefs(settings.reminderEnabled, settings.reminderMinuteOfDay))
+
+    /** Whether the daily reminder is on and when it comes. */
+    val reminder: StateFlow<ReminderPrefs> = _reminder
+
+    init {
+        // Plan the reminder again at every start: it follows the current time zone, and a restored backup brings the
+        // setting without WorkManager's own record of it.
+        if (_reminder.value.enabled) reminderScheduler.schedule(_reminder.value.minuteOfDay)
+    }
+
+    /** Switches the reminder on (planning the next one) or off (cancelling it). */
+    fun setReminderEnabled(enabled: Boolean) {
+        settings.reminderEnabled = enabled
+        _reminder.update { it.copy(enabled = enabled) }
+        if (enabled) reminderScheduler.schedule(_reminder.value.minuteOfDay) else reminderScheduler.cancel()
+    }
+
+    /** Moves the reminder to [hour]:[minute]; takes effect at once when the reminder is on. */
+    fun setReminderTime(hour: Int, minute: Int) {
+        val minuteOfDay = (hour * 60 + minute).coerceIn(0, 24 * 60 - 1)
+        settings.reminderMinuteOfDay = minuteOfDay
+        _reminder.update { it.copy(minuteOfDay = minuteOfDay) }
+        if (_reminder.value.enabled) reminderScheduler.schedule(minuteOfDay)
     }
 
     private val _quizSession = MutableStateFlow<QuizSession?>(null)
@@ -270,7 +302,8 @@ class CountryViewModel(
                 CountryViewModel(
                     repository = CountryRepository(AppDatabase.getDatabase(app).userProgressDao()),
                     speech = AndroidSpeech(app),
-                    settings = PrefsUserSettings(app)
+                    settings = PrefsUserSettings(app),
+                    reminderScheduler = WorkManagerReminderScheduler(app)
                 )
             }
         }
