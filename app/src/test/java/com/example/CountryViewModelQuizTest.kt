@@ -51,13 +51,15 @@ class CountryViewModelQuizTest {
 
     @After
     fun tearDown() {
-        db.closeWhenIdle()
+        db.closeWhenIdle(*created.toTypedArray())
     }
 
     private var now = 1_000L
 
+    private val created = mutableListOf<CountryViewModel>()
+
     private fun newViewModel(countries: List<Country> = CountryCatalog.all) =
-        CountryViewModel(CountryRepository(db.userProgressDao(), countries), FakeSpeech(), clock = { now })
+        CountryViewModel(CountryRepository(db.userProgressDao(), countries), FakeSpeech(), clock = { now }).also { created += it }
 
     // Small worlds for the paths the full catalog no longer reaches: a scope with fewer than ten
     // countries and one with too few to quiz at all.
@@ -578,7 +580,8 @@ class CountryViewModelQuizTest {
     @Test
     fun theChosenDifficulty_isRememberedByTheNextViewModel() {
         val settings = InMemoryUserSettings()
-        fun viewModel() = CountryViewModel(CountryRepository(db.userProgressDao()), FakeSpeech(), clock = { now }, settings = settings)
+        fun viewModel() =
+            CountryViewModel(CountryRepository(db.userProgressDao()), FakeSpeech(), clock = { now }, settings = settings).also { created += it }
         val first = viewModel()
         assertEquals(QuizDifficulty.NORMAL, first.quizDifficulty.value)
 

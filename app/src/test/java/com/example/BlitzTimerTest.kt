@@ -57,7 +57,7 @@ class BlitzTimerTest {
 
     @After
     fun tearDown() {
-        db.closeWhenIdle()
+        db.closeWhenIdle(vm)
     }
 
     private fun show() {

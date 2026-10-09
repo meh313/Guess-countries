@@ -53,15 +53,17 @@ class CountryViewModelStreakTest {
 
     @After
     fun tearDown() {
-        db.closeWhenIdle()
+        db.closeWhenIdle(*created.toTypedArray())
     }
+
+    private val created = mutableListOf<CountryViewModel>()
 
     private fun newViewModel() = CountryViewModel(
         CountryRepository(db.userProgressDao(), CountryCatalog.all, now = { wall }),
         FakeSpeech(),
         clock = { 0L },
         zone = { berlin }
-    )
+    ).also { created += it }
 
     private fun seedQuiz(timestamp: Long) =
         runBlocking {

@@ -38,7 +38,7 @@ class CountryViewModelSpeechTest {
 
     @After
     fun tearDown() {
-        db.closeWhenIdle()
+        db.closeWhenIdle(vm)
     }
 
     private val country get() = vm.repository.allCountries.first { it.isSovereign }

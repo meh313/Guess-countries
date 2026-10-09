@@ -2,6 +2,8 @@ package com.example.support
 
 import android.content.Context
 import android.os.Looper
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelStore
 import androidx.room.Room
 import androidx.room.withTransaction
 import androidx.test.core.app.ApplicationProvider
@@ -29,11 +31,22 @@ fun AppDatabase.awaitPendingWrites() {
 
 /**
  * Closes the database once pending writes have finished. Closing under an in-flight write throws on a
- * background thread, and JUnit then blames whichever unrelated test runs next.
+ * background thread, and JUnit then blames whichever unrelated test runs next. [viewModels] built over this
+ * database are released first: a view model's flows (the eagerly shared weak spots among them) keep
+ * re-querying Room after every write until its scope is cancelled, which only its owner normally does.
  */
-fun AppDatabase.closeWhenIdle() {
+fun AppDatabase.closeWhenIdle(vararg viewModels: ViewModel) {
+    releaseViewModels(*viewModels)
     awaitPendingWrites()
     close()
+}
+
+/** Cancels the coroutines of [viewModels], as the framework does when their owner goes away. */
+fun releaseViewModels(vararg viewModels: ViewModel) {
+    val store = ViewModelStore()
+    viewModels.forEachIndexed { index, viewModel -> store.put("vm$index", viewModel) }
+    store.clear()
+    shadowOf(Looper.getMainLooper()).idle()
 }
 
 /**
