@@ -5,8 +5,11 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Box
+import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
@@ -16,7 +19,9 @@ import androidx.compose.material.icons.filled.Style
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,25 +33,41 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.ui.screens.AboutScreen
+import com.example.ui.components.Standing
 import com.example.ui.screens.ExploreScreen
+import com.example.ui.screens.SettingsScreen
 import com.example.ui.screens.FlashcardScreen
 import com.example.ui.screens.QuizScreen
 import com.example.ui.screens.StatsScreen
 import com.example.ui.theme.WorldFlagsTheme
 import com.example.ui.viewmodel.CountryViewModel
 
-sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
-    object Explore : Screen("explore", "Explore", Icons.Default.Public)
-    object Flashcards : Screen("flashcards", "Flashcards", Icons.Default.Style)
-    object Quiz : Screen("quiz", "Quiz", Icons.Default.EmojiEvents)
-    object Stats : Screen("stats", "Progress", Icons.Default.BarChart)
+sealed class Screen(val route: String, @StringRes val titleRes: Int, val icon: ImageVector) {
+    object Explore : Screen("explore", R.string.nav_explore, Icons.Default.Public)
+    object Flashcards : Screen("flashcards", R.string.nav_flashcards, Icons.Default.Style)
+    object Quiz : Screen("quiz", R.string.nav_quiz, Icons.Default.EmojiEvents)
+    object Stats : Screen("stats", R.string.nav_progress, Icons.Default.BarChart)
+
+    companion object {
+        /** Reached from Progress, not from the bar; Back returns there. */
+        const val SETTINGS = "settings"
+        const val ABOUT = "about"
+    }
 }
 
 class MainActivity : ComponentActivity() {
@@ -59,8 +80,14 @@ class MainActivity : ComponentActivity() {
         // Only a fresh start follows the intent: after a rotation the player may have moved to another tab.
         if (savedInstanceState == null) requestedTab.value = intent.requestedTab()
         setContent {
-            WorldFlagsTheme {
-                MainAppScreen(requestedTab = requestedTab.value, onTabRequestShown = { requestedTab.value = null })
+            // The theme follows the settings, so the view model is created here, above the theme.
+            val viewModel: CountryViewModel = viewModel(factory = CountryViewModel.Factory)
+            val appearance by viewModel.appearance.collectAsStateWithLifecycle()
+            WorldFlagsTheme(
+                darkTheme = appearance.themeMode.isDark(isSystemInDarkTheme()),
+                dynamicColor = appearance.dynamicColor
+            ) {
+                MainAppScreen(viewModel = viewModel, requestedTab = requestedTab.value, onTabRequestShown = { requestedTab.value = null })
             }
         }
     }
@@ -111,46 +138,59 @@ fun MainAppScreen(
         }
     }
 
+    fun isSelected(screen: Screen) = currentRoute == screen.route ||
+        (screen == Screen.Stats && (currentRoute == Screen.SETTINGS || currentRoute == Screen.ABOUT))
+    fun open(screen: Screen) {
+        if (currentRoute != screen.route) {
+            navController.navigate(screen.route) {
+                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                launchSingleTop = true
+                restoreState = true
+            }
+        }
+    }
+    // A bar along the bottom on phones; on a window 600dp or wider (tablets, landscape phones with room) a rail
+    // along the start edge, which leaves the height to the content.
+    val windowWidthDp = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.width.toDp() }
+    // At 1.5 times the font size or more, four labels no longer fit side by side: only the selected tab keeps its label.
+    val showAllLabels = LocalDensity.current.fontScale < 1.5f
+    val useRail = windowWidthDp >= RAIL_MIN_WIDTH_DP.dp
+
     Scaffold(
         bottomBar = {
-            NavigationBar(
-                modifier = Modifier.testTag("bottom_navigation_bar")
-            ) {
-                items.forEach { screen ->
-                    val isSelected = currentRoute == screen.route
-                    NavigationBarItem(
-                        icon = {
-                            Icon(
-                                imageVector = screen.icon,
-                                contentDescription = null // the label below already names the tab
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = screen.title,
-                                fontSize = 11.sp
-                            )
-                        },
-                        selected = isSelected,
-                        onClick = {
-                            if (currentRoute != screen.route) {
-                                navController.navigate(screen.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
-                                    }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            }
-                        },
-                        modifier = Modifier.testTag("nav_tab_${screen.route}")
-                    )
+            if (!useRail) {
+                NavigationBar(modifier = Modifier.testTag("bottom_navigation_bar")) {
+                    items.forEach { screen ->
+                        NavigationBarItem(
+                            icon = { Icon(imageVector = screen.icon, contentDescription = null) }, // the label names the tab
+                            label = { TabLabel(stringResource(screen.titleRes)) },
+                            alwaysShowLabel = showAllLabels,
+                            selected = isSelected(screen),
+                            onClick = { open(screen) },
+                            modifier = Modifier.testTag("nav_tab_${screen.route}")
+                        )
+                    }
                 }
             }
         },
         modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding)) {
+        Row(modifier = Modifier.padding(innerPadding)) {
+            if (useRail) {
+                NavigationRail(modifier = Modifier.testTag("navigation_rail")) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    items.forEach { screen ->
+                        NavigationRailItem(
+                            icon = { Icon(imageVector = screen.icon, contentDescription = null) },
+                            label = { TabLabel(stringResource(screen.titleRes)) },
+                            alwaysShowLabel = showAllLabels,
+                            selected = isSelected(screen),
+                            onClick = { open(screen) },
+                            modifier = Modifier.testTag("nav_tab_${screen.route}")
+                        )
+                    }
+                }
+            }
             NavHost(
                 navController = navController,
                 startDestination = Screen.Explore.route
@@ -165,21 +205,50 @@ fun MainAppScreen(
                     QuizScreen(viewModel = viewModel)
                 }
                 composable(Screen.Stats.route) {
-                    StatsScreen(viewModel = viewModel)
+                    StatsScreen(
+                        viewModel = viewModel,
+                        onOpenSettings = { navController.navigate(Screen.SETTINGS) { launchSingleTop = true } },
+                        onOpenExplore = { continent ->
+                            viewModel.showInExplore(continent, Standing.WEAK)
+                            navController.navigate(Screen.Explore.route) {
+                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
+                    )
+                }
+                composable(Screen.SETTINGS) {
+                    SettingsScreen(
+                        viewModel = viewModel,
+                        onBack = { navController.popBackStack() },
+                        onAbout = { navController.navigate(Screen.ABOUT) { launchSingleTop = true } }
+                    )
+                }
+                composable(Screen.ABOUT) {
+                    AboutScreen(onBack = { navController.popBackStack() })
                 }
             }
             // After the NavHost, whose own effects give the controller its graph: effects run in composition order.
             LaunchedEffect(requestedTab) {
-                val route = items.firstOrNull { it.route == requestedTab }?.route ?: return@LaunchedEffect
-                if (currentRoute != route) {
-                    navController.navigate(route) {
-                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                }
+                val screen = items.firstOrNull { it.route == requestedTab } ?: return@LaunchedEffect
+                open(screen)
                 onTabRequestShown()
             }
         }
     }
 }
+
+/** A tab label on one line: at large font sizes it shrinks a little instead of breaking "Flashcards" in two. */
+@Composable
+private fun TabLabel(title: String) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.labelSmall,
+        maxLines = 1,
+        autoSize = TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = 12.sp)
+    )
+}
+
+/** Windows at least this wide get the navigation rail instead of the bottom bar. */
+const val RAIL_MIN_WIDTH_DP = 600

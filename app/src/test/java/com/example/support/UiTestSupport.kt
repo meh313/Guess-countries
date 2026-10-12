@@ -1,6 +1,7 @@
 package com.example.support
 
 import com.example.ui.viewmodel.CountryViewModel
+import com.example.ui.viewmodel.QuizPlan
 import android.os.Looper
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
@@ -66,6 +67,20 @@ fun ComposeTestRule.awaitWeakSpotsWhere(viewModel: CountryViewModel, timeoutMill
     val collector = CoroutineScope(Dispatchers.Default).launch { viewModel.weakSpots.collect {} }
     try {
         awaitDelivered(timeoutMillis) { accept(viewModel.weakSpots.value.size) }
+    } finally {
+        collector.cancel()
+    }
+}
+
+/**
+ * Waits until the quiz plan (weak and due countries per skill, recent targets) satisfies [accept], handing Room's
+ * results to the main thread meanwhile. The plan is shared only while something collects it, so a collector runs
+ * for the duration of the wait.
+ */
+fun ComposeTestRule.awaitQuizPlan(viewModel: CountryViewModel, timeoutMillis: Long = 10_000, accept: (QuizPlan) -> Boolean) {
+    val collector = CoroutineScope(Dispatchers.Default).launch { viewModel.quizPlan.collect {} }
+    try {
+        awaitDelivered(timeoutMillis) { accept(viewModel.quizPlan.value) }
     } finally {
         collector.cancel()
     }

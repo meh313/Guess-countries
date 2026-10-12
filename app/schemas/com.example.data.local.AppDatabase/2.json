@@ -1,0 +1,264 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 2,
+    "identityHash": "88f5d798fd086ef5643d7480da6382e8",
+    "entities": [
+      {
+        "tableName": "user_country_progress",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`countryCode` TEXT NOT NULL, `isFavorite` INTEGER NOT NULL, `lastReviewed` INTEGER NOT NULL, PRIMARY KEY(`countryCode`))",
+        "fields": [
+          {
+            "fieldPath": "countryCode",
+            "columnName": "countryCode",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isFavorite",
+            "columnName": "isFavorite",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastReviewed",
+            "columnName": "lastReviewed",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "countryCode"
+          ]
+        }
+      },
+      {
+        "tableName": "skill_progress",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`countryCode` TEXT NOT NULL, `skill` TEXT NOT NULL, `score` INTEGER NOT NULL, `box` INTEGER NOT NULL, `dueAt` INTEGER NOT NULL, `reviews` INTEGER NOT NULL, `correct` INTEGER NOT NULL, `lastResult` INTEGER NOT NULL, `lastReviewed` INTEGER NOT NULL, PRIMARY KEY(`countryCode`, `skill`))",
+        "fields": [
+          {
+            "fieldPath": "countryCode",
+            "columnName": "countryCode",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "skill",
+            "columnName": "skill",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "score",
+            "columnName": "score",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "box",
+            "columnName": "box",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dueAt",
+            "columnName": "dueAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reviews",
+            "columnName": "reviews",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "correct",
+            "columnName": "correct",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastResult",
+            "columnName": "lastResult",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastReviewed",
+            "columnName": "lastReviewed",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "countryCode",
+            "skill"
+          ]
+        }
+      },
+      {
+        "tableName": "quiz_scores",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `mode` TEXT NOT NULL, `score` INTEGER NOT NULL, `total` INTEGER NOT NULL, `continentFilter` TEXT NOT NULL, `timestamp` INTEGER NOT NULL, `correct` INTEGER, `questionCount` INTEGER, `difficulty` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "mode",
+            "columnName": "mode",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "score",
+            "columnName": "score",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "total",
+            "columnName": "total",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "continentFilter",
+            "columnName": "continentFilter",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timestamp",
+            "columnName": "timestamp",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "correct",
+            "columnName": "correct",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "questionCount",
+            "columnName": "questionCount",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "difficulty",
+            "columnName": "difficulty",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "quiz_answers",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `quizId` INTEGER NOT NULL, `position` INTEGER NOT NULL, `targetCode` TEXT NOT NULL, `pickedCode` TEXT, `pickedText` TEXT, `isCorrect` INTEGER NOT NULL, `timeMs` INTEGER NOT NULL, FOREIGN KEY(`quizId`) REFERENCES `quiz_scores`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "quizId",
+            "columnName": "quizId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "position",
+            "columnName": "position",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "targetCode",
+            "columnName": "targetCode",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pickedCode",
+            "columnName": "pickedCode",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "pickedText",
+            "columnName": "pickedText",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "isCorrect",
+            "columnName": "isCorrect",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timeMs",
+            "columnName": "timeMs",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_quiz_answers_quizId",
+            "unique": false,
+            "columnNames": [
+              "quizId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_quiz_answers_quizId` ON `${TABLE_NAME}` (`quizId`)"
+          },
+          {
+            "name": "index_quiz_answers_targetCode",
+            "unique": false,
+            "columnNames": [
+              "targetCode"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_quiz_answers_targetCode` ON `${TABLE_NAME}` (`targetCode`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "quiz_scores",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "quizId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '88f5d798fd086ef5643d7480da6382e8')"
+    ]
+  }
+}

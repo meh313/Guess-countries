@@ -1,6 +1,11 @@
 package com.example.ui.screens
 
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.Intent
+import android.content.res.Resources
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,6 +28,8 @@ import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.LocationCity
@@ -44,20 +51,38 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
+import com.example.R
 import com.example.data.local.UserProgressEntity
 import com.example.data.model.Country
+import com.example.progress.Skill
+import com.example.progress.SkillMastery
+import com.example.progress.SkillState
+import com.example.ui.chipLabelRes
+import com.example.ui.components.Standing
 import com.example.ui.components.formatArea
 import com.example.ui.components.formatPopulation
 import com.example.ui.components.rememberCompactNumberFormat
+import com.example.ui.labelRes
 import androidx.compose.ui.text.style.TextOverflow
 import com.example.ui.components.FlagView
 import com.example.ui.components.getContinentColor
@@ -70,9 +95,17 @@ fun CountryDetailSheet(
     onDismiss: () -> Unit,
     onSpeak: () -> Unit,
     speechAvailable: Boolean,
-    onToggleFavorite: () -> Unit
+    onToggleFavorite: () -> Unit,
+    /** The web pages this country's facts were checked against; empty for the first catalog's countries. */
+    sources: List<String> = emptyList(),
+    /** The player's state per skill (null where never reviewed); empty hides the progress row (Antarctica). */
+    skillStates: Map<Skill, SkillState?> = emptyMap(),
+    now: Long = System.currentTimeMillis()
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val context = LocalContext.current
+    val resources = LocalResources.current
+    var sourcesOpen by rememberSaveable { mutableStateOf(false) }
     val isFavorite = progress?.isFavorite == true
     val compactNumbers = rememberCompactNumberFormat()
     val continentColor = getContinentColor(country.continent)
@@ -132,9 +165,9 @@ fun CountryDetailSheet(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.VolumeUp,
                             contentDescription = if (speechAvailable) {
-                                "Read country summary aloud"
+                                stringResource(R.string.action_read_aloud)
                             } else {
-                                "Reading aloud is unavailable on this device"
+                                stringResource(R.string.read_aloud_unavailable)
                             },
                             tint = if (speechAvailable) {
                                 MaterialTheme.colorScheme.primary
@@ -144,7 +177,7 @@ fun CountryDetailSheet(
                         )
                     }
                     IconButton(onClick = onDismiss) {
-                        Icon(imageVector = Icons.Default.Close, contentDescription = "Close")
+                        Icon(imageVector = Icons.Default.Close, contentDescription = stringResource(R.string.action_close))
                     }
                 }
             }
@@ -160,7 +193,7 @@ fun CountryDetailSheet(
                         modifier = Modifier
                             .heightIn(max = 180.dp)
                             .testTag("sheet_flag"),
-                        contentDescription = "Flag of ${country.name}"
+                        contentDescription = stringResource(R.string.flag_of, country.name)
                     )
 
                     // The region pill and the bookmark share the flag's width, so they sit in one row that is
@@ -183,7 +216,7 @@ fun CountryDetailSheet(
                             Text(
                                 text = country.regionLabel,
                                 color = Color.White,
-                                fontSize = 12.sp,
+                                style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
                                 maxLines = 2,
                                 overflow = TextOverflow.Ellipsis,
@@ -202,7 +235,7 @@ fun CountryDetailSheet(
                         ) {
                             Icon(
                                 imageVector = if (isFavorite) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                                contentDescription = "Bookmark ${country.name}",
+                                contentDescription = stringResource(R.string.bookmark_country, country.name),
                                 tint = if (isFavorite) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface
                             )
                         }
@@ -214,9 +247,10 @@ fun CountryDetailSheet(
 
             // Quick Info Grid
             Text(
-                text = "Country Facts",
+                text = stringResource(R.string.sheet_facts_title),
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.semantics { heading() }
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -224,14 +258,14 @@ fun CountryDetailSheet(
             Row(modifier = Modifier.fillMaxWidth()) {
                 DetailMetricCard(
                     icon = Icons.Default.LocationCity,
-                    label = "Capital City",
+                    label = stringResource(R.string.sheet_fact_capital),
                     value = country.capital,
                     modifier = Modifier.weight(1f)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 DetailMetricCard(
                     icon = Icons.Default.People,
-                    label = "Population",
+                    label = stringResource(R.string.sheet_fact_population),
                     value = formatPopulation(compactNumbers, country.population),
                     modifier = Modifier.weight(1f)
                 )
@@ -242,14 +276,14 @@ fun CountryDetailSheet(
             Row(modifier = Modifier.fillMaxWidth()) {
                 DetailMetricCard(
                     icon = Icons.Default.Public,
-                    label = "Total Area",
+                    label = stringResource(R.string.sheet_fact_area),
                     value = formatArea(compactNumbers, country.areaSqKm),
                     modifier = Modifier.weight(1f)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 DetailMetricCard(
                     icon = Icons.Default.MonetizationOn,
-                    label = "Currency",
+                    label = stringResource(R.string.sheet_fact_currency),
                     value = country.currency,
                     modifier = Modifier.weight(1f)
                 )
@@ -260,26 +294,56 @@ fun CountryDetailSheet(
             Row(modifier = Modifier.fillMaxWidth()) {
                 DetailMetricCard(
                     icon = Icons.Default.Language,
-                    label = "Languages",
+                    label = stringResource(R.string.sheet_fact_languages),
                     value = country.languages.joinToString(", "),
                     modifier = Modifier.weight(1f)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 DetailMetricCard(
                     icon = Icons.Default.DirectionsCar,
-                    label = "Driving Side",
-                    value = if (country.driveSide == "N/A") "No public roads" else "${country.driveSide} side",
+                    label = stringResource(R.string.sheet_fact_driving_side),
+                    value = if (country.driveSide == "N/A") stringResource(R.string.sheet_no_public_roads) else stringResource(R.string.sheet_drive_side, country.driveSide),
                     modifier = Modifier.weight(1f)
                 )
+            }
+
+            if (skillStates.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(20.dp))
+                Text(
+                    text = stringResource(R.string.sheet_progress_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.semantics { heading() }
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("sheet_progress")
+                ) {
+                    Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Skill.entries.forEach { skill ->
+                            val state = skillStates[skill]
+                            Text(
+                                text = stringResource(R.string.sheet_skill_standing, stringResource(skill.labelRes), describeStanding(resources, state, now)),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(20.dp))
 
             // Flag Meaning & History
             Text(
-                text = "Flag Symbolism & History",
+                text = stringResource(R.string.sheet_flag_title),
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.semantics { heading() }
             )
             Spacer(modifier = Modifier.height(6.dp))
             Card(
@@ -298,9 +362,10 @@ fun CountryDetailSheet(
 
             // Famous Landmarks
             Text(
-                text = "Famous Landmarks",
+                text = stringResource(R.string.sheet_landmarks_title),
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.semantics { heading() }
             )
             Spacer(modifier = Modifier.height(8.dp))
             FlowRow(
@@ -313,8 +378,8 @@ fun CountryDetailSheet(
                         color = MaterialTheme.colorScheme.primaryContainer
                     ) {
                         Text(
-                            text = "📍 $landmark",
-                            fontSize = 12.sp,
+                            text = stringResource(R.string.sheet_landmark, landmark),
+                            style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
@@ -343,7 +408,7 @@ fun CountryDetailSheet(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            text = "Did You Know?",
+                            text = stringResource(R.string.sheet_fun_fact_title),
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSecondaryContainer
@@ -357,8 +422,83 @@ fun CountryDetailSheet(
                 }
             }
 
+            if (sources.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(16.dp))
+                // Where the facts above were checked. Plain text until opened; a tap on a link hands it to the browser,
+                // which needs no permission of this app's.
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(role = Role.Button, onClickLabel = stringResource(if (sourcesOpen) R.string.sheet_hide_sources else R.string.sheet_show_sources)) { sourcesOpen = !sourcesOpen }
+                        .testTag("sheet_sources_btn"),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.sheet_sources, sources.size),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Icon(
+                        imageVector = if (sourcesOpen) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        contentDescription = null
+                    )
+                }
+                if (sourcesOpen) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 6.dp)
+                            .testTag("sheet_sources"),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.sheet_sources_note),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        sources.forEach { url ->
+                            Text(
+                                text = url,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable(role = Role.Button, onClickLabel = stringResource(R.string.sheet_open_in_browser)) { openUrl(context, url) }
+                                    .padding(vertical = 2.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(24.dp))
         }
+    }
+}
+
+/** One line on a skill: "Mastered · box 4 · next review in 12 days", "Learning · box 1 · due now", or "Not reviewed yet". */
+internal fun describeStanding(resources: Resources, state: SkillState?, now: Long): String {
+    if (state == null || state.isNew) return resources.getString(R.string.sheet_standing_not_reviewed)
+    val standing = Standing.of(state, now)
+    val head = resources.getString(standing.chipLabelRes)
+    // Rounded up: a review 23 hours away is tomorrow's.
+    val days = ((state.dueAt - now + SkillMastery.DAY_MILLIS - 1) / SkillMastery.DAY_MILLIS).toInt()
+    val due = when {
+        state.dueAt <= now -> resources.getString(R.string.sheet_due_now)
+        days <= 1 -> resources.getString(R.string.sheet_next_review_tomorrow)
+        else -> resources.getQuantityString(R.plurals.sheet_next_review_days, days, days)
+    }
+    val last = resources.getString(if (state.lastResult > 0) R.string.sheet_last_answer_right else R.string.sheet_last_answer_wrong)
+    return resources.getString(R.string.sheet_standing_line, head, resources.getString(R.string.sheet_standing_box, state.box), due, last)
+}
+
+/** Hands [url] to the browser; nothing happens on a device without one. */
+internal fun openUrl(context: Context, url: String) {
+    try {
+        context.startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
+    } catch (_: ActivityNotFoundException) {
+        // No browser: the address is still on screen to copy.
     }
 }
 
@@ -388,12 +528,12 @@ fun DetailMetricCard(
             Column {
                 Text(
                     text = label,
-                    fontSize = 10.sp,
+                    style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
                 Text(
                     text = value,
-                    fontSize = 12.sp,
+                    style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )

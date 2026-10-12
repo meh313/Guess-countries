@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.example.data.settings.InMemoryUserSettings
 import com.example.data.settings.PrefsUserSettings
+import com.example.data.settings.ThemeMode
+import com.example.data.settings.TimerPace
 import com.example.quiz.QuizDifficulty
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -74,6 +76,58 @@ class UserSettingsTest {
     }
 
     @Test
+    fun theLookAndTheTimerStartAtTheirDefaults() {
+        val settings = PrefsUserSettings(context)
+
+        assertEquals(ThemeMode.SYSTEM, settings.themeMode)
+        assertEquals(false, settings.dynamicColor)
+        assertEquals(TimerPace.NORMAL, settings.timerPace)
+        assertEquals(ThemeMode.SYSTEM, InMemoryUserSettings().themeMode)
+        assertEquals(false, InMemoryUserSettings().dynamicColor)
+        assertEquals(TimerPace.NORMAL, InMemoryUserSettings().timerPace)
+    }
+
+    @Test
+    fun theLookAndTheTimerAreKeptForTheNextInstance() {
+        PrefsUserSettings(context).apply {
+            themeMode = ThemeMode.DARK
+            dynamicColor = true
+            timerPace = TimerPace.OFF
+        }
+
+        val next = PrefsUserSettings(context)
+        assertEquals(ThemeMode.DARK, next.themeMode)
+        assertEquals(true, next.dynamicColor)
+        assertEquals(TimerPace.OFF, next.timerPace)
+    }
+
+    @Test
+    fun unknownStoredLookOrPace_fallBackToTheDefaults() {
+        context.getSharedPreferences(PrefsUserSettings.FILE, Context.MODE_PRIVATE)
+            .edit().putString("theme_mode", "SEPIA").putString("timer_pace", "FRANTIC").commit()
+
+        assertEquals(ThemeMode.SYSTEM, PrefsUserSettings(context).themeMode)
+        assertEquals(TimerPace.NORMAL, PrefsUserSettings(context).timerPace)
+    }
+
+    @Test
+    fun theThemeMode_decidesDarkFromTheSystemOnlyWhenItSaysSo() {
+        assertEquals(true, ThemeMode.SYSTEM.isDark(systemDark = true))
+        assertEquals(false, ThemeMode.SYSTEM.isDark(systemDark = false))
+        assertEquals(false, ThemeMode.LIGHT.isDark(systemDark = true))
+        assertEquals(true, ThemeMode.DARK.isDark(systemDark = false))
+    }
+
+    @Test
+    fun theTimerPace_stretchesOrLiftsALimit_andLeavesNoLimitAlone() {
+        assertEquals(10, TimerPace.NORMAL.limit(10))
+        assertEquals(20, TimerPace.RELAXED.limit(10))
+        assertEquals(null, TimerPace.OFF.limit(10))
+        assertEquals(null, TimerPace.NORMAL.limit(null))
+        assertEquals(null, TimerPace.RELAXED.limit(null))
+    }
+
+    @Test
     fun aMinuteOutsideTheDayIsHeldToTheDayWhenStored() {
         val settings = PrefsUserSettings(context)
 
@@ -82,5 +136,32 @@ class UserSettingsTest {
 
         settings.reminderMinuteOfDay = -3
         assertEquals(0, settings.reminderMinuteOfDay)
+    }
+
+    @Test
+    fun theBackupRules_nameTheDatabaseAndTheSettings_andLeaveWorkManagerOut() {
+        for (resource in listOf(com.example.R.xml.backup_rules, com.example.R.xml.data_extraction_rules)) {
+            val parser = context.resources.getXml(resource)
+            val included = mutableListOf<String>()
+            val excluded = mutableListOf<String>()
+            while (parser.next() != org.xmlpull.v1.XmlPullParser.END_DOCUMENT) {
+                if (parser.eventType != org.xmlpull.v1.XmlPullParser.START_TAG) continue
+                val path = parser.getAttributeValue(null, "path") ?: continue
+                val domain = parser.getAttributeValue(null, "domain")
+                when (parser.name) {
+                    "include" -> included += "$domain/$path"
+                    "exclude" -> excluded += "$domain/$path"
+                }
+            }
+            assertEquals(resource.toString(), true, "database/world_flags_db" in included)
+            assertEquals(resource.toString(), true, "database/world_flags_db-wal" in included)
+            assertEquals(resource.toString(), true, "sharedpref/settings.xml" in included)
+            // An explicit include list keeps WorkManager's database out by itself (lint rejects excluding an unlisted path).
+            assertEquals(resource.toString(), emptyList<String>(), excluded)
+            assertEquals(resource.toString(), false, included.any { it.contains("work") })
+        }
+        // The names the rules use are the real ones.
+        assertEquals("world_flags_db", com.example.data.local.AppDatabase.NAME)
+        assertEquals("settings", PrefsUserSettings.FILE)
     }
 }

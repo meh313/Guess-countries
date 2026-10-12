@@ -164,16 +164,16 @@ class ReminderScheduleTest {
     fun aStreakAtRisk_isNamed() {
         val message = ReminderSchedule.message(PracticeStreak.Summary(current = 3, best = 5, practicedToday = false))
 
-        assertEquals("Keep your streak", message.title)
-        assertEquals("One quiz keeps your 3-day streak", message.text)
+        assertTrue(message.keepsStreak)
+        assertEquals(3, message.streakDays)
     }
 
     @Test
     fun noStreak_invitesANewOne() {
         val message = ReminderSchedule.message(PracticeStreak.Summary(current = 0, best = 4, practicedToday = false))
 
-        assertEquals("Time for a quick quiz", message.title)
-        assertEquals("A quick quiz starts a new streak", message.text)
+        assertFalse(message.keepsStreak)
+        assertEquals(0, message.streakDays)
     }
 
     @Test

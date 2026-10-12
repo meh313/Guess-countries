@@ -1,7 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Words shared by more than one screen, and the labels of the enums (quiz modes, scopes, sort orders, standings…),
+  which `ui/Labels.kt` maps to. Each screen keeps its own words in `strings_<screen>.xml`. Stored values (quiz mode
+  names, scope keys, continent names, study sources) are never these strings: they stay the English keys and are
+  translated on display only.
+-->
 <resources>
     <string name="app_name">World Flags</string>
     <plurals name="countries_count">
         <item quantity="one">%d Country</item>
         <item quantity="other">%d Countries</item>
     </plurals>
+
+    <!-- Tabs -->
+    <string name="nav_explore">Explore</string>
+    <string name="nav_flashcards">Flashcards</string>
+    <string name="nav_quiz">Quiz</string>
+    <string name="nav_progress">Progress</string>
+
+    <!-- Shared actions and lines -->
+    <string name="action_done">Done</string>
+    <string name="action_back">Back</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_close">Close</string>
+    <string name="action_clear_filters">Clear filters</string>
+    <string name="action_read_aloud">Read country summary aloud</string>
+    <string name="read_aloud_unavailable">Reading aloud is unavailable on this device</string>
+    <string name="flag_to_identify">Flag to identify</string>
+    <string name="flag_of">Flag of %1$s</string>
+    <string name="bookmark_country">Bookmark %1$s</string>
+    <string name="streak_started">Streak started: day 1</string>
+    <plurals name="streak_kept">
+        <item quantity="one">Streak kept: %d day</item>
+        <item quantity="other">Streak kept: %d days</item>
+    </plurals>
+
+    <!-- Quiz modes (display titles; the stored value is the enum name) -->
+    <string name="mode_flag_name">Flag → Country</string>
+    <string name="mode_pick_flag">Country → Flag</string>
+    <string name="mode_pick_flag_hint">Pick the right flag out of four</string>
+    <string name="mode_capital">Country → Capital</string>
+    <string name="mode_continent">Flag → Continent</string>
+    <string name="mode_continent_hint">Covers the whole world</string>
+    <string name="mode_speed_round">Speed Round</string>
+    <string name="mode_speed_round_hint">10 seconds per question</string>
+    <string name="mode_blitz">60-Second Blitz</string>
+    <string name="mode_blitz_hint">As many flags as you can in one minute</string>
+    <string name="mode_flashcards">Flashcards</string>
+
+    <!-- What a question asks, per mode -->
+    <string name="question_flag_name">Which country does this flag belong to?</string>
+    <string name="question_pick_flag">Which of these is the flag of %1$s?</string>
+    <string name="question_capital">What is the capital city of %1$s?</string>
+    <string name="question_continent">Which continent does this flag belong to?</string>
+    <string name="question_blitz">Which country is this?</string>
+    <string name="question_speed_round">Identify the country for this flag:</string>
+
+    <!-- Answers difficulty -->
+    <string name="difficulty_normal">Normal</string>
+    <string name="difficulty_normal_hint">One look-alike flag among the answers</string>
+    <string name="difficulty_hard">Hard</string>
+    <string name="difficulty_hard_hint">Look-alike flags wherever they exist</string>
+
+    <!-- Quiz scopes and study sources (display labels; the stored keys are in QuizEngine and StudySession) -->
+    <string name="scope_global">Global</string>
+    <string name="scope_weak_spots">Weak spots</string>
+    <string name="scope_due_today">Due today</string>
+    <string name="scope_mistakes">Mistakes</string>
+    <string name="study_source_deck">This deck</string>
+
+    <!-- Continents (display labels; the catalog keeps the English names as keys) -->
+    <string name="continent_all">All</string>
+    <string name="continent_africa">Africa</string>
+    <string name="continent_americas">Americas</string>
+    <string name="continent_asia">Asia</string>
+    <string name="continent_europe">Europe</string>
+    <string name="continent_oceania">Oceania</string>
+    <string name="continent_antarctica">Antarctica</string>
+
+    <!-- Sort orders -->
+    <string name="sort_by_name">Sort by Name</string>
+    <string name="sort_by_population">Sort by Population</string>
+    <string name="sort_by_area">Sort by Area</string>
+    <string name="sort_by_continent">Sort by Continent</string>
+    <string name="sort_noun_name">name</string>
+    <string name="sort_noun_population">population</string>
+    <string name="sort_noun_area">area</string>
+    <string name="sort_noun_continent">continent</string>
+
+    <!-- Standing of a skill (pips, chips, the detail sheet) -->
+    <string name="standing_unseen">not reviewed yet</string>
+    <string name="standing_weak">still learning</string>
+    <string name="standing_mastered">mastered</string>
+    <string name="standing_chip_unseen">Unseen</string>
+    <string name="standing_chip_weak">Learning</string>
+    <string name="standing_chip_mastered">Mastered</string>
+    <string name="pips_description">Flag %1$s, capital %2$s</string>
+
+    <!-- Skills -->
+    <string name="skill_flag">Flag</string>
+    <string name="skill_capital">Capital</string>
+
+    <!-- Settings enums -->
+    <string name="theme_system">System</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="timer_normal">Normal</string>
+    <string name="timer_relaxed">Relaxed</string>
+    <string name="timer_off">No limit</string>
+
+    <!-- The daily reminder (notification channel and the two messages) -->
+    <string name="reminder_channel_name">Daily reminder</string>
+    <string name="reminder_channel_description">A nudge to finish a quiz when you have not practiced today</string>
+    <string name="reminder_keep_title">Keep your streak</string>
+    <plurals name="reminder_keep_text">
+        <item quantity="one">One quiz keeps your %d-day streak</item>
+        <item quantity="other">One quiz keeps your %d-day streak</item>
+    </plurals>
+    <string name="reminder_start_title">Time for a quick quiz</string>
+    <string name="reminder_start_text">A quick quiz starts a new streak</string>
+
+    <!-- The spoken country summary -->
+    <string name="speech_name">%1$s.</string>
+    <string name="speech_capital_and_continent">Capital is %1$s, located in %2$s.</string>
+    <string name="speech_continent">Located in %1$s.</string>
 </resources>
