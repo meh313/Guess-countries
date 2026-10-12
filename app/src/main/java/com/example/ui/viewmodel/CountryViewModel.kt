@@ -324,15 +324,9 @@ class CountryViewModel(
 
     fun stopSpeaking() = speech.stop()
 
-    fun speakCountryDetails(country: Country) {
-        // Antarctica has no capital, and its name is its continent: say neither as if they were news.
-        val place = when {
-            country.isSovereign -> "Capital is ${country.capital}, located in ${country.continent}."
-            !country.continent.equals(country.name, ignoreCase = true) -> "Located in ${country.continent}."
-            else -> ""
-        }
-        val text = listOf("${country.name}.", place, country.funFact).filter { it.isNotBlank() }.joinToString(" ")
-        speech.speak(text, "country_tts_${country.code}")
+    /** Reads [summary] (see [com.example.ui.CountrySummary.spoken]) aloud as the one utterance about [country]. */
+    fun speakCountryDetails(country: Country, summary: String) {
+        speech.speak(summary, "country_tts_${country.code}")
     }
 
     fun onSearchQueryChange(query: String) {

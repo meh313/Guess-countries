@@ -25,12 +25,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
+import com.example.R
 import com.example.ui.components.readingWidth
 import kotlinx.coroutines.withContext
 
@@ -64,61 +66,52 @@ fun AboutScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
             .padding(horizontal = 20.dp, vertical = 12.dp)
             .testTag("about_screen")
     ) {
-        ScreenHeader(title = "About", onBack = onBack, backTag = "about_back_btn")
+        ScreenHeader(title = stringResource(R.string.about_title), onBack = onBack, backTag = "about_back_btn")
 
         Text(
-            text = "World Flags $version",
+            text = stringResource(R.string.about_version, version),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.testTag("about_version")
         )
         Text(
-            text = "An offline app for learning the flags, capitals and facts of the 196 countries of the world, and Antarctica.",
+            text = stringResource(R.string.about_tagline),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        AboutSection("Where the facts come from") {
+        AboutSection(stringResource(R.string.about_sources_title)) {
             Text(
-                text = "Each country entry was researched against public sources, mostly Wikipedia, national constitutions and official sites, " +
-                    "and then checked a second time by two independent reviewers who could only change a fact they could both source. " +
-                    "Population figures are the United Nations World Population Prospects 2024 estimates, rounded to three significant figures; " +
-                    "the other facts were checked in 2026. The research notes, the audit and the owner's decisions are in the repository, " +
-                    "and a country's detail sheet lists the pages its facts were checked against.",
+                text = stringResource(R.string.about_sources_text),
                 style = MaterialTheme.typography.bodyMedium
             )
             TextButton(onClick = { openUrl(context, REPOSITORY_URL) }, modifier = Modifier.testTag("about_repository_btn")) {
-                Text("Open the repository")
+                Text(stringResource(R.string.about_open_repository))
             }
         }
 
-        AboutSection("What is in the catalog") {
+        AboutSection(stringResource(R.string.about_catalog_title)) {
             Text(
-                text = "The 196 sovereign states as widely recognised, plus Antarctica to browse. Flags are drawn to each country's own " +
-                    "proportions. Where the meaning of a flag is disputed or legendary, the text says so instead of picking a side; " +
-                    "a fact that could not be settled was left out rather than guessed.",
+                text = stringResource(R.string.about_catalog_text),
                 style = MaterialTheme.typography.bodyMedium
             )
         }
 
-        AboutSection("Privacy") {
+        AboutSection(stringResource(R.string.about_privacy_title)) {
             Text(
-                text = "The app has no network permission: nothing you do leaves the device, and there is no account. Your progress is " +
-                    "stored in the app's own database and included in Android's backup of the app, so it moves with you to a new phone " +
-                    "when backup is on. Settings > Reset progress deletes all of it.",
+                text = stringResource(R.string.about_privacy_text),
                 style = MaterialTheme.typography.bodyMedium
             )
         }
 
-        AboutSection("Licences") {
+        AboutSection(stringResource(R.string.about_licences_title)) {
             Text(
-                text = "The flag artwork is rendered from the flag-icons project (MIT licence). The app is built with Android Jetpack and " +
-                    "Kotlin libraries under the Apache License 2.0. The full notice text:",
+                text = stringResource(R.string.about_licences_text),
                 style = MaterialTheme.typography.bodyMedium
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = notices ?: "Loading…",
+                text = notices ?: stringResource(R.string.about_notices_loading),
                 style = MaterialTheme.typography.bodySmall,
                 fontFamily = FontFamily.Monospace,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,

@@ -70,6 +70,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -85,6 +87,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.example.R
 import com.example.data.settings.TimerPace
 import com.example.progress.Skill
 import com.example.progress.SkillMastery
@@ -95,7 +98,11 @@ import com.example.ui.components.FlagOptionGrid
 import com.example.ui.components.FlagView
 import com.example.ui.components.readingWidth
 import com.example.ui.components.MissComparison
+import com.example.ui.hintRes
+import com.example.ui.questionText
+import com.example.ui.scopeLabel
 import com.example.ui.theme.StreakColor
+import com.example.ui.titleRes
 import com.example.ui.viewmodel.CountryViewModel
 import kotlinx.coroutines.delay
 
@@ -127,7 +134,7 @@ fun QuizScreen(
     // The running quiz lives in the ViewModel; the setup choices survive rotation via rememberSaveable.
     val session by viewModel.quizSession.collectAsStateWithLifecycle()
     var selectedMode by rememberSaveable { mutableStateOf(QuizMode.FLAG_NAME) }
-    var selectedContinentScope by rememberSaveable { mutableStateOf("Global") }
+    var selectedContinentScope by rememberSaveable { mutableStateOf(QuizEngine.GLOBAL) }
     val selectedDifficulty by viewModel.quizDifficulty.collectAsStateWithLifecycle()
     val timerPace by viewModel.timerPace.collectAsStateWithLifecycle()
     // The weak and due countries of the skill the chosen mode exercises: capitals for the capital quiz, else flags.
@@ -140,8 +147,8 @@ fun QuizScreen(
     // Once practice lifts the weak spots out of reach, or the last due review is done, the choice goes back to Global
     // instead of reviving by itself.
     LaunchedEffect(weakSpotsAvailable, dueAvailable) {
-        if (!weakSpotsAvailable && selectedContinentScope == QuizEngine.WEAK_SPOTS) selectedContinentScope = "Global"
-        if (!dueAvailable && selectedContinentScope == QuizEngine.DUE) selectedContinentScope = "Global"
+        if (!weakSpotsAvailable && selectedContinentScope == QuizEngine.WEAK_SPOTS) selectedContinentScope = QuizEngine.GLOBAL
+        if (!dueAvailable && selectedContinentScope == QuizEngine.DUE) selectedContinentScope = QuizEngine.GLOBAL
     }
     // A review can come due while the screen is open: look again when it comes back to the foreground.
     val setupLifecycleOwner = LocalLifecycleOwner.current
@@ -169,13 +176,13 @@ fun QuizScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Geography & Flag Quiz",
+                text = stringResource(R.string.quiz_title),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.semantics { heading() }
             )
             Text(
-                text = "Test what you know and keep your streak going",
+                text = stringResource(R.string.quiz_subtitle),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
             )
@@ -184,7 +191,7 @@ fun QuizScreen(
 
             // Select Game Mode
             Text(
-                text = "Select Mode",
+                text = stringResource(R.string.quiz_select_mode),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.align(Alignment.Start).semantics { heading() }
@@ -222,15 +229,16 @@ fun QuizScreen(
                             Spacer(modifier = Modifier.width(16.dp))
                             Column {
                                 Text(
-                                    text = mode.title,
+                                    text = stringResource(mode.titleRes),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                     color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
                                 )
                                 // The speed round's hint follows the timer setting.
                                 val hintText = when {
-                                    mode.timeLimitSeconds == null -> mode.hint
-                                    else -> timerPace.limit(mode.timeLimitSeconds)?.let { "$it seconds per question" } ?: "No time limit (see Settings)"
+                                    mode.timeLimitSeconds == null -> mode.hintRes?.let { stringResource(it) }
+                                    else -> timerPace.limit(mode.timeLimitSeconds)?.let { pluralStringResource(R.plurals.quiz_seconds_per_question, it, it) }
+                                        ?: stringResource(R.string.quiz_no_time_limit)
                                 }
                                 hintText?.let { hint ->
                                     Text(
@@ -249,7 +257,7 @@ fun QuizScreen(
 
             // Select Continent Scope
             Text(
-                text = "Select Scope",
+                text = stringResource(R.string.quiz_select_scope),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.align(Alignment.Start).semantics { heading() }
@@ -261,7 +269,7 @@ fun QuizScreen(
             val shownScope = QuizEngine.effectiveScope(selectedMode, selectedContinentScope, weakSpotsAvailable, dueAvailable)
             if (!scopeApplies) {
                 Text(
-                    text = "The continent quiz always covers the whole world",
+                    text = stringResource(R.string.quiz_scope_whole_world),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier
@@ -314,7 +322,7 @@ fun QuizScreen(
                                 Spacer(modifier = Modifier.width(6.dp))
                             }
                             Text(
-                                text = if (isDue && dueAvailable) "$scope · ${due.size}" else scope,
+                                text = if (isDue && dueAvailable) stringResource(R.string.quiz_scope_due_count, scopeLabel(scope), due.size) else scopeLabel(scope),
                                 color = contentColor,
                                 fontWeight = FontWeight.Bold
                             )
@@ -323,12 +331,13 @@ fun QuizScreen(
                 }
             }
             // The two chips that are not places explain themselves: why they are locked, or what they will ask about.
-            val what = if (skill == Skill.CAPITAL) "capitals" else "countries"
+            val capitals = skill == Skill.CAPITAL
             val dueNote = when {
                 !scopeApplies -> null
-                !dueAvailable -> "Nothing is due for review today"
-                shownScope == QuizEngine.DUE ->
-                    "The ${QuizEngine.questionCount(due.size, QuizEngine.DUE)} $what due for review, with answers from the whole world"
+                !dueAvailable -> stringResource(R.string.quiz_due_nothing)
+                shownScope == QuizEngine.DUE -> QuizEngine.questionCount(due.size, QuizEngine.DUE).let { count ->
+                    pluralStringResource(if (capitals) R.plurals.quiz_due_note_capitals else R.plurals.quiz_due_note_countries, count, count)
+                }
                 else -> null
             }
             if (dueNote != null) {
@@ -344,10 +353,15 @@ fun QuizScreen(
             }
             val weakSpotsNote = when {
                 !scopeApplies -> null
-                !weakSpotsAvailable ->
-                    "Weak spots unlocks once ${QuizEngine.MIN_POOL} reviewed $what are below mastery (you have ${weakSpots.size})"
-                shownScope == QuizEngine.WEAK_SPOTS ->
-                    "Your ${minOf(weakSpots.size, QuizEngine.MAX_QUESTIONS)} weakest $what, with answers from the whole world"
+                !weakSpotsAvailable -> stringResource(
+                    if (capitals) R.string.quiz_weak_spots_locked_capitals else R.string.quiz_weak_spots_locked_countries,
+                    QuizEngine.MIN_POOL,
+                    weakSpots.size
+                )
+                shownScope == QuizEngine.WEAK_SPOTS -> stringResource(
+                    if (capitals) R.string.quiz_weak_spots_note_capitals else R.string.quiz_weak_spots_note_countries,
+                    minOf(weakSpots.size, QuizEngine.MAX_QUESTIONS)
+                )
                 else -> null
             }
             if (weakSpotsNote != null) {
@@ -366,7 +380,7 @@ fun QuizScreen(
 
             // Normal or Hard: how many look-alike flags are among the wrong answers.
             Text(
-                text = "Answers",
+                text = stringResource(R.string.quiz_answers),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.align(Alignment.Start).semantics { heading() }
@@ -374,7 +388,7 @@ fun QuizScreen(
             Spacer(modifier = Modifier.height(10.dp))
             val difficultyApplies = selectedMode.usesLookAlikes
             Text(
-                text = if (difficultyApplies) selectedDifficulty.hint else "Look-alike answers apply to flag questions",
+                text = stringResource(if (difficultyApplies) selectedDifficulty.hintRes else R.string.quiz_look_alikes_flags_only),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
@@ -404,7 +418,7 @@ fun QuizScreen(
                             .testTag("quiz_difficulty_${difficulty.name.lowercase()}")
                     ) {
                         Text(
-                            text = difficulty.title,
+                            text = stringResource(difficulty.titleRes),
                             color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
@@ -435,10 +449,10 @@ fun QuizScreen(
             ) {
                 Text(
                     text = if (canStart) {
-                        if (selectedMode.isEndless) "Start ${selectedMode.totalTimeSeconds}-Second Blitz"
-                        else "Start $questionCount-Question Quiz"
+                        if (selectedMode.isEndless) stringResource(R.string.quiz_start_blitz, selectedMode.totalTimeSeconds ?: 0)
+                        else stringResource(R.string.quiz_start_quiz, questionCount)
                     } else {
-                        "Needs at least ${QuizEngine.MIN_POOL} countries"
+                        stringResource(R.string.quiz_needs_countries, QuizEngine.MIN_POOL)
                     },
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Bold
@@ -569,13 +583,13 @@ fun QuizScreen(
             ) {
                 Column {
                     Text(
-                        text = if (active.mode.isEndless) "Question ${active.currentIndex + 1} · Correct ${active.correct}"
-                        else "Question ${active.currentIndex + 1} of $questionCount",
+                        text = if (active.mode.isEndless) stringResource(R.string.quiz_progress_blitz, active.currentIndex + 1, active.correct)
+                        else stringResource(R.string.quiz_progress, active.currentIndex + 1, questionCount),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "Score: ${active.score}",
+                        text = stringResource(R.string.quiz_score, active.score),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
@@ -599,7 +613,7 @@ fun QuizScreen(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "Streak ${active.streak}",
+                                text = stringResource(R.string.quiz_streak, active.streak),
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,
                                 style = MaterialTheme.typography.labelMedium
@@ -611,7 +625,7 @@ fun QuizScreen(
                         onClick = { showQuitConfirm = true },
                         modifier = Modifier.testTag("quiz_quit_btn")
                     ) {
-                        Icon(imageVector = Icons.Default.Close, contentDescription = "Quit quiz")
+                        Icon(imageVector = Icons.Default.Close, contentDescription = stringResource(R.string.quiz_quit))
                     }
                 }
             }
@@ -620,13 +634,16 @@ fun QuizScreen(
 
             if (totalMs != null) {
                 // One quiet description for TalkBack; a ticking bar would be announced constantly.
-                val secondsLeft = (totalRemainingMs + 999) / 1000
+                val secondsLeft = ((totalRemainingMs + 999) / 1000).toInt()
+                val totalSeconds = (totalMs / 1000).toInt()
+                val totalDescription = pluralStringResource(R.plurals.quiz_seconds_in_total, totalSeconds, totalSeconds)
+                val leftDescription = pluralStringResource(R.plurals.quiz_seconds_left, secondsLeft, secondsLeft)
                 Column(
                     modifier = Modifier
                         .testTag("quiz_timer")
                         .clearAndSetSemantics {
-                            contentDescription = "${totalMs / 1000} seconds in total"
-                            stateDescription = "$secondsLeft seconds left"
+                            contentDescription = totalDescription
+                            stateDescription = leftDescription
                         }
                 ) {
                     val urgent = totalRemainingMs <= 10_000L
@@ -639,7 +656,7 @@ fun QuizScreen(
                         color = if (urgent) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary
                     )
                     Text(
-                        text = "${(totalRemainingMs + 999) / 1000}s left",
+                        text = stringResource(R.string.quiz_seconds_left_short, secondsLeft),
                         style = MaterialTheme.typography.bodySmall,
                         color = if (urgent) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -657,14 +674,17 @@ fun QuizScreen(
 
             if (limitMs != null && !active.hasAnswered) {
                 // One quiet description for TalkBack; a ticking bar would be announced constantly.
-                val secondsLeft = (remainingMs + 999) / 1000
+                val secondsLeft = ((remainingMs + 999) / 1000).toInt()
+                val limitSeconds = (limitMs / 1000).toInt()
+                val limitDescription = pluralStringResource(R.plurals.quiz_seconds_per_question, limitSeconds, limitSeconds)
+                val leftDescription = pluralStringResource(R.plurals.quiz_seconds_left, secondsLeft, secondsLeft)
                 Column(
                     modifier = Modifier
                         .padding(top = 8.dp)
                         .testTag("quiz_timer")
                         .clearAndSetSemantics {
-                            contentDescription = "${limitMs / 1000} seconds per question"
-                            stateDescription = "$secondsLeft seconds left"
+                            contentDescription = limitDescription
+                            stateDescription = leftDescription
                         }
                 ) {
                     val urgent = remainingMs <= 3_000L
@@ -677,7 +697,7 @@ fun QuizScreen(
                         color = if (urgent) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary
                     )
                     Text(
-                        text = "${(remainingMs + 999) / 1000}s left",
+                        text = stringResource(R.string.quiz_seconds_left_short, secondsLeft),
                         style = MaterialTheme.typography.bodySmall,
                         color = if (urgent) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -703,13 +723,13 @@ fun QuizScreen(
                             modifier = Modifier
                                 .heightIn(max = 160.dp)
                                 .testTag("quiz_flag"),
-                            contentDescription = "Flag to identify"
+                            contentDescription = stringResource(R.string.flag_to_identify)
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                     }
 
                     Text(
-                        text = q.questionText,
+                        text = active.mode.questionText(q.targetCountry),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
@@ -734,6 +754,8 @@ fun QuizScreen(
                     }
                 )
             } else Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                val correctAnswerDescription = stringResource(R.string.quiz_option_correct)
+                val wrongAnswerDescription = stringResource(R.string.quiz_option_incorrect)
                 q.options.forEachIndexed { index, optionText ->
                     val isSelected = active.selectedAnswerIndex == index
                     val isCorrect = index == q.correctAnswerIndex
@@ -757,9 +779,9 @@ fun QuizScreen(
                             .semantics {
                                 // Not only colour: say which option was right and which one was picked.
                                 if (active.hasAnswered && isCorrect) {
-                                    stateDescription = "Correct answer"
+                                    stateDescription = correctAnswerDescription
                                 } else if (active.hasAnswered && isSelected) {
-                                    stateDescription = "Your answer, incorrect"
+                                    stateDescription = wrongAnswerDescription
                                 }
                             }
                             .testTag("quiz_option_$index"),
@@ -799,10 +821,10 @@ fun QuizScreen(
                 // For "pick the flag" the options are country codes, so say the country instead.
                 val answerText = if (active.mode.answersAreFlags) q.targetCountry.name else q.options[q.correctAnswerIndex]
                 val result = when {
-                    active.timedOut -> "Time's up! The answer is $answerText"
+                    active.timedOut -> stringResource(R.string.quiz_result_timeout, answerText)
                     active.selectedAnswerIndex == q.correctAnswerIndex ->
-                        "Correct! +${QuizEngine.pointsForCorrectAnswer(active.streak - 1)} points"
-                    else -> "Not quite. The answer is $answerText"
+                        stringResource(R.string.quiz_result_correct, QuizEngine.pointsForCorrectAnswer(active.streak - 1))
+                    else -> stringResource(R.string.quiz_result_wrong, answerText)
                 }
                 Card(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
@@ -831,15 +853,15 @@ fun QuizScreen(
                             MissComparison(
                                 picked = pickedCountry,
                                 correct = q.targetCountry,
-                                pickedCaption = if (capitals) "${pickedCountry.quizCapital}, ${pickedCountry.name}" else pickedCountry.name,
-                                correctCaption = if (capitals) "${q.targetCountry.quizCapital}, ${q.targetCountry.name}" else q.targetCountry.name,
+                                pickedCaption = if (capitals) stringResource(R.string.quiz_capital_and_country, pickedCountry.quizCapital, pickedCountry.name) else pickedCountry.name,
+                                correctCaption = if (capitals) stringResource(R.string.quiz_capital_and_country, q.targetCountry.quizCapital, q.targetCountry.name) else q.targetCountry.name,
                                 modifier = Modifier.padding(bottom = 10.dp)
                             )
                         }
                         // A blitz moves on in under a second: no time for the capital and the fun fact.
                         if (!active.mode.isEndless) {
                             Text(
-                                text = "💡 ${q.targetCountry.name}: ${q.targetCountry.capital}",
+                                text = stringResource(R.string.quiz_fact_capital, q.targetCountry.name, q.targetCountry.capital),
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
@@ -854,7 +876,7 @@ fun QuizScreen(
                             onClick = { viewModel.nextQuizQuestion() },
                             modifier = Modifier.fillMaxWidth().testTag("next_question_btn")
                         ) {
-                            Text(if (active.isLastQuestion) "Finish & View Score" else "Next Question")
+                            Text(stringResource(if (active.isLastQuestion) R.string.quiz_finish else R.string.quiz_next_question))
                         }
                     }
                 }
@@ -866,8 +888,8 @@ fun QuizScreen(
     if (showQuitConfirm && active != null && !active.isFinished) {
         AlertDialog(
             onDismissRequest = { showQuitConfirm = false },
-            title = { Text("Quit this quiz?") },
-            text = { Text("Your progress in this quiz will be lost.") },
+            title = { Text(stringResource(R.string.quiz_quit_title)) },
+            text = { Text(stringResource(R.string.quiz_quit_text)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -876,7 +898,7 @@ fun QuizScreen(
                     },
                     modifier = Modifier.testTag("quiz_quit_confirm_btn")
                 ) {
-                    Text("Quit")
+                    Text(stringResource(R.string.quiz_quit_confirm))
                 }
             },
             dismissButton = {
@@ -884,7 +906,7 @@ fun QuizScreen(
                     onClick = { showQuitConfirm = false },
                     modifier = Modifier.testTag("quiz_quit_cancel_btn")
                 ) {
-                    Text("Keep playing")
+                    Text(stringResource(R.string.quiz_quit_cancel))
                 }
             }
         )

@@ -30,10 +30,10 @@ interface UserSettings {
 }
 
 /** Which colour scheme the app uses. */
-enum class ThemeMode(val title: String) {
-    SYSTEM("System"),
-    LIGHT("Light"),
-    DARK("Dark");
+enum class ThemeMode {
+    SYSTEM,
+    LIGHT,
+    DARK;
 
     /** Whether the dark scheme applies, given what the system currently says. */
     fun isDark(systemDark: Boolean): Boolean = when (this) {
@@ -47,10 +47,10 @@ enum class ThemeMode(val title: String) {
  * The pace of the timed quizzes: the Speed Round's seconds per question are multiplied by [factor], or the limit
  * is lifted; the blitz keeps its minute but waits for Next after each answer when the pace is [OFF].
  */
-enum class TimerPace(val title: String, val factor: Int?) {
-    NORMAL("Normal", 1),
-    RELAXED("Relaxed", 2),
-    OFF("No limit", null);
+enum class TimerPace(val factor: Int?) {
+    NORMAL(1),
+    RELAXED(2),
+    OFF(null);
 
     /** [seconds] per question at this pace, or null for no limit. */
     fun limit(seconds: Int?): Int? = if (seconds == null || factor == null) null else seconds * factor

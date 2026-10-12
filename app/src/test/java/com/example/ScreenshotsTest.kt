@@ -14,6 +14,7 @@ import com.example.data.local.AppDatabase
 import androidx.compose.ui.test.assertIsDisplayed
 import android.graphics.Bitmap
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
@@ -29,6 +30,8 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.shadows.ShadowDialog
+import android.view.View
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import androidx.compose.ui.test.performScrollTo
@@ -258,6 +261,41 @@ class ScreenshotsTest {
         save("quiz_setup_tablet")
         rule.openTab("stats")
         save("stats_tablet")
+    }
+
+    /**
+     * A right-to-left layout: the bar's order, the chips, the sort menu's ticks and the arrows mirror, the text keeps
+     * to the start edge. The words stay English (there is no translation yet); the layout is what is looked at. The
+     * qualifier sets the resources; Robolectric's windows still resolve their direction from the locale, so each
+     * window is told as well, as a right-to-left locale would.
+     */
+    @Test
+    @Config(qualifiers = "ldrtl-w360dp-h800dp-xxhdpi")
+    fun rightToLeft() {
+        rule.waitForIdle()
+        forceRtl(rule.activity.window.decorView)
+        save("explore_rtl")
+        rule.onNodeWithTag("explore_grid").performScrollToNode(hasTestTag("country_card_fr"))
+        rule.onNodeWithTag("country_card_fr").performClick()
+        rule.waitForIdle()
+        forceRtl(ShadowDialog.getLatestDialog().window!!.decorView)
+        saveBitmap("sheet_rtl", drawLatestDialog())
+        rule.onNodeWithContentDescription("Close").performClick()
+        rule.waitForIdle()
+        rule.openTab("quiz")
+        val viewModel = ViewModelProvider(rule.activity)[CountryViewModel::class.java]
+        viewModel.startQuiz(QuizMode.FLAG_NAME, "Europe")
+        rule.waitForIdle()
+        save("quiz_play_rtl")
+        viewModel.endQuiz()
+        rule.waitForIdle()
+        rule.openTab("stats")
+        save("stats_rtl")
+    }
+
+    private fun forceRtl(view: View) {
+        rule.runOnUiThread { view.layoutDirection = View.LAYOUT_DIRECTION_RTL }
+        rule.waitForIdle()
     }
 
     /** Fonts at twice their size: nothing clipped, buttons and the banner grow. */

@@ -32,18 +32,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.R
 import com.example.data.model.Country
 import com.example.progress.PracticeStreak
 import com.example.quiz.QuizMode
 import com.example.quiz.QuizSession
 import com.example.ui.components.FlagView
 import com.example.ui.components.readingWidth
+import com.example.ui.titleRes
 
 /**
  * The score screen of a finished quiz, in the window where the quiz was played (not a dialog, so it cannot be
@@ -85,7 +89,7 @@ fun QuizResultScreen(
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = if (session.mode.isEndless) "Time's up!" else "Quiz Complete!",
+            text = stringResource(if (session.mode.isEndless) R.string.result_times_up else R.string.result_complete),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
@@ -96,7 +100,7 @@ fun QuizResultScreen(
         // The numbers: right answers first, points second (the blitz keeps its one line, which its tests pin).
         if (session.mode.isEndless) {
             Text(
-                text = "${session.correct} correct · ${session.score} points",
+                text = stringResource(R.string.result_blitz_score, session.correct, session.score),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary,
@@ -104,21 +108,21 @@ fun QuizResultScreen(
                 modifier = Modifier.testTag("quiz_finish_score")
             )
             Text(
-                text = "${session.answers.size} flags in ${session.mode.totalTimeSeconds} seconds",
+                text = pluralStringResource(R.plurals.result_blitz_flags, session.answers.size, session.answers.size, session.mode.totalTimeSeconds ?: 0),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.testTag("quiz_finish_correct")
             )
         } else {
             Text(
-                text = "${session.correct} / ${session.questions.size} correct",
+                text = stringResource(R.string.result_correct_ratio, session.correct, session.questions.size),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.testTag("quiz_finish_correct")
             )
             Text(
-                text = "${session.score} points",
+                text = stringResource(R.string.result_points, session.score),
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -127,17 +131,17 @@ fun QuizResultScreen(
         }
         if (session.mode.usesLookAlikes) {
             Text(
-                text = "Answers: ${session.difficulty.title}",
+                text = stringResource(R.string.result_answers, stringResource(session.difficulty.titleRes)),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.testTag("quiz_finish_difficulty")
             )
         }
         val streakLine = when (outcome?.kind) {
-            PracticeStreak.Kind.STARTED -> "Streak started: day 1"
-            PracticeStreak.Kind.KEPT -> "Streak kept: ${outcome.days} days"
-            PracticeStreak.Kind.ALREADY_COUNTED -> "${outcome.days}-day streak, already counted today"
-            null -> if (streakDays > 0) "$streakDays-day streak" else null
+            PracticeStreak.Kind.STARTED -> stringResource(R.string.streak_started)
+            PracticeStreak.Kind.KEPT -> pluralStringResource(R.plurals.streak_kept, outcome.days, outcome.days)
+            PracticeStreak.Kind.ALREADY_COUNTED -> stringResource(R.string.result_streak_already_counted, outcome.days)
+            null -> if (streakDays > 0) stringResource(R.string.result_streak_days, streakDays) else null
         }
         if (streakLine != null) {
             Text(
@@ -157,7 +161,7 @@ fun QuizResultScreen(
         // The misses, each with the flag that was picked beside the right one.
         if (misses.isEmpty()) {
             Text(
-                text = "Every answer right!",
+                text = stringResource(R.string.result_perfect),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.testTag("quiz_finish_perfect")
@@ -172,7 +176,7 @@ fun QuizResultScreen(
             ) {
                 Column(modifier = Modifier.padding(14.dp)) {
                     Text(
-                        text = "Mistakes (${misses.size})",
+                        text = stringResource(R.string.result_mistakes, misses.size),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier
@@ -197,7 +201,7 @@ fun QuizResultScreen(
                     .testTag("quiz_practise_mistakes_btn"),
                 shape = RoundedCornerShape(16.dp)
             ) {
-                Text("Practise mistakes", fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.result_practise_mistakes), fontWeight = FontWeight.Bold)
             }
             Spacer(modifier = Modifier.height(10.dp))
         }
@@ -208,7 +212,7 @@ fun QuizResultScreen(
                 .testTag("quiz_retry_btn"),
             shape = RoundedCornerShape(16.dp)
         ) {
-            Text("Retry", fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.result_retry), fontWeight = FontWeight.Bold)
         }
         Spacer(modifier = Modifier.height(10.dp))
         TextButton(
@@ -217,7 +221,7 @@ fun QuizResultScreen(
                 .fillMaxWidth()
                 .testTag("quiz_finish_done_btn")
         ) {
-            Text("Done", fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.action_done), fontWeight = FontWeight.Bold)
         }
     }
     }
@@ -229,16 +233,17 @@ private fun MissRow(miss: QuizSession.AnswerRecord, mode: QuizMode, countriesByC
     val target = miss.question.targetCountry
     val picked = miss.pickedCode?.let { countriesByCode[it] }
     val pickedText = when {
-        miss.pickedIndex == null -> "No answer in time"
-        picked != null && mode == QuizMode.CAPITAL -> "You picked ${miss.pickedText}, ${picked.name}"
-        picked != null -> "You picked ${picked.name}"
-        else -> "You picked: ${miss.pickedText}"
+        miss.pickedIndex == null -> stringResource(R.string.result_no_answer)
+        picked != null && mode == QuizMode.CAPITAL -> stringResource(R.string.result_picked_capital, miss.pickedText.orEmpty(), picked.name)
+        picked != null -> stringResource(R.string.result_picked, picked.name)
+        else -> stringResource(R.string.result_picked_text, miss.pickedText.orEmpty())
     }
-    val answer = if (mode == QuizMode.CAPITAL) "${target.quizCapital}, ${target.name}" else target.name
+    val answer = if (mode == QuizMode.CAPITAL) stringResource(R.string.quiz_capital_and_country, target.quizCapital, target.name) else target.name
+    val rowDescription = stringResource(R.string.result_miss_description, answer, pickedText)
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .semantics(mergeDescendants = true) { contentDescription = "$answer. $pickedText" }
+            .semantics(mergeDescendants = true) { contentDescription = rowDescription }
             .testTag("quiz_miss_${target.code.lowercase()}"),
         verticalAlignment = Alignment.CenterVertically
     ) {

@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
@@ -30,6 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.R
 import com.example.data.model.Country
 
 /**
@@ -64,15 +66,17 @@ fun FlagOptionGrid(
                         isSelected -> Color(0xFFC62828)
                         else -> MaterialTheme.colorScheme.surface
                     }
+                    val correctAnswer = stringResource(R.string.option_correct_answer)
+                    val yourAnswerIncorrect = stringResource(R.string.option_your_answer_incorrect)
                     Card(
                         modifier = Modifier
                             .weight(1f)
                             .clickable(enabled = !answered) { onPick(index) }
                             .semantics {
                                 if (answered && isCorrect) {
-                                    stateDescription = "Correct answer"
+                                    stateDescription = correctAnswer
                                 } else if (answered && isSelected) {
-                                    stateDescription = "Your answer, incorrect"
+                                    stateDescription = yourAnswerIncorrect
                                 }
                             }
                             .testTag("quiz_option_$index"),
@@ -87,8 +91,8 @@ fun FlagOptionGrid(
                                         country = country,
                                         modifier = Modifier.fillMaxWidth(),
                                         contentDescription =
-                                            if (answered) "Option ${index + 1}, the flag of ${country.name}"
-                                            else "Option ${index + 1} of ${optionCodes.size}"
+                                            if (answered) stringResource(R.string.option_flag_of, index + 1, country.name)
+                                            else stringResource(R.string.option_of, index + 1, optionCodes.size)
                                     )
                                     // Once answered, every flag gets its name: the teaching moment of this mode. The flag's own
                                     // description already names it, so TalkBack is not told twice.

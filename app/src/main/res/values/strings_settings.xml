@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Settings screen and the About screen it leads to. The theme and timer labels are shared enum labels in strings.xml. -->
+<resources>
+    <!-- Settings: header and Appearance -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_section_appearance">Appearance</string>
+    <string name="settings_theme_label">Theme</string>
+    <string name="settings_dynamic_color_title">Wallpaper colours</string>
+    <string name="settings_dynamic_color_detail">Colours from the wallpaper instead of the app\'s own blue</string>
+
+    <!-- Settings: Quiz -->
+    <string name="settings_section_quiz">Quiz</string>
+    <string name="settings_timer_label">Timer</string>
+    <string name="settings_timer_hint_normal">Speed Round: 10 seconds per question. Blitz: a new flag a moment after each answer.</string>
+    <string name="settings_timer_hint_relaxed">Speed Round: 20 seconds per question. Blitz: a new flag a moment after each answer.</string>
+    <string name="settings_timer_hint_off">Speed Round: no time limit. Blitz: the minute still runs, but the next flag waits for Next.</string>
+
+    <!-- Settings: Data (export, import, reset) -->
+    <string name="settings_section_data">Data</string>
+    <string name="settings_data_local">Everything stays on this device: there is no account and the app has no network access. Progress is included in Android\'s own backup of the app.</string>
+    <string name="settings_export">Export</string>
+    <string name="settings_import">Import</string>
+    <string name="settings_transfer_hint">Export writes a file with your progress and settings; Import replaces everything with such a file.</string>
+    <string name="settings_export_done">Exported to %1$s.</string>
+    <string name="settings_export_fallback_name">the chosen file</string>
+    <string name="settings_export_write_error">The file could not be opened for writing.</string>
+    <string name="settings_export_failed">Export failed: %1$s</string>
+    <string name="settings_import_read_error">The file could not be opened.</string>
+    <string name="settings_import_failed">Import failed: %1$s</string>
+    <string name="settings_import_failed_plain">Import failed.</string>
+    <string name="settings_import_done">Imported %1$s, %2$s and %3$s.</string>
+    <plurals name="settings_import_quizzes">
+        <item quantity="one">%d quiz</item>
+        <item quantity="other">%d quizzes</item>
+    </plurals>
+    <plurals name="settings_import_skills">
+        <item quantity="one">%d skill record</item>
+        <item quantity="other">%d skill records</item>
+    </plurals>
+    <plurals name="settings_import_countries">
+        <item quantity="one">%d country</item>
+        <item quantity="other">%d countries</item>
+    </plurals>
+    <string name="settings_reset">Reset progress</string>
+
+    <!-- Settings: About row -->
+    <string name="settings_section_about">About</string>
+    <string name="settings_about_title">About World Flags</string>
+    <string name="settings_about_detail">Version %1$s · where the facts come from, licences, privacy</string>
+
+    <!-- Settings: the import dialog -->
+    <string name="settings_import_dialog_title">Import this file?</string>
+    <string name="settings_import_dialog_text">Everything here is replaced by the file: bookmarks, every country\'s standing, the quiz log and the settings. This cannot be undone.</string>
+    <string name="settings_import_confirm">Replace</string>
+    <string name="settings_import_cancel">Keep mine</string>
+
+    <!-- Settings: the reset dialog -->
+    <string name="settings_reset_dialog_title">Reset all progress?</string>
+    <string name="settings_reset_dialog_text">Bookmarks, every country\'s standing, the quiz log and the streak are deleted. The settings stay. This cannot be undone.</string>
+    <string name="settings_reset_confirm">Reset</string>
+    <string name="settings_reset_cancel">Keep</string>
+
+    <!-- About: header and tagline -->
+    <string name="about_title">About</string>
+    <string name="about_version">World Flags %1$s</string>
+    <string name="about_tagline">An offline app for learning the flags, capitals and facts of the 196 countries of the world, and Antarctica.</string>
+
+    <!-- About: where the facts come from -->
+    <string name="about_sources_title">Where the facts come from</string>
+    <string name="about_sources_text">Each country entry was researched against public sources, mostly Wikipedia, national constitutions and official sites, and then checked a second time by two independent reviewers who could only change a fact they could both source. Population figures are the United Nations World Population Prospects 2024 estimates, rounded to three significant figures; the other facts were checked in 2026. The research notes, the audit and the owner\'s decisions are in the repository, and a country\'s detail sheet lists the pages its facts were checked against.</string>
+    <string name="about_open_repository">Open the repository</string>
+
+    <!-- About: what is in the catalog -->
+    <string name="about_catalog_title">What is in the catalog</string>
+    <string name="about_catalog_text">The 196 sovereign states as widely recognised, plus Antarctica to browse. Flags are drawn to each country\'s own proportions. Where the meaning of a flag is disputed or legendary, the text says so instead of picking a side; a fact that could not be settled was left out rather than guessed.</string>
+
+    <!-- About: privacy -->
+    <string name="about_privacy_title">Privacy</string>
+    <string name="about_privacy_text">The app has no network permission: nothing you do leaves the device, and there is no account. Your progress is stored in the app\'s own database and included in Android\'s backup of the app, so it moves with you to a new phone when backup is on. Settings &gt; Reset progress deletes all of it.</string>
+
+    <!-- About: licences -->
+    <string name="about_licences_title">Licences</string>
+    <string name="about_licences_text">The flag artwork is rendered from the flag-icons project (MIT licence). The app is built with Android Jetpack and Kotlin libraries under the Apache License 2.0. The full notice text:</string>
+    <string name="about_notices_loading">Loading…</string>
+</resources>

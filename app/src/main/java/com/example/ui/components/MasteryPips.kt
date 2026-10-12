@@ -11,20 +11,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.example.R
 import com.example.progress.Skill
 import com.example.progress.SkillMastery
 import com.example.progress.SkillState
+import com.example.ui.labelRes
 import com.example.ui.theme.MasteredColor
 import com.example.ui.theme.NeedsPracticeColor
 
 /** How a country stands in one skill, for the small indicators and the detail sheet. */
-enum class Standing(val label: String, val chipLabel: String) {
-    UNSEEN("not reviewed yet", "Unseen"),
-    WEAK("still learning", "Learning"),
-    MASTERED("mastered", "Mastered");
+enum class Standing {
+    UNSEEN,
+    WEAK,
+    MASTERED;
 
     companion object {
         fun of(state: SkillState?, now: Long): Standing = when {
@@ -41,9 +44,10 @@ enum class Standing(val label: String, val chipLabel: String) {
  */
 @Composable
 fun MasteryPips(flag: Standing, capital: Standing, modifier: Modifier = Modifier) {
+    val description = stringResource(R.string.pips_description, stringResource(flag.labelRes), stringResource(capital.labelRes))
     Row(
         modifier = modifier
-            .semantics(mergeDescendants = true) { contentDescription = "Flag ${flag.label}, capital ${capital.label}" }
+            .semantics(mergeDescendants = true) { contentDescription = description }
             .testTag("progress_pips"),
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {

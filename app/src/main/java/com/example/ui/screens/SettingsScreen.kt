@@ -24,7 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -50,16 +50,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.R
 import com.example.data.settings.ThemeMode
 import com.example.data.settings.TimerPace
 import com.example.data.transfer.ProgressTransfer
+import com.example.ui.titleRes
 import com.example.ui.viewmodel.CountryViewModel
 import com.example.ui.components.readingWidth
 import kotlinx.coroutines.Dispatchers
@@ -81,10 +85,12 @@ fun SettingsScreen(
     val pace by viewModel.timerPace.collectAsStateWithLifecycle()
     var confirmReset by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
+    val resources = LocalResources.current
     val version = remember(context) { appVersion(context) }
     val scope = rememberCoroutineScope()
-    // What the last export or import did, shown under the buttons.
+    // What the last export or import did, shown under the buttons, and whether it went wrong (sets the colour).
     var transferNote by rememberSaveable { mutableStateOf<String?>(null) }
+    var transferFailed by rememberSaveable { mutableStateOf(false) }
     // An import replaces everything, so the file is read first and the player asked before it is applied.
     var pendingImport by remember { mutableStateOf<String?>(null) }
 
@@ -95,11 +101,13 @@ fun SettingsScreen(
                 val json = viewModel.exportJson()
                 withContext(Dispatchers.IO) {
                     context.contentResolver.openOutputStream(uri)?.bufferedWriter()?.use { it.write(json) }
-                        ?: error("The file could not be opened for writing.")
+                        ?: error(resources.getString(R.string.settings_export_write_error))
                 }
-                "Exported to ${uri.lastPathSegment ?: "the chosen file"}."
+                transferFailed = false
+                resources.getString(R.string.settings_export_done, uri.lastPathSegment ?: resources.getString(R.string.settings_export_fallback_name))
             } catch (e: Exception) {
-                "Export failed: ${e.message ?: e.javaClass.simpleName}"
+                transferFailed = true
+                resources.getString(R.string.settings_export_failed, e.message ?: e.javaClass.simpleName)
             }
         }
     }
@@ -109,11 +117,12 @@ fun SettingsScreen(
             try {
                 val text = withContext(Dispatchers.IO) {
                     context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
-                        ?: error("The file could not be opened.")
+                        ?: error(resources.getString(R.string.settings_import_read_error))
                 }
                 pendingImport = text
             } catch (e: Exception) {
-                transferNote = "Import failed: ${e.message ?: e.javaClass.simpleName}"
+                transferFailed = true
+                transferNote = resources.getString(R.string.settings_import_failed, e.message ?: e.javaClass.simpleName)
             }
         }
     }
@@ -127,10 +136,10 @@ fun SettingsScreen(
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 12.dp)
     ) {
-        ScreenHeader(title = "Settings", onBack = onBack, backTag = "settings_back_btn")
+        ScreenHeader(title = stringResource(R.string.settings_title), onBack = onBack, backTag = "settings_back_btn")
 
-        SettingsSection("Appearance") {
-            SettingLabel("Theme")
+        SettingsSection(stringResource(R.string.settings_section_appearance)) {
+            SettingLabel(stringResource(R.string.settings_theme_label))
             SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth().testTag("settings_theme")) {
                 ThemeMode.entries.forEachIndexed { index, mode ->
                     SegmentedButton(
@@ -139,7 +148,7 @@ fun SettingsScreen(
                         shape = SegmentedButtonDefaults.itemShape(index = index, count = ThemeMode.entries.size),
                         modifier = Modifier.testTag("settings_theme_${mode.name.lowercase()}")
                     ) {
-                        Text(mode.title)
+                        Text(stringResource(mode.titleRes))
                     }
                 }
             }
@@ -147,8 +156,8 @@ fun SettingsScreen(
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 Spacer(modifier = Modifier.height(8.dp))
                 SwitchRow(
-                    title = "Wallpaper colours",
-                    detail = "Colours from the wallpaper instead of the app's own blue",
+                    title = stringResource(R.string.settings_dynamic_color_title),
+                    detail = stringResource(R.string.settings_dynamic_color_detail),
                     checked = appearance.dynamicColor,
                     onCheckedChange = { viewModel.setDynamicColor(it) },
                     tag = "settings_dynamic_color"
@@ -156,8 +165,8 @@ fun SettingsScreen(
             }
         }
 
-        SettingsSection("Quiz") {
-            SettingLabel("Timer")
+        SettingsSection(stringResource(R.string.settings_section_quiz)) {
+            SettingLabel(stringResource(R.string.settings_timer_label))
             SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth().testTag("settings_timer")) {
                 TimerPace.entries.forEachIndexed { index, option ->
                     SegmentedButton(
@@ -166,16 +175,18 @@ fun SettingsScreen(
                         shape = SegmentedButtonDefaults.itemShape(index = index, count = TimerPace.entries.size),
                         modifier = Modifier.testTag("settings_timer_${option.name.lowercase()}")
                     ) {
-                        Text(option.title)
+                        Text(stringResource(option.titleRes))
                     }
                 }
             }
             Text(
-                text = when (pace) {
-                    TimerPace.NORMAL -> "Speed Round: 10 seconds per question. Blitz: a new flag a moment after each answer."
-                    TimerPace.RELAXED -> "Speed Round: 20 seconds per question. Blitz: a new flag a moment after each answer."
-                    TimerPace.OFF -> "Speed Round: no time limit. Blitz: the minute still runs, but the next flag waits for Next."
-                },
+                text = stringResource(
+                    when (pace) {
+                        TimerPace.NORMAL -> R.string.settings_timer_hint_normal
+                        TimerPace.RELAXED -> R.string.settings_timer_hint_relaxed
+                        TimerPace.OFF -> R.string.settings_timer_hint_off
+                    }
+                ),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
@@ -184,9 +195,9 @@ fun SettingsScreen(
             )
         }
 
-        SettingsSection("Data") {
+        SettingsSection(stringResource(R.string.settings_section_data)) {
             Text(
-                text = "Everything stays on this device: there is no account and the app has no network access. Progress is included in Android's own backup of the app.",
+                text = stringResource(R.string.settings_data_local),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -199,7 +210,7 @@ fun SettingsScreen(
                         .testTag("settings_export_btn"),
                     shape = RoundedCornerShape(14.dp)
                 ) {
-                    Text("Export", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.settings_export), fontWeight = FontWeight.Bold)
                 }
                 OutlinedButton(
                     onClick = { importLauncher.launch(arrayOf("application/json", "text/*", "application/octet-stream")) },
@@ -208,11 +219,11 @@ fun SettingsScreen(
                         .testTag("settings_import_btn"),
                     shape = RoundedCornerShape(14.dp)
                 ) {
-                    Text("Import", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.settings_import), fontWeight = FontWeight.Bold)
                 }
             }
             Text(
-                text = "Export writes a file with your progress and settings; Import replaces everything with such a file.",
+                text = stringResource(R.string.settings_transfer_hint),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 6.dp)
@@ -222,7 +233,7 @@ fun SettingsScreen(
                     text = it,
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.Bold,
-                    color = if (it.contains("failed") || it.contains("not")) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                    color = if (transferFailed) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
                     modifier = Modifier
                         .padding(top = 6.dp)
                         .testTag("settings_transfer_note")
@@ -237,11 +248,11 @@ fun SettingsScreen(
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
             ) {
-                Text("Reset progress", fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.settings_reset), fontWeight = FontWeight.Bold)
             }
         }
 
-        SettingsSection("About") {
+        SettingsSection(stringResource(R.string.settings_section_about)) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -252,15 +263,15 @@ fun SettingsScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(text = "About World Flags", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                    Text(text = stringResource(R.string.settings_about_title), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                     Text(
-                        text = "Version $version · where the facts come from, licences, privacy",
+                        text = stringResource(R.string.settings_about_detail, version),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.testTag("settings_version")
                     )
                 }
-                Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null)
+                Icon(imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
             }
         }
     }
@@ -269,26 +280,37 @@ fun SettingsScreen(
     pendingImport?.let { text ->
         AlertDialog(
             onDismissRequest = { pendingImport = null },
-            title = { Text("Import this file?") },
-            text = { Text("Everything here is replaced by the file: bookmarks, every country's standing, the quiz log and the settings. This cannot be undone.") },
+            title = { Text(stringResource(R.string.settings_import_dialog_title)) },
+            text = { Text(stringResource(R.string.settings_import_dialog_text)) },
             confirmButton = {
                 Button(
                     onClick = {
                         pendingImport = null
                         scope.launch {
                             transferNote = viewModel.importJson(text).fold(
-                                onSuccess = { "Imported ${it.quizzes.size} quizzes, ${it.skills.size} skill records and ${it.progress.size} countries." },
-                                onFailure = { it.message ?: "Import failed." }
+                                onSuccess = {
+                                    transferFailed = false
+                                    resources.getString(
+                                        R.string.settings_import_done,
+                                        resources.getQuantityString(R.plurals.settings_import_quizzes, it.quizzes.size, it.quizzes.size),
+                                        resources.getQuantityString(R.plurals.settings_import_skills, it.skills.size, it.skills.size),
+                                        resources.getQuantityString(R.plurals.settings_import_countries, it.progress.size, it.progress.size)
+                                    )
+                                },
+                                onFailure = {
+                                    transferFailed = true
+                                    it.message ?: resources.getString(R.string.settings_import_failed_plain)
+                                }
                             )
                         }
                     },
                     modifier = Modifier.testTag("settings_import_confirm_btn")
                 ) {
-                    Text("Replace")
+                    Text(stringResource(R.string.settings_import_confirm))
                 }
             },
             dismissButton = {
-                TextButton(onClick = { pendingImport = null }, modifier = Modifier.testTag("settings_import_cancel_btn")) { Text("Keep mine") }
+                TextButton(onClick = { pendingImport = null }, modifier = Modifier.testTag("settings_import_cancel_btn")) { Text(stringResource(R.string.settings_import_cancel)) }
             }
         )
     }
@@ -296,8 +318,8 @@ fun SettingsScreen(
     if (confirmReset) {
         AlertDialog(
             onDismissRequest = { confirmReset = false },
-            title = { Text("Reset all progress?") },
-            text = { Text("Bookmarks, every country's standing, the quiz log and the streak are deleted. The settings stay. This cannot be undone.") },
+            title = { Text(stringResource(R.string.settings_reset_dialog_title)) },
+            text = { Text(stringResource(R.string.settings_reset_dialog_text)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -307,11 +329,11 @@ fun SettingsScreen(
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                     modifier = Modifier.testTag("settings_reset_confirm_btn")
                 ) {
-                    Text("Reset")
+                    Text(stringResource(R.string.settings_reset_confirm))
                 }
             },
             dismissButton = {
-                TextButton(onClick = { confirmReset = false }, modifier = Modifier.testTag("settings_reset_cancel_btn")) { Text("Keep") }
+                TextButton(onClick = { confirmReset = false }, modifier = Modifier.testTag("settings_reset_cancel_btn")) { Text(stringResource(R.string.settings_reset_cancel)) }
             }
         )
     }
@@ -322,7 +344,7 @@ fun SettingsScreen(
 internal fun ScreenHeader(title: String, onBack: () -> Unit, backTag: String) {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
         IconButton(onClick = onBack, modifier = Modifier.testTag(backTag)) {
-            Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+            Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
         }
         Spacer(modifier = Modifier.width(4.dp))
         Text(

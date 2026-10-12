@@ -55,6 +55,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.selected
@@ -64,17 +65,21 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.data.model.SortOption
+import com.example.ui.CountrySummary
+import com.example.ui.chipLabelRes
 import com.example.ui.components.ContinentChip
 import com.example.ui.components.CountryCard
 import com.example.progress.Skill
 import com.example.ui.components.Standing
 import com.example.ui.components.standing
+import com.example.ui.labelRes
 import com.example.ui.viewmodel.CountryViewModel
 
 @Composable
@@ -96,6 +101,7 @@ fun ExploreScreen(
     val continents = listOf("All", "Africa", "Americas", "Asia", "Europe", "Oceania", "Antarctica")
     var showSortMenu by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
+    val resources = LocalResources.current
     val sortBy by viewModel.sortBy.collectAsStateWithLifecycle()
 
     // One scrolling grid: the banner and the controls are full-width items. That keeps countries
@@ -139,14 +145,14 @@ fun ExploreScreen(
                         verticalArrangement = Arrangement.Center
                     ) {
                         Text(
-                            text = "World Explorer",
+                            text = stringResource(R.string.explore_title),
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold,
                             color = Color.White,
                             modifier = Modifier.semantics { heading() }
                         )
                         Text(
-                            text = "Discover countries, flags & continents across the globe",
+                            text = stringResource(R.string.explore_subtitle),
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.White.copy(alpha = 0.9f)
                         )
@@ -161,7 +167,7 @@ fun ExploreScreen(
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { viewModel.onSearchQueryChange(it) },
-                    placeholder = { Text("Search country, capital, or official name...") },
+                    placeholder = { Text(stringResource(R.string.explore_search_hint)) },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Search,
@@ -171,7 +177,7 @@ fun ExploreScreen(
                     trailingIcon = {
                         if (searchQuery.isNotEmpty()) {
                             IconButton(onClick = { viewModel.onSearchQueryChange("") }) {
-                                Icon(imageVector = Icons.Default.Clear, contentDescription = "Clear search")
+                                Icon(imageVector = Icons.Default.Clear, contentDescription = stringResource(R.string.explore_clear_search))
                             }
                         }
                     },
@@ -221,7 +227,7 @@ fun ExploreScreen(
                         FilterChip(
                             selected = selected,
                             onClick = { viewModel.onStandingSelect(if (selected) null else standing) },
-                            label = { Text(standing.chipLabel, style = MaterialTheme.typography.labelMedium) },
+                            label = { Text(stringResource(standing.chipLabelRes), style = MaterialTheme.typography.labelMedium) },
                             shape = RoundedCornerShape(16.dp),
                             modifier = Modifier.testTag("standing_chip_${standing.name.lowercase()}")
                         )
@@ -248,7 +254,7 @@ fun ExploreScreen(
                         FilterChip(
                             selected = showOnlyBookmarks,
                             onClick = { viewModel.toggleBookmarksOnlyFilter() },
-                            label = { Text("Saved", style = MaterialTheme.typography.labelMedium) },
+                            label = { Text(stringResource(R.string.explore_saved_chip), style = MaterialTheme.typography.labelMedium) },
                             leadingIcon = {
                                 Icon(
                                     imageVector = if (showOnlyBookmarks) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
@@ -275,7 +281,7 @@ fun ExploreScreen(
                             ) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.Sort,
-                                    contentDescription = "Sort Options",
+                                    contentDescription = stringResource(R.string.explore_sort_options),
                                     tint = MaterialTheme.colorScheme.primary
                                 )
                             }
@@ -285,15 +291,10 @@ fun ExploreScreen(
                                 onDismissRequest = { showSortMenu = false }
                             ) {
                                 // The current order is ticked, so the menu says what the list is doing.
-                                listOf(
-                                    SortOption.NAME to "Sort by Name",
-                                    SortOption.POPULATION to "Sort by Population",
-                                    SortOption.AREA to "Sort by Area",
-                                    SortOption.CONTINENT to "Sort by Continent"
-                                ).forEach { (option, label) ->
+                                SortOption.entries.forEach { option ->
                                     val current = sortBy == option
                                     DropdownMenuItem(
-                                        text = { Text(label) },
+                                        text = { Text(stringResource(option.labelRes)) },
                                         trailingIcon = { if (current) Icon(imageVector = Icons.Default.Check, contentDescription = null) },
                                         onClick = {
                                             viewModel.onSortSelect(option)
@@ -331,17 +332,13 @@ fun ExploreScreen(
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = if (noSavedYet) "No saved countries yet" else "No countries found",
+                            text = stringResource(if (noSavedYet) R.string.explore_empty_saved_title else R.string.explore_empty_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.outline
                         )
                         Text(
-                            text = if (noSavedYet) {
-                                "Tap the bookmark on any country to save it here"
-                            } else {
-                                "Try adjusting your search query or continent filter"
-                            },
+                            text = stringResource(if (noSavedYet) R.string.explore_empty_saved_hint else R.string.explore_empty_hint),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.outline,
                             textAlign = TextAlign.Center
@@ -351,7 +348,7 @@ fun ExploreScreen(
                                 onClick = { viewModel.clearFilters() },
                                 modifier = Modifier.testTag("explore_clear_filters_btn")
                             ) {
-                                Text("Clear filters")
+                                Text(stringResource(R.string.action_clear_filters))
                             }
                         }
                     }
@@ -383,7 +380,7 @@ fun ExploreScreen(
             skillStates = if (country.isSovereign) Skill.entries.associateWith { skills[it]?.get(country.code) } else emptyMap(),
             now = now,
             onDismiss = { viewModel.selectCountry(null) },
-            onSpeak = { viewModel.speakCountryDetails(country) },
+            onSpeak = { viewModel.speakCountryDetails(country, CountrySummary.spoken(resources, country)) },
             speechAvailable = speechAvailable,
             onToggleFavorite = { viewModel.toggleFavorite(country.code) }
         )

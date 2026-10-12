@@ -60,6 +60,7 @@ import org.junit.Rule
 import org.junit.rules.RuleChain
 import org.junit.Test
 import org.junit.runner.RunWith
+import com.example.ui.CountrySummary
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
@@ -698,7 +699,7 @@ class QuizAndFlashcardUiTest {
         engine.onInitListener.onInit(TextToSpeech.SUCCESS)
         rule.waitForIdle()
         val vm = ViewModelProvider(rule.activity)[CountryViewModel::class.java]
-        vm.speakCountryDetails(vm.repository.allCountries.first())
+        vm.repository.allCountries.first().let { vm.speakCountryDetails(it, CountrySummary.spoken(rule.activity.resources, it)) }
         assertFalse("speech should be running", engine.isStopped)
 
         rotate()

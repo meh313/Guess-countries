@@ -24,6 +24,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.continentLabel
 import com.example.ui.theme.AfricaColor
 import com.example.ui.theme.AmericasColor
 import com.example.ui.theme.AntarcticaColor
@@ -61,7 +62,7 @@ fun ContinentChip(
                 modifier = Modifier.padding(end = 6.dp)
             )
             Text(
-                text = continent,
+                text = continentLabel(continent),
                 color = contentColor,
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium

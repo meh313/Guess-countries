@@ -221,7 +221,7 @@ class ExploreProgressUiTest {
             rule.onNodeWithTag("settings_import_btn").performClick()
             rule.eventually("the import question") { rule.onNodeWithText("Import this file?").assertIsDisplayed() }
             rule.onNodeWithTag("settings_import_confirm_btn").performClick()
-            rule.eventually("the import note") { rule.onNodeWithTag("settings_transfer_note").assert(hasText("Imported 1 quizzes, 1 skill records and 2 countries", substring = true)) }
+            rule.eventually("the import note") { rule.onNodeWithTag("settings_transfer_note").assert(hasText("Imported 1 quiz, 1 skill record and 2 countries", substring = true)) }
 
             val skills = runBlocking { db.userProgressDao().getAllSkills().first() }
             assertEquals(listOf("FR"), skills.map { it.countryCode })
