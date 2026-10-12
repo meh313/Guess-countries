@@ -151,9 +151,75 @@ class QuizEngineTest {
     }
 
     @Test
-    fun theWeakSpotsAreNotAPlace_soNoCountryBelongsToThem() {
-        assertTrue(QuizEngine.WEAK_SPOTS !in QuizEngine.SCOPES)
-        assertTrue(QuizEngine.poolFor(QuizEngine.WEAK_SPOTS, allCountries).isEmpty())
+    fun theWeakSpotsAndTheDueCountriesAreNotPlaces_soNoCountryBelongsToThem() {
+        for (scope in listOf(QuizEngine.WEAK_SPOTS, QuizEngine.DUE)) {
+            assertTrue(scope !in QuizEngine.SCOPES)
+            assertTrue(QuizEngine.poolFor(scope, allCountries).isEmpty())
+        }
+    }
+
+    @Test
+    fun effectiveScope_keepsTheDueScopeOnlyWhileSomethingIsDue() {
+        for (mode in QuizMode.entries) {
+            val expected = if (mode == QuizMode.CONTINENT) "Global" else QuizEngine.DUE
+            assertEquals("mode=$mode", expected, QuizEngine.effectiveScope(mode, QuizEngine.DUE, dueAvailable = true))
+            assertEquals("mode=$mode", "Global", QuizEngine.effectiveScope(mode, QuizEngine.DUE, dueAvailable = false))
+        }
+        // The two special scopes do not depend on each other.
+        assertEquals(QuizEngine.DUE, QuizEngine.effectiveScope(QuizMode.FLAG_NAME, QuizEngine.DUE, weakSpotsAvailable = false, dueAvailable = true))
+        assertEquals(QuizEngine.WEAK_SPOTS, QuizEngine.effectiveScope(QuizMode.FLAG_NAME, QuizEngine.WEAK_SPOTS, weakSpotsAvailable = true, dueAvailable = false))
+    }
+
+    @Test
+    fun questionCount_inTheDueScope_runsOverAsFewAsOneCountry() {
+        assertEquals(0, QuizEngine.questionCount(0, QuizEngine.DUE))
+        assertEquals(1, QuizEngine.questionCount(1, QuizEngine.DUE))
+        assertEquals(3, QuizEngine.questionCount(3, QuizEngine.DUE))
+        assertEquals(10, QuizEngine.questionCount(25, QuizEngine.DUE))
+        // Every other scope keeps the minimum.
+        assertEquals(0, QuizEngine.questionCount(3, QuizEngine.WEAK_SPOTS))
+        assertEquals(0, QuizEngine.questionCount(3, "Europe"))
+    }
+
+    @Test
+    fun generate_runsOverAFewTargetsWhenTheAnswersComeFromAWiderPool() {
+        for (count in 1..3) {
+            val targets = sovereign.take(count)
+            val questions = QuizEngine.generate(targets, QuizMode.FLAG_NAME, Random(1), answerPool = sovereign)
+            assertEquals(count, questions.size)
+            assertEquals(targets.map { it.code }.toSet(), questions.map { it.targetCountry.code }.toSet())
+            questions.forEach { assertEquals(4, it.options.distinct().size) }
+        }
+        // The blitz cycles through them without ever repeating a country back to back where it can.
+        val blitz = QuizEngine.generate(sovereign.take(2), QuizMode.BLITZ, Random(1), answerPool = sovereign).map { it.targetCountry.code }
+        assertEquals(QuizEngine.BLITZ_QUESTIONS, blitz.size)
+        blitz.zipWithNext().forEach { (a, b) -> assertTrue(a != b) }
+        // A single target has nothing to alternate with.
+        assertEquals(QuizEngine.BLITZ_QUESTIONS, QuizEngine.generate(sovereign.take(1), QuizMode.BLITZ, Random(1), answerPool = sovereign).size)
+        // Too few answers remain too few answers.
+        assertTrue(QuizEngine.generate(sovereign.take(2), QuizMode.FLAG_NAME, Random(1), answerPool = sovereign.take(3)).isEmpty())
+    }
+
+    @Test
+    fun generate_asksInTheOrderGiven_andTheBlitzOpensWithIt() {
+        val byCode: (List<com.example.data.model.Country>) -> List<com.example.data.model.Country> = { it.sortedBy { c -> c.code } }
+        val expected = sovereign.sortedBy { it.code }.map { it.code }
+
+        val fixed = QuizEngine.generate(sovereign, QuizMode.FLAG_NAME, Random(1), order = byCode).map { it.targetCountry.code }
+        assertEquals(expected.take(QuizEngine.MAX_QUESTIONS), fixed)
+
+        val blitz = QuizEngine.generate(sovereign, QuizMode.BLITZ, Random(1), order = byCode).map { it.targetCountry.code }
+        assertEquals(expected.take(QuizEngine.BLITZ_QUESTIONS), blitz)
+
+        val six = sovereign.take(6)
+        val smallBlitz = QuizEngine.generate(six, QuizMode.BLITZ, Random(1), order = byCode).map { it.targetCountry.code }
+        assertEquals(six.map { it.code }.sorted(), smallBlitz.take(6))
+        smallBlitz.zipWithNext().forEach { (a, b) -> assertTrue(a != b) }
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun generate_rejectsAnOrderThatLosesCountries() {
+        QuizEngine.generate(sovereign, QuizMode.FLAG_NAME, Random(1), order = { it.drop(1) })
     }
 
     @Test

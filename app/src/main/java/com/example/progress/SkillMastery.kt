@@ -59,7 +59,7 @@ object SkillMastery {
     const val EASY_RIGHT = 12
     const val AGAIN_WRONG = 12
 
-    private const val DAY_MILLIS = 86_400_000L
+    const val DAY_MILLIS = 86_400_000L
 
     fun skillOf(mode: QuizMode): Skill = if (mode == QuizMode.CAPITAL) Skill.CAPITAL else Skill.FLAG
 

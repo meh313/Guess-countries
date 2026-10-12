@@ -1,6 +1,7 @@
 package com.example
 
 import android.os.Looper
+import androidx.lifecycle.SavedStateHandle
 import com.example.data.local.AppDatabase
 import com.example.data.local.QuizScoreEntity
 import com.example.data.local.SkillProgressEntity
@@ -17,11 +18,15 @@ import com.example.data.settings.InMemoryUserSettings
 import com.example.quiz.QuizDifficulty
 import com.example.quiz.QuizEngine
 import com.example.quiz.QuizMode
+import com.example.quiz.QuizSession
 import com.example.support.FakeSpeech
 import com.example.support.awaitPendingWrites
 import com.example.support.closeWhenIdle
 import com.example.support.inMemoryDatabase
 import com.example.ui.viewmodel.CountryViewModel
+import com.example.ui.viewmodel.QuizPlan
+import com.example.ui.viewmodel.QuizStateHolder
+import kotlin.random.Random
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -62,8 +67,17 @@ class CountryViewModelQuizTest {
 
     private val created = mutableListOf<CountryViewModel>()
 
-    private fun newViewModel(countries: List<Country> = CountryCatalog.all) =
-        CountryViewModel(CountryRepository(db.userProgressDao(), countries), FakeSpeech(), clock = { now }).also { created += it }
+    private fun newViewModel(
+        countries: List<Country> = CountryCatalog.all,
+        random: Random = Random.Default,
+        savedState: SavedStateHandle = SavedStateHandle()
+    ) = CountryViewModel(
+        CountryRepository(db.userProgressDao(), countries),
+        FakeSpeech(),
+        clock = { now },
+        random = random,
+        savedStateHandle = savedState
+    ).also { created += it }
 
     // Small worlds for the paths the full catalog no longer reaches: a scope with fewer than ten
     // countries and one with too few to quiz at all.
@@ -602,6 +616,255 @@ class CountryViewModelQuizTest {
             }
         }
         vm.awaitWeakSpots(0)
+    }
+
+    // --- Due today, per-skill scopes and the question picker ----------------------------------------------------------
+
+    /** The quiz plan is shared only while collected (the quiz setup screen does that); here a collector stands in. */
+    private fun CountryViewModel.awaitPlan(what: String, accept: (QuizPlan) -> Boolean) {
+        val collector = CoroutineScope(Dispatchers.Default).launch { quizPlan.collect {} }
+        try {
+            val deadline = System.currentTimeMillis() + 10_000
+            while (!accept(quizPlan.value)) {
+                check(System.currentTimeMillis() < deadline) { "quiz plan never reached: $what" }
+                shadowOf(Looper.getMainLooper()).idle()
+                Thread.sleep(10)
+            }
+        } finally {
+            collector.cancel()
+        }
+    }
+
+    private val day = 86_400_000L
+
+    /** A reviewed [skill] row for [code]: due long ago unless [dueAt] says otherwise, weak either way. */
+    private fun reviewedRow(code: String, skill: Skill, dueAt: Long = 0L) = runBlocking {
+        db.userProgressDao().upsertSkill(SkillProgressEntity.of(code, skill, SkillState(score = 40, box = 2, dueAt = dueAt, reviews = 2, correct = 1)))
+    }
+
+    private fun masteredRow(code: String, skill: Skill = Skill.FLAG) = runBlocking {
+        db.userProgressDao().upsertSkill(
+            SkillProgressEntity.of(code, skill, SkillState(score = 80, box = 3, dueAt = System.currentTimeMillis() + 5 * day, reviews = 3, correct = 3))
+        )
+    }
+
+    private fun QuizSession.targets() = questions.map { it.targetCountry.code }
+
+    @Test
+    fun startQuiz_dueToday_asksAboutTheCountriesDueInTheModesSkill_withAnswersFromTheWholeWorld() {
+        listOf("FR", "DE", "JP").forEach { reviewedRow(it, Skill.FLAG) }
+        reviewedRow("BR", Skill.FLAG, dueAt = System.currentTimeMillis() + day) // weak but not due
+        reviewedRow("IT", Skill.CAPITAL)
+        val vm = newViewModel()
+        vm.awaitPlan("three flags and one capital due") { it.due(Skill.FLAG).size == 3 && it.due(Skill.CAPITAL).size == 1 }
+
+        vm.startQuiz(QuizMode.FLAG_NAME, QuizEngine.DUE)
+
+        val flags = vm.quizSession.value!!
+        assertEquals(QuizEngine.DUE, flags.scope)
+        assertEquals(setOf("FR", "DE", "JP"), flags.targets().toSet())
+        assertTrue(flags.questions.all { it.options.size == 4 })
+
+        vm.startQuiz(QuizMode.CAPITAL, QuizEngine.DUE)
+
+        val capitals = vm.quizSession.value!!
+        assertEquals(QuizEngine.DUE, capitals.scope)
+        assertEquals(listOf("IT"), capitals.targets())
+        assertEquals(4, capitals.current.options.size)
+    }
+
+    @Test
+    fun startQuiz_dueToday_takesTheTenLongestDue() {
+        twelveWeak.forEachIndexed { i, code -> reviewedRow(code, Skill.FLAG, dueAt = 1_000L + i * day) }
+        val vm = newViewModel()
+        vm.awaitPlan("twelve due") { it.due(Skill.FLAG).size == 12 }
+
+        vm.startQuiz(QuizMode.FLAG_NAME, QuizEngine.DUE)
+
+        assertEquals(twelveWeak.take(10).toSet(), vm.quizSession.value!!.targets().toSet())
+    }
+
+    @Test
+    fun startQuiz_dueToday_inTheBlitzCyclesThroughEveryDueCountry() {
+        twelveWeak.forEach { reviewedRow(it, Skill.FLAG) }
+        val vm = newViewModel()
+        vm.awaitPlan("twelve due") { it.due(Skill.FLAG).size == 12 }
+
+        vm.startQuiz(QuizMode.BLITZ, QuizEngine.DUE)
+
+        val s = vm.quizSession.value!!
+        assertEquals(QuizEngine.BLITZ_QUESTIONS, s.questions.size)
+        assertEquals(twelveWeak.toSet(), s.targets().toSet())
+    }
+
+    @Test
+    fun startQuiz_dueToday_withNothingDueFallsBackToGlobal() {
+        reviewedRow("FR", Skill.FLAG, dueAt = System.currentTimeMillis() + day)
+        val vm = newViewModel()
+        vm.awaitPlan("one weak flag") { it.weak(Skill.FLAG).size == 1 }
+
+        vm.startQuiz(QuizMode.FLAG_NAME, QuizEngine.DUE)
+
+        assertEquals("Global", vm.quizSession.value!!.scope)
+    }
+
+    @Test
+    fun startQuiz_weakSpots_followTheSkillOfTheMode() {
+        reviewWrong(twelveWeak) // weak flags
+        val vm = newViewModel()
+        vm.awaitWeakSpots(12)
+
+        vm.startQuiz(QuizMode.CAPITAL, QuizEngine.WEAK_SPOTS)
+        assertEquals("no weak capitals yet", "Global", vm.quizSession.value!!.scope)
+
+        listOf("FR", "DE", "JP", "BR").forEach { reviewedRow(it, Skill.CAPITAL, dueAt = System.currentTimeMillis() + day) }
+        vm.awaitPlan("four weak capitals") { it.weak(Skill.CAPITAL).size == 4 }
+
+        vm.startQuiz(QuizMode.CAPITAL, QuizEngine.WEAK_SPOTS)
+        val s = vm.quizSession.value!!
+        assertEquals(QuizEngine.WEAK_SPOTS, s.scope)
+        assertEquals(setOf("FR", "DE", "JP", "BR"), s.targets().toSet())
+    }
+
+    @Test
+    fun startQuiz_global_asksAboutUnseenCountriesBeforeMasteredOnes() {
+        val world = sovereign.take(14)
+        world.drop(4).forEach { masteredRow(it.code) }
+        val unseen = world.take(4).map { it.code }.toSet()
+
+        var opensWithUnseen = 0
+        val unseenPositions = mutableListOf<Int>()
+        val masteredPositions = mutableListOf<Int>()
+        for (seed in 1..50) {
+            val vm = newViewModel(world, random = Random(seed))
+            vm.awaitPlan("ten mastered") { it.skills[Skill.FLAG]?.size == 10 }
+            vm.startQuiz(QuizMode.FLAG_NAME, "Global")
+            val targets = vm.quizSession.value!!.targets()
+            if (targets.first() in unseen) opensWithUnseen++
+            targets.forEachIndexed { i, code -> (if (code in unseen) unseenPositions else masteredPositions) += i }
+        }
+        // Weights 4 against 0.5: an unseen country opens about five quizzes in six and sits near the front.
+        assertTrue("opens with an unseen country in $opensWithUnseen of 50", opensWithUnseen >= 35)
+        assertTrue("unseen at ${unseenPositions.average()}", unseenPositions.average() <= 3.5)
+        assertTrue("mastered at ${masteredPositions.average()}", masteredPositions.average() >= 4.5)
+    }
+
+    @Test
+    fun startQuiz_global_looksPastTheTargetsOfTheLastQuizzesFirst() {
+        val world = sovereign.take(20)
+        val first = newViewModel(world, random = Random(1))
+        first.startQuiz(QuizMode.FLAG_NAME, "Global")
+        val recent = first.quizSession.value!!.targets().toSet()
+        first.playToTheEnd()
+        db.awaitPendingWrites()
+
+        for (seed in 1..20) {
+            val vm = newViewModel(world, random = Random(seed))
+            vm.awaitPlan("ten recent targets") { it.recentTargets.size == 10 }
+            vm.startQuiz(QuizMode.FLAG_NAME, "Global")
+            val repeats = vm.quizSession.value!!.targets().count { it in recent }
+            assertTrue("seed=$seed repeats $repeats of the last quiz's ten", repeats <= 5)
+        }
+    }
+
+    @Test
+    fun startQuiz_isDeterministicForASeededRandom() {
+        val a = newViewModel(random = Random(5)).also { it.startQuiz(QuizMode.FLAG_NAME, "Global") }.quizSession.value!!
+        val b = newViewModel(random = Random(5)).also { it.startQuiz(QuizMode.FLAG_NAME, "Global") }.quizSession.value!!
+        assertEquals(a.questions, b.questions)
+    }
+
+    // --- Process death ------------------------------------------------------------------------------------------------
+
+    /** What the activity would hand the next process: the handle's saved state, restored into a fresh handle. */
+    private fun SavedStateHandle.saved(): SavedStateHandle {
+        val state = savedStateProvider().saveState()
+        assertTrue("the quiz is saved under its key", state.containsKey(QuizStateHolder.SAVED_QUIZ))
+        return SavedStateHandle.createHandle(state, null)
+    }
+
+    @Test
+    fun theQuizInProgress_survivesTheProcessThroughTheSavedState() {
+        val handle = SavedStateHandle()
+        val vm = newViewModel(savedState = handle)
+        vm.startQuiz(QuizMode.SPEED_MATCH, "Europe", QuizDifficulty.HARD)
+        now += 300
+        vm.answerQuiz(vm.quizSession.value!!.current.correctAnswerIndex)
+        now += 100
+        vm.nextQuizQuestion()
+        now += 400 // the second question has been open for 400 ms when the activity saves its state
+        val before = vm.quizSession.value!!
+
+        val saved = handle.saved()
+        now += 60_000 // the process is gone for a minute
+        val revived = newViewModel(savedState = saved)
+
+        val after = revived.quizSession.value!!
+        assertEquals(before.questions, after.questions)
+        assertEquals(before.answers, after.answers)
+        assertEquals(1, after.currentIndex)
+        assertEquals(before.score, after.score)
+        assertEquals(before.streak, after.streak)
+        assertEquals(QuizMode.SPEED_MATCH, after.mode)
+        assertEquals("Europe", after.scope)
+        assertEquals(QuizDifficulty.HARD, after.difficulty)
+        assertTrue("restored paused, for the screen to resume", after.isPaused)
+
+        revived.resumeQuiz()
+        val resumed = revived.quizSession.value!!
+        assertFalse(resumed.isPaused)
+        assertEquals("the question keeps its 400 ms", now - 400, resumed.questionStartedAt)
+        assertEquals("and the quiz its 800 ms", now - 800, resumed.startedAt)
+    }
+
+    @Test
+    fun aPausedQuiz_isSavedWithTheTimeUpToItsPause() {
+        val handle = SavedStateHandle()
+        val vm = newViewModel(savedState = handle)
+        vm.startQuiz(QuizMode.SPEED_MATCH, "Global")
+        now += 250
+        vm.pauseQuiz()
+        now += 5_000 // away on another tab when the state is saved
+
+        val revived = newViewModel(savedState = handle.saved())
+        revived.resumeQuiz()
+
+        assertEquals(now - 250, revived.quizSession.value!!.questionStartedAt)
+    }
+
+    @Test
+    fun withNoQuizInProgress_theSavedStateRestoresNone() {
+        val handle = SavedStateHandle()
+        val vm = newViewModel(savedState = handle)
+        assertNull(newViewModel(savedState = handle.saved()).quizSession.value)
+
+        vm.startQuiz(QuizMode.FLAG_NAME, "Global")
+        vm.endQuiz()
+
+        assertNull(newViewModel(savedState = handle.saved()).quizSession.value)
+    }
+
+    @Test
+    fun aFinishedQuiz_isRestoredFinished_withoutSavingItAgain() {
+        val handle = SavedStateHandle()
+        val vm = newViewModel(savedState = handle)
+        vm.startQuiz(QuizMode.FLAG_NAME, "Global")
+        vm.playToTheEnd()
+        db.awaitPendingWrites()
+
+        val revived = newViewModel(savedState = handle.saved())
+
+        assertTrue(revived.quizSession.value!!.isFinished)
+        assertEquals(vm.quizSession.value!!.score, revived.quizSession.value!!.score)
+        assertEquals(1, runBlocking { db.userProgressDao().getQuizHistory().first() }.size)
+    }
+
+    @Test
+    fun aSavedQuizAboutACountryNoLongerInTheCatalog_isDropped() {
+        val handle = SavedStateHandle()
+        newViewModel(sixAfrican + fourEuropean, savedState = handle).startQuiz(QuizMode.FLAG_NAME, "Africa")
+
+        assertNull(newViewModel(fourEuropean, savedState = handle.saved()).quizSession.value)
     }
 
     // --- Remembered difficulty --------------------------------------------------------------------------------------

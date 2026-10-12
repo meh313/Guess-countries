@@ -7,6 +7,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,8 +19,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -37,6 +36,7 @@ import androidx.compose.material.icons.filled.LocationCity
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.Today
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -83,6 +83,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.progress.PracticeStreak
+import com.example.progress.Skill
+import com.example.progress.SkillMastery
 import com.example.quiz.QuizDifficulty
 import com.example.quiz.QuizEngine
 import com.example.quiz.QuizMode
@@ -105,8 +107,11 @@ private val QuizMode.icon: ImageVector
         QuizMode.BLITZ -> Icons.Default.Timer
     }
 
-/** The scope chips in order: Global, then the weak spots (second, so the row does not hide them), then the continents. */
-private val SETUP_SCOPES = listOf(QuizEngine.SCOPES.first(), QuizEngine.WEAK_SPOTS) + QuizEngine.SCOPES.drop(1)
+/**
+ * The scope chips in order: Global, then the two scopes that are not places (early, so the row does not hide them),
+ * then the continents.
+ */
+private val SETUP_SCOPES = listOf(QuizEngine.SCOPES.first(), QuizEngine.DUE, QuizEngine.WEAK_SPOTS) + QuizEngine.SCOPES.drop(1)
 
 @Composable
 fun QuizScreen(
@@ -119,11 +124,25 @@ fun QuizScreen(
     var selectedMode by rememberSaveable { mutableStateOf(QuizMode.FLAG_NAME) }
     var selectedContinentScope by rememberSaveable { mutableStateOf("Global") }
     val selectedDifficulty by viewModel.quizDifficulty.collectAsStateWithLifecycle()
-    val weakSpots by viewModel.weakSpots.collectAsStateWithLifecycle()
+    // The weak and due countries of the skill the chosen mode exercises: capitals for the capital quiz, else flags.
+    val plan by viewModel.quizPlan.collectAsStateWithLifecycle()
+    val skill = SkillMastery.skillOf(selectedMode)
+    val weakSpots = plan.weak(skill)
+    val due = plan.due(skill)
     val weakSpotsAvailable = weakSpots.size >= QuizEngine.MIN_POOL
-    // Once practice lifts the weak spots out of reach, the choice goes back to Global instead of reviving by itself.
-    LaunchedEffect(weakSpotsAvailable) {
+    val dueAvailable = due.isNotEmpty()
+    // Once practice lifts the weak spots out of reach, or the last due review is done, the choice goes back to Global
+    // instead of reviving by itself.
+    LaunchedEffect(weakSpotsAvailable, dueAvailable) {
         if (!weakSpotsAvailable && selectedContinentScope == QuizEngine.WEAK_SPOTS) selectedContinentScope = "Global"
+        if (!dueAvailable && selectedContinentScope == QuizEngine.DUE) selectedContinentScope = "Global"
+    }
+    // A review can come due while the screen is open: look again when it comes back to the foreground.
+    val setupLifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(setupLifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event -> if (event == Lifecycle.Event.ON_RESUME) viewModel.refreshStreak() }
+        setupLifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { setupLifecycleOwner.lifecycle.removeObserver(observer) }
     }
     val countriesByCode = remember(allCountries) { allCountries.associateBy { it.code } }
     val quizScrollState = rememberScrollState()
@@ -225,7 +244,7 @@ fun QuizScreen(
 
             // Some modes always cover the whole world; their scope chips show "Global" and are inactive.
             val scopeApplies = !selectedMode.usesWholeWorld
-            val shownScope = QuizEngine.effectiveScope(selectedMode, selectedContinentScope, weakSpotsAvailable)
+            val shownScope = QuizEngine.effectiveScope(selectedMode, selectedContinentScope, weakSpotsAvailable, dueAvailable)
             if (!scopeApplies) {
                 Text(
                     text = "The continent quiz always covers the whole world",
@@ -236,11 +255,16 @@ fun QuizScreen(
                         .padding(bottom = 8.dp)
                 )
             }
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(SETUP_SCOPES) { scope ->
+            // Eight chips: a plain scrolling row, so every chip exists (and can be scrolled to) however narrow the screen.
+            Row(
+                modifier = Modifier.horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                SETUP_SCOPES.forEach { scope ->
                     val isWeakSpots = scope == QuizEngine.WEAK_SPOTS
+                    val isDue = scope == QuizEngine.DUE
                     val isSelected = shownScope == scope
-                    val chipEnabled = scopeApplies && (!isWeakSpots || weakSpotsAvailable)
+                    val chipEnabled = scopeApplies && (!isWeakSpots || weakSpotsAvailable) && (!isDue || dueAvailable)
                     val contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
                     Surface(
                         shape = RoundedCornerShape(16.dp),
@@ -259,27 +283,55 @@ fun QuizScreen(
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            if (isWeakSpots) {
+                            val chipIcon = when {
+                                isWeakSpots -> Icons.Default.FitnessCenter
+                                isDue -> Icons.Default.Today
+                                else -> null
+                            }
+                            if (chipIcon != null) {
                                 Icon(
-                                    imageVector = Icons.Default.FitnessCenter,
+                                    imageVector = chipIcon,
                                     contentDescription = null,
                                     tint = contentColor,
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                             }
-                            Text(text = scope, color = contentColor, fontWeight = FontWeight.Bold)
+                            Text(
+                                text = if (isDue && dueAvailable) "$scope · ${due.size}" else scope,
+                                color = contentColor,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
                 }
             }
-            // The weak-spots chip explains itself: why it is locked, or what it will ask about.
+            // The two chips that are not places explain themselves: why they are locked, or what they will ask about.
+            val what = if (skill == Skill.CAPITAL) "capitals" else "countries"
+            val dueNote = when {
+                !scopeApplies -> null
+                !dueAvailable -> "Nothing is due for review today"
+                shownScope == QuizEngine.DUE ->
+                    "The ${QuizEngine.questionCount(due.size, QuizEngine.DUE)} $what due for review, with answers from the whole world"
+                else -> null
+            }
+            if (dueNote != null) {
+                Text(
+                    text = dueNote,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .align(Alignment.Start)
+                        .padding(top = 8.dp)
+                        .testTag("quiz_due_note")
+                )
+            }
             val weakSpotsNote = when {
                 !scopeApplies -> null
                 !weakSpotsAvailable ->
-                    "Weak spots unlocks once ${QuizEngine.MIN_POOL} reviewed countries are below mastery (you have ${weakSpots.size})"
+                    "Weak spots unlocks once ${QuizEngine.MIN_POOL} reviewed $what are below mastery (you have ${weakSpots.size})"
                 shownScope == QuizEngine.WEAK_SPOTS ->
-                    "Your ${minOf(weakSpots.size, QuizEngine.MAX_QUESTIONS)} weakest countries, with answers from the whole world"
+                    "Your ${minOf(weakSpots.size, QuizEngine.MAX_QUESTIONS)} weakest $what, with answers from the whole world"
                 else -> null
             }
             if (weakSpotsNote != null) {
@@ -346,9 +398,13 @@ fun QuizScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             // Start Quiz Button
-            val scopePoolSize =
-                if (shownScope == QuizEngine.WEAK_SPOTS) weakSpots.size else QuizEngine.poolFor(shownScope, allCountries).size
-            val canStart = scopePoolSize >= QuizEngine.MIN_POOL
+            val scopePoolSize = when (shownScope) {
+                QuizEngine.WEAK_SPOTS -> weakSpots.size
+                QuizEngine.DUE -> due.size
+                else -> QuizEngine.poolFor(shownScope, allCountries).size
+            }
+            val questionCount = QuizEngine.questionCount(scopePoolSize, shownScope)
+            val canStart = questionCount > 0
             Button(
                 onClick = { viewModel.startQuiz(selectedMode, selectedContinentScope, selectedDifficulty) },
                 enabled = canStart,
@@ -362,7 +418,7 @@ fun QuizScreen(
                 Text(
                     text = if (canStart) {
                         if (selectedMode.isEndless) "Start ${selectedMode.totalTimeSeconds}-Second Blitz"
-                        else "Start ${QuizEngine.questionCount(scopePoolSize)}-Question Quiz"
+                        else "Start $questionCount-Question Quiz"
                     } else {
                         "Needs at least ${QuizEngine.MIN_POOL} countries"
                     },
