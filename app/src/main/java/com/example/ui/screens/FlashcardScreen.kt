@@ -75,6 +75,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.Country
 import com.example.data.model.SortOption
+import com.example.progress.Grade
 import com.example.quiz.QuizEngine
 import com.example.flashcards.FlashcardDeck
 import com.example.ui.components.FlagView
@@ -189,7 +190,8 @@ fun FlashcardScreen(
     }
     val onGrade: (Boolean) -> Unit = { mastered ->
         viewModel.stopSpeaking()
-        viewModel.updateMastery(currentCountry.code, mastered)
+        // A self-grade is light evidence: "Mastered!" counts as knowing it today, not as mastery.
+        viewModel.gradeFlashcard(currentCountry.code, if (mastered) Grade.GOOD else Grade.AGAIN)
         currentCode = FlashcardDeck.nextCode(deck, index)
         flippedCode = null
     }

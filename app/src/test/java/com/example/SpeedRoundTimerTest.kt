@@ -84,7 +84,7 @@ class SpeedRoundTimerTest {
     /** The countdown text sits under the timer's single TalkBack description, so only the unmerged tree has it. */
     private fun countdown(text: String) = rule.onNodeWithText(text, useUnmergedTree = true)
 
-    private fun reviews() = runBlocking { db.userProgressDao().getAllProgress().first() }
+    private fun reviews() = runBlocking { db.userProgressDao().getAllSkills().first() }
 
     @Test
     fun theCountdownFollowsTheClockAndRoundsUp() {
@@ -114,7 +114,7 @@ class SpeedRoundTimerTest {
         rule.onNodeWithTag("quiz_result").assert(hasText("Time's up! The answer is ${q.options[q.correctAnswerIndex]}"))
         rule.onNodeWithTag("quiz_timer").assertDoesNotExist()
         db.awaitPendingWrites()
-        assertEquals(0, reviews().single { it.countryCode == q.targetCountry.code }.timesCorrect)
+        assertEquals(0, reviews().single { it.countryCode == q.targetCountry.code }.correct)
     }
 
     @Test
@@ -141,7 +141,7 @@ class SpeedRoundTimerTest {
         assertEquals(10, session.score)
         rule.onNodeWithTag("quiz_timer").assertDoesNotExist()
         db.awaitPendingWrites()
-        assertEquals(1, reviews().single { it.countryCode == q.targetCountry.code }.timesReviewed)
+        assertEquals(1, reviews().single { it.countryCode == q.targetCountry.code }.reviews)
     }
 
     @Test

@@ -3,7 +3,11 @@ package com.example
 import android.os.Looper
 import com.example.data.local.AppDatabase
 import com.example.data.local.QuizScoreEntity
+import com.example.data.local.SkillProgressEntity
 import com.example.data.model.CountryRepository
+import com.example.progress.Evidence
+import com.example.progress.Skill
+import com.example.progress.SkillState
 import com.example.quiz.sovereign
 import com.example.quiz.allCountries
 import com.example.data.model.CountryCatalog
@@ -69,6 +73,9 @@ class CountryViewModelQuizTest {
 
     private fun progressRow(code: String) =
         runBlocking { db.userProgressDao().getAllProgress().first() }.firstOrNull { it.countryCode == code }
+
+    private fun skillRow(code: String) =
+        runBlocking { db.userProgressDao().getAllSkills().first() }.firstOrNull { it.countryCode == code }
 
     /** Answers every remaining question correctly through the ViewModel's public actions. */
     private fun CountryViewModel.playToTheEnd() {
@@ -235,13 +242,13 @@ class CountryViewModelQuizTest {
 
         vm.answerQuiz(vm.quizSession.value!!.current.correctAnswerIndex)
 
-        awaitCondition("the review to be saved") {
-            runBlocking { db.userProgressDao().getAllProgress().first() }.any { it.countryCode == target }
-        }
-        val row = runBlocking { db.userProgressDao().getAllProgress().first() }.single { it.countryCode == target }
-        assertEquals(25, row.masteryScore)
-        assertEquals(1, row.timesReviewed)
-        assertEquals(1, row.timesCorrect)
+        awaitCondition("the review to be saved") { skillRow(target) != null }
+        val row = skillRow(target)!!
+        assertEquals(Skill.FLAG.name, row.skill)
+        assertEquals(20, row.score)
+        assertEquals(1, row.box)
+        assertEquals(1, row.reviews)
+        assertEquals(1, row.correct)
     }
 
     @Test
@@ -298,10 +305,11 @@ class CountryViewModelQuizTest {
         val s = vm.quizSession.value!!
         assertTrue(s.timedOut)
         assertEquals(0, s.score)
-        awaitCondition("the review to be saved") { progressRow(target) != null }
-        val row = progressRow(target)!!
-        assertEquals(1, row.timesReviewed)
-        assertEquals(0, row.timesCorrect)
+        awaitCondition("the review to be saved") { skillRow(target) != null }
+        val row = skillRow(target)!!
+        assertEquals(1, row.reviews)
+        assertEquals(0, row.correct)
+        assertEquals(-1, row.lastResult)
     }
 
     @Test
@@ -310,14 +318,14 @@ class CountryViewModelQuizTest {
         vm.startQuiz(QuizMode.SPEED_MATCH, "Global")
         val target = vm.quizSession.value!!.current.targetCountry.code
         vm.answerQuiz(vm.quizSession.value!!.current.correctAnswerIndex)
-        awaitCondition("the review to be saved") { progressRow(target) != null }
+        awaitCondition("the review to be saved") { skillRow(target) != null }
 
         vm.timeOutQuiz()
         vm.timeOutQuiz()
 
         assertFalse(vm.quizSession.value!!.timedOut)
         db.awaitPendingWrites()
-        assertEquals(1, progressRow(target)!!.timesReviewed)
+        assertEquals(1, skillRow(target)!!.reviews)
     }
 
     @Test
@@ -447,7 +455,7 @@ class CountryViewModelQuizTest {
     private fun reviewWrong(codes: List<String>) {
         codes.forEach { code ->
             now += 10
-            runBlocking { db.userProgressDao().recordReview(code, false, now) }
+            runBlocking { db.userProgressDao().recordAnswer(code, Skill.FLAG, false, Evidence.FULL, now) }
         }
     }
 
@@ -473,12 +481,12 @@ class CountryViewModelQuizTest {
     fun weakSpots_listsReviewedCountriesBelowMasteryWeakestFirst() {
         runBlocking {
             val dao = db.userProgressDao()
-            dao.recordReview("FR", true, 10L)
-            dao.recordReview("FR", true, 11L) // 50
-            dao.recordReview("DE", false, 12L) // 0
-            dao.recordReview("JP", true, 13L) // 25
-            repeat(3) { dao.recordReview("BR", true, 14L + it) } // 75, learned
-            dao.recordReview("AQ", false, 20L) // not a country
+            dao.recordAnswer("FR", Skill.FLAG, true, Evidence.FULL, 10L)
+            dao.recordAnswer("FR", Skill.FLAG, true, Evidence.FULL, 11L) // 40
+            dao.recordAnswer("DE", Skill.FLAG, false, Evidence.FULL, 12L) // 0
+            dao.recordAnswer("JP", Skill.FLAG, true, Evidence.FULL, 13L) // 20
+            dao.upsertSkill(SkillProgressEntity.of("BR", Skill.FLAG, SkillState(score = 80, box = 3, dueAt = 1_000L + 7 * 86_400_000L, reviews = 3, correct = 3))) // mastered
+            dao.recordAnswer("AQ", Skill.FLAG, false, Evidence.FULL, 20L) // not a country
         }
         val vm = newViewModel()
 

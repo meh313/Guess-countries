@@ -23,6 +23,10 @@ import androidx.compose.ui.test.performTextInput
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.example.data.local.AppDatabase
+import com.example.data.local.SkillProgressEntity
+import com.example.progress.Evidence
+import com.example.progress.Skill
+import com.example.progress.SkillState
 import com.example.data.local.QuizScoreEntity
 import com.example.quiz.QuizEngine
 import kotlinx.coroutines.runBlocking
@@ -286,8 +290,8 @@ class QuizAndFlashcardUiTest {
     @Test
     fun stats_doNotCountAMasteredAntarctica() {
         // Antarctica can still be graded in Flashcards, but it is not one of the countries being counted.
-        repeat(3) { viewModel.updateMastery("AQ", true) }
-        repeat(3) { viewModel.updateMastery("FR", true) }
+        mastered("AQ")
+        mastered("FR")
 
         tab("stats")
 
@@ -695,7 +699,15 @@ class QuizAndFlashcardUiTest {
     /** Writes reviews straight to the database, one after another, so the order of their effects is certain. */
     private fun review(code: String, vararg results: Boolean) = runBlocking {
         val dao = AppDatabase.getDatabase(ApplicationProvider.getApplicationContext()).userProgressDao()
-        results.forEachIndexed { i, correct -> dao.recordReview(code, correct, 1_000L + i) }
+        results.forEachIndexed { i, correct -> dao.recordAnswer(code, Skill.FLAG, correct, Evidence.FULL, 1_000L + i) }
+    }
+
+    /** Seeds a flag as mastered (box 3, score 80, next review a week away), which takes three due days to earn by playing. */
+    private fun mastered(code: String) = runBlocking {
+        val dao = AppDatabase.getDatabase(ApplicationProvider.getApplicationContext()).userProgressDao()
+        dao.upsertSkill(
+            SkillProgressEntity.of(code, Skill.FLAG, SkillState(score = 80, box = 3, dueAt = System.currentTimeMillis() + 7 * 86_400_000L, reviews = 3, correct = 3))
+        )
     }
 
     @Test

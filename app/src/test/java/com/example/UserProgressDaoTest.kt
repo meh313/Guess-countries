@@ -1,9 +1,15 @@
 package com.example
 
 import com.example.data.local.AppDatabase
+import com.example.data.local.QuizAnswerEntity
 import com.example.data.local.QuizScoreEntity
+import com.example.data.local.SkillProgressEntity
 import com.example.data.local.UserProgressEntity
 import com.example.data.model.CountryRepository
+import com.example.progress.Evidence
+import com.example.progress.Grade
+import com.example.progress.Skill
+import com.example.progress.SkillState
 import com.example.support.inMemoryDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -30,6 +36,8 @@ class UserProgressDaoTest {
     private lateinit var db: AppDatabase
     private val dao get() = db.userProgressDao()
 
+    private val day = 86_400_000L
+
     @Before
     fun setUp() {
         db = inMemoryDatabase()
@@ -43,11 +51,19 @@ class UserProgressDaoTest {
     private fun row(code: String): UserProgressEntity? =
         runBlocking { dao.getAllProgress().first() }.firstOrNull { it.countryCode == code }
 
+    private fun skill(code: String, skill: Skill = Skill.FLAG): SkillProgressEntity? =
+        runBlocking { dao.getAllSkills().first() }.firstOrNull { it.countryCode == code && it.skill == skill.name }
+
+    private fun answer(code: String, correct: Boolean, now: Long, skill: Skill = Skill.FLAG, evidence: Evidence = Evidence.FULL) =
+        runBlocking { dao.recordAnswer(code, skill, correct, evidence, now) }
+
+    // --- bookmarks ----------------------------------------------------------------------------------------------------
+
     @Test
     fun toggleFavorite_createsTheRowOnFirstUseAndFlipsItEachTime() {
         runBlocking { dao.toggleFavorite("FR", 100L) }
         assertTrue(row("FR")!!.isFavorite)
-        assertEquals(0, row("FR")!!.masteryScore)
+        assertNull("a bookmark is not a review", skill("FR"))
 
         runBlocking { dao.toggleFavorite("FR", 200L) }
         assertFalse(row("FR")!!.isFavorite)
@@ -66,106 +82,148 @@ class UserProgressDaoTest {
         assertNull(row("IT"))
     }
 
-    @Test
-    fun correctReviews_add25PointsUpTo100AndCountEveryReview() {
-        val seen = mutableListOf<Int>()
-        repeat(5) {
-            runBlocking { dao.recordReview("FR", true, 10L + it) }
-            seen += row("FR")!!.masteryScore
-        }
+    // --- answers ------------------------------------------------------------------------------------------------------
 
-        assertEquals(listOf(25, 50, 75, 100, 100), seen)
-        val r = row("FR")!!
-        assertEquals(5, r.timesReviewed)
-        assertEquals(5, r.timesCorrect)
-        assertEquals(14L, r.lastReviewed)
+    @Test
+    fun theFirstRightAnswer_createsTheCountryRowAndAFlagRowInBoxOne() {
+        val state = answer("FR", true, 10L)
+
+        assertEquals(SkillState(score = 20, box = 1, dueAt = 10L + day, reviews = 1, correct = 1, lastResult = 1, lastReviewed = 10L), state)
+        assertEquals(state, skill("FR")!!.toState())
+        assertEquals(10L, row("FR")!!.lastReviewed)
+        assertFalse(row("FR")!!.isFavorite)
     }
 
     @Test
-    fun wrongReviews_remove10PointsDownTo0WithoutCountingAsCorrect() {
-        runBlocking {
-            dao.recordReview("FR", true, 1L) // 25
-            dao.recordReview("FR", false, 2L) // 15
-            dao.recordReview("FR", false, 3L) // 5
-            dao.recordReview("FR", false, 4L) // 0, not -5
-            dao.recordReview("FR", false, 5L) // still 0
-        }
+    fun answersInTheSameSittingRaiseTheScoreButNotTheBox_answersOnDueDaysPromote() {
+        answer("FR", true, 10L)
+        answer("FR", true, 20L)
+        assertEquals(40, skill("FR")!!.score)
+        assertEquals(1, skill("FR")!!.box)
 
-        val r = row("FR")!!
-        assertEquals(0, r.masteryScore)
-        assertEquals(5, r.timesReviewed)
-        assertEquals(1, r.timesCorrect)
-        assertEquals(5L, r.lastReviewed)
+        answer("FR", true, 10L + day) // due: box 2
+        answer("FR", true, 10L + 5 * day) // due: box 3
+        val r = skill("FR")!!
+        assertEquals(3, r.box)
+        assertEquals(80, r.score)
+        assertEquals(4, r.reviews)
+        assertEquals(4, r.correct)
     }
 
     @Test
-    fun bookmarkAndMasteryDoNotOverwriteEachOther() {
-        runBlocking {
-            dao.toggleFavorite("FR", 1L)
-            dao.recordReview("FR", true, 2L)
-            dao.recordReview("FR", true, 3L)
-        }
-        val afterReviews = row("FR")!!
-        assertTrue("a review must not clear the bookmark", afterReviews.isFavorite)
-        assertEquals(50, afterReviews.masteryScore)
+    fun aWrongAnswer_resetsTheBoxAndCountsTheReviewOnly() {
+        answer("FR", true, 1L)
+        answer("FR", true, 1L + day)
+        answer("FR", false, 2L + day)
+
+        val r = skill("FR")!!
+        assertEquals(20, r.score)
+        assertEquals(1, r.box)
+        assertEquals(3, r.reviews)
+        assertEquals(2, r.correct)
+        assertEquals(-1, r.lastResult)
+        assertEquals(2L + day, r.lastReviewed)
+    }
+
+    @Test
+    fun theFlagAndTheCapitalAreKeptApart() {
+        answer("FR", true, 1L, skill = Skill.FLAG)
+        answer("FR", false, 2L, skill = Skill.CAPITAL)
+
+        assertEquals(20, skill("FR", Skill.FLAG)!!.score)
+        assertEquals(1, skill("FR", Skill.FLAG)!!.correct)
+        assertEquals(0, skill("FR", Skill.CAPITAL)!!.score)
+        assertEquals(1, skill("FR", Skill.CAPITAL)!!.reviews)
+        assertEquals("the country row is shared", 2L, row("FR")!!.lastReviewed)
+    }
+
+    @Test
+    fun lightEvidence_staysUnderTheCap() {
+        repeat(12) { answer("FR", true, 1L + it * day, evidence = Evidence.LIGHT) }
+
+        assertEquals(60, skill("FR")!!.score)
+        assertEquals(1, skill("FR")!!.box)
+    }
+
+    @Test
+    fun grades_goThroughTheSameRules() {
+        runBlocking { dao.recordGrade("FR", Skill.FLAG, Grade.GOOD, 5L) }
+        assertEquals(8, skill("FR")!!.score)
+
+        runBlocking { dao.recordGrade("FR", Skill.FLAG, Grade.AGAIN, 6L) }
+        val r = skill("FR")!!
+        assertEquals(0, r.score)
+        assertEquals(1, r.box)
+        assertEquals(2, r.reviews)
+        assertEquals(6L + day, r.dueAt)
+    }
+
+    @Test
+    fun bookmarkAndAnswersDoNotOverwriteEachOther() {
+        runBlocking { dao.toggleFavorite("FR", 1L) }
+        answer("FR", true, 2L)
+        answer("FR", true, 3L)
+        assertTrue("an answer must not clear the bookmark", row("FR")!!.isFavorite)
+        assertEquals(40, skill("FR")!!.score)
 
         runBlocking { dao.toggleFavorite("FR", 4L) }
-        val afterToggle = row("FR")!!
-        assertFalse(afterToggle.isFavorite)
-        assertEquals("toggling must not reset mastery", 50, afterToggle.masteryScore)
-        assertEquals(2, afterToggle.timesReviewed)
+        assertFalse(row("FR")!!.isFavorite)
+        assertEquals("toggling must not reset the skill", 40, skill("FR")!!.score)
+        assertEquals(2, skill("FR")!!.reviews)
     }
 
     @Test
-    fun reviewingACountryNeverSeenBefore_startsFromAnEmptyRow() {
-        runBlocking { dao.recordReview("JP", false, 9L) }
-
-        val r = row("JP")!!
-        assertFalse(r.isFavorite)
-        assertEquals(0, r.masteryScore)
-        assertEquals(1, r.timesReviewed)
-    }
-
-    @Test
-    fun manyConcurrentReviews_areAllCounted() {
-        // A read-modify-write from a stale snapshot loses updates under this load.
+    fun manyConcurrentAnswers_areAllCounted() {
+        // Every answer is its own transaction on Room's single writer, so none is lost under this load.
         runBlocking {
             coroutineScope {
-                (1..200).map { i -> async(Dispatchers.Default) { dao.recordReview("FR", true, i.toLong()) } }.awaitAll()
+                (1..200).map { i -> async(Dispatchers.Default) { dao.recordAnswer("FR", Skill.FLAG, true, Evidence.FULL, i.toLong()) } }.awaitAll()
             }
         }
 
-        val r = row("FR")!!
-        assertEquals(200, r.timesReviewed)
-        assertEquals(200, r.timesCorrect)
-        assertEquals(100, r.masteryScore)
+        val r = skill("FR")!!
+        assertEquals(200, r.reviews)
+        assertEquals(200, r.correct)
+        assertEquals(100, r.score)
+        assertEquals("all in one sitting: one promotion only", 1, r.box)
     }
 
     @Test
-    fun concurrentBookmarkTapsAndReviews_doNotLoseEachOther() {
+    fun concurrentBookmarkTapsAndAnswers_doNotLoseEachOther() {
         runBlocking {
             coroutineScope {
                 val taps = (1..101).map { i -> async(Dispatchers.Default) { dao.toggleFavorite("FR", i.toLong()) } }
-                val reviews = (1..100).map { i -> async(Dispatchers.Default) { dao.recordReview("FR", i % 2 == 0, i.toLong()) } }
-                (taps + reviews).awaitAll()
+                val answers = (1..100).map { i -> async(Dispatchers.Default) { dao.recordAnswer("FR", Skill.FLAG, i % 2 == 0, Evidence.FULL, i.toLong()) } }
+                (taps + answers).awaitAll()
             }
         }
 
-        val r = row("FR")!!
-        assertTrue("101 taps leave the bookmark on", r.isFavorite)
-        assertEquals("every review is counted", 100, r.timesReviewed)
-        assertEquals(50, r.timesCorrect)
+        assertTrue("101 taps leave the bookmark on", row("FR")!!.isFavorite)
+        assertEquals("every answer is counted", 100, skill("FR")!!.reviews)
+        assertEquals(50, skill("FR")!!.correct)
     }
 
     @Test
-    fun repository_usesItsClockForReviewsAndQuizResults() {
+    fun upsertSkill_seedsAStateAsItIs() {
+        val state = SkillState(score = 80, box = 3, dueAt = 7 * day, reviews = 3, correct = 3, lastResult = 1, lastReviewed = 6L)
+        runBlocking { dao.upsertSkill(SkillProgressEntity.of("BR", Skill.FLAG, state)) }
+
+        assertEquals(state, skill("BR")!!.toState())
+        assertNull("seeding a skill does not create the country row", row("BR"))
+    }
+
+    // --- quizzes ------------------------------------------------------------------------------------------------------
+
+    @Test
+    fun repository_usesItsClockForAnswersAndQuizResults() {
         val repository = CountryRepository(dao, now = { 777L })
 
         runBlocking {
-            repository.recordReview("FR", true)
+            repository.recordAnswer("FR", Skill.FLAG, true, Evidence.FULL)
             repository.saveQuizScore("FLAG_NAME", 120, 190, "Global")
         }
 
+        assertEquals(777L, skill("FR")!!.lastReviewed)
         assertEquals(777L, row("FR")!!.lastReviewed)
         assertEquals(777L, runBlocking { dao.getQuizHistory().first() }.single().timestamp)
     }
@@ -174,7 +232,7 @@ class UserProgressDaoTest {
     fun quizTimestamps_listsWhenEveryQuizWasSaved() {
         runBlocking {
             dao.insertQuizScore(QuizScoreEntity(mode = "FLAG_NAME", score = 10, total = 190, continentFilter = "Global", timestamp = 300L))
-            dao.insertQuizScore(QuizScoreEntity(mode = "BLITZ", score = 50, total = 4, continentFilter = "Global", timestamp = 100L))
+            dao.insertQuizScore(QuizScoreEntity(mode = "BLITZ", score = 50, total = 0, continentFilter = "Global", timestamp = 100L, correct = 4))
             dao.insertQuizScore(QuizScoreEntity(mode = "CAPITAL", score = 0, total = 190, continentFilter = "Asia", timestamp = 200L))
         }
 
@@ -186,17 +244,56 @@ class UserProgressDaoTest {
         assertTrue(runBlocking { dao.quizTimestamps() }.isEmpty())
     }
 
-    @Test
-    fun insertQuizScoreAfterReading_returnsTheEarlierQuizzesAndSavesTheNewOne() {
-        fun quiz(at: Long) = QuizScoreEntity(mode = "FLAG_NAME", score = 10, total = 190, continentFilter = "Global", timestamp = at)
+    private fun quiz(at: Long) = QuizScoreEntity(mode = "FLAG_NAME", score = 10, total = 190, continentFilter = "Global", timestamp = at)
 
-        val first = runBlocking { dao.insertQuizScoreAfterReading(quiz(100L)) }
-        val second = runBlocking { dao.insertQuizScoreAfterReading(quiz(200L)) }
+    private fun answerRow(position: Int, target: String, picked: String?, correct: Boolean) =
+        QuizAnswerEntity(quizId = 0, position = position, targetCode = target, pickedCode = picked, pickedText = picked, isCorrect = correct, timeMs = 1_500L)
+
+    @Test
+    fun insertQuizWithAnswers_returnsTheEarlierQuizzesAndSavesTheNewOne() {
+        val first = runBlocking { dao.insertQuizWithAnswers(quiz(100L), emptyList()) }
+        val second = runBlocking { dao.insertQuizWithAnswers(quiz(200L), emptyList()) }
         val third = runBlocking { dao.insertQuizScoreAfterReading(quiz(300L)) }
 
         assertEquals(emptyList<Long>(), first)
         assertEquals(listOf(100L), second)
         assertEquals(listOf(100L, 200L), third.sorted())
         assertEquals(listOf(100L, 200L, 300L), runBlocking { dao.quizTimestamps() }.sorted())
+    }
+
+    @Test
+    fun insertQuizWithAnswers_storesTheAnswersUnderTheQuiz() {
+        runBlocking { dao.insertQuizWithAnswers(quiz(100L), listOf(answerRow(0, "FR", "FR", true), answerRow(1, "DE", "AT", false), answerRow(2, "JP", null, false))) }
+
+        val id = runBlocking { dao.getQuizHistory().first() }.single().id
+        val answers = runBlocking { dao.answersOf(id) }
+        assertEquals(listOf("FR", "DE", "JP"), answers.map { it.targetCode })
+        assertEquals(listOf(true, false, false), answers.map { it.isCorrect })
+        assertEquals("AT", answers[1].pickedCode)
+        assertNull("a time-out picked nothing", answers[2].pickedCode)
+        assertTrue(answers.all { it.quizId == id })
+    }
+
+    @Test
+    fun recentTargets_listsTheTargetsOfTheLastFewQuizzesOnly() {
+        runBlocking {
+            dao.insertQuizWithAnswers(quiz(100L), listOf(answerRow(0, "FR", "FR", true)))
+            dao.insertQuizWithAnswers(quiz(200L), listOf(answerRow(0, "DE", "DE", true)))
+            dao.insertQuizWithAnswers(quiz(300L), listOf(answerRow(0, "JP", "JP", true), answerRow(1, "BR", "AR", false)))
+            dao.insertQuizWithAnswers(QuizScoreEntity(mode = "FLASHCARDS", score = 0, total = 0, continentFilter = "Due today", timestamp = 400L), emptyList())
+        }
+
+        assertEquals(setOf("DE", "JP", "BR"), runBlocking { dao.recentTargets(2).first() }.toSet())
+        assertEquals(setOf("FR", "DE", "JP", "BR"), runBlocking { dao.recentTargets(5).first() }.toSet())
+    }
+
+    @Test
+    fun deletingAQuiz_removesItsAnswers() {
+        runBlocking { dao.insertQuizWithAnswers(quiz(100L), listOf(answerRow(0, "FR", "FR", true))) }
+        val id = runBlocking { dao.getQuizHistory().first() }.single().id
+
+        db.openHelper.writableDatabase.execSQL("DELETE FROM quiz_scores WHERE id = $id")
+
+        assertTrue(runBlocking { dao.answersOf(id) }.isEmpty())
     }
 }

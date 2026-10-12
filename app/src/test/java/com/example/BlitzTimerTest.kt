@@ -223,7 +223,7 @@ class BlitzTimerTest {
         assertTrue(session.isFinished)
         assertEquals(0, session.score)
         db.awaitPendingWrites()
-        val reviews = runBlocking { db.userProgressDao().getAllProgress().first() }
+        val reviews = runBlocking { db.userProgressDao().getAllSkills().first() }
         assertTrue("no review for $shown", reviews.none { it.countryCode == shown })
     }
 }

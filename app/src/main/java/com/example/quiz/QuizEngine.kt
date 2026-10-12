@@ -49,7 +49,9 @@ data class QuizQuestion(
     val targetCountry: Country,
     val questionText: String,
     val options: List<String>,
-    val correctAnswerIndex: Int
+    val correctAnswerIndex: Int,
+    /** The country behind each option, in the order of [options]; null where the option is not a country (a continent). */
+    val optionCodes: List<String?> = List(options.size) { null }
 )
 
 /** Pure quiz rules: which countries are eligible, how questions are built and how answers score. */
@@ -138,37 +140,34 @@ object QuizEngine {
     private fun question(pool: List<Country>, target: Country, mode: QuizMode, lookAlikes: Int, random: Random): QuizQuestion =
         when (mode) {
             QuizMode.FLAG_NAME ->
-                choice(target, "Which country does this flag belong to?", target.name, wrongAnswers(pool, target, random, lookAlikes) { it.name }, random)
+                countryChoice(target, "Which country does this flag belong to?", wrongCountries(pool, target, random, lookAlikes) { it.name }, random) { it.name }
             QuizMode.PICK_FLAG ->
-                choice(target, "Which of these is the flag of ${target.name}?", target.code, wrongAnswers(pool, target, random, lookAlikes) { it.code }, random)
+                countryChoice(target, "Which of these is the flag of ${target.name}?", wrongCountries(pool, target, random, lookAlikes) { it.code }, random) { it.code }
             QuizMode.CAPITAL ->
-                choice(target, "What is the capital city of ${target.name}?", target.quizCapital, wrongAnswers(pool, target, random, 0) { it.quizCapital }, random)
-            QuizMode.CONTINENT ->
-                choice(
-                    target,
-                    "Which continent does this flag belong to?",
-                    target.continent,
-                    (ANSWER_CONTINENTS - target.continent).shuffled(random).take(DISTRACTORS),
-                    random
-                )
+                countryChoice(target, "What is the capital city of ${target.name}?", wrongCountries(pool, target, random, 0) { it.quizCapital }, random) { it.quizCapital }
+            QuizMode.CONTINENT -> {
+                val wrong = (ANSWER_CONTINENTS - target.continent).shuffled(random).take(DISTRACTORS)
+                val options = (wrong + target.continent).shuffled(random)
+                QuizQuestion(target, "Which continent does this flag belong to?", options, options.indexOf(target.continent))
+            }
             QuizMode.BLITZ ->
-                choice(target, "Which country is this?", target.name, wrongAnswers(pool, target, random, lookAlikes) { it.name }, random)
+                countryChoice(target, "Which country is this?", wrongCountries(pool, target, random, lookAlikes) { it.name }, random) { it.name }
             QuizMode.SPEED_MATCH ->
-                choice(target, "Identify the country for this flag:", target.name, wrongAnswers(pool, target, random, lookAlikes) { it.name }, random)
+                countryChoice(target, "Identify the country for this flag:", wrongCountries(pool, target, random, lookAlikes) { it.name }, random) { it.name }
         }
 
     /**
-     * Distractors that differ from the answer text, so no two options can look identical. Up to [lookAlikes] of them
-     * are flags that look like the target's (only those inside [pool], so a Europe quiz never offers Chad); the rest
-     * are random members of [pool].
+     * Countries whose answer text differs from the target's and from each other, so no two options can look identical.
+     * Up to [lookAlikes] of them have flags that look like the target's (only those inside [pool], so a Europe quiz
+     * never offers Chad); the rest are random members of [pool].
      */
-    private fun wrongAnswers(
+    private fun wrongCountries(
         pool: List<Country>,
         target: Country,
         random: Random,
         lookAlikes: Int,
         answerOf: (Country) -> String
-    ): List<String> {
+    ): List<Country> {
         val answer = answerOf(target)
         val similar =
             if (lookAlikes <= 0) {
@@ -177,31 +176,32 @@ object QuizEngine {
                 val byCode = pool.associateBy { it.code }
                 FlagLookAlikes.of(target.code).asSequence()
                     .mapNotNull { byCode[it] }
-                    .map(answerOf)
-                    .filter { it != answer }
-                    .distinct()
+                    .filter { answerOf(it) != answer }
+                    .distinctBy(answerOf)
                     .toList()
                     .shuffled(random)
                     .take(lookAlikes)
             }
+        val taken = similar.map(answerOf).toSet()
         val rest = pool.asSequence()
             .filter { it != target }
-            .map(answerOf)
-            .filter { it != answer && it !in similar }
-            .distinct()
+            .filter { answerOf(it) != answer && answerOf(it) !in taken }
+            .distinctBy(answerOf)
             .toList()
             .shuffled(random)
         return (similar + rest).take(DISTRACTORS)
     }
 
-    private fun choice(
+    /** A question whose options are countries, shown as [answerOf] them; the country behind each option is kept. */
+    private fun countryChoice(
         target: Country,
         text: String,
-        answer: String,
-        wrong: List<String>,
-        random: Random
+        wrong: List<Country>,
+        random: Random,
+        answerOf: (Country) -> String
     ): QuizQuestion {
-        val options = (wrong + answer).shuffled(random)
-        return QuizQuestion(target, text, options, options.indexOf(answer))
+        val countries = (wrong + target).shuffled(random)
+        val options = countries.map(answerOf)
+        return QuizQuestion(target, text, options, countries.indexOf(target), countries.map { it.code })
     }
 }
