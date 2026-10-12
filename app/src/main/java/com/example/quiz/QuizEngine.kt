@@ -75,6 +75,12 @@ object QuizEngine {
     /** A scope that is not a place: the countries whose review in the quiz's skill is due. */
     const val DUE = "Due today"
 
+    /** A scope that is not a place: the countries the quiz just finished got wrong. */
+    const val MISTAKES = "Mistakes"
+
+    /** Scopes whose targets are hand-picked and whose wrong answers come from the whole world; they run over one country if need be. */
+    val HAND_PICKED_SCOPES = setOf(DUE, MISTAKES)
+
     private const val DISTRACTORS = 3
     private val ANSWER_CONTINENTS = listOf("Africa", "Americas", "Asia", "Europe", "Oceania")
 
@@ -105,11 +111,11 @@ object QuizEngine {
     }
 
     /**
-     * Number of questions a quiz over [poolSize] countries has; 0 when the pool is too small. The due scope takes
-     * its wrong answers from the whole world, so it runs over a single country if that is all that is due.
+     * Number of questions a quiz over [poolSize] countries has; 0 when the pool is too small. The due and mistakes
+     * scopes take their wrong answers from the whole world, so they run over a single country if that is all there is.
      */
     fun questionCount(poolSize: Int, scope: String = "Global"): Int = when {
-        scope == DUE -> minOf(MAX_QUESTIONS, poolSize)
+        scope in HAND_PICKED_SCOPES -> minOf(MAX_QUESTIONS, poolSize)
         poolSize < MIN_POOL -> 0
         else -> minOf(MAX_QUESTIONS, poolSize)
     }

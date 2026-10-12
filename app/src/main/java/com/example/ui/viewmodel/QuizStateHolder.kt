@@ -148,6 +148,44 @@ class QuizStateHolder(
         _finishOutcome.value = null
     }
 
+    /** The finished quiz again from the top: the same questions, saved again when finished. */
+    fun retry() {
+        val session = _session.value?.takeIf { it.isFinished } ?: return
+        _finishOutcome.value = null
+        _session.value = QuizSession(
+            mode = session.mode,
+            scope = session.scope,
+            questions = session.questions,
+            difficulty = session.difficulty,
+            questionStartedAt = clock(),
+            startedAt = clock()
+        )
+    }
+
+    /**
+     * A quiz over the countries the finished quiz got wrong, in the order they were missed (up to ten), with the
+     * wrong answers from the whole world. The blitz's mistakes become a Flag → Country quiz; every other mode keeps
+     * its kind of question. Nothing happens when every answer was right.
+     */
+    fun practiseMistakes() {
+        val session = _session.value?.takeIf { it.isFinished } ?: return
+        val missed = session.misses.map { it.question.targetCountry }.distinct().take(QuizEngine.MAX_QUESTIONS)
+        if (missed.isEmpty()) return
+        val mode = if (session.mode.isEndless) QuizMode.FLAG_NAME else session.mode
+        val world = QuizEngine.poolFor("Global", repository.allCountries)
+        val questions = QuizEngine.generate(missed, mode, random, session.difficulty, world, order = { it })
+        if (questions.isEmpty()) return
+        _finishOutcome.value = null
+        _session.value = QuizSession(
+            mode = mode,
+            scope = QuizEngine.MISTAKES,
+            questions = questions,
+            difficulty = session.difficulty,
+            questionStartedAt = clock(),
+            startedAt = clock()
+        )
+    }
+
     /** A quiz answer: full evidence about the flag or the capital, except a continent pick, which says little. */
     private fun record(session: QuizSession, correct: Boolean) {
         val mode = session.mode

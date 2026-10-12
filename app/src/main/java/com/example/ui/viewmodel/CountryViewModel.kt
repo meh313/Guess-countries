@@ -170,6 +170,12 @@ class CountryViewModel(
 
     fun endQuiz() = quiz.end()
 
+    /** The finished quiz again from the top. */
+    fun retryQuiz() = quiz.retry()
+
+    /** A quiz over the countries the finished quiz got wrong; see [QuizStateHolder.practiseMistakes]. */
+    fun practiseMistakes() = quiz.practiseMistakes()
+
     // --- Explore ----------------------------------------------------------------------------------------------------
 
     val filteredCountries: StateFlow<List<Country>> = combine(

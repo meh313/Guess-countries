@@ -171,11 +171,15 @@ class QuizEngineTest {
     }
 
     @Test
-    fun questionCount_inTheDueScope_runsOverAsFewAsOneCountry() {
-        assertEquals(0, QuizEngine.questionCount(0, QuizEngine.DUE))
-        assertEquals(1, QuizEngine.questionCount(1, QuizEngine.DUE))
-        assertEquals(3, QuizEngine.questionCount(3, QuizEngine.DUE))
-        assertEquals(10, QuizEngine.questionCount(25, QuizEngine.DUE))
+    fun questionCount_inTheHandPickedScopes_runsOverAsFewAsOneCountry() {
+        assertEquals(setOf(QuizEngine.DUE, QuizEngine.MISTAKES), QuizEngine.HAND_PICKED_SCOPES)
+        for (scope in QuizEngine.HAND_PICKED_SCOPES) {
+            assertEquals(scope, 0, QuizEngine.questionCount(0, scope))
+            assertEquals(scope, 1, QuizEngine.questionCount(1, scope))
+            assertEquals(scope, 3, QuizEngine.questionCount(3, scope))
+            assertEquals(scope, 10, QuizEngine.questionCount(25, scope))
+        }
+        assertTrue(QuizEngine.MISTAKES !in QuizEngine.SCOPES && QuizEngine.poolFor(QuizEngine.MISTAKES, allCountries).isEmpty())
         // Every other scope keeps the minimum.
         assertEquals(0, QuizEngine.questionCount(3, QuizEngine.WEAK_SPOTS))
         assertEquals(0, QuizEngine.questionCount(3, "Europe"))

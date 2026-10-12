@@ -27,7 +27,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.GridView
@@ -82,7 +81,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.example.progress.PracticeStreak
 import com.example.progress.Skill
 import com.example.progress.SkillMastery
 import com.example.quiz.QuizDifficulty
@@ -90,6 +88,7 @@ import com.example.quiz.QuizEngine
 import com.example.quiz.QuizMode
 import com.example.ui.components.FlagOptionGrid
 import com.example.ui.components.FlagView
+import com.example.ui.components.MissComparison
 import com.example.ui.theme.StreakColor
 import com.example.ui.viewmodel.CountryViewModel
 import kotlinx.coroutines.delay
@@ -427,12 +426,26 @@ fun QuizScreen(
                 )
             }
         }
+    } else if (active.isFinished) {
+        // SCORE SCREEN, in the window: the misses with both flags, and the ways on.
+        val streakOutcome by viewModel.finishOutcome.collectAsStateWithLifecycle()
+        val streak by viewModel.streak.collectAsStateWithLifecycle()
+        QuizResultScreen(
+            session = active,
+            outcome = streakOutcome,
+            streakDays = streak.current,
+            countriesByCode = countriesByCode,
+            onRetry = { viewModel.retryQuiz() },
+            onPractiseMistakes = { viewModel.practiseMistakes() },
+            onDone = { viewModel.endQuiz() },
+            modifier = modifier
+        )
     } else {
         // ACTIVE QUIZ SCREEN
         val q = active.current
 
         // The quiz now outlives the screen, so offer a way out (Back asks first).
-        BackHandler(enabled = !active.isFinished) { showQuitConfirm = true }
+        BackHandler { showQuitConfirm = true }
 
         // The clocks only run while the quiz is on screen: a call, a tab switch or the app going to the background
         // pauses the question and the blitz where they stand, and they go on with the time they had left.
@@ -768,6 +781,23 @@ fun QuizScreen(
                                 .padding(bottom = 6.dp)
                                 .testTag("quiz_result")
                         )
+                        // A wrong text answer shows the flag that was picked beside the right one, the one time the two
+                        // are seen together. The flag grid names its flags itself, a continent has no flag, and a blitz
+                        // has no time.
+                        val pickedCountry = active.selectedAnswerIndex
+                            ?.takeIf { it != q.correctAnswerIndex && !active.timedOut }
+                            ?.let { q.optionCodes.getOrNull(it) }
+                            ?.let { countriesByCode[it] }
+                        if (pickedCountry != null && !active.mode.isEndless && !active.mode.answersAreFlags) {
+                            val capitals = active.mode == QuizMode.CAPITAL
+                            MissComparison(
+                                picked = pickedCountry,
+                                correct = q.targetCountry,
+                                pickedCaption = if (capitals) "${pickedCountry.quizCapital}, ${pickedCountry.name}" else pickedCountry.name,
+                                correctCaption = if (capitals) "${q.targetCountry.quizCapital}, ${q.targetCountry.name}" else q.targetCountry.name,
+                                modifier = Modifier.padding(bottom = 10.dp)
+                            )
+                        }
                         // A blitz moves on in under a second: no time for the capital and the fun fact.
                         if (!active.mode.isEndless) {
                             Text(
@@ -821,73 +851,6 @@ fun QuizScreen(
         )
     }
 
-    // Finish Celebration Dialog
-    if (active?.isFinished == true) {
-        val streakOutcome by viewModel.finishOutcome.collectAsStateWithLifecycle()
-        AlertDialog(
-            onDismissRequest = { viewModel.endQuiz() },
-            title = {
-                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                    Icon(
-                        imageVector = Icons.Default.EmojiEvents,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.secondary,
-                        modifier = Modifier.size(56.dp)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(if (active.mode.isEndless) "Time's up!" else "Quiz Complete!", fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
-                }
-            },
-            text = {
-                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = if (active.mode.isEndless) "${active.correct} correct · ${active.score} points"
-                        else "Your Score: ${active.score} Points",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    if (active.mode.usesLookAlikes) {
-                        Text(
-                            text = "Answers: ${active.difficulty.title}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.testTag("quiz_finish_difficulty")
-                        )
-                    }
-                    streakOutcome?.let { outcome ->
-                        Text(
-                            text = when (outcome.kind) {
-                                PracticeStreak.Kind.STARTED -> "Streak started: day 1"
-                                PracticeStreak.Kind.KEPT -> "Streak kept: ${outcome.days} days"
-                                PracticeStreak.Kind.ALREADY_COUNTED -> "${outcome.days}-day streak, already counted today"
-                            },
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.secondary,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier
-                                .padding(top = 8.dp, bottom = 4.dp)
-                                .testTag("quiz_finish_streak")
-                        )
-                    }
-                    Text(
-                        text = "Great job expanding your geographical knowledge!",
-                        style = MaterialTheme.typography.bodyMedium,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = { viewModel.endQuiz() },
-                    modifier = Modifier.testTag("quiz_finish_done_btn")
-                ) {
-                    Text("Done")
-                }
-            }
-        )
-    }
 }
 
 /** A short confirm or reject buzz for an answer (a plain key tap before Android 11). */

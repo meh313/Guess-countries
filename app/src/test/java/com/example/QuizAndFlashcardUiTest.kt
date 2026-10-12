@@ -1,6 +1,5 @@
 package com.example
 
-import androidx.activity.ComponentDialog
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
@@ -60,7 +59,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import org.robolectric.shadows.ShadowDialog
 
 /** Drives the real MainActivity on a small phone (360x640dp) the way a player would. */
 @RunWith(RobolectricTestRunner::class)
@@ -123,7 +121,8 @@ class QuizAndFlashcardUiTest {
         }
 
         rule.onNodeWithText("Quiz Complete!").assertIsDisplayed()
-        rule.onNodeWithTag("quiz_finish_done_btn").performClick()
+        // The score screen scrolls (a list of misses can be long); Done sits at its end.
+        rule.onNodeWithTag("quiz_finish_done_btn").performScrollTo().performClick()
         rule.waitForIdle()
         rule.onNodeWithTag("start_quiz_btn").performScrollTo().assertIsDisplayed()
     }
@@ -382,7 +381,7 @@ class QuizAndFlashcardUiTest {
     }
 
     @Test
-    fun finishedQuizDialog_canBeDismissedWithBack() {
+    fun finishedQuiz_backReturnsToSetup() {
         startQuiz("Africa")
         repeat(questionsFor("Africa")) {
             answerFirstOption()
@@ -390,13 +389,155 @@ class QuizAndFlashcardUiTest {
         }
         rule.onNodeWithText("Quiz Complete!").assertIsDisplayed()
 
-        // A Compose dialog lives in its own window, so Back must go to the dialog, not the activity.
-        val dialog = ShadowDialog.getLatestDialog() as ComponentDialog
-        rule.runOnUiThread { dialog.onBackPressedDispatcher.onBackPressed() }
+        rule.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
         rule.waitForIdle()
 
         rule.onNodeWithText("Quiz Complete!").assertDoesNotExist()
         rule.onNodeWithTag("start_quiz_btn").performScrollTo().assertIsDisplayed()
+    }
+
+    // --- The score screen ---------------------------------------------------------------------------------------------
+
+    /** Plays the Africa quiz through, answering every question wrong except those in [rightOnes] (0-based). */
+    private fun playAfricaMissing(rightOnes: Set<Int> = emptySet()): List<Pair<String, String>> {
+        startQuiz("Africa")
+        val missed = mutableListOf<Pair<String, String>>()
+        repeat(questionsFor("Africa")) { n ->
+            val q = viewModel.quizSession.value!!.current
+            val pick = if (n in rightOnes) q.correctAnswerIndex else (q.correctAnswerIndex + 1) % q.options.size
+            if (n !in rightOnes) missed += q.targetCountry.code to q.optionCodes[pick]!!
+            rule.onNodeWithTag("quiz_option_$pick").performScrollTo().performClick()
+            rule.waitForIdle()
+            goNext()
+        }
+        rule.onNodeWithText("Quiz Complete!").assertIsDisplayed()
+        return missed
+    }
+
+    @Test
+    fun quizResult_countsTheRightAnswersAndListsEveryMissWithBothFlags() {
+        val missed = playAfricaMissing(rightOnes = setOf(0, 2))
+        val total = questionsFor("Africa")
+
+        rule.onNodeWithTag("quiz_finish_correct").assert(hasText("2 / $total correct"))
+        rule.onNodeWithTag("quiz_finish_misses").performScrollTo()
+        rule.onNodeWithText("Mistakes (${total - 2})").assertIsDisplayed()
+        missed.forEach { (target, picked) ->
+            val targetName = allCountries.single { it.code == target }.name
+            val pickedName = allCountries.single { it.code == picked }.name
+            rule.onNodeWithTag("quiz_miss_${target.lowercase()}").performScrollTo()
+                .assert(SemanticsMatcher.expectValue(SemanticsProperties.ContentDescription, listOf("$targetName. You picked $pickedName")))
+        }
+        rule.onNodeWithTag("quiz_practise_mistakes_btn").performScrollTo().assertIsDisplayed()
+        rule.onNodeWithTag("quiz_retry_btn").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun quizResult_withEveryAnswerRight_offersNoPractice() {
+        playAfricaMissing(rightOnes = (0 until questionsFor("Africa")).toSet())
+
+        rule.onNodeWithTag("quiz_finish_correct").assert(hasText("${questionsFor("Africa")} / ${questionsFor("Africa")} correct"))
+        rule.onNodeWithTag("quiz_finish_perfect").performScrollTo().assertIsDisplayed()
+        rule.onNodeWithTag("quiz_practise_mistakes_btn").assertDoesNotExist()
+        rule.onNodeWithTag("quiz_retry_btn").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun practiseMistakes_startsAQuizOverTheMissedCountriesOnly() {
+        val missed = playAfricaMissing(rightOnes = (0 until questionsFor("Africa")).toSet() - setOf(0, 2))
+        assertEquals(2, missed.size)
+
+        rule.onNodeWithTag("quiz_practise_mistakes_btn").performScrollTo().performClick()
+        rule.waitForIdle()
+
+        val s = viewModel.quizSession.value!!
+        assertEquals(QuizEngine.MISTAKES, s.scope)
+        assertEquals(missed.map { it.first }, s.questions.map { it.targetCountry.code })
+        rule.onNodeWithText("Question 1 of 2").assertIsDisplayed()
+        // The two misses again, right this time: logged under Mistakes, and the practice has nothing left to offer.
+        repeat(2) {
+            rule.onNodeWithTag("quiz_option_${viewModel.quizSession.value!!.current.correctAnswerIndex}").performScrollTo().performClick()
+            rule.waitForIdle()
+            goNext()
+        }
+        rule.onNodeWithTag("quiz_finish_perfect").performScrollTo().assertIsDisplayed()
+        rule.eventually("the practice quiz in the log") {
+            assertEquals(listOf("Africa", QuizEngine.MISTAKES), viewModel.quizHistory.value.map { it.continentFilter }.sorted())
+        }
+    }
+
+    @Test
+    fun retry_asksTheSameQuestionsAgainFromTheTop() {
+        playAfricaMissing(rightOnes = setOf(0))
+        val finished = viewModel.quizSession.value!!
+
+        rule.onNodeWithTag("quiz_retry_btn").performScrollTo().performClick()
+        rule.waitForIdle()
+
+        val again = viewModel.quizSession.value!!
+        assertEquals(finished.questions, again.questions)
+        assertEquals(0, again.currentIndex)
+        assertEquals(0, again.score)
+        assertFalse(again.isFinished)
+        rule.onNodeWithText("Question 1 of ${questionsFor("Africa")}").assertIsDisplayed()
+    }
+
+    @Test
+    fun aWrongTextAnswer_showsThePickedFlagBesideTheRightOne() {
+        startQuizIn(QuizMode.FLAG_NAME)
+        val q = viewModel.quizSession.value!!.current
+        val wrong = (q.correctAnswerIndex + 1) % q.options.size
+        val picked = allCountries.single { it.code == q.optionCodes[wrong] }
+
+        rule.onNodeWithTag("quiz_option_$wrong").performScrollTo().performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithTag("quiz_miss_comparison").performScrollTo()
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.ContentDescription, listOf("You picked ${picked.name}, the answer is ${q.targetCountry.name}")))
+        rule.onNodeWithText("You picked", useUnmergedTree = true).assertExists()
+        rule.onNodeWithText("Correct", useUnmergedTree = true).assertExists()
+    }
+
+    @Test
+    fun aRightTextAnswer_showsNoComparison() {
+        startQuizIn(QuizMode.FLAG_NAME)
+        val q = viewModel.quizSession.value!!.current
+
+        rule.onNodeWithTag("quiz_option_${q.correctAnswerIndex}").performScrollTo().performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithTag("quiz_miss_comparison").assertDoesNotExist()
+    }
+
+    @Test
+    fun aWrongCapital_comparesTheTwoCapitalsWithTheirCountries() {
+        startQuizIn(QuizMode.CAPITAL)
+        val q = viewModel.quizSession.value!!.current
+        val wrong = (q.correctAnswerIndex + 1) % q.options.size
+        val picked = allCountries.single { it.code == q.optionCodes[wrong] }
+
+        rule.onNodeWithTag("quiz_option_$wrong").performScrollTo().performClick()
+        rule.waitForIdle()
+
+        val expected = "You picked ${picked.quizCapital}, ${picked.name}, the answer is ${q.targetCountry.quizCapital}, ${q.targetCountry.name}"
+        rule.onNodeWithTag("quiz_miss_comparison").performScrollTo()
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.ContentDescription, listOf(expected)))
+    }
+
+    @Test
+    fun pickTheFlag_namesEveryFlagOnceAnswered_withoutTellingTalkBackTwice() {
+        startQuizIn(QuizMode.PICK_FLAG)
+        val q = viewModel.quizSession.value!!.current
+        val names = q.options.map { code -> allCountries.single { it.code == code }.name }
+        names.forEach { rule.onAllNodesWithText(it, useUnmergedTree = true).assertCountEquals(0) }
+
+        rule.onNodeWithTag("quiz_option_0").performScrollTo().performClick()
+        rule.waitForIdle()
+
+        names.forEach { rule.onNodeWithText(it, useUnmergedTree = true).assertExists() }
+        // The flag's description already names the country; the caption is hidden from accessibility.
+        rule.onNodeWithText(names[0], useUnmergedTree = true)
+            .assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.HideFromAccessibility))
     }
 
     @Test
@@ -880,7 +1021,7 @@ class QuizAndFlashcardUiTest {
         rule.eventually("the streak line") { rule.onNodeWithTag("quiz_finish_streak").assertIsDisplayed() }
         rule.onNodeWithText("Streak started: day 1").assertIsDisplayed()
 
-        rule.onNodeWithTag("quiz_finish_done_btn").performClick()
+        rule.onNodeWithTag("quiz_finish_done_btn").performScrollTo().performClick()
         rule.waitForIdle()
         finishAfricaQuiz()
 

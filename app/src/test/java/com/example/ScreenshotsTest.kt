@@ -119,17 +119,32 @@ class ScreenshotsTest {
         rule.waitForIdle()
         save("flashcards_weak_spots")
 
-        // Finishing a quiz: the score screen says what it did for the streak. Two earlier days give the Progress screen a run.
+        // A wrong text answer: the picked flag beside the right one.
         rule.openTab("quiz")
+        viewModel.startQuiz(QuizMode.FLAG_NAME, "Europe")
+        rule.waitForIdle()
+        val europe = viewModel.quizSession.value!!.current
+        viewModel.answerQuiz((europe.correctAnswerIndex + 1) % europe.options.size)
+        rule.waitForIdle()
+        rule.onNodeWithTag("quiz_miss_comparison").performScrollTo()
+        save("quiz_wrong_answer")
+        viewModel.endQuiz()
+        rule.waitForIdle()
+
+        // Finishing a quiz with one miss: the score screen says what it did for the streak and lists the miss. Two
+        // earlier days give the Progress screen a run.
         viewModel.startQuiz(QuizMode.FLAG_NAME, "Africa")
         rule.waitForIdle()
+        var missedOne = false
         while (viewModel.quizSession.value?.isFinished == false) {
-            viewModel.answerQuiz(viewModel.quizSession.value!!.current.correctAnswerIndex)
+            val q = viewModel.quizSession.value!!.current
+            viewModel.answerQuiz(if (missedOne) q.correctAnswerIndex else (q.correctAnswerIndex + 1) % q.options.size)
+            missedOne = true
             viewModel.nextQuizQuestion()
         }
         rule.awaitDelivered { viewModel.finishOutcome.value != null }
         rule.onNodeWithTag("quiz_finish_streak").assertIsDisplayed()
-        saveBitmap("quiz_finish_streak", drawLatestDialog())
+        save("quiz_finish")
         viewModel.endQuiz()
         rule.waitForIdle()
         listOf(1, 2).forEach { daysAgo ->
@@ -180,7 +195,7 @@ class ScreenshotsTest {
         }
         rule.awaitDelivered { viewModel.finishOutcome.value != null }
         rule.onNodeWithTag("quiz_finish_streak").assertIsDisplayed()
-        saveBitmap("quiz_finish_dark", drawLatestDialog())
+        save("quiz_finish_dark")
         viewModel.endQuiz()
         rule.waitForIdle()
 
