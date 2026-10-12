@@ -98,18 +98,6 @@ fun MainAppScreen(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    LaunchedEffect(requestedTab) {
-        val route = items.firstOrNull { it.route == requestedTab }?.route ?: return@LaunchedEffect
-        if (currentRoute != route) {
-            navController.navigate(route) {
-                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                launchSingleTop = true
-                restoreState = true
-            }
-        }
-        onTabRequestShown()
-    }
-
     // Don't keep talking after the user moves to another tab. The route is null while the back stack
     // is restored after a rotation, so only a change between two known routes counts.
     var lastRoute by rememberSaveable { mutableStateOf<String?>(null) }
@@ -176,6 +164,18 @@ fun MainAppScreen(
                 composable(Screen.Stats.route) {
                     StatsScreen(viewModel = viewModel)
                 }
+            }
+            // After the NavHost, whose own effects give the controller its graph: effects run in composition order.
+            LaunchedEffect(requestedTab) {
+                val route = items.firstOrNull { it.route == requestedTab }?.route ?: return@LaunchedEffect
+                if (currentRoute != route) {
+                    navController.navigate(route) {
+                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+                onTabRequestShown()
             }
         }
     }
