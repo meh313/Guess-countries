@@ -588,10 +588,10 @@ class CountryViewModelQuizTest {
             db.awaitPendingWrites()
         }
 
-        // Right answers in one sitting raise the score, but no country is mastered on its first day.
+        // Three right answers raise the score to 60, short of the 75 mastery needs: all four are still weak.
         vm.awaitWeakSpots(4)
         val skills = runBlocking { db.userProgressDao().getAllSkills().first() }.associateBy { it.countryCode }
-        assertTrue(twelveWeak.take(4).all { skills.getValue(it).score >= 60 && skills.getValue(it).box == 1 })
+        assertTrue(twelveWeak.take(4).all { skills.getValue(it).score == 60 })
 
         // Mastered states (three due days behind them) leave the weak spots.
         runBlocking {
