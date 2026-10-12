@@ -32,6 +32,7 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import androidx.compose.ui.test.performScrollTo
 import androidx.lifecycle.ViewModelProvider
+import com.example.progress.Grade
 import com.example.quiz.QuizDifficulty
 import com.example.quiz.QuizMode
 import com.example.ui.viewmodel.CountryViewModel
@@ -106,7 +107,7 @@ class ScreenshotsTest {
 
         // Six countries answered wrong (and the two quizzes above left their own marks): the weak-spots scope unlocks
         // and so does the deck.
-        listOf("FR", "DE", "ES", "JP", "BR", "IT").forEach { viewModel.updateMastery(it, false) }
+        listOf("FR", "DE", "ES", "JP", "BR", "IT").forEach { viewModel.gradeFlashcard(it, Grade.AGAIN) }
         rule.awaitWeakSpotsWhere(viewModel) { it >= 6 }
         rule.openTab("quiz")
         rule.onNodeWithTag("start_quiz_btn").performScrollTo()

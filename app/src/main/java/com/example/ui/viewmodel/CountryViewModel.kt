@@ -18,7 +18,11 @@ import com.example.data.settings.InMemoryUserSettings
 import com.example.data.settings.PrefsUserSettings
 import com.example.data.settings.ReminderPrefs
 import com.example.data.settings.UserSettings
+import com.example.progress.Grade
 import com.example.progress.PracticeStreak
+import com.example.progress.Skill
+import com.example.progress.SkillMastery
+import com.example.progress.SkillState
 import com.example.quiz.QuizDifficulty
 import com.example.quiz.QuizEngine
 import com.example.quiz.QuizMode
@@ -111,23 +115,33 @@ class CountryViewModel(
     val quizHistory: StateFlow<List<QuizScoreEntity>> = repository.quizHistory
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    /**
-     * The countries practiced but not yet mastered, weakest first. Derived from [userProgressMap], so the progress
-     * table has one observer however many screens read it; the quiz setup screen keeps it current while it is shown.
-     */
-    val weakSpots: StateFlow<List<Country>> = userProgressMap
-        .map { WeakSpots.select(it.values.toList(), repository.allCountries) }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
     private val streakRefresh = MutableStateFlow(0)
+
+    /** Works the streak and the mastery counts out again against the current time: a day can end while the Progress screen is open. */
+    fun refreshStreak() = streakRefresh.update { it + 1 }
+
+    /** Every country's standing in every skill, as the database has it. */
+    val skills: StateFlow<Map<Skill, Map<String, SkillState>>> = repository.skills
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+
+    /**
+     * The countries whose flag was practiced but is not (or no longer) mastered, weakest first. Derived from [skills],
+     * so the table has one observer however many screens read it; the quiz setup screen keeps it current while shown.
+     */
+    val weakSpots: StateFlow<List<Country>> = combine(skills, streakRefresh) { bySkill, _ ->
+        WeakSpots.select(bySkill[Skill.FLAG].orEmpty(), repository.allCountries, repository.now())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    /** The codes of the countries whose flag counts as mastered right now (box, score and not lapsed). */
+    val masteredFlags: StateFlow<Set<String>> = combine(skills, streakRefresh) { bySkill, _ ->
+        val now = repository.now()
+        bySkill[Skill.FLAG].orEmpty().filterValues { SkillMastery.isMastered(it, now) }.keys
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptySet())
 
     /** The daily practice streak, worked out from when quizzes finished; see [refreshStreak] for the day rolling over. */
     val streak: StateFlow<PracticeStreak.Summary> = combine(quizHistory, streakRefresh) { history, _ ->
         PracticeStreak.summary(history.map { it.timestamp }, repository.now(), zone())
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PracticeStreak.NONE)
-
-    /** Works the streak out again against the current time: a day can end while the Progress screen is open. */
-    fun refreshStreak() = streakRefresh.update { it + 1 }
 
     private val _finishOutcome = MutableStateFlow<PracticeStreak.Outcome?>(null)
 
@@ -205,8 +219,17 @@ class CountryViewModel(
         viewModelScope.launch { repository.toggleFavorite(countryCode) }
     }
 
-    fun updateMastery(countryCode: String, isCorrect: Boolean) {
-        viewModelScope.launch { repository.recordReview(countryCode, isCorrect) }
+    /** A flashcard self-grade: light evidence about the flag, never enough on its own to master it. */
+    fun gradeFlashcard(countryCode: String, grade: Grade) {
+        viewModelScope.launch { repository.recordGrade(countryCode, Skill.FLAG, grade) }
+    }
+
+    /** A quiz answer: full evidence about the flag or the capital, except a continent pick, which says little. */
+    private fun recordAnswer(session: QuizSession, correct: Boolean) {
+        val mode = session.mode
+        viewModelScope.launch {
+            repository.recordAnswer(session.current.targetCountry.code, SkillMastery.skillOf(mode), correct, SkillMastery.evidenceOf(mode))
+        }
     }
 
     /**
@@ -257,18 +280,18 @@ class CountryViewModel(
     /** Called when a timed question runs out of time: counts as a wrong answer. */
     fun timeOutQuiz() {
         val session = _quizSession.value ?: return
-        val updated = session.timeOut()
+        val updated = session.timeOut(clock())
         if (updated === session) return
         _quizSession.value = updated
-        updateMastery(session.current.targetCountry.code, false)
+        recordAnswer(session, correct = false)
     }
 
     fun answerQuiz(index: Int) {
         val session = _quizSession.value ?: return
-        val updated = session.answer(index)
+        val updated = session.answer(index, clock())
         if (updated === session) return
         _quizSession.value = updated
-        updateMastery(session.current.targetCountry.code, index == session.current.correctAnswerIndex)
+        recordAnswer(session, correct = index == session.current.correctAnswerIndex)
     }
 
     fun nextQuizQuestion() {
@@ -288,12 +311,10 @@ class CountryViewModel(
         onQuizFinished(updated)
     }
 
-    /** Fixed-length quizzes are scored out of the best possible; an endless one by how many were right. */
     private fun onQuizFinished(session: QuizSession) {
-        val total = if (session.mode.isEndless) session.correct else session.maxScore
         // The save hands back the finish times before this one, so "already counted today" means an earlier quiz.
         viewModelScope.launch {
-            val earlier = repository.saveQuizScore(session.mode.name, session.score, total, session.scope)
+            val earlier = repository.saveQuiz(session)
             _finishOutcome.value = PracticeStreak.outcome(earlier, repository.now(), zone())
         }
     }
@@ -301,12 +322,6 @@ class CountryViewModel(
     fun endQuiz() {
         _quizSession.value = null
         _finishOutcome.value = null
-    }
-
-    fun saveQuizResult(mode: String, score: Int, total: Int, continent: String) {
-        viewModelScope.launch {
-            repository.saveQuizScore(mode, score, total, continent)
-        }
     }
 
     override fun onCleared() {

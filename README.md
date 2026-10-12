@@ -18,6 +18,16 @@ drill them with flashcards, and test yourself with quizzes. Everything runs on t
   an optional daily reminder (a notification at a time you pick, only on days without a finished quiz; it asks for
   the notification permission on Android 13 and newer), mastery per continent and a log of recent quizzes.
 
+### How mastery works
+
+Each country is tracked per skill (its flag, its capital) on a Leitner schedule: a confidence score from 0 to 100
+and a box from 1 to 5 whose review intervals are 1, 3, 7, 14 and 30 days. A right quiz answer raises the score and,
+when the review was due, moves the box up; an answer before the due date keeps its schedule, so nothing is mastered
+in one sitting. A wrong answer sends the country back to box 1. Continent questions and flashcard grades are light
+evidence: they move the score a little and never past 60. A flag counts as *mastered* at box 3 or higher with a score
+of 75 or more, and lapses out of that if it goes unreviewed for twice its interval. *Weak spots* are the countries
+reviewed but not (or no longer) mastered.
+
 ## Build
 
 Requires JDK 21 and the Android SDK (compileSdk 37, targetSdk 36). The Gradle wrapper picks the right Gradle version.
@@ -66,13 +76,13 @@ are then kept as a workflow artifact for a week.
 | Path | What lives there |
 | --- | --- |
 | `quiz/` | Pure quiz rules (`QuizEngine`) and the immutable `QuizSession`; no Android types. |
-| `progress/` | Pure practice-streak rules (`PracticeStreak`), computed from when quizzes finished. |
+| `progress/` | Pure rules: the practice streak (`PracticeStreak`), computed from when quizzes finished, and per-skill mastery (`SkillMastery`: score, Leitner box, due date). |
 | `reminder/` | The daily reminder: pure schedule rules, the WorkManager scheduler and worker, the notification. |
 | `data/settings/` | `UserSettings`: the few preferences kept in SharedPreferences (answers difficulty, reminder). |
 | `flashcards/` | Deck ordering for the flashcard screen. |
 | `speech/` | Text-to-speech behind a small `Speech` interface. |
 | `data/model/` | The country catalog, one file per continent (`EuropeCatalog.kt`…, alphabetical), and `CountryRepository`. |
-| `data/local/` | Room database; progress and quiz history. Schemas are exported to `app/schemas/`. |
+| `data/local/` | Room database (version 2): bookmarks, skill states, quiz history with every answer. Schemas are exported to `app/schemas/`; `AppDatabase.MIGRATION_1_2` is tested against the committed version 1 schema. |
 | `ui/` | Compose screens, components, theme and `CountryViewModel`. |
 | `tools/` | Content pipeline: flag rendering (`render-flags.mjs`, `to-webp.py`, `contact-sheet.py`), catalog generation (`validate-research.py`, `gen-entries.py`, `apply-edits.py`, `gen-flag-art.py`, `flag-checksums.py`), audit input (`export-entries.py`), quiz data (`gen-lookalikes.py` writes `FlagLookAlikes.kt`). |
 | `content/` | Provenance for the catalog: `seed/` (country lists and owner rules), `research/` (first-pass entries with sources), `audit/` (second-pass fixes, doubts and owner decisions per continent). |

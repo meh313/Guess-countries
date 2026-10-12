@@ -12,6 +12,8 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import com.example.data.local.AppDatabase
 import com.example.data.model.CountryRepository
+import com.example.progress.Evidence
+import com.example.progress.Skill
 import com.example.data.settings.InMemoryUserSettings
 import com.example.quiz.QuizDifficulty
 import com.example.quiz.QuizEngine
@@ -150,7 +152,7 @@ class QuizSetupScreenTest {
     /** Gives four countries of the small world a wrong review each, so four weak spots exist before the screen opens. */
     private fun fourWeakSpots(): List<String> {
         val codes = smallWorld.take(4).map { it.code }
-        runBlocking { codes.forEachIndexed { i, code -> db.userProgressDao().recordReview(code, false, 100L + i) } }
+        runBlocking { codes.forEachIndexed { i, code -> db.userProgressDao().recordAnswer(code, Skill.FLAG, false, Evidence.FULL, 100L + i) } }
         return codes
     }
 
@@ -173,7 +175,7 @@ class QuizSetupScreenTest {
 
     @Test
     fun theWeakSpotsChip_countsTheCountriesItIsStillShortOf() {
-        runBlocking { smallWorld.take(3).forEachIndexed { i, c -> db.userProgressDao().recordReview(c.code, false, 100L + i) } }
+        runBlocking { smallWorld.take(3).forEachIndexed { i, c -> db.userProgressDao().recordAnswer(c.code, Skill.FLAG, false, Evidence.FULL, 100L + i) } }
 
         showWithWeakSpots(3)
 

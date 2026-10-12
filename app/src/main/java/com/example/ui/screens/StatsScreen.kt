@@ -43,7 +43,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LifecycleResumeEffect
-import com.example.data.model.WeakSpots
 import com.example.progress.PracticeStreak
 import com.example.quiz.QuizMode
 import com.example.ui.components.StatBadge
@@ -58,6 +57,7 @@ fun StatsScreen(
     modifier: Modifier = Modifier
 ) {
     val progressMap by viewModel.userProgressMap.collectAsStateWithLifecycle()
+    val masteredFlags by viewModel.masteredFlags.collectAsStateWithLifecycle()
     val streak by viewModel.streak.collectAsStateWithLifecycle()
     // A day can end while this screen sits open in the background; work the streak out again on every return.
     LifecycleResumeEffect(viewModel) {
@@ -73,7 +73,7 @@ fun StatsScreen(
 
     val bookmarkedCount = progressMap.values.count { it.isFavorite }
     val sovereignCodes = allCountries.map { it.code }.toSet()
-    val masteredCount = progressMap.values.count { it.countryCode in sovereignCodes && it.masteryScore >= WeakSpots.MASTERED }
+    val masteredCount = masteredFlags.count { it in sovereignCodes }
     val totalQuizzes = quizHistory.size
     // A blitz runs as long as the clock allows, so its points would swamp the 190-point maximum of the others.
     val maxScore = quizHistory.filter { it.mode != QuizMode.BLITZ.name }.maxOfOrNull { it.score } ?: 0
@@ -159,7 +159,7 @@ fun StatsScreen(
         items(continents) { continent ->
             val continentCountries = allCountries.filter { it.continent.equals(continent, ignoreCase = true) }
             val total = continentCountries.size
-            val masteredInContinent = continentCountries.count { (progressMap[it.code]?.masteryScore ?: 0) >= WeakSpots.MASTERED }
+            val masteredInContinent = continentCountries.count { it.code in masteredFlags }
             val progressRatio = if (total > 0) masteredInContinent.toFloat() / total else 0f
             val continentColor = getContinentColor(continent)
 
@@ -271,7 +271,7 @@ fun StatsScreen(
                             color = MaterialTheme.colorScheme.primaryContainer
                         ) {
                             Text(
-                                text = if (entry.mode == QuizMode.BLITZ.name) "${entry.total} correct · ${entry.score} pts" else "${entry.score} pts",
+                                text = if (entry.mode == QuizMode.BLITZ.name) "${entry.correct ?: entry.total} correct · ${entry.score} pts" else "${entry.score} pts",
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)

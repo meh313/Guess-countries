@@ -189,7 +189,8 @@ class BlitzTimerTest {
         assertEquals(1, rows.size)
         assertEquals("BLITZ", rows.single().mode)
         assertEquals(10, rows.single().score)
-        assertEquals(1, rows.single().total)
+        assertEquals(1, rows.single().correct)
+        assertEquals("an endless quiz has no best possible score", 0, rows.single().total)
     }
 
     @Test
@@ -223,7 +224,7 @@ class BlitzTimerTest {
         assertTrue(session.isFinished)
         assertEquals(0, session.score)
         db.awaitPendingWrites()
-        val reviews = runBlocking { db.userProgressDao().getAllProgress().first() }
+        val reviews = runBlocking { db.userProgressDao().getAllSkills().first() }
         assertTrue("no review for $shown", reviews.none { it.countryCode == shown })
     }
 }

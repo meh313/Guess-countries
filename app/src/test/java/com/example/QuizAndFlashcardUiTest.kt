@@ -23,6 +23,10 @@ import androidx.compose.ui.test.performTextInput
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.example.data.local.AppDatabase
+import com.example.data.local.SkillProgressEntity
+import com.example.progress.Evidence
+import com.example.progress.Skill
+import com.example.progress.SkillState
 import com.example.data.local.QuizScoreEntity
 import com.example.quiz.QuizEngine
 import kotlinx.coroutines.runBlocking
@@ -260,9 +264,16 @@ class QuizAndFlashcardUiTest {
         rule.onNodeWithTag("quiz_timer").assertDoesNotExist()
     }
 
+    /** A finished quiz as the app saves it, written straight to the database. */
+    private fun savedQuiz(mode: QuizMode, score: Int, total: Int, correct: Int? = null) = runBlocking {
+        AppDatabase.getDatabase(ApplicationProvider.getApplicationContext()).userProgressDao().insertQuizScore(
+            QuizScoreEntity(mode = mode.name, score = score, total = total, continentFilter = "Global", correct = correct)
+        )
+    }
+
     @Test
     fun stats_listsQuizzesByTheirModeTitle() {
-        viewModel.saveQuizResult(QuizMode.SPEED_MATCH.name, 50, 100, "Global")
+        savedQuiz(QuizMode.SPEED_MATCH, score = 50, total = 100)
         tab("stats")
         rule.waitUntil(10_000) { viewModel.quizHistory.value.isNotEmpty() }
 
@@ -286,8 +297,8 @@ class QuizAndFlashcardUiTest {
     @Test
     fun stats_doNotCountAMasteredAntarctica() {
         // Antarctica can still be graded in Flashcards, but it is not one of the countries being counted.
-        repeat(3) { viewModel.updateMastery("AQ", true) }
-        repeat(3) { viewModel.updateMastery("FR", true) }
+        mastered("AQ")
+        mastered("FR")
 
         tab("stats")
 
@@ -678,8 +689,8 @@ class QuizAndFlashcardUiTest {
 
     @Test
     fun stats_listsABlitzByItsCorrectCountAndKeepsItOutOfTheHighestScore() {
-        viewModel.saveQuizResult(QuizMode.BLITZ.name, 340, 14, "Global")
-        viewModel.saveQuizResult(QuizMode.FLAG_NAME.name, 120, 190, "Global")
+        savedQuiz(QuizMode.BLITZ, score = 340, total = 0, correct = 14)
+        savedQuiz(QuizMode.FLAG_NAME, score = 120, total = 190)
         tab("stats")
         rule.waitUntil(10_000) { viewModel.quizHistory.value.size == 2 }
 
@@ -695,7 +706,15 @@ class QuizAndFlashcardUiTest {
     /** Writes reviews straight to the database, one after another, so the order of their effects is certain. */
     private fun review(code: String, vararg results: Boolean) = runBlocking {
         val dao = AppDatabase.getDatabase(ApplicationProvider.getApplicationContext()).userProgressDao()
-        results.forEachIndexed { i, correct -> dao.recordReview(code, correct, 1_000L + i) }
+        results.forEachIndexed { i, correct -> dao.recordAnswer(code, Skill.FLAG, correct, Evidence.FULL, 1_000L + i) }
+    }
+
+    /** Seeds a flag as mastered (box 3, score 80, next review a week away), which takes three due days to earn by playing. */
+    private fun mastered(code: String) = runBlocking {
+        val dao = AppDatabase.getDatabase(ApplicationProvider.getApplicationContext()).userProgressDao()
+        dao.upsertSkill(
+            SkillProgressEntity.of(code, Skill.FLAG, SkillState(score = 80, box = 3, dueAt = System.currentTimeMillis() + 7 * 86_400_000L, reviews = 3, correct = 3))
+        )
     }
 
     @Test
@@ -717,10 +736,10 @@ class QuizAndFlashcardUiTest {
     @Test
     fun flashcards_weakSpotsDeck_holdsTheWeakCountriesWeakestFirstAndKeepsItsOrderWhileGrading() {
         review("FR", false) // 0
-        review("DE", true, false) // 15
-        review("ES", true, true, false) // 40
-        review("JP", true, true) // 50
-        review("BR", true, true, true) // 75: learned
+        review("DE", true, false) // 0, reviewed a little later than France
+        review("ES", true, true, false) // 20
+        review("JP", true, true) // 40
+        mastered("BR") // not a weak spot
         review("AQ", false) // not a country
         viewModel.toggleFavorite("IT") // a bookmark is not a review
         rule.awaitWeakSpots(viewModel, 4)
@@ -736,7 +755,7 @@ class QuizAndFlashcardUiTest {
         rule.waitForIdle()
         rule.onNodeWithText("France").assertIsDisplayed()
 
-        // Mastering France lifts it out of the weak spots, but the deck in hand keeps its four cards and its order.
+        // Grading France changes its standing, but the deck in hand keeps its four cards and its order.
         rule.onNodeWithTag("grade_mastered_btn").performClick()
         rule.waitForIdle()
         rule.onNodeWithText("Card 2 of 4").assertIsDisplayed()
