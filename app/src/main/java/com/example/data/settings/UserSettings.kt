@@ -18,6 +18,42 @@ interface UserSettings {
 
     /** When the reminder comes, in minutes after local midnight; 19:00 until changed. */
     var reminderMinuteOfDay: Int
+
+    /** Light, dark, or whatever the system says. */
+    var themeMode: ThemeMode
+
+    /** Colours taken from the wallpaper (Android 12 and newer) instead of the app's own palette. */
+    var dynamicColor: Boolean
+
+    /** How fast the timed quizzes run. */
+    var timerPace: TimerPace
+}
+
+/** Which colour scheme the app uses. */
+enum class ThemeMode(val title: String) {
+    SYSTEM("System"),
+    LIGHT("Light"),
+    DARK("Dark");
+
+    /** Whether the dark scheme applies, given what the system currently says. */
+    fun isDark(systemDark: Boolean): Boolean = when (this) {
+        SYSTEM -> systemDark
+        LIGHT -> false
+        DARK -> true
+    }
+}
+
+/**
+ * The pace of the timed quizzes: the Speed Round's seconds per question are multiplied by [factor], or the limit
+ * is lifted; the blitz keeps its minute but waits for Next after each answer when the pace is [OFF].
+ */
+enum class TimerPace(val title: String, val factor: Int?) {
+    NORMAL("Normal", 1),
+    RELAXED("Relaxed", 2),
+    OFF("No limit", null);
+
+    /** [seconds] per question at this pace, or null for no limit. */
+    fun limit(seconds: Int?): Int? = if (seconds == null || factor == null) null else seconds * factor
 }
 
 /** The reminder settings as the screens see them. */
@@ -26,10 +62,16 @@ data class ReminderPrefs(val enabled: Boolean, val minuteOfDay: Int) {
     val minute: Int get() = minuteOfDay % 60
 }
 
+/** The look of the app as the screens see it. */
+data class Appearance(val themeMode: ThemeMode, val dynamicColor: Boolean)
+
 class InMemoryUserSettings(
     override var quizDifficulty: QuizDifficulty = QuizDifficulty.NORMAL,
     override var reminderEnabled: Boolean = false,
-    override var reminderMinuteOfDay: Int = ReminderSchedule.DEFAULT_MINUTE_OF_DAY
+    override var reminderMinuteOfDay: Int = ReminderSchedule.DEFAULT_MINUTE_OF_DAY,
+    override var themeMode: ThemeMode = ThemeMode.SYSTEM,
+    override var dynamicColor: Boolean = false,
+    override var timerPace: TimerPace = TimerPace.NORMAL
 ) : UserSettings
 
 class PrefsUserSettings(context: Context) : UserSettings {
@@ -50,10 +92,25 @@ class PrefsUserSettings(context: Context) : UserSettings {
             .takeIf { it in 0 until ReminderSchedule.MINUTES_PER_DAY } ?: ReminderSchedule.DEFAULT_MINUTE_OF_DAY
         set(value) = prefs.edit { putInt(KEY_REMINDER_MINUTE, value.coerceIn(0, ReminderSchedule.MINUTES_PER_DAY - 1)) }
 
+    override var themeMode: ThemeMode
+        get() = prefs.getString(KEY_THEME, null)?.let { stored -> ThemeMode.entries.firstOrNull { it.name == stored } } ?: ThemeMode.SYSTEM
+        set(value) = prefs.edit { putString(KEY_THEME, value.name) }
+
+    override var dynamicColor: Boolean
+        get() = prefs.getBoolean(KEY_DYNAMIC_COLOR, false)
+        set(value) = prefs.edit { putBoolean(KEY_DYNAMIC_COLOR, value) }
+
+    override var timerPace: TimerPace
+        get() = prefs.getString(KEY_TIMER_PACE, null)?.let { stored -> TimerPace.entries.firstOrNull { it.name == stored } } ?: TimerPace.NORMAL
+        set(value) = prefs.edit { putString(KEY_TIMER_PACE, value.name) }
+
     companion object {
         const val FILE = "settings"
         private const val KEY_DIFFICULTY = "quiz_difficulty"
         private const val KEY_REMINDER_ENABLED = "reminder_enabled"
         private const val KEY_REMINDER_MINUTE = "reminder_minute_of_day"
+        private const val KEY_THEME = "theme_mode"
+        private const val KEY_DYNAMIC_COLOR = "dynamic_color"
+        private const val KEY_TIMER_PACE = "timer_pace"
     }
 }

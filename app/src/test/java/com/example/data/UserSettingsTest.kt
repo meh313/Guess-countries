@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.example.data.settings.InMemoryUserSettings
 import com.example.data.settings.PrefsUserSettings
+import com.example.data.settings.ThemeMode
+import com.example.data.settings.TimerPace
 import com.example.quiz.QuizDifficulty
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -71,6 +73,58 @@ class UserSettingsTest {
             .edit().putInt("reminder_minute_of_day", 99_999).commit()
 
         assertEquals(19 * 60, PrefsUserSettings(context).reminderMinuteOfDay)
+    }
+
+    @Test
+    fun theLookAndTheTimerStartAtTheirDefaults() {
+        val settings = PrefsUserSettings(context)
+
+        assertEquals(ThemeMode.SYSTEM, settings.themeMode)
+        assertEquals(false, settings.dynamicColor)
+        assertEquals(TimerPace.NORMAL, settings.timerPace)
+        assertEquals(ThemeMode.SYSTEM, InMemoryUserSettings().themeMode)
+        assertEquals(false, InMemoryUserSettings().dynamicColor)
+        assertEquals(TimerPace.NORMAL, InMemoryUserSettings().timerPace)
+    }
+
+    @Test
+    fun theLookAndTheTimerAreKeptForTheNextInstance() {
+        PrefsUserSettings(context).apply {
+            themeMode = ThemeMode.DARK
+            dynamicColor = true
+            timerPace = TimerPace.OFF
+        }
+
+        val next = PrefsUserSettings(context)
+        assertEquals(ThemeMode.DARK, next.themeMode)
+        assertEquals(true, next.dynamicColor)
+        assertEquals(TimerPace.OFF, next.timerPace)
+    }
+
+    @Test
+    fun unknownStoredLookOrPace_fallBackToTheDefaults() {
+        context.getSharedPreferences(PrefsUserSettings.FILE, Context.MODE_PRIVATE)
+            .edit().putString("theme_mode", "SEPIA").putString("timer_pace", "FRANTIC").commit()
+
+        assertEquals(ThemeMode.SYSTEM, PrefsUserSettings(context).themeMode)
+        assertEquals(TimerPace.NORMAL, PrefsUserSettings(context).timerPace)
+    }
+
+    @Test
+    fun theThemeMode_decidesDarkFromTheSystemOnlyWhenItSaysSo() {
+        assertEquals(true, ThemeMode.SYSTEM.isDark(systemDark = true))
+        assertEquals(false, ThemeMode.SYSTEM.isDark(systemDark = false))
+        assertEquals(false, ThemeMode.LIGHT.isDark(systemDark = true))
+        assertEquals(true, ThemeMode.DARK.isDark(systemDark = false))
+    }
+
+    @Test
+    fun theTimerPace_stretchesOrLiftsALimit_andLeavesNoLimitAlone() {
+        assertEquals(10, TimerPace.NORMAL.limit(10))
+        assertEquals(20, TimerPace.RELAXED.limit(10))
+        assertEquals(null, TimerPace.OFF.limit(10))
+        assertEquals(null, TimerPace.NORMAL.limit(null))
+        assertEquals(null, TimerPace.RELAXED.limit(null))
     }
 
     @Test

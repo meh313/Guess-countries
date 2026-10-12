@@ -35,7 +35,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.ui.screens.AboutScreen
 import com.example.ui.screens.ExploreScreen
+import com.example.ui.screens.SettingsScreen
 import com.example.ui.screens.FlashcardScreen
 import com.example.ui.screens.QuizScreen
 import com.example.ui.screens.StatsScreen
@@ -47,6 +51,12 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
     object Flashcards : Screen("flashcards", "Flashcards", Icons.Default.Style)
     object Quiz : Screen("quiz", "Quiz", Icons.Default.EmojiEvents)
     object Stats : Screen("stats", "Progress", Icons.Default.BarChart)
+
+    companion object {
+        /** Reached from Progress, not from the bar; Back returns there. */
+        const val SETTINGS = "settings"
+        const val ABOUT = "about"
+    }
 }
 
 class MainActivity : ComponentActivity() {
@@ -59,8 +69,14 @@ class MainActivity : ComponentActivity() {
         // Only a fresh start follows the intent: after a rotation the player may have moved to another tab.
         if (savedInstanceState == null) requestedTab.value = intent.requestedTab()
         setContent {
-            WorldFlagsTheme {
-                MainAppScreen(requestedTab = requestedTab.value, onTabRequestShown = { requestedTab.value = null })
+            // The theme follows the settings, so the view model is created here, above the theme.
+            val viewModel: CountryViewModel = viewModel(factory = CountryViewModel.Factory)
+            val appearance by viewModel.appearance.collectAsStateWithLifecycle()
+            WorldFlagsTheme(
+                darkTheme = appearance.themeMode.isDark(isSystemInDarkTheme()),
+                dynamicColor = appearance.dynamicColor
+            ) {
+                MainAppScreen(viewModel = viewModel, requestedTab = requestedTab.value, onTabRequestShown = { requestedTab.value = null })
             }
         }
     }
@@ -117,7 +133,8 @@ fun MainAppScreen(
                 modifier = Modifier.testTag("bottom_navigation_bar")
             ) {
                 items.forEach { screen ->
-                    val isSelected = currentRoute == screen.route
+                    val isSelected = currentRoute == screen.route ||
+                        (screen == Screen.Stats && (currentRoute == Screen.SETTINGS || currentRoute == Screen.ABOUT))
                     NavigationBarItem(
                         icon = {
                             Icon(
@@ -165,7 +182,17 @@ fun MainAppScreen(
                     QuizScreen(viewModel = viewModel)
                 }
                 composable(Screen.Stats.route) {
-                    StatsScreen(viewModel = viewModel)
+                    StatsScreen(viewModel = viewModel, onOpenSettings = { navController.navigate(Screen.SETTINGS) { launchSingleTop = true } })
+                }
+                composable(Screen.SETTINGS) {
+                    SettingsScreen(
+                        viewModel = viewModel,
+                        onBack = { navController.popBackStack() },
+                        onAbout = { navController.navigate(Screen.ABOUT) { launchSingleTop = true } }
+                    )
+                }
+                composable(Screen.ABOUT) {
+                    AboutScreen(onBack = { navController.popBackStack() })
                 }
             }
             // After the NavHost, whose own effects give the controller its graph: effects run in composition order.

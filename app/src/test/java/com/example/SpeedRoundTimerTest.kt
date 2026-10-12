@@ -13,6 +13,8 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import com.example.data.local.AppDatabase
 import com.example.data.model.CountryRepository
+import com.example.data.settings.InMemoryUserSettings
+import com.example.data.settings.TimerPace
 import com.example.quiz.QuizMode
 import com.example.support.FakeSpeech
 import com.example.support.awaitPendingWrites
@@ -199,6 +201,36 @@ class SpeedRoundTimerTest {
         clockAt(600_000)
 
         assertFalse(session.timedOut)
+        assertFalse(session.hasAnswered)
+    }
+
+    /** A view model with the timer set to [pace], shown on the speed round. */
+    private fun showWithPace(pace: TimerPace) {
+        db.closeWhenIdle(vm)
+        db = inMemoryDatabase()
+        vm = CountryViewModel(CountryRepository(db.userProgressDao()), FakeSpeech(), clock = { now }, settings = InMemoryUserSettings(timerPace = pace))
+        show(QuizMode.SPEED_MATCH)
+    }
+
+    @Test
+    fun theRelaxedPace_givesEachQuestionTwentySeconds() {
+        showWithPace(TimerPace.RELAXED)
+
+        countdown("20s left").assertIsDisplayed()
+        clockAt(15_000)
+        countdown("5s left").assertIsDisplayed()
+        assertFalse(session.timedOut)
+        clockAt(20_000)
+        assertTrue(session.timedOut)
+    }
+
+    @Test
+    fun withNoLimit_theSpeedRoundShowsNoTimerAndNeverTimesOut() {
+        showWithPace(TimerPace.OFF)
+
+        rule.onNodeWithTag("quiz_timer").assertDoesNotExist()
+        clockAt(600_000)
+
         assertFalse(session.hasAnswered)
     }
 

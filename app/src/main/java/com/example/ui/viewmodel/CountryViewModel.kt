@@ -14,10 +14,14 @@ import com.example.data.local.QuizScoreEntity
 import com.example.data.local.UserProgressEntity
 import com.example.data.model.Country
 import com.example.data.model.CountryRepository
+import com.example.data.model.CountrySources
 import com.example.data.model.SortOption
+import com.example.data.settings.Appearance
 import com.example.data.settings.InMemoryUserSettings
 import com.example.data.settings.PrefsUserSettings
 import com.example.data.settings.ReminderPrefs
+import com.example.data.settings.ThemeMode
+import com.example.data.settings.TimerPace
 import com.example.data.settings.UserSettings
 import com.example.flashcards.StudySession
 import com.example.progress.Grade
@@ -42,6 +46,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 /**
  * State for every screen: the Explore filters, speech, the settings, and the progress and quiz state it hands to
@@ -62,8 +67,19 @@ class CountryViewModel(
     /** Shuffles questions and answers; tests can seed it. */
     random: Random = Random.Default,
     /** Where the quiz in progress is kept across process death; the app passes the activity's, tests may pass none. */
-    savedStateHandle: SavedStateHandle? = null
+    savedStateHandle: SavedStateHandle? = null,
+    /** Reads the per-country sources (an asset); null when the app has none to show, as in most tests. */
+    private val sourcesLoader: (suspend () -> CountrySources)? = null
 ) : ViewModel() {
+
+    private val _sources = MutableStateFlow<CountrySources?>(null)
+
+    /** The web pages each country's facts were checked against, once read; null until then or without a loader. */
+    val sources: StateFlow<CountrySources?> = _sources
+
+    init {
+        sourcesLoader?.let { load -> viewModelScope.launch(Dispatchers.IO) { _sources.value = load() } }
+    }
 
     val searchQuery = MutableStateFlow("")
     val selectedContinent = MutableStateFlow("All")
@@ -79,6 +95,31 @@ class CountryViewModel(
     fun setQuizDifficulty(difficulty: QuizDifficulty) {
         settings.quizDifficulty = difficulty
         _quizDifficulty.value = difficulty
+    }
+
+    private val _appearance = MutableStateFlow(Appearance(settings.themeMode, settings.dynamicColor))
+
+    /** The theme choice and whether wallpaper colours are on, remembered across restarts. */
+    val appearance: StateFlow<Appearance> = _appearance
+
+    fun setThemeMode(mode: ThemeMode) {
+        settings.themeMode = mode
+        _appearance.update { it.copy(themeMode = mode) }
+    }
+
+    fun setDynamicColor(enabled: Boolean) {
+        settings.dynamicColor = enabled
+        _appearance.update { it.copy(dynamicColor = enabled) }
+    }
+
+    private val _timerPace = MutableStateFlow(settings.timerPace)
+
+    /** How fast the timed quizzes run, remembered across restarts. */
+    val timerPace: StateFlow<TimerPace> = _timerPace
+
+    fun setTimerPace(pace: TimerPace) {
+        settings.timerPace = pace
+        _timerPace.value = pace
     }
 
     private val _reminder = MutableStateFlow(ReminderPrefs(settings.reminderEnabled, settings.reminderMinuteOfDay))
@@ -139,6 +180,13 @@ class CountryViewModel(
 
     /** A flashcard self-grade: light evidence about the flag, never enough on its own to master it. */
     fun gradeFlashcard(countryCode: String, grade: Grade) = progress.recordGrade(countryCode, grade)
+
+    /** Forgets every bookmark, skill state and logged quiz, and drops any quiz or study session in progress. */
+    fun resetProgress() {
+        quiz.end()
+        study.dismiss()
+        viewModelScope.launch { repository.clearProgress() }
+    }
 
     // --- Quiz -------------------------------------------------------------------------------------------------------
 
@@ -290,7 +338,8 @@ class CountryViewModel(
                     speech = AndroidSpeech(app),
                     settings = PrefsUserSettings(app),
                     reminderScheduler = WorkManagerReminderScheduler(app),
-                    savedStateHandle = createSavedStateHandle()
+                    savedStateHandle = createSavedStateHandle(),
+                    sourcesLoader = { CountrySources.load(app) }
                 )
             }
         }
