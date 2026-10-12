@@ -1,0 +1,250 @@
+package com.example.ui.screens
+
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import com.example.data.model.Country
+import com.example.progress.PracticeStreak
+import com.example.quiz.QuizMode
+import com.example.quiz.QuizSession
+import com.example.ui.components.FlagView
+
+/**
+ * The score screen of a finished quiz, in the window where the quiz was played (not a dialog, so it cannot be
+ * dismissed by a tap beside it): how many were right, the points, what the quiz did for the streak, every miss
+ * with the flag that was picked beside the right one, and the ways on: the same quiz again, a quiz over the
+ * mistakes, or back to the setup. Back means Done.
+ */
+@Composable
+fun QuizResultScreen(
+    session: QuizSession,
+    /** What the quiz did for the streak; null until the save is through, or after the process was restored. */
+    outcome: PracticeStreak.Outcome?,
+    /** The current streak, shown when [outcome] is not known (the quiz was saved before the process died). */
+    streakDays: Int,
+    countriesByCode: Map<String, Country>,
+    onRetry: () -> Unit,
+    onPractiseMistakes: () -> Unit,
+    onDone: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    BackHandler(onBack = onDone)
+    val misses = session.misses
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(20.dp)
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            imageVector = Icons.Default.EmojiEvents,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.secondary,
+            modifier = Modifier.size(56.dp)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = if (session.mode.isEndless) "Time's up!" else "Quiz Complete!",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.semantics { heading() }
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // The numbers: right answers first, points second (the blitz keeps its one line, which its tests pin).
+        if (session.mode.isEndless) {
+            Text(
+                text = "${session.correct} correct · ${session.score} points",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.testTag("quiz_finish_score")
+            )
+            Text(
+                text = "${session.answers.size} flags in ${session.mode.totalTimeSeconds} seconds",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.testTag("quiz_finish_correct")
+            )
+        } else {
+            Text(
+                text = "${session.correct} / ${session.questions.size} correct",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.testTag("quiz_finish_correct")
+            )
+            Text(
+                text = "${session.score} points",
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.testTag("quiz_finish_score")
+            )
+        }
+        if (session.mode.usesLookAlikes) {
+            Text(
+                text = "Answers: ${session.difficulty.title}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.testTag("quiz_finish_difficulty")
+            )
+        }
+        val streakLine = when (outcome?.kind) {
+            PracticeStreak.Kind.STARTED -> "Streak started: day 1"
+            PracticeStreak.Kind.KEPT -> "Streak kept: ${outcome.days} days"
+            PracticeStreak.Kind.ALREADY_COUNTED -> "${outcome.days}-day streak, already counted today"
+            null -> if (streakDays > 0) "$streakDays-day streak" else null
+        }
+        if (streakLine != null) {
+            Text(
+                text = streakLine,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.secondary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .padding(top = 8.dp)
+                    .testTag("quiz_finish_streak")
+            )
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // The misses, each with the flag that was picked beside the right one.
+        if (misses.isEmpty()) {
+            Text(
+                text = "Every answer right!",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.testTag("quiz_finish_perfect")
+            )
+        } else {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("quiz_finish_misses"),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Text(
+                        text = "Mistakes (${misses.size})",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .padding(bottom = 8.dp)
+                            .semantics { heading() }
+                    )
+                    misses.forEachIndexed { i, miss ->
+                        if (i > 0) HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                        MissRow(miss, session.mode, countriesByCode)
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        if (misses.isNotEmpty()) {
+            Button(
+                onClick = onPractiseMistakes,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("quiz_practise_mistakes_btn"),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Text("Practise mistakes", fontWeight = FontWeight.Bold)
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+        }
+        OutlinedButton(
+            onClick = onRetry,
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("quiz_retry_btn"),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Text("Retry", fontWeight = FontWeight.Bold)
+        }
+        Spacer(modifier = Modifier.height(10.dp))
+        TextButton(
+            onClick = onDone,
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("quiz_finish_done_btn")
+        ) {
+            Text("Done", fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+/** One miss: the country asked about with its flag, and what was picked (a flag and name, a continent, or nothing in time). */
+@Composable
+private fun MissRow(miss: QuizSession.AnswerRecord, mode: QuizMode, countriesByCode: Map<String, Country>) {
+    val target = miss.question.targetCountry
+    val picked = miss.pickedCode?.let { countriesByCode[it] }
+    val pickedText = when {
+        miss.pickedIndex == null -> "No answer in time"
+        picked != null && mode == QuizMode.CAPITAL -> "You picked ${miss.pickedText}, ${picked.name}"
+        picked != null -> "You picked ${picked.name}"
+        else -> "You picked: ${miss.pickedText}"
+    }
+    val answer = if (mode == QuizMode.CAPITAL) "${target.quizCapital}, ${target.name}" else target.name
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .semantics(mergeDescendants = true) { contentDescription = "$answer. $pickedText" }
+            .testTag("quiz_miss_${target.code.lowercase()}"),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        FlagView(country = target, modifier = Modifier.width(64.dp), contentDescription = null)
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = answer, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+            Text(text = pickedText, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        if (picked != null && picked.code != target.code) {
+            Spacer(modifier = Modifier.width(12.dp))
+            FlagView(country = picked, modifier = Modifier.width(48.dp), contentDescription = null)
+        }
+    }
+}

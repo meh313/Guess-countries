@@ -774,6 +774,134 @@ class CountryViewModelQuizTest {
         assertEquals(a.questions, b.questions)
     }
 
+    // --- Retry and practise mistakes ----------------------------------------------------------------------------------
+
+    /** Answers every remaining question wrong except the ones whose 0-based position is in [right]. */
+    private fun CountryViewModel.playMissingAllBut(right: Set<Int>) {
+        var n = 0
+        while (quizSession.value?.isFinished == false) {
+            val q = quizSession.value!!.current
+            answerQuiz(if (n in right) q.correctAnswerIndex else (q.correctAnswerIndex + 1) % q.options.size)
+            nextQuizQuestion()
+            n++
+        }
+    }
+
+    @Test
+    fun retryQuiz_startsTheSameQuestionsAgain_andSavesTheSecondRunToo() {
+        val vm = newViewModel()
+        vm.startQuiz(QuizMode.CAPITAL, "Europe", QuizDifficulty.HARD)
+        vm.playMissingAllBut(setOf(0))
+        val first = vm.quizSession.value!!
+
+        vm.retryQuiz()
+
+        val again = vm.quizSession.value!!
+        assertEquals(first.questions, again.questions)
+        assertEquals(first.mode, again.mode)
+        assertEquals(first.scope, again.scope)
+        assertEquals(first.difficulty, again.difficulty)
+        assertEquals(0, again.currentIndex)
+        assertEquals(0, again.score)
+        assertTrue(again.answers.isEmpty())
+        assertNull(vm.finishOutcome.value)
+
+        vm.playToTheEnd()
+        db.awaitPendingWrites()
+        assertEquals(2, runBlocking { db.userProgressDao().getQuizHistory().first() }.size)
+    }
+
+    @Test
+    fun retryQuiz_doesNothingWhileTheQuizIsStillOn() {
+        val vm = newViewModel()
+        vm.startQuiz(QuizMode.FLAG_NAME, "Global")
+        vm.answerQuiz(0)
+        val before = vm.quizSession.value!!
+
+        vm.retryQuiz()
+
+        assertEquals(before, vm.quizSession.value)
+    }
+
+    @Test
+    fun practiseMistakes_asksAboutTheMissedCountriesInTheOrderMissed_withAnswersFromTheWholeWorld() {
+        val vm = newViewModel()
+        vm.startQuiz(QuizMode.FLAG_NAME, "Oceania", QuizDifficulty.HARD)
+        vm.playMissingAllBut(setOf(1, 3, 4, 5, 6, 7, 8, 9))
+        val finished = vm.quizSession.value!!
+        val missed = finished.misses.map { it.question.targetCountry.code }
+        assertEquals(2, missed.size)
+
+        vm.practiseMistakes()
+
+        val practice = vm.quizSession.value!!
+        assertEquals(QuizEngine.MISTAKES, practice.scope)
+        assertEquals(QuizMode.FLAG_NAME, practice.mode)
+        assertEquals(QuizDifficulty.HARD, practice.difficulty)
+        assertEquals(missed, practice.targets())
+        val oceania = sovereign.filter { it.continent == "Oceania" }.map { it.name }.toSet()
+        assertTrue("wrong answers come from the whole world", practice.questions.any { q -> q.options.any { it !in oceania } })
+        assertNull(vm.finishOutcome.value)
+
+        vm.playToTheEnd()
+        db.awaitPendingWrites()
+        // Both rows can share a millisecond, so their order is not pinned.
+        assertEquals(setOf(QuizEngine.MISTAKES, "Oceania"), runBlocking { db.userProgressDao().getQuizHistory().first() }.map { it.continentFilter }.toSet())
+    }
+
+    @Test
+    fun practiseMistakes_afterABlitz_isAFlagQuizOverAtMostTenDistinctMisses() {
+        val vm = newViewModel()
+        vm.startQuiz(QuizMode.BLITZ, "Global")
+        repeat(14) {
+            val q = vm.quizSession.value!!.current
+            vm.answerQuiz((q.correctAnswerIndex + 1) % q.options.size)
+            vm.nextQuizQuestion()
+        }
+        vm.finishQuiz()
+        val missed = vm.quizSession.value!!.misses.map { it.question.targetCountry.code }
+        assertEquals(14, missed.size)
+
+        vm.practiseMistakes()
+
+        val practice = vm.quizSession.value!!
+        assertEquals(QuizMode.FLAG_NAME, practice.mode)
+        assertEquals(QuizEngine.MISTAKES, practice.scope)
+        assertEquals(missed.distinct().take(10), practice.targets())
+    }
+
+    @Test
+    fun practiseMistakes_countsATimeOutAsAMiss() {
+        val vm = newViewModel()
+        vm.startQuiz(QuizMode.SPEED_MATCH, "Global")
+        val first = vm.quizSession.value!!.current.targetCountry.code
+        vm.timeOutQuiz()
+        vm.nextQuizQuestion()
+        vm.playToTheEnd()
+
+        vm.practiseMistakes()
+
+        assertEquals(listOf(first), vm.quizSession.value!!.targets())
+        assertEquals(QuizMode.SPEED_MATCH, vm.quizSession.value!!.mode)
+    }
+
+    @Test
+    fun practiseMistakes_doesNothingWithoutMistakes_orBeforeTheEnd() {
+        val vm = newViewModel()
+        vm.startQuiz(QuizMode.FLAG_NAME, "Global")
+        vm.answerQuiz((vm.quizSession.value!!.current.correctAnswerIndex + 1) % 4)
+        val during = vm.quizSession.value!!
+        vm.practiseMistakes()
+        assertEquals(during, vm.quizSession.value)
+
+        vm.endQuiz()
+        vm.startQuiz(QuizMode.FLAG_NAME, "Global")
+        vm.playToTheEnd()
+        val perfect = vm.quizSession.value!!
+        vm.practiseMistakes()
+        assertEquals(perfect, vm.quizSession.value)
+    }
+
     // --- Process death ------------------------------------------------------------------------------------------------
 
     /** What the activity would hand the next process: the handle's saved state, restored into a fresh handle. */
