@@ -13,11 +13,14 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import com.example.data.local.AppDatabase
 import com.example.data.model.CountryRepository
+import com.example.data.settings.InMemoryUserSettings
+import com.example.data.settings.TimerPace
 import com.example.quiz.QuizMode
 import com.example.support.FakeSpeech
 import com.example.support.awaitPendingWrites
 import com.example.support.closeWhenIdle
 import com.example.support.inMemoryDatabase
+import com.example.support.stateDescriptionIs
 import com.example.ui.screens.BLITZ_ADVANCE_MS
 import com.example.ui.screens.QuizScreen
 import com.example.ui.theme.WorldFlagsTheme
@@ -102,6 +105,8 @@ class BlitzTimerTest {
 
         clockAt(15_000)
         countdown("45s left").assertIsDisplayed()
+        // TalkBack can ask for the time left (the state, read on demand) without hearing every tick.
+        rule.onNodeWithTag("quiz_timer").assert(stateDescriptionIs("45 seconds left"))
 
         clockAt(59_100)
         countdown("1s left").assertIsDisplayed()
@@ -134,6 +139,23 @@ class BlitzTimerTest {
         assertEquals(1, session.currentIndex)
         assertTrue(session.current.targetCountry.code != first)
         rule.onNodeWithText("Question 2 · Correct 1").assertIsDisplayed()
+    }
+
+    @Test
+    fun withNoLimit_theNextFlagWaitsForNext_butTheMinuteStillRuns() {
+        db.closeWhenIdle(vm)
+        db = inMemoryDatabase()
+        vm = CountryViewModel(CountryRepository(db.userProgressDao()), FakeSpeech(), clock = { now }, settings = InMemoryUserSettings(timerPace = TimerPace.OFF))
+        show()
+        answerRight()
+
+        rule.mainClock.advanceTimeBy(BLITZ_ADVANCE_MS * 3)
+        assertEquals(0, session.currentIndex)
+        onUi { vm.nextQuizQuestion() }
+        assertEquals(1, session.currentIndex)
+
+        clockAt(60_000)
+        assertTrue(session.isFinished)
     }
 
     @Test
@@ -189,7 +211,8 @@ class BlitzTimerTest {
         assertEquals(1, rows.size)
         assertEquals("BLITZ", rows.single().mode)
         assertEquals(10, rows.single().score)
-        assertEquals(1, rows.single().total)
+        assertEquals(1, rows.single().correct)
+        assertEquals("an endless quiz has no best possible score", 0, rows.single().total)
     }
 
     @Test
@@ -223,7 +246,7 @@ class BlitzTimerTest {
         assertTrue(session.isFinished)
         assertEquals(0, session.score)
         db.awaitPendingWrites()
-        val reviews = runBlocking { db.userProgressDao().getAllProgress().first() }
+        val reviews = runBlocking { db.userProgressDao().getAllSkills().first() }
         assertTrue("no review for $shown", reviews.none { it.countryCode == shown })
     }
 }

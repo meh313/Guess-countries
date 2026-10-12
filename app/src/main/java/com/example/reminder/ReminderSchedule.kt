@@ -18,7 +18,10 @@ object ReminderSchedule {
      */
     const val MAX_LATENESS_MILLIS = 3 * 60 * 60 * 1000L
 
-    data class Message(val title: String, val text: String)
+    /** Which reminder to send: [streakDays] is the run that ends yesterday, 0 when there is none to keep. The words are string resources. */
+    data class Message(val streakDays: Int) {
+        val keepsStreak: Boolean get() = streakDays > 0
+    }
 
     /**
      * The first moment after [after] at which the wall clock of [zone] shows [minuteOfDay] (minutes after midnight): today
@@ -53,11 +56,6 @@ object ReminderSchedule {
 
     fun isTooLate(dueAt: Long, now: Long): Boolean = now - dueAt > MAX_LATENESS_MILLIS
 
-    /** Words for a reminder sent while today has no quiz yet: [streak] is the run that ends yesterday (or 0). */
-    fun message(streak: PracticeStreak.Summary): Message =
-        if (streak.current > 0) {
-            Message("Keep your streak", "One quiz keeps your ${streak.current}-day streak")
-        } else {
-            Message("Time for a quick quiz", "A quick quiz starts a new streak")
-        }
+    /** The reminder sent while today has no quiz yet: keep the [streak] that ends yesterday, or start one. */
+    fun message(streak: PracticeStreak.Summary): Message = Message(streakDays = maxOf(streak.current, 0))
 }

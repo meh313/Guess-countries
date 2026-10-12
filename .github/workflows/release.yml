@@ -182,6 +182,10 @@ jobs:
 
           \`mapping-$VERSION.txt.gz\` is the R8 mapping file for reading obfuscated crash traces.
           EOF
+          # What this version changes for the player, when the release has something to say beyond the commit list.
+          if [ -f "release-notes/$VERSION.md" ]; then
+            { echo; cat "release-notes/$VERSION.md"; } >> dist/notes.md
+          fi
           ls -l dist
 
       - name: Keep the files as a workflow artifact (dry run)

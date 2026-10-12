@@ -13,6 +13,8 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import com.example.data.local.AppDatabase
 import com.example.data.model.CountryRepository
+import com.example.data.settings.InMemoryUserSettings
+import com.example.data.settings.TimerPace
 import com.example.quiz.QuizMode
 import com.example.support.FakeSpeech
 import com.example.support.awaitPendingWrites
@@ -84,7 +86,7 @@ class SpeedRoundTimerTest {
     /** The countdown text sits under the timer's single TalkBack description, so only the unmerged tree has it. */
     private fun countdown(text: String) = rule.onNodeWithText(text, useUnmergedTree = true)
 
-    private fun reviews() = runBlocking { db.userProgressDao().getAllProgress().first() }
+    private fun reviews() = runBlocking { db.userProgressDao().getAllSkills().first() }
 
     @Test
     fun theCountdownFollowsTheClockAndRoundsUp() {
@@ -114,7 +116,7 @@ class SpeedRoundTimerTest {
         rule.onNodeWithTag("quiz_result").assert(hasText("Time's up! The answer is ${q.options[q.correctAnswerIndex]}"))
         rule.onNodeWithTag("quiz_timer").assertDoesNotExist()
         db.awaitPendingWrites()
-        assertEquals(0, reviews().single { it.countryCode == q.targetCountry.code }.timesCorrect)
+        assertEquals(0, reviews().single { it.countryCode == q.targetCountry.code }.correct)
     }
 
     @Test
@@ -141,7 +143,7 @@ class SpeedRoundTimerTest {
         assertEquals(10, session.score)
         rule.onNodeWithTag("quiz_timer").assertDoesNotExist()
         db.awaitPendingWrites()
-        assertEquals(1, reviews().single { it.countryCode == q.targetCountry.code }.timesReviewed)
+        assertEquals(1, reviews().single { it.countryCode == q.targetCountry.code }.reviews)
     }
 
     @Test
@@ -199,6 +201,36 @@ class SpeedRoundTimerTest {
         clockAt(600_000)
 
         assertFalse(session.timedOut)
+        assertFalse(session.hasAnswered)
+    }
+
+    /** A view model with the timer set to [pace], shown on the speed round. */
+    private fun showWithPace(pace: TimerPace) {
+        db.closeWhenIdle(vm)
+        db = inMemoryDatabase()
+        vm = CountryViewModel(CountryRepository(db.userProgressDao()), FakeSpeech(), clock = { now }, settings = InMemoryUserSettings(timerPace = pace))
+        show(QuizMode.SPEED_MATCH)
+    }
+
+    @Test
+    fun theRelaxedPace_givesEachQuestionTwentySeconds() {
+        showWithPace(TimerPace.RELAXED)
+
+        countdown("20s left").assertIsDisplayed()
+        clockAt(15_000)
+        countdown("5s left").assertIsDisplayed()
+        assertFalse(session.timedOut)
+        clockAt(20_000)
+        assertTrue(session.timedOut)
+    }
+
+    @Test
+    fun withNoLimit_theSpeedRoundShowsNoTimerAndNeverTimesOut() {
+        showWithPace(TimerPace.OFF)
+
+        rule.onNodeWithTag("quiz_timer").assertDoesNotExist()
+        clockAt(600_000)
+
         assertFalse(session.hasAnswered)
     }
 

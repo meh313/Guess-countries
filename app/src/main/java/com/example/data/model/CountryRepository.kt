@@ -1,10 +1,19 @@
 package com.example.data.model
 
+import com.example.data.local.QuizAnswerEntity
 import com.example.data.local.QuizScoreEntity
 import com.example.data.local.UserProgressDao
 import com.example.data.local.UserProgressEntity
+import com.example.data.transfer.ProgressSnapshot
+import com.example.flashcards.StudySession
+import com.example.progress.Evidence
+import com.example.progress.Grade
+import com.example.progress.Skill
+import com.example.progress.SkillState
+import com.example.quiz.QuizSession
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 /**
@@ -67,16 +76,84 @@ class CountryRepository(
 
     val progress: Flow<List<UserProgressEntity>> = progressDao.getAllProgress()
 
+    /** Every skill row, grouped by skill and then by country code. */
+    val skills: Flow<Map<Skill, Map<String, SkillState>>> = progressDao.getAllSkills().map { rows ->
+        rows.groupBy({ Skill.valueOf(it.skill) }, { it.countryCode to it.toState() }).mapValues { (_, pairs) -> pairs.toMap() }
+    }
+
     val quizHistory: Flow<List<QuizScoreEntity>> = progressDao.getQuizHistory()
+
+    /** The targets of the last few quizzes, so the next one can look elsewhere first. */
+    val recentTargets: Flow<List<String>> = progressDao.recentTargets(RECENT_QUIZZES)
 
     // Writes finish even when the caller's scope is cancelled: a view model cleared right after the last answer
     // (the player left the screen) must not lose the review or the score it had just started saving.
     suspend fun toggleFavorite(code: String) = withContext(NonCancellable) { progressDao.toggleFavorite(code, now()) }
 
-    suspend fun recordReview(code: String, isCorrect: Boolean) =
-        withContext(NonCancellable) { progressDao.recordReview(code, isCorrect, now()) }
+    suspend fun recordAnswer(code: String, skill: Skill, correct: Boolean, evidence: Evidence): SkillState =
+        withContext(NonCancellable) { progressDao.recordAnswer(code, skill, correct, evidence, now()) }
 
-    /** Saves a finished quiz and returns when the quizzes saved before it finished. */
+    suspend fun recordGrade(code: String, skill: Skill, grade: Grade): SkillState =
+        withContext(NonCancellable) { progressDao.recordGrade(code, skill, grade, now()) }
+
+    /**
+     * Saves a finished quiz with every answer and returns when the quizzes saved before it finished. A fixed-length
+     * quiz keeps its best possible score in `total`; an endless one (the blitz) keeps 0 there and its right answers
+     * in `correct`.
+     */
+    suspend fun saveQuiz(session: QuizSession): List<Long> = withContext(NonCancellable) {
+        val score = QuizScoreEntity(
+            mode = session.mode.name,
+            score = session.score,
+            total = if (session.mode.isEndless) 0 else session.maxScore,
+            continentFilter = session.scope,
+            timestamp = now(),
+            correct = session.correct,
+            questionCount = session.answers.size,
+            difficulty = session.difficulty.name
+        )
+        val answers = session.answers.mapIndexed { position, record ->
+            QuizAnswerEntity(
+                quizId = 0,
+                position = position,
+                targetCode = record.question.targetCountry.code,
+                pickedCode = record.pickedCode,
+                pickedText = record.pickedText,
+                isCorrect = record.correct,
+                timeMs = record.timeMs
+            )
+        }
+        progressDao.insertQuizWithAnswers(score, answers)
+    }
+
+    /**
+     * Logs a finished study session like a quiz (mode [StudySession.MODE], no points, [remembered] of [cards] right)
+     * and returns the earlier finish times, so the streak and the reminder count it.
+     */
+    suspend fun saveStudySession(source: String, remembered: Int, cards: Int): List<Long> = withContext(NonCancellable) {
+        progressDao.insertQuizScoreAfterReading(
+            QuizScoreEntity(
+                mode = StudySession.MODE,
+                score = 0,
+                total = 0,
+                continentFilter = source,
+                timestamp = now(),
+                correct = remembered,
+                questionCount = cards
+            )
+        )
+    }
+
+    /** Everything in the database, for an export file. */
+    suspend fun exportSnapshot(): ProgressSnapshot = progressDao.snapshot(now())
+
+    /** Replaces everything in the database with [snapshot]. */
+    suspend fun importSnapshot(snapshot: ProgressSnapshot) = withContext(NonCancellable) { progressDao.replaceAll(snapshot) }
+
+    /** Forgets every bookmark, skill state and logged quiz; the settings are not touched. */
+    suspend fun clearProgress() = withContext(NonCancellable) { progressDao.clearAll() }
+
+    /** Saves a quiz row without answers (a test fixture) and returns the earlier finish times. */
     suspend fun saveQuizScore(mode: String, score: Int, total: Int, continent: String): List<Long> =
         withContext(NonCancellable) {
             progressDao.insertQuizScoreAfterReading(
@@ -91,6 +168,9 @@ class CountryRepository(
         }
 
     companion object {
+        /** How many of the last quizzes count as recent when the next one picks its countries. */
+        const val RECENT_QUIZZES = 3
+
         /** Alphabetical by name, ignoring accents and case. */
         val byName: Comparator<Country> = compareBy { it.nameSortKey }
 

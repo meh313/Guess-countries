@@ -22,11 +22,20 @@ data class QuizSession(
     /** When the quiz began, in the ViewModel's clock, for modes that run against one clock. */
     val startedAt: Long = 0L,
     /** When the clocks were stopped because the quiz left the screen, or null while it is being played. */
-    val pausedAt: Long? = null
+    val pausedAt: Long? = null,
+    /** Every question answered or timed out so far, in order, for the score screen and the quiz log. */
+    val answers: List<AnswerRecord> = emptyList()
 ) {
     init {
         require(questions.isNotEmpty()) { "A quiz needs at least one question" }
         require(currentIndex in questions.indices) { "currentIndex $currentIndex is outside 0..${questions.lastIndex}" }
+    }
+
+    /** One answered question: what was picked (null for a time-out) and how long it took. */
+    data class AnswerRecord(val question: QuizQuestion, val pickedIndex: Int?, val timeMs: Long) {
+        val correct: Boolean get() = pickedIndex == question.correctAnswerIndex
+        val pickedCode: String? get() = pickedIndex?.let { question.optionCodes.getOrNull(it) }
+        val pickedText: String? get() = pickedIndex?.let { question.options[it] }
     }
 
     val current: QuizQuestion get() = questions[currentIndex]
@@ -35,15 +44,19 @@ data class QuizSession(
     val isLastQuestion: Boolean get() = currentIndex == questions.lastIndex
     val maxScore: Int get() = QuizEngine.maxScore(questions.size)
 
-    /** Records the player's choice. Ignored once this question is answered or the quiz is over. */
-    fun answer(index: Int): QuizSession {
+    /** The questions answered wrong or not at all. */
+    val misses: List<AnswerRecord> get() = answers.filter { !it.correct }
+
+    /** Records the player's choice at [now] (the ViewModel's clock). Ignored once this question is answered or the quiz is over. */
+    fun answer(index: Int, now: Long = questionStartedAt): QuizSession {
         if (hasAnswered || isFinished || index !in current.options.indices) return this
         val correct = index == current.correctAnswerIndex
         return copy(
             selectedAnswerIndex = index,
             score = if (correct) score + QuizEngine.pointsForCorrectAnswer(streak) else score,
             streak = if (correct) streak + 1 else 0,
-            correct = if (correct) this.correct + 1 else this.correct
+            correct = if (correct) this.correct + 1 else this.correct,
+            answers = answers + AnswerRecord(current, index, (now - questionStartedAt).coerceAtLeast(0L))
         )
     }
 
@@ -65,10 +78,14 @@ data class QuizSession(
         return copy(pausedAt = null, questionStartedAt = questionStartedAt + away, startedAt = startedAt + away)
     }
 
-    /** Ends the question as unanswered when the time ran out: no points and the streak is lost. */
-    fun timeOut(): QuizSession {
+    /** Ends the question as unanswered when the time ran out at [now]: no points and the streak is lost. */
+    fun timeOut(now: Long = questionStartedAt): QuizSession {
         if (hasAnswered || isFinished) return this
-        return copy(selectedAnswerIndex = TIMED_OUT, streak = 0)
+        return copy(
+            selectedAnswerIndex = TIMED_OUT,
+            streak = 0,
+            answers = answers + AnswerRecord(current, null, (now - questionStartedAt).coerceAtLeast(0L))
+        )
     }
 
     /**

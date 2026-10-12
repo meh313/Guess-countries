@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The quiz tab: the setup screen (`quiz_`), the question screen (`quiz_`) and the score screen (`result_`). The mode,
+  difficulty, scope and skill labels are shared and live in strings.xml.
+-->
+<!-- Counts whose wording does not change with the number, or that are never 1, stay plain strings. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="PluralsCandidate">
+    <!-- Setup: header -->
+    <string name="quiz_title">Geography &amp; Flag Quiz</string>
+    <string name="quiz_subtitle">Test what you know and keep your streak going</string>
+
+    <!-- Setup: mode -->
+    <string name="quiz_select_mode">Select Mode</string>
+    <plurals name="quiz_seconds_per_question">
+        <item quantity="one">%d second per question</item>
+        <item quantity="other">%d seconds per question</item>
+    </plurals>
+    <string name="quiz_no_time_limit">No time limit (see Settings)</string>
+
+    <!-- Setup: scope -->
+    <string name="quiz_select_scope">Select Scope</string>
+    <string name="quiz_scope_whole_world">The continent quiz always covers the whole world</string>
+    <string name="quiz_scope_due_count">%1$s · %2$d</string>
+    <string name="quiz_due_nothing">Nothing is due for review today</string>
+    <plurals name="quiz_due_note_countries">
+        <item quantity="one">The %1$d country due for review, with answers from the whole world</item>
+        <item quantity="other">The %1$d countries due for review, with answers from the whole world</item>
+    </plurals>
+    <plurals name="quiz_due_note_capitals">
+        <item quantity="one">The %1$d capital due for review, with answers from the whole world</item>
+        <item quantity="other">The %1$d capitals due for review, with answers from the whole world</item>
+    </plurals>
+    <string name="quiz_weak_spots_locked_countries">Weak spots unlocks once %1$d reviewed countries are below mastery (you have %2$d)</string>
+    <string name="quiz_weak_spots_locked_capitals">Weak spots unlocks once %1$d reviewed capitals are below mastery (you have %2$d)</string>
+    <string name="quiz_weak_spots_note_countries">Your %1$d weakest countries, with answers from the whole world</string>
+    <string name="quiz_weak_spots_note_capitals">Your %1$d weakest capitals, with answers from the whole world</string>
+
+    <!-- Setup: answers difficulty -->
+    <string name="quiz_answers">Answers</string>
+    <string name="quiz_look_alikes_flags_only">Look-alike answers apply to flag questions</string>
+
+    <!-- Setup: start button -->
+    <string name="quiz_start_blitz">Start %1$d-Second Blitz</string>
+    <string name="quiz_start_quiz">Start %1$d-Question Quiz</string>
+    <string name="quiz_needs_countries">Needs at least %1$d countries</string>
+
+    <!-- Play: status bar -->
+    <string name="quiz_progress_blitz">Question %1$d · Correct %2$d</string>
+    <string name="quiz_progress">Question %1$d of %2$d</string>
+    <string name="quiz_score">Score: %1$d</string>
+    <string name="quiz_streak">Streak %1$d</string>
+    <string name="quiz_quit">Quit quiz</string>
+
+    <!-- Play: timers -->
+    <plurals name="quiz_seconds_in_total">
+        <item quantity="one">%d second in total</item>
+        <item quantity="other">%d seconds in total</item>
+    </plurals>
+    <plurals name="quiz_seconds_left">
+        <item quantity="one">%d second left</item>
+        <item quantity="other">%d seconds left</item>
+    </plurals>
+    <string name="quiz_seconds_left_short">%1$ds left</string>
+
+    <!-- Play: options -->
+    <string name="quiz_option_correct">Correct answer</string>
+    <string name="quiz_option_incorrect">Your answer, incorrect</string>
+
+    <!-- Play: after the answer -->
+    <string name="quiz_result_timeout">Time\'s up! The answer is %1$s</string>
+    <string name="quiz_result_correct">Correct! +%1$d points</string>
+    <string name="quiz_result_wrong">Not quite. The answer is %1$s</string>
+    <string name="quiz_capital_and_country">%1$s, %2$s</string>
+    <string name="quiz_fact_capital">💡 %1$s: %2$s</string>
+    <string name="quiz_finish">Finish &amp; View Score</string>
+    <string name="quiz_next_question">Next Question</string>
+
+    <!-- Play: quit dialog -->
+    <string name="quiz_quit_title">Quit this quiz?</string>
+    <string name="quiz_quit_text">Your progress in this quiz will be lost.</string>
+    <string name="quiz_quit_confirm">Quit</string>
+    <string name="quiz_quit_cancel">Keep playing</string>
+
+    <!-- Score screen: header and numbers -->
+    <string name="result_times_up">Time\'s up!</string>
+    <string name="result_complete">Quiz Complete!</string>
+    <string name="result_blitz_score">%1$d correct · %2$d points</string>
+    <plurals name="result_blitz_flags">
+        <item quantity="one">%1$d flag in %2$d seconds</item>
+        <item quantity="other">%1$d flags in %2$d seconds</item>
+    </plurals>
+    <string name="result_correct_ratio">%1$d / %2$d correct</string>
+    <string name="result_points">%1$d points</string>
+    <string name="result_answers">Answers: %1$s</string>
+    <string name="result_streak_already_counted">%1$d-day streak, already counted today</string>
+    <string name="result_streak_days">%1$d-day streak</string>
+
+    <!-- Score screen: the misses -->
+    <string name="result_perfect">Every answer right!</string>
+    <string name="result_mistakes">Mistakes (%1$d)</string>
+    <string name="result_no_answer">No answer in time</string>
+    <string name="result_picked_capital">You picked %1$s, %2$s</string>
+    <string name="result_picked">You picked %1$s</string>
+    <string name="result_picked_text">You picked: %1$s</string>
+    <string name="result_miss_description">%1$s. %2$s</string>
+
+    <!-- Score screen: the ways on -->
+    <string name="result_practise_mistakes">Practise mistakes</string>
+    <string name="result_retry">Retry</string>
+</resources>

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The Explore tab: the banner, the search and filter controls, the empty state, the country cards, the country
+  detail sheet, and the two quiz components that live next to the cards (the flag answer grid and the miss
+  comparison). The continent chips, the standing chips, the sort menu and the skill labels use the shared enum
+  labels in strings.xml.
+-->
+<resources>
+    <!-- Explore: the banner -->
+    <string name="explore_title">World Explorer</string>
+    <string name="explore_subtitle">Discover countries, flags &amp; continents across the globe</string>
+
+    <!-- Explore: search, the Saved chip and the sort button -->
+    <string name="explore_search_hint">Search country, capital, or official name…</string>
+    <string name="explore_clear_search">Clear search</string>
+    <string name="explore_saved_chip">Saved</string>
+    <string name="explore_sort_options">Sort Options</string>
+
+    <!-- Explore: the empty state -->
+    <string name="explore_empty_saved_title">No saved countries yet</string>
+    <string name="explore_empty_saved_hint">Tap the bookmark on any country to save it here</string>
+    <string name="explore_empty_title">No countries found</string>
+    <string name="explore_empty_hint">Try adjusting your search query or continent filter</string>
+
+    <!-- Detail sheet: the facts grid -->
+    <string name="sheet_facts_title">Country Facts</string>
+    <string name="sheet_fact_capital">Capital City</string>
+    <string name="sheet_fact_population">Population</string>
+    <string name="sheet_fact_area">Total Area</string>
+    <string name="sheet_fact_currency">Currency</string>
+    <string name="sheet_fact_languages">Languages</string>
+    <string name="sheet_fact_driving_side">Driving Side</string>
+    <string name="sheet_drive_side">%1$s side</string>
+    <string name="sheet_no_public_roads">No public roads</string>
+
+    <!-- Detail sheet: the progress card ("Flag: Mastered · box 4 · next review in 12 days · last answer right") -->
+    <string name="sheet_progress_title">Your progress</string>
+    <string name="sheet_skill_standing">%1$s: %2$s</string>
+    <string name="sheet_standing_not_reviewed">Not reviewed yet</string>
+    <string name="sheet_standing_line">%1$s · %2$s · %3$s · %4$s</string>
+    <string name="sheet_standing_box">box %1$d</string>
+    <string name="sheet_due_now">due now</string>
+    <string name="sheet_next_review_tomorrow">next review tomorrow</string>
+    <plurals name="sheet_next_review_days">
+        <item quantity="one">next review in %1$d day</item>
+        <item quantity="other">next review in %1$d days</item>
+    </plurals>
+    <string name="sheet_last_answer_right">last answer right</string>
+    <string name="sheet_last_answer_wrong">last answer wrong</string>
+
+    <!-- Detail sheet: the flag, the landmarks and the fun fact -->
+    <string name="sheet_flag_title">Flag Symbolism &amp; History</string>
+    <string name="sheet_landmarks_title">Famous Landmarks</string>
+    <string name="sheet_landmark">📍 %1$s</string>
+    <string name="sheet_fun_fact_title">Did You Know?</string>
+
+    <!-- Detail sheet: the sources -->
+    <string name="sheet_sources">Sources (%1$d)</string>
+    <string name="sheet_show_sources">Show the sources</string>
+    <string name="sheet_hide_sources">Hide the sources</string>
+    <string name="sheet_sources_note">The pages the facts above were checked against when the catalog was written.</string>
+    <string name="sheet_open_in_browser">Open in the browser</string>
+
+    <!-- The flag answer grid of a "pick the flag" question -->
+    <string name="option_correct_answer">Correct answer</string>
+    <string name="option_your_answer_incorrect">Your answer, incorrect</string>
+    <string name="option_of">Option %1$d of %2$d</string>
+    <string name="option_flag_of">Option %1$d, the flag of %2$s</string>
+
+    <!-- The miss comparison after a wrong answer -->
+    <string name="miss_description">You picked %1$s, the answer is %2$s</string>
+    <string name="miss_you_picked">You picked</string>
+    <string name="miss_correct">Correct</string>
+</resources>

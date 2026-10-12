@@ -33,8 +33,8 @@ object ReminderNotifier {
     fun ensureChannel(context: Context) {
         NotificationManagerCompat.from(context).createNotificationChannel(
             NotificationChannelCompat.Builder(CHANNEL_ID, NotificationManagerCompat.IMPORTANCE_DEFAULT)
-                .setName("Daily reminder")
-                .setDescription("A nudge to finish a quiz when you have not practiced today")
+                .setName(context.getString(R.string.reminder_channel_name))
+                .setDescription(context.getString(R.string.reminder_channel_description))
                 .build()
         )
     }
@@ -62,8 +62,11 @@ object ReminderNotifier {
         )
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification_flag)
-            .setContentTitle(message.title)
-            .setContentText(message.text)
+            .setContentTitle(context.getString(if (message.keepsStreak) R.string.reminder_keep_title else R.string.reminder_start_title))
+            .setContentText(
+                if (message.keepsStreak) context.resources.getQuantityString(R.plurals.reminder_keep_text, message.streakDays, message.streakDays)
+                else context.getString(R.string.reminder_start_text)
+            )
             .setContentIntent(open)
             .setAutoCancel(true)
             .setOnlyAlertOnce(true)
