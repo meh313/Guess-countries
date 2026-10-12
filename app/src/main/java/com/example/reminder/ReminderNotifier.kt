@@ -26,21 +26,38 @@ object ReminderNotifier {
         return permitted && NotificationManagerCompat.from(context).areNotificationsEnabled()
     }
 
-    // The permission is checked just above (areNotificationsAllowed), which lint cannot follow through the call.
-    @SuppressLint("MissingPermission")
-    fun show(context: Context, message: ReminderSchedule.Message) {
-        if (!areNotificationsAllowed(context)) return
-        val manager = NotificationManagerCompat.from(context)
-        manager.createNotificationChannel(
+    /**
+     * Registers the channel. Called when the reminder is switched on, not only when the first notification is posted,
+     * so the app's notification settings page already lists it while the player is looking at that page.
+     */
+    fun ensureChannel(context: Context) {
+        NotificationManagerCompat.from(context).createNotificationChannel(
             NotificationChannelCompat.Builder(CHANNEL_ID, NotificationManagerCompat.IMPORTANCE_DEFAULT)
                 .setName("Daily reminder")
                 .setDescription("A nudge to finish a quiz when you have not practiced today")
                 .build()
         )
+    }
+
+    /**
+     * Opens the app on the Quiz tab. SINGLE_TOP hands the intent to the activity that is already running, so a quiz in
+     * progress survives the tap; without it CLEAR_TOP would finish that activity and its view model.
+     */
+    fun openQuizIntent(context: Context): Intent =
+        Intent(context, MainActivity::class.java)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            .putExtra(MainActivity.EXTRA_OPEN_TAB, MainActivity.TAB_QUIZ)
+
+    // The permission is checked just above (areNotificationsAllowed), which lint cannot follow through the call.
+    @SuppressLint("MissingPermission")
+    fun show(context: Context, message: ReminderSchedule.Message) {
+        if (!areNotificationsAllowed(context)) return
+        val manager = NotificationManagerCompat.from(context)
+        ensureChannel(context)
         val open = PendingIntent.getActivity(
             context,
             0,
-            Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
+            openQuizIntent(context),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)

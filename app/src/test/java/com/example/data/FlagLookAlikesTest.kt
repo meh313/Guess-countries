@@ -39,12 +39,20 @@ class FlagLookAlikesTest {
         val pairs = listOf(
             "TD" to "RO", "ID" to "MC", "ID" to "PL", "IE" to "CI", "AU" to "NZ", "NO" to "IS", "NL" to "LU",
             "SI" to "SK", "CO" to "EC", "CO" to "VE", "GN" to "ML", "GN" to "SN", "HN" to "SV", "BH" to "QA",
-            "EG" to "IQ", "TR" to "TN", "IN" to "NE", "JP" to "BD", "US" to "LR", "CL" to "CZ", "CZ" to "PH", "CA" to "PE"
+            "EG" to "IQ", "TR" to "TN", "IN" to "NE", "JP" to "BD", "US" to "LR", "CL" to "CZ", "CZ" to "PH", "CA" to "PE",
+            "HT" to "LI", "SO" to "FM", "KE" to "SS"
         )
         for ((a, b) in pairs) {
             assertTrue("$a should list $b", b in FlagLookAlikes.of(a))
             assertTrue("$b should list $a", a in FlagLookAlikes.of(b))
         }
+    }
+
+    @Test
+    fun syriaLeftTheRedWhiteBlackGroupWithIts2025Flag() {
+        // Green over white over black since 2025: it no longer looks like Egypt, Iraq or Yemen.
+        for (code in listOf("EG", "IQ", "YE")) assertTrue("$code still lists SY", "SY" !in FlagLookAlikes.of(code))
+        assertTrue(FlagLookAlikes.of("SY").none { it in setOf("EG", "IQ", "YE") })
     }
 
     @Test

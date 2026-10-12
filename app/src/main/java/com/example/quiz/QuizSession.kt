@@ -20,7 +20,9 @@ data class QuizSession(
     /** How many answers were right; the score of an endless quiz is counted in these. */
     val correct: Int = 0,
     /** When the quiz began, in the ViewModel's clock, for modes that run against one clock. */
-    val startedAt: Long = 0L
+    val startedAt: Long = 0L,
+    /** When the clocks were stopped because the quiz left the screen, or null while it is being played. */
+    val pausedAt: Long? = null
 ) {
     init {
         require(questions.isNotEmpty()) { "A quiz needs at least one question" }
@@ -47,6 +49,21 @@ data class QuizSession(
 
     /** Ends the quiz now, in the middle of a question if need be: the clock of an endless quiz ran out. */
     fun finish(): QuizSession = if (isFinished) this else copy(isFinished = true)
+
+    val isPaused: Boolean get() = pausedAt != null
+
+    /** Stops the clocks at [now]: the quiz is no longer on screen. Ignored when already paused or over. */
+    fun pause(now: Long): QuizSession = if (isPaused || isFinished) this else copy(pausedAt = now)
+
+    /**
+     * Starts the clocks again at [now], as if the time away had never passed: the question and the whole quiz keep
+     * the time they had left. Ignored when not paused.
+     */
+    fun resume(now: Long): QuizSession {
+        val since = pausedAt ?: return this
+        val away = (now - since).coerceAtLeast(0L)
+        return copy(pausedAt = null, questionStartedAt = questionStartedAt + away, startedAt = startedAt + away)
+    }
 
     /** Ends the question as unanswered when the time ran out: no points and the streak is lost. */
     fun timeOut(): QuizSession {

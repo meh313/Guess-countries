@@ -160,24 +160,35 @@ class SpeedRoundTimerTest {
     }
 
     @Test
-    fun leavingTheScreenAndComingBack_neitherPausesNorRestartsTheCountdown() {
+    fun leavingTheScreen_pausesTheCountdown_andComingBackGoesOnWhereItStopped() {
         vm.startQuiz(QuizMode.SPEED_MATCH, "Global")
         var visible by mutableStateOf(true)
         rule.setContent { WorldFlagsTheme { if (visible) QuizScreen(vm) } }
         rule.mainClock.advanceTimeBy(200)
         clockAt(2_000)
+        countdown("8s left").assertIsDisplayed()
 
+        // A call, another tab, the app in the background: the question is not on screen for 28 seconds.
         onUi { visible = false }
         rule.mainClock.advanceTimeBy(250)
-        now = 7_000
+        assertTrue(session.isPaused)
+        now = 30_000
         onUi { visible = true }
         rule.mainClock.advanceTimeBy(250)
 
-        countdown("3s left").assertIsDisplayed()
+        assertFalse(session.isPaused)
+        assertFalse(session.timedOut)
+        countdown("8s left").assertIsDisplayed()
+
+        // The eight seconds that were left run out from the return, not from when the question was shown.
+        clockAt(37_900)
+        countdown("1s left").assertIsDisplayed()
+        clockAt(38_000)
+        assertTrue(session.timedOut)
     }
 
     @Test
-    fun leavingTheScreenForTooLong_timesTheQuestionOutOnReturn() {
+    fun aPausedQuizIsNotTimedOutByTheClockWhileItIsAway() {
         vm.startQuiz(QuizMode.SPEED_MATCH, "Global")
         var visible by mutableStateOf(true)
         rule.setContent { WorldFlagsTheme { if (visible) QuizScreen(vm) } }
@@ -185,11 +196,10 @@ class SpeedRoundTimerTest {
 
         onUi { visible = false }
         rule.mainClock.advanceTimeBy(250)
-        now = 30_000
-        onUi { visible = true }
-        rule.mainClock.advanceTimeBy(250)
+        clockAt(600_000)
 
-        assertTrue(session.timedOut)
+        assertFalse(session.timedOut)
+        assertFalse(session.hasAnswered)
     }
 
     @Test

@@ -5,6 +5,11 @@
     <!-- The optional daily reminder posts a notification (a runtime permission from Android 13). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- WorkManager declares these for network constraints and expedited work; the reminder uses neither, and the
+         app has no network access to speak of, so keep them out of the permission list. -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" tools:node="remove" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" tools:node="remove" />
+
     <!-- Package visibility (API 30+): lets TextToSpeech discover installed speech engines. -->
     <queries>
         <intent>

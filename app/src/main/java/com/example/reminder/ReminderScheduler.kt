@@ -42,6 +42,8 @@ class WorkManagerReminderScheduler(
 
     /** Replaces the chain, so the first reminder is worked out again in the current time zone. */
     override fun schedule(minuteOfDay: Int) {
+        // Register the channel now, so the system's notification settings for the app list it before the first run.
+        ReminderNotifier.ensureChannel(context)
         workManager.enqueueUniqueWork(
             WORK_NAME,
             ExistingWorkPolicy.REPLACE,

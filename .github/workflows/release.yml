@@ -45,7 +45,15 @@ jobs:
       EXPECTED_CERT: 151c68bfdc8dba3cfdba818ff827309344382e268dc45cd5bc3ac88460189d7a
       DRY_RUN: ${{ inputs.dry_run == true }}
     steps:
-      - uses: actions/checkout@v7
+      # A release is main as CI tested it, or a version tag. Nothing else gets signed and published.
+      - name: Refuse any ref but main or a version tag
+        run: |
+          if [ "$GITHUB_REF" != refs/heads/main ] && [ "$GITHUB_REF_TYPE" != tag ]; then
+            echo "::error::Releases are built from main or a v* tag, not from $GITHUB_REF_NAME."
+            exit 1
+          fi
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Check the signing secrets
         env:
@@ -98,7 +106,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
           echo "Building World Flags $version as $tag, versionCode $code (dry run: $DRY_RUN)"
 
-      - uses: actions/setup-java@v6
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6
         with:
           distribution: temurin
           java-version: 21
@@ -108,14 +116,25 @@ jobs:
           SDKMANAGER=$(ls "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager | head -1)
           yes | "$SDKMANAGER" --licenses > /dev/null || true
 
-      - uses: gradle/actions/setup-gradle@v6
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6
 
-      - name: Build the signed release APK
+      # Lint and the unit tests run again here: a release must not depend on remembering to look at CI first.
+      - name: Lint, test and build the signed release APK
         env:
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           VERSION_CODE: ${{ steps.version.outputs.code }}
-        run: ./gradlew --console=plain assembleRelease
+        run: ./gradlew --console=plain lintDebug testDebugUnitTest assembleRelease
+
+      - name: Upload reports
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: release-reports
+          path: |
+            app/build/reports/
+            app/build/test-results/
+          if-no-files-found: ignore
 
       - name: Verify the APK and collect the files
         id: files
@@ -167,7 +186,7 @@ jobs:
 
       - name: Keep the files as a workflow artifact (dry run)
         if: env.DRY_RUN == 'true'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: release-${{ steps.version.outputs.tag }}-dry-run
           path: dist/

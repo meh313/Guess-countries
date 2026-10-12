@@ -9,6 +9,7 @@ import com.example.support.FreshDatabaseRule
 import com.example.support.closeWhenIdle
 import com.example.support.inMemoryDatabase
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -58,6 +59,67 @@ class CountryRepositoryTest {
         val r = repository()
         assertEquals(listOf("ZI"), r.filterCountries("harare", "All", SortOption.NAME).map { it.code })
         assertEquals(listOf("CR"), r.filterCountries("republic of croatia", "All", SortOption.NAME).map { it.code })
+    }
+
+    @Test
+    fun search_matchesTheStartOfWordsOnly() {
+        val r = repository()
+        // "rica" starts the second word of Costa Rica; "ivoire" starts a word; "oatia" starts nothing.
+        assertEquals(listOf("CO"), r.filterCountries("rica", "All", SortOption.NAME).map { it.code })
+        assertEquals(listOf("CÔ"), r.filterCountries("ivoire", "All", SortOption.NAME).map { it.code })
+        assertEquals(emptyList<String>(), r.filterCountries("oatia", "All", SortOption.NAME).map { it.code })
+    }
+
+    // --- Over the real catalog: the names people actually type -------------------------------------------------------
+
+    private fun real() = CountryRepository(inMemoryDatabase().userProgressDao())
+
+    private fun found(query: String) = real().filterCountries(query, "All", SortOption.NAME).map { it.code }
+
+    @Test
+    fun search_findsCountriesByTheirCommonShortNames() {
+        assertEquals("GB", found("UK").first())
+        assertEquals("GB", found("Britain").first())
+        assertEquals("GB", found("England").first())
+        assertEquals(listOf("US"), found("USA"))
+        assertEquals(listOf("NL"), found("Holland"))
+        assertEquals(listOf("MM"), found("Burma"))
+        assertEquals(listOf("SZ"), found("Swaziland"))
+        assertEquals(listOf("TL"), found("East Timor"))
+        assertEquals(listOf("CD"), found("DRC"))
+        assertEquals(listOf("AE"), found("UAE"))
+        assertEquals(listOf("VA"), found("Holy See"))
+        assertEquals(listOf("CZ"), found("Czechia"))
+        assertEquals(listOf("CI"), found("Côte d'Ivoire"))
+        assertEquals(listOf("TR"), found("Türkiye"))
+    }
+
+    @Test
+    fun search_treatsSaintAndStAlike() {
+        assertEquals(listOf("LC"), found("St Lucia"))
+        assertEquals(listOf("LC"), found("St. Lucia"))
+        assertEquals(listOf("LC"), found("Saint Lucia"))
+        // The three Saints come first; Stockholm (a capital) and "State of ..." (official names) follow.
+        assertEquals(setOf("KN", "LC", "VC"), found("st").take(3).toSet())
+        assertTrue("SE" in found("st"))
+    }
+
+    @Test
+    fun search_doesNotMatchTheInsideOfWords() {
+        // "UK" used to find Ivory Coast (Yamoussoukro), Ukraine and Tonga (Nukuʻalofa); "Iran" found Albania (Tirana).
+        assertEquals(listOf("GB", "UA"), found("UK"))
+        assertEquals(listOf("IR"), found("Iran"))
+        assertEquals(listOf("US"), found("USA"))
+    }
+
+    @Test
+    fun search_putsAWholeNameBeforeNamesThatMerelyStartWithIt_thenCapitals() {
+        assertEquals("IN", found("India").first())
+        // India and Indonesia by name, then the "Independent State of ..." official names.
+        assertEquals(listOf("IN", "ID"), found("Ind").take(2))
+        // "Pa" starts Panama, Papua New Guinea... (names) before Paris (a capital).
+        val pa = found("Pa")
+        assertTrue(pa.indexOf("PA") < pa.indexOf("FR"))
     }
 
     @Test

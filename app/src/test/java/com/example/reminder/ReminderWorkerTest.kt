@@ -5,6 +5,8 @@ import android.app.Application
 import android.app.Notification
 import android.app.NotificationManager
 import android.content.Context
+import android.content.Intent
+import android.os.Build
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import androidx.work.Configuration
@@ -16,6 +18,7 @@ import androidx.work.WorkerParameters
 import androidx.work.testing.SynchronousExecutor
 import androidx.work.testing.TestDriver
 import androidx.work.testing.WorkManagerTestInitHelper
+import com.example.MainActivity
 import com.example.data.local.AppDatabase
 import com.example.data.local.QuizScoreEntity
 import com.example.data.settings.PrefsUserSettings
@@ -27,6 +30,8 @@ import java.util.TimeZone
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -37,10 +42,11 @@ import org.robolectric.annotation.Config
 
 /**
  * The reminder chain against a real WorkManager in test mode and a clock the test moves by hand: planning, the run that
- * sends the notification, and the next run it plans. No sleeps and no real time.
+ * sends the notification, and the next run it plans. No sleeps and no real time. Runs on the oldest supported Android
+ * (no channels, no permission), on 13 (the permission arrives) and on the current one.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [36])
+@Config(sdk = [24, 33, 36])
 class ReminderWorkerTest {
 
     // The app database is a singleton the worker opens itself, so start every test with a fresh one.
@@ -181,6 +187,42 @@ class ReminderWorkerTest {
     }
 
     @Test
+    fun theNotificationOpensTheQuizTab_withoutRestartingARunningApp() {
+        runDueWork(plan(), now = at(2026, 10, 5, 19))
+
+        val opened = shadowOf(notifications().single().contentIntent).savedIntent
+        assertEquals(MainActivity::class.java.name, opened.component?.className)
+        assertEquals(MainActivity.TAB_QUIZ, opened.getStringExtra(MainActivity.EXTRA_OPEN_TAB))
+        // CLEAR_TOP without SINGLE_TOP would finish the running activity, and a quiz in progress with it.
+        assertTrue(opened.flags and Intent.FLAG_ACTIVITY_SINGLE_TOP != 0)
+        assertTrue(opened.flags and Intent.FLAG_ACTIVITY_NEW_TASK != 0)
+    }
+
+    @Test
+    fun aFailureWhileNotifying_stillPlansTomorrow() {
+        val info = plan()
+        // The database cannot be read: every query throws.
+        AppDatabase.getDatabase(context).close()
+
+        runDueWork(info, now = at(2026, 10, 5, 19))
+
+        assertEquals(0, notifications().size)
+        assertEquals(1, pending().size)
+        assertEquals(WorkInfo.State.SUCCEEDED, workManager.getWorkInfoById(info.id).get()?.state)
+    }
+
+    @Test
+    fun switchingTheReminderOn_registersTheChannelBeforeTheFirstRun() {
+        assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+        val manager = context.getSystemService(NotificationManager::class.java)
+        assertEquals(null, manager.getNotificationChannel(ReminderNotifier.CHANNEL_ID))
+
+        plan()
+
+        assertEquals("Daily reminder", manager.getNotificationChannel(ReminderNotifier.CHANNEL_ID).name)
+    }
+
+    @Test
     fun aStreakAtRisk_isNamedInTheReminder() {
         finishQuizAt(at(2026, 10, 3, 9))
         finishQuizAt(at(2026, 10, 4, 9))
@@ -216,6 +258,8 @@ class ReminderWorkerTest {
 
     @Test
     fun withoutPermissionToNotify_nothingIsSent_butTomorrowIsPlanned() {
+        // Below Android 13 there is no notification permission to deny.
+        assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
         shadowOf(context as Application).denyPermissions(Manifest.permission.POST_NOTIFICATIONS)
         val info = plan()
 

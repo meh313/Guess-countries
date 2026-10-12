@@ -1,5 +1,6 @@
 package com.example
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -49,20 +50,45 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
 }
 
 class MainActivity : ComponentActivity() {
+    /** The tab a launching intent asks for (the reminder notification opens the quiz); cleared once shown. */
+    private val requestedTab = mutableStateOf<String?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        // Only a fresh start follows the intent: after a rotation the player may have moved to another tab.
+        if (savedInstanceState == null) requestedTab.value = intent.requestedTab()
         setContent {
             WorldFlagsTheme {
-                MainAppScreen()
+                MainAppScreen(requestedTab = requestedTab.value, onTabRequestShown = { requestedTab.value = null })
             }
         }
+    }
+
+    /**
+     * The activity is already running (SINGLE_TOP) and a notification was tapped: switch tabs, keep everything else.
+     * The intent is not stored with setIntent: nothing reads it after onCreate, and keeping one with NEW_TASK on a
+     * running activity stops Robolectric's ActivityScenario from ever seeing the activity destroyed.
+     */
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        intent.requestedTab()?.let { requestedTab.value = it }
+    }
+
+    private fun Intent.requestedTab(): String? = getStringExtra(EXTRA_OPEN_TAB)
+
+    companion object {
+        /** String extra naming the tab to open: one of the [Screen] routes. */
+        const val EXTRA_OPEN_TAB = "com.example.OPEN_TAB"
+        const val TAB_QUIZ = "quiz"
     }
 }
 
 @Composable
 fun MainAppScreen(
-    viewModel: CountryViewModel = viewModel(factory = CountryViewModel.Factory)
+    viewModel: CountryViewModel = viewModel(factory = CountryViewModel.Factory),
+    requestedTab: String? = null,
+    onTabRequestShown: () -> Unit = {}
 ) {
     val navController = rememberNavController()
     val items = listOf(
@@ -141,6 +167,18 @@ fun MainAppScreen(
                 composable(Screen.Stats.route) {
                     StatsScreen(viewModel = viewModel)
                 }
+            }
+            // After the NavHost, whose own effects give the controller its graph: effects run in composition order.
+            LaunchedEffect(requestedTab) {
+                val route = items.firstOrNull { it.route == requestedTab }?.route ?: return@LaunchedEffect
+                if (currentRoute != route) {
+                    navController.navigate(route) {
+                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+                onTabRequestShown()
             }
         }
     }

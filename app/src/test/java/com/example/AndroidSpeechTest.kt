@@ -86,6 +86,23 @@ class AndroidSpeechTest {
     }
 
     @Test
+    fun afterAFailedEngineInit_theNextPrepareTriesAgain() {
+        ShadowTextToSpeech.addLanguageAvailability(Locale.US)
+        val speech = newSpeech()
+        speech.prepare()
+        val first = ShadowTextToSpeech.getLastTextToSpeechInstance()
+        engine().onInitListener.onInit(TextToSpeech.ERROR)
+
+        speech.prepare()
+        val second = ShadowTextToSpeech.getLastTextToSpeechInstance()
+        engine().onInitListener.onInit(TextToSpeech.SUCCESS)
+
+        assertTrue("the dead engine should have been dropped", first !== second)
+        assertTrue(shadowOf(first).isShutdown)
+        assertTrue(speech.isAvailable.value)
+    }
+
+    @Test
     fun usAmericanEnglishIsUsedWhenAvailable() {
         ShadowTextToSpeech.addLanguageAvailability(Locale.US)
         val speech = newSpeech()

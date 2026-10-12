@@ -50,6 +50,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -78,6 +79,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.progress.PracticeStreak
 import com.example.quiz.QuizDifficulty
 import com.example.quiz.QuizEngine
@@ -143,7 +147,7 @@ fun QuizScreen(
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "Test your knowledge & climb the leaderboard!",
+                text = "Test what you know and keep your streak going",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
             )
@@ -374,13 +378,35 @@ fun QuizScreen(
         // The quiz now outlives the screen, so offer a way out (Back asks first).
         BackHandler(enabled = !active.isFinished) { showQuitConfirm = true }
 
+        // The clocks only run while the quiz is on screen: a call, a tab switch or the app going to the background
+        // pauses the question and the blitz where they stand, and they go on with the time they had left.
+        val lifecycleOwner = LocalLifecycleOwner.current
+        DisposableEffect(lifecycleOwner) {
+            val observer = LifecycleEventObserver { _, event ->
+                when (event) {
+                    Lifecycle.Event.ON_START -> viewModel.resumeQuiz()
+                    Lifecycle.Event.ON_STOP -> viewModel.pauseQuiz()
+                    else -> Unit
+                }
+            }
+            viewModel.resumeQuiz() // back on screen (another tab, a rotation): the clocks go on from where they stopped
+            lifecycleOwner.lifecycle.addObserver(observer)
+            onDispose {
+                lifecycleOwner.lifecycle.removeObserver(observer)
+                viewModel.pauseQuiz()
+            }
+        }
+
         val view = LocalView.current
         val limitMs = active.mode.timeLimitSeconds?.let { it * 1000L }
         var remainingMs by remember(active.currentIndex, active.questionStartedAt) { mutableLongStateOf(limitMs ?: 0L) }
         if (limitMs != null) {
             // Time is measured from when the question was shown, so rotating or switching tabs neither
             // pauses nor restarts it.
-            LaunchedEffect(active.currentIndex, active.questionStartedAt, active.hasAnswered) {
+            LaunchedEffect(active.currentIndex, active.questionStartedAt, active.hasAnswered, active.isPaused) {
+                // Coming back to the screen, the first frame still shows the paused session: its clock must not run
+                // (and time the question out) before the resumed session arrives and restarts this loop.
+                if (active.isPaused) return@LaunchedEffect
                 while (!active.hasAnswered) {
                     val left = limitMs - (viewModel.clockMillis() - active.questionStartedAt)
                     remainingMs = left.coerceIn(0L, limitMs)
@@ -397,7 +423,8 @@ fun QuizScreen(
         val totalMs = active.mode.totalTimeSeconds?.let { it * 1000L }
         var totalRemainingMs by remember(active.startedAt) { mutableLongStateOf(totalMs ?: 0L) }
         if (totalMs != null) {
-            LaunchedEffect(active.startedAt, active.isFinished) {
+            LaunchedEffect(active.startedAt, active.isFinished, active.isPaused) {
+                if (active.isPaused) return@LaunchedEffect
                 while (!active.isFinished) {
                     val left = totalMs - (viewModel.clockMillis() - active.startedAt)
                     totalRemainingMs = left.coerceIn(0L, totalMs)

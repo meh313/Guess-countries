@@ -1,6 +1,7 @@
 package com.example.reminder
 
 import android.content.Context
+import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.data.local.AppDatabase
@@ -28,15 +29,27 @@ class ReminderWorker(
 
         val at = now()
         val dueAt = inputData.getLong(WorkManagerReminderScheduler.KEY_DUE_AT, at)
-        if (!ReminderSchedule.isTooLate(dueAt, at)) {
-            val timestamps = AppDatabase.getDatabase(applicationContext).userProgressDao().quizTimestamps()
-            val allowed = ReminderNotifier.areNotificationsAllowed(applicationContext)
-            if (ReminderSchedule.shouldNotify(enabled = true, allowed, timestamps, at, zone())) {
-                ReminderNotifier.show(applicationContext, ReminderSchedule.message(PracticeStreak.summary(timestamps, at, zone())))
-            }
+        try {
+            if (!ReminderSchedule.isTooLate(dueAt, at)) notifyIfNothingPracticed(at)
+        } catch (e: Exception) {
+            // Tonight's reminder is lost, tomorrow's must not be: the chain is only re-planned when the app is opened.
+            Log.w(TAG, "The reminder could not be shown", e)
+        } finally {
+            // From the later of "now" and the planned moment, so a run a second early cannot plan today's time again.
+            WorkManagerReminderScheduler(applicationContext, now, zone).scheduleNext(id, settings.reminderMinuteOfDay, maxOf(at, dueAt))
         }
-        // From the later of "now" and the planned moment, so a run a second early cannot plan today's time again.
-        WorkManagerReminderScheduler(applicationContext, now, zone).scheduleNext(id, settings.reminderMinuteOfDay, maxOf(at, dueAt))
         return Result.success()
+    }
+
+    private suspend fun notifyIfNothingPracticed(at: Long) {
+        val timestamps = AppDatabase.getDatabase(applicationContext).userProgressDao().quizTimestamps()
+        val allowed = ReminderNotifier.areNotificationsAllowed(applicationContext)
+        if (ReminderSchedule.shouldNotify(enabled = true, allowed, timestamps, at, zone())) {
+            ReminderNotifier.show(applicationContext, ReminderSchedule.message(PracticeStreak.summary(timestamps, at, zone())))
+        }
+    }
+
+    private companion object {
+        const val TAG = "ReminderWorker"
     }
 }

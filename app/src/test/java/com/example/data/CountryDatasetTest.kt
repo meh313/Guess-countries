@@ -1,7 +1,6 @@
 package com.example.data
 
 import com.example.data.model.CountryCatalog
-import com.example.data.model.nameSortKey
 import com.example.quiz.allCountries
 import com.example.ui.components.flagArtFor
 import org.junit.Assert.assertEquals

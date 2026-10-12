@@ -13,10 +13,10 @@ enum class QuizMode(
     /** Seconds for the whole quiz when the mode runs against one clock until it ends, else null. */
     val totalTimeSeconds: Int? = null
 ) {
-    FLAG_NAME("Flag -> Country"),
-    PICK_FLAG("Country -> Flag", hint = "Pick the right flag out of four"),
-    CAPITAL("Country -> Capital"),
-    CONTINENT("Flag -> Continent", hint = "Covers the whole world"),
+    FLAG_NAME("Flag → Country"),
+    PICK_FLAG("Country → Flag", hint = "Pick the right flag out of four"),
+    CAPITAL("Country → Capital"),
+    CONTINENT("Flag → Continent", hint = "Covers the whole world"),
     SPEED_MATCH("Speed Round", timeLimitSeconds = 10, hint = "10 seconds per question"),
     BLITZ("60-Second Blitz", hint = "As many flags as you can in one minute", totalTimeSeconds = 60);
 
