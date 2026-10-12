@@ -72,11 +72,11 @@ class ScreenshotsTest {
         rule.onNodeWithTag("flashcard_flip_card").performClick()
         rule.waitForIdle()
         save("flashcards_back")
-        // Nothing practiced yet, so the weak-spots deck says what it needs.
-        rule.onNodeWithTag("flashcard_weak_spots_btn").performClick()
+        // Nothing practiced yet: the study chooser offers this deck only.
+        rule.onNodeWithTag("flashcard_study_btn").performClick()
         rule.waitForIdle()
-        save("flashcards_weak_spots_locked")
-        rule.onNodeWithTag("flashcard_weak_spots_locked_ok_btn").performClick()
+        saveBitmap("flashcards_study_chooser", drawLatestDialog())
+        rule.onNodeWithTag("study_cancel_btn").performClick()
         rule.waitForIdle()
 
         rule.openTab("quiz")
@@ -106,7 +106,7 @@ class ScreenshotsTest {
         rule.waitForIdle()
 
         // Six countries answered wrong (and the two quizzes above left their own marks): the weak-spots scope unlocks
-        // and so does the deck.
+        // and so does the study source.
         listOf("FR", "DE", "ES", "JP", "BR", "IT").forEach { viewModel.gradeFlashcard(it, Grade.AGAIN) }
         rule.awaitWeakSpotsWhere(viewModel) { it >= 6 }
         rule.openTab("quiz")
@@ -114,10 +114,31 @@ class ScreenshotsTest {
         rule.onNodeWithTag("quiz_scope_weak_spots").performScrollTo().performClick()
         rule.waitForIdle()
         save("quiz_setup_weak_spots")
+
+        // A study session over the weak spots: the flipped card with its grades, then the summary after ten cards.
         rule.openTab("flashcards")
-        rule.onNodeWithTag("flashcard_weak_spots_btn").performClick()
+        rule.onNodeWithTag("flashcard_study_btn").performClick()
         rule.waitForIdle()
-        save("flashcards_weak_spots")
+        rule.onNodeWithTag("study_weak_btn").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithTag("flashcard_flip_card").performClick()
+        rule.waitForIdle()
+        save("flashcards_study")
+        rule.onNodeWithTag("grade_good_btn").performClick()
+        rule.waitForIdle()
+        viewModel.dismissStudy()
+        rule.waitForIdle()
+        viewModel.startStudy(com.example.flashcards.StudySession.DECK, viewModel.repository.allCountries.take(10).map { it.code })
+        rule.waitForIdle()
+        repeat(10) { i ->
+            viewModel.flipStudyCard()
+            viewModel.gradeStudyCard(if (i % 3 == 0) Grade.EASY else Grade.GOOD)
+        }
+        rule.awaitDelivered { viewModel.studyOutcome.value != null }
+        rule.onNodeWithTag("flashcard_summary").assertIsDisplayed()
+        save("flashcards_summary")
+        viewModel.dismissStudy()
+        rule.waitForIdle()
 
         // A wrong text answer: the picked flag beside the right one.
         rule.openTab("quiz")

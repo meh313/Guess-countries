@@ -19,8 +19,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.LocationCity
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Today
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -43,7 +45,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LifecycleResumeEffect
+import com.example.flashcards.StudySession
 import com.example.progress.PracticeStreak
+import com.example.progress.Skill
 import com.example.quiz.QuizMode
 import com.example.ui.components.StatBadge
 import com.example.ui.components.getContinentColor
@@ -57,7 +61,10 @@ fun StatsScreen(
     modifier: Modifier = Modifier
 ) {
     val progressMap by viewModel.userProgressMap.collectAsStateWithLifecycle()
-    val masteredFlags by viewModel.masteredFlags.collectAsStateWithLifecycle()
+    val mastered by viewModel.mastered.collectAsStateWithLifecycle()
+    val masteredFlags = mastered[Skill.FLAG].orEmpty()
+    val masteredCapitals = mastered[Skill.CAPITAL].orEmpty()
+    val plan by viewModel.quizPlan.collectAsStateWithLifecycle()
     val streak by viewModel.streak.collectAsStateWithLifecycle()
     // A day can end while this screen sits open in the background; work the streak out again on every return.
     LifecycleResumeEffect(viewModel) {
@@ -74,7 +81,10 @@ fun StatsScreen(
     val bookmarkedCount = progressMap.values.count { it.isFavorite }
     val sovereignCodes = allCountries.map { it.code }.toSet()
     val masteredCount = masteredFlags.count { it in sovereignCodes }
-    val totalQuizzes = quizHistory.size
+    val capitalsCount = masteredCapitals.count { it in sovereignCodes }
+    val dueCount = plan.due(Skill.FLAG).size
+    // Study sessions are logged for the streak, but they are not quizzes.
+    val totalQuizzes = quizHistory.count { it.mode != StudySession.MODE }
     // A blitz runs as long as the clock allows, so its points would swamp the 190-point maximum of the others.
     val maxScore = quizHistory.filter { it.mode != QuizMode.BLITZ.name }.maxOfOrNull { it.score } ?: 0
 
@@ -118,6 +128,26 @@ fun StatsScreen(
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 StatBadge(
+                    title = "Capitals Known",
+                    value = "$capitalsCount / ${allCountries.size}",
+                    icon = Icons.Default.LocationCity,
+                    iconColor = Color(0xFF8E44AD),
+                    modifier = Modifier.weight(1f).testTag("stats_capitals")
+                )
+            }
+        }
+
+        item {
+            Row(modifier = Modifier.fillMaxWidth()) {
+                StatBadge(
+                    title = "Due Today",
+                    value = "$dueCount",
+                    icon = Icons.Default.Today,
+                    iconColor = Color(0xFF16A085),
+                    modifier = Modifier.weight(1f).testTag("stats_due")
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                StatBadge(
                     title = "Saved Bookmarks",
                     value = "$bookmarkedCount",
                     icon = Icons.Default.Bookmark,
@@ -134,7 +164,7 @@ fun StatsScreen(
                     value = "$totalQuizzes",
                     icon = Icons.Default.Public,
                     iconColor = Color(0xFF27AE60),
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f).testTag("stats_quizzes")
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 StatBadge(
@@ -160,6 +190,7 @@ fun StatsScreen(
             val continentCountries = allCountries.filter { it.continent.equals(continent, ignoreCase = true) }
             val total = continentCountries.size
             val masteredInContinent = continentCountries.count { it.code in masteredFlags }
+            val capitalsInContinent = continentCountries.count { it.code in masteredCapitals }
             val progressRatio = if (total > 0) masteredInContinent.toFloat() / total else 0f
             val continentColor = getContinentColor(continent)
 
@@ -190,12 +221,19 @@ fun StatsScreen(
                             }
                         }
 
-                        Text(
-                            text = "$masteredInContinent of $total Mastered",
-                            style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                        )
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                text = "$masteredInContinent of $total Mastered",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                            )
+                            Text(
+                                text = "Capitals: $capitalsInContinent",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(10.dp))
@@ -232,7 +270,7 @@ fun StatsScreen(
                 ) {
                     Box(modifier = Modifier.padding(20.dp), contentAlignment = Alignment.Center) {
                         Text(
-                            text = "No quiz attempts yet. Start a quiz to track your high scores!",
+                            text = "No quizzes yet. Finish a quiz or a study session and it shows up here.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.outline
                         )
@@ -254,8 +292,12 @@ fun StatsScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
+                            val modeTitle = when (entry.mode) {
+                                StudySession.MODE -> StudySession.MODE_TITLE
+                                else -> QuizMode.entries.firstOrNull { it.name == entry.mode }?.title ?: entry.mode
+                            }
                             Text(
-                                text = "${QuizMode.entries.firstOrNull { it.name == entry.mode }?.title ?: entry.mode} • ${entry.continentFilter}",
+                                text = "$modeTitle • ${entry.continentFilter}",
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold
                             )
@@ -271,7 +313,11 @@ fun StatsScreen(
                             color = MaterialTheme.colorScheme.primaryContainer
                         ) {
                             Text(
-                                text = if (entry.mode == QuizMode.BLITZ.name) "${entry.correct ?: entry.total} correct · ${entry.score} pts" else "${entry.score} pts",
+                                text = when (entry.mode) {
+                                    StudySession.MODE -> "${entry.correct ?: 0} of ${entry.questionCount ?: 0} remembered"
+                                    QuizMode.BLITZ.name -> "${entry.correct ?: entry.total} correct · ${entry.score} pts"
+                                    else -> "${entry.score} pts"
+                                },
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
@@ -291,7 +337,7 @@ private fun days(n: Int) = if (n == 1) "1 day" else "$n days"
 private fun StreakCard(streak: PracticeStreak.Summary, modifier: Modifier = Modifier) {
     val title = if (streak.current == 0) "No streak yet" else "${streak.current}-day streak"
     val detail = if (streak.best == 0) {
-        "Finish a quiz today to start one"
+        "Finish a quiz or a study session today to start one"
     } else {
         "Best: ${days(streak.best)} · ${if (streak.practicedToday) "Practiced today" else "Not yet today"}"
     }

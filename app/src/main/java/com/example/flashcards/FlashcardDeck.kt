@@ -18,4 +18,7 @@ object FlashcardDeck {
 
     /** Code of the card after [index], wrapping to the first card at the end. */
     fun nextCode(deck: List<Country>, index: Int): String = deck[(index + 1) % deck.size].code
+
+    /** Code of the card before [index], wrapping to the last card at the start. */
+    fun previousCode(deck: List<Country>, index: Int): String = deck[(index - 1 + deck.size) % deck.size].code
 }

@@ -78,6 +78,10 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
+        /** The shared instance, if one was opened; tests let its writes finish before resetting it. */
+        @VisibleForTesting
+        fun openInstance(): AppDatabase? = synchronized(this) { INSTANCE }
+
         /** Closes and forgets the shared instance so each test starts from a fresh database. */
         @VisibleForTesting
         fun closeAndReset() {

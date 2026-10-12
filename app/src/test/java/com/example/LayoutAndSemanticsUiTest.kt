@@ -128,8 +128,8 @@ class LayoutAndSemanticsUiTest {
         rule.openTab("flashcards")
 
         assertFrontFaceFits(minFlagDp = 72f)
-        rule.onNodeWithTag("grade_hard_btn").assertIsDisplayed()
-        rule.onNodeWithTag("grade_mastered_btn").assertIsDisplayed()
+        rule.onNodeWithTag("flashcard_prev_btn").assertIsDisplayed()
+        rule.onNodeWithTag("flashcard_next_btn").assertIsDisplayed()
     }
 
     /** Chip above flag above hint, all inside the card, and the flag is a 4:3 rectangle of sensible size. */
@@ -166,7 +166,7 @@ class LayoutAndSemanticsUiTest {
 
         val flag = rule.boundsOf("flashcard_flag")
         assertTrue("flag height ${flag.height / density}dp", flag.height / density >= 71.5f)
-        rule.onNodeWithTag("grade_mastered_btn").assertIsDisplayed()
+        rule.onNodeWithTag("flashcard_next_btn").assertIsDisplayed()
     }
 
     @Test
@@ -197,10 +197,10 @@ class LayoutAndSemanticsUiTest {
 
     @Test
     @Config(sdk = [36], qualifiers = "w800dp-h360dp-xxhdpi")
-    fun landscapePhone_gradeButtonsStillAdvanceTheDeck() {
+    fun landscapePhone_nextStillAdvancesTheDeck() {
         rule.openTab("flashcards")
 
-        rule.onNodeWithTag("grade_mastered_btn").performClick()
+        rule.onNodeWithTag("flashcard_next_btn").performClick()
         rule.waitForIdle()
 
         rule.onNodeWithTag("flashcard_flip_card").assertIsDisplayed()
@@ -351,7 +351,7 @@ class LayoutAndSemanticsUiTest {
         val shown = ViewModelProvider(rule.activity)[CountryViewModel::class.java].filteredCountries.value
         rule.openTab("flashcards")
         repeat(shown.indexOfFirst { it.code == longest.code }) {
-            rule.onNodeWithTag("grade_mastered_btn").performClick()
+            rule.onNodeWithTag("flashcard_next_btn").performClick()
             rule.waitForIdle()
         }
         rule.onNodeWithTag("flashcard_flip_card").performClick()

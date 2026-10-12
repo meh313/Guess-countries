@@ -71,11 +71,16 @@ class ProgressStateHolder(
         .map { it.weak[Skill.FLAG].orEmpty() }
         .stateIn(scope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    /** The codes of the countries whose flag counts as mastered right now (box, score and not lapsed). */
-    val masteredFlags: StateFlow<Set<String>> = combine(skills, refresh) { bySkill, _ ->
+    /** Per skill, the codes of the countries that count as mastered right now (box, score and not lapsed). */
+    val mastered: StateFlow<Map<Skill, Set<String>>> = combine(skills, refresh) { bySkill, _ ->
         val now = repository.now()
-        bySkill[Skill.FLAG].orEmpty().filterValues { SkillMastery.isMastered(it, now) }.keys
-    }.stateIn(scope, SharingStarted.WhileSubscribed(5000), emptySet())
+        Skill.entries.associateWith { skill -> bySkill[skill].orEmpty().filterValues { SkillMastery.isMastered(it, now) }.keys }
+    }.stateIn(scope, SharingStarted.WhileSubscribed(5000), emptyMap())
+
+    /** The codes of the countries whose flag counts as mastered right now. */
+    val masteredFlags: StateFlow<Set<String>> = mastered
+        .map { it[Skill.FLAG].orEmpty() }
+        .stateIn(scope, SharingStarted.WhileSubscribed(5000), emptySet())
 
     /** The daily practice streak, worked out from when quizzes finished; see [refreshClock] for the day rolling over. */
     val streak: StateFlow<PracticeStreak.Summary> = combine(quizHistory, refresh) { history, _ ->

@@ -7,35 +7,34 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.Undo
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Flip
 import androidx.compose.material.icons.filled.LocationCity
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Shuffle
-import androidx.compose.material.icons.filled.ThumbUp
-import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -43,19 +42,18 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -66,6 +64,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
@@ -73,15 +72,18 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.data.model.Country
 import com.example.data.model.SortOption
-import com.example.progress.Grade
-import com.example.quiz.QuizEngine
 import com.example.flashcards.FlashcardDeck
-import com.example.ui.components.FlagView
-import com.example.ui.components.getContinentColor
+import com.example.flashcards.StudySession
+import com.example.progress.Grade
+import com.example.progress.PracticeStreak
+import com.example.progress.Skill
 import com.example.ui.components.FlagAspectRatio
+import com.example.ui.components.FlagView
 import com.example.ui.components.formatPopulation
+import com.example.ui.components.getContinentColor
 import com.example.ui.components.rememberCompactNumberFormat
 import com.example.ui.theme.MasteredColor
 import com.example.ui.theme.NeedsPracticeColor
@@ -92,14 +94,18 @@ private val COMPACT_HEIGHT = 480.dp
 private val TWO_PANE_MIN_WIDTH = 560.dp
 private val SIDE_PANE_WIDTH = 240.dp
 
+/**
+ * Flashcards: browsing the deck (Explore's list, in its order or shuffled) with Previous and Next, and study
+ * sessions over the cards due today, the weak spots or this deck, graded Again / Good / Easy after the flip.
+ */
 @Composable
 fun FlashcardScreen(
     viewModel: CountryViewModel,
     modifier: Modifier = Modifier
 ) {
     val exploreCountries by viewModel.filteredCountries.collectAsStateWithLifecycle()
-    val weakSpots by viewModel.weakSpots.collectAsStateWithLifecycle()
-    val weakSpotsAvailable = weakSpots.size >= QuizEngine.MIN_POOL
+    val plan by viewModel.quizPlan.collectAsStateWithLifecycle()
+    val study by viewModel.studySession.collectAsStateWithLifecycle()
     val speechAvailable by viewModel.speechAvailable.collectAsStateWithLifecycle()
     // Bind the speech engine only once a screen that can speak is shown.
     LaunchedEffect(Unit) { viewModel.prepareSpeech() }
@@ -112,17 +118,44 @@ fun FlashcardScreen(
     var currentCode by rememberSaveable { mutableStateOf<String?>(null) }
     var flippedCode by rememberSaveable { mutableStateOf<String?>(null) }
     var shuffleSeed by rememberSaveable { mutableStateOf<Long?>(null) }
-    // The weak-spots deck is a snapshot taken when it is switched on (country codes, weakest first): grading a card
-    // changes its mastery and must not reorder the deck underneath the player.
-    var weakDeckCodes by rememberSaveable { mutableStateOf<String?>(null) }
-    var showLockedHint by rememberSaveable { mutableStateOf(false) }
-    if (weakSpotsAvailable && showLockedHint) showLockedHint = false
+    var showStudyChooser by rememberSaveable { mutableStateOf(false) }
     val countriesByCode = remember(viewModel) { viewModel.repository.allCountries.associateBy { it.code } }
-    val weakDeck = remember(weakDeckCodes, countriesByCode) {
-        weakDeckCodes?.split(',')?.mapNotNull { countriesByCode[it] }
+    val due = plan.due(Skill.FLAG)
+    val weak = plan.weak(Skill.FLAG)
+
+    val session = study
+    if (session != null) {
+        StudyView(
+            session = session,
+            outcome = viewModel.studyOutcome.collectAsStateWithLifecycle().value,
+            countriesByCode = countriesByCode,
+            speechAvailable = speechAvailable,
+            onFlip = { viewModel.flipStudyCard() },
+            onSpeak = { code -> countriesByCode[code]?.let { viewModel.speakCountryDetails(it) } },
+            onGrade = { grade ->
+                viewModel.stopSpeaking()
+                viewModel.gradeStudyCard(grade)
+            },
+            onUndo = { viewModel.undoStudyGrade() },
+            onEnd = {
+                viewModel.stopSpeaking()
+                viewModel.endStudy()
+            },
+            onStudyAgain = {
+                val codes = when (session.source) {
+                    StudySession.DUE -> due.map { it.code }
+                    StudySession.WEAK -> weak.map { it.code }
+                    else -> session.cards
+                }
+                viewModel.startStudy(session.source, codes.ifEmpty { session.cards })
+            },
+            onDone = { viewModel.dismissStudy() },
+            modifier = modifier
+        )
+        return
     }
-    // Explore's filters do not apply to the weak-spots deck.
-    val countries = weakDeck ?: exploreCountries
+
+    val countries = exploreCountries
 
     // The deck is shared with Explore's filters and sort order, so say so and offer a way out.
     val filterSummary = listOfNotNull(
@@ -131,8 +164,7 @@ fun FlashcardScreen(
         searchQuery.takeIf { it.isNotBlank() }?.let { "\"$it\"" },
         "Sorted by ${sortBy.name.lowercase()}".takeIf { sortBy != SortOption.NAME }
     ).joinToString(" · ")
-    val exploreFiltersSet = filterSummary.isNotEmpty()
-    val filtersActive = exploreFiltersSet && weakDeck == null
+    val filtersActive = filterSummary.isNotEmpty()
 
     if (countries.isEmpty()) {
         Column(
@@ -188,38 +220,72 @@ fun FlashcardScreen(
         currentCode = null
         flippedCode = null
     }
-    val onGrade: (Boolean) -> Unit = { mastered ->
+    val onStep: (Boolean) -> Unit = { forward ->
         viewModel.stopSpeaking()
-        // A self-grade is light evidence: "Mastered!" counts as knowing it today, not as mastery.
-        viewModel.gradeFlashcard(currentCountry.code, if (mastered) Grade.GOOD else Grade.AGAIN)
-        currentCode = FlashcardDeck.nextCode(deck, index)
+        currentCode = if (forward) FlashcardDeck.nextCode(deck, index) else FlashcardDeck.previousCode(deck, index)
         flippedCode = null
     }
-    val onWeakSpotsToggle = {
-        if (weakDeckCodes != null || weakSpotsAvailable) {
-            viewModel.stopSpeaking()
-            weakDeckCodes = if (weakDeckCodes != null) null else weakSpots.joinToString(",") { it.code }
-            shuffleSeed = null
-            currentCode = null
-            flippedCode = null
-        } else {
-            showLockedHint = !showLockedHint
-        }
-    }
-    val weakDeckActive = weakDeck != null
-    val flipCard: @Composable (Modifier, Boolean) -> Unit = { cardModifier, compact ->
-        FlipCard(
-            country = currentCountry,
-            isFlipped = isFlipped,
-            rotation = rotation,
-            compact = compact,
-            speechAvailable = speechAvailable,
-            onFlip = { flippedCode = if (isFlipped) null else currentCountry.code },
-            onSpeak = { viewModel.speakCountryDetails(currentCountry) },
-            modifier = cardModifier
+    // "This deck" starts at the card in hand and goes on in the deck's order.
+    val deckFromHere = { (deck.drop(index) + deck.take(index)).map { it.code } }
+
+    if (showStudyChooser) {
+        StudyChooser(
+            dueCount = due.size,
+            weakCount = weak.size,
+            deckCount = minOf(deck.size, StudySession.DEFAULT_SIZE),
+            onPick = { source ->
+                showStudyChooser = false
+                viewModel.stopSpeaking()
+                flippedCode = null
+                val codes = when (source) {
+                    StudySession.DUE -> due.map { it.code }
+                    StudySession.WEAK -> weak.map { it.code }
+                    else -> deckFromHere()
+                }
+                viewModel.startStudy(source, codes)
+            },
+            onDismiss = { showStudyChooser = false }
         )
     }
 
+    DeckLayout(
+        modifier = modifier,
+        top = {
+            DeckHeader(index, deck.size, onShuffle, onReset, onStudy = { showStudyChooser = true })
+            if (filtersActive) {
+                Spacer(modifier = Modifier.height(8.dp))
+                FilterNotice(filterSummary) { viewModel.clearFilters() }
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            DeckProgress((index + 1).toFloat() / deck.size)
+        },
+        card = { cardModifier, compact ->
+            FlipCard(
+                country = currentCountry,
+                isFlipped = isFlipped,
+                rotation = rotation,
+                compact = compact,
+                speechAvailable = speechAvailable,
+                onFlip = { flippedCode = if (isFlipped) null else currentCountry.code },
+                onSpeak = { viewModel.speakCountryDetails(currentCountry) },
+                modifier = cardModifier
+            )
+        },
+        bottom = { stacked -> StepButtons(stacked = stacked, onStep = onStep) }
+    )
+}
+
+/**
+ * The screen's two shapes: a column (header, card, buttons) in portrait, and in a short wide window the card
+ * beside a scrolling side pane holding the rest.
+ */
+@Composable
+private fun DeckLayout(
+    modifier: Modifier,
+    top: @Composable ColumnScope.() -> Unit,
+    card: @Composable (Modifier, Boolean) -> Unit,
+    bottom: @Composable ColumnScope.(stacked: Boolean) -> Unit
+) {
     BoxWithConstraints(
         modifier = modifier
             .fillMaxSize()
@@ -235,7 +301,7 @@ fun FlashcardScreen(
                     .padding(16.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                flipCard(Modifier.weight(1f).fillMaxHeight(), true)
+                card(Modifier.weight(1f).fillMaxHeight(), true)
 
                 Column(
                     modifier = Modifier
@@ -244,12 +310,8 @@ fun FlashcardScreen(
                         .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    DeckHeader(index, deck.size, onShuffle, onReset, weakDeckActive, onWeakSpotsToggle)
-                    if (filtersActive) FilterNotice(filterSummary) { viewModel.clearFilters() }
-                    if (weakDeckActive) WeakDeckNotice(deck.size, exploreFiltersSet) { onWeakSpotsToggle() }
-                    if (showLockedHint) WeakSpotsLockedNotice(weakSpots.size) { showLockedHint = false }
-                    DeckProgress((index + 1).toFloat() / deck.size)
-                    GradeButtons(stacked = true, onGrade = onGrade)
+                    top()
+                    bottom(true)
                 }
             }
         } else {
@@ -259,43 +321,26 @@ fun FlashcardScreen(
                     .padding(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                DeckHeader(index, deck.size, onShuffle, onReset, weakDeckActive, onWeakSpotsToggle)
-
-                if (filtersActive) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    FilterNotice(filterSummary) { viewModel.clearFilters() }
-                }
-                if (weakDeckActive) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    WeakDeckNotice(deck.size, exploreFiltersSet) { onWeakSpotsToggle() }
-                }
-                if (showLockedHint) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    WeakSpotsLockedNotice(weakSpots.size) { showLockedHint = false }
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-                DeckProgress((index + 1).toFloat() / deck.size)
+                top()
                 Spacer(modifier = Modifier.height(24.dp))
 
-                flipCard(Modifier.fillMaxWidth().weight(1f), false)
+                card(Modifier.fillMaxWidth().weight(1f), false)
 
                 Spacer(modifier = Modifier.height(20.dp))
-                GradeButtons(stacked = false, onGrade = onGrade)
+                bottom(false)
             }
         }
     }
 }
 
-/** Title, "Card x of y" and the shuffle / reset actions. */
+/** Title, "Card x of y", the Study action and the shuffle / reset actions. */
 @Composable
 private fun DeckHeader(
     index: Int,
     total: Int,
     onShuffle: () -> Unit,
     onReset: () -> Unit,
-    weakDeckActive: Boolean,
-    onWeakSpotsToggle: () -> Unit
+    onStudy: () -> Unit
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -304,9 +349,10 @@ private fun DeckHeader(
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "Flashcard Study",
+                text = "Flashcards",
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.semantics { heading() }
             )
             Text(
                 text = "Card ${index + 1} of $total",
@@ -316,17 +362,8 @@ private fun DeckHeader(
         }
 
         Row {
-            IconButton(
-                onClick = onWeakSpotsToggle,
-                modifier = Modifier
-                    .semantics { stateDescription = if (weakDeckActive) "On" else "Off" }
-                    .testTag("flashcard_weak_spots_btn")
-            ) {
-                Icon(
-                    imageVector = Icons.Default.FitnessCenter,
-                    contentDescription = "Weak spots deck",
-                    tint = if (weakDeckActive) MaterialTheme.colorScheme.primary else LocalContentColor.current
-                )
+            IconButton(onClick = onStudy, modifier = Modifier.testTag("flashcard_study_btn")) {
+                Icon(imageVector = Icons.Default.School, contentDescription = "Study", tint = MaterialTheme.colorScheme.primary)
             }
             IconButton(onClick = onShuffle) {
                 Icon(imageVector = Icons.Default.Shuffle, contentDescription = "Shuffle Cards")
@@ -334,6 +371,307 @@ private fun DeckHeader(
             IconButton(onClick = onReset) {
                 Icon(imageVector = Icons.Default.Refresh, contentDescription = "Reset Deck")
             }
+        }
+    }
+}
+
+/** Previous and Next: side by side normally, stacked in the landscape side pane. */
+@Composable
+private fun StepButtons(stacked: Boolean, onStep: (forward: Boolean) -> Unit) {
+    val previous: @Composable (Modifier) -> Unit = { m ->
+        OutlinedButton(onClick = { onStep(false) }, modifier = m.testTag("flashcard_prev_btn"), shape = RoundedCornerShape(14.dp)) {
+            Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, modifier = Modifier.size(16.dp))
+            Spacer(modifier = Modifier.width(4.dp))
+            Text("Previous", fontWeight = FontWeight.Bold)
+        }
+    }
+    val next: @Composable (Modifier) -> Unit = { m ->
+        Button(onClick = { onStep(true) }, modifier = m.testTag("flashcard_next_btn"), shape = RoundedCornerShape(14.dp)) {
+            Text("Next", fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.width(4.dp))
+            Icon(imageVector = Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, modifier = Modifier.size(16.dp))
+        }
+    }
+    if (stacked) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            next(Modifier.fillMaxWidth())
+            previous(Modifier.fillMaxWidth())
+        }
+    } else {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            previous(Modifier.weight(1f))
+            next(Modifier.weight(1f))
+        }
+    }
+}
+
+/** Where the study cards come from. A source with nothing in it is shown, counted and inactive. */
+@Composable
+private fun StudyChooser(dueCount: Int, weakCount: Int, deckCount: Int, onPick: (String) -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Study") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = "Up to ${StudySession.DEFAULT_SIZE} cards; grade each one after the flip. Ten or more count as practice.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                StudyOption(StudySession.DUE, "Due today", "$dueCount ${cards(dueCount)} due for review", dueCount > 0, "study_due_btn") { onPick(it) }
+                StudyOption(StudySession.WEAK, "Weak spots", "$weakCount reviewed, not mastered", weakCount > 0, "study_weak_btn") { onPick(it) }
+                StudyOption(StudySession.DECK, "This deck", "the next $deckCount ${cards(deckCount)} from here", deckCount > 0, "study_deck_btn") { onPick(it) }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss, modifier = Modifier.testTag("study_cancel_btn")) { Text("Cancel") }
+        }
+    )
+}
+
+private fun cards(n: Int) = if (n == 1) "card" else "cards"
+
+@Composable
+private fun StudyOption(source: String, title: String, detail: String, enabled: Boolean, tag: String, onPick: (String) -> Unit) {
+    Surface(
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = enabled, role = Role.Button) { onPick(source) }
+            .testTag(tag)
+    ) {
+        Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+            )
+            Text(
+                text = detail,
+                style = MaterialTheme.typography.bodySmall,
+                color = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+            )
+        }
+    }
+}
+
+// --- Study session --------------------------------------------------------------------------------------------------
+
+/** A study session: the card on top with Again / Good / Easy once flipped, Undo and End; the summary once it is over. */
+@Composable
+private fun StudyView(
+    session: StudySession,
+    outcome: PracticeStreak.Outcome?,
+    countriesByCode: Map<String, Country>,
+    speechAvailable: Boolean,
+    onFlip: () -> Unit,
+    onSpeak: (String) -> Unit,
+    onGrade: (Grade) -> Unit,
+    onUndo: () -> Unit,
+    onEnd: () -> Unit,
+    onStudyAgain: () -> Unit,
+    onDone: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val code = session.current
+    val country = code?.let { countriesByCode[it] }
+    if (session.isOver || country == null) {
+        StudySummary(session, outcome, onStudyAgain, onDone, modifier)
+        return
+    }
+    val rotation = key(code) {
+        animateFloatAsState(
+            targetValue = if (session.isFlipped) 180f else 0f,
+            animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing),
+            label = "flashcard_rotation"
+        )
+    }
+    DeckLayout(
+        modifier = modifier,
+        top = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Study · ${session.source}",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.semantics { heading() }
+                    )
+                    Text(
+                        text = "Card ${session.position} of ${session.cards.size}" + if (session.isRehearsal) " · again" else "",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                        modifier = Modifier.testTag("study_position")
+                    )
+                }
+                IconButton(onClick = onUndo, enabled = session.pending != null, modifier = Modifier.testTag("flashcard_undo_btn")) {
+                    Icon(imageVector = Icons.AutoMirrored.Filled.Undo, contentDescription = "Undo last grade")
+                }
+                TextButton(onClick = onEnd, modifier = Modifier.testTag("flashcard_end_btn")) { Text("End") }
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            DeckProgress(session.gradedCards.toFloat() / session.cards.size)
+        },
+        card = { cardModifier, compact ->
+            FlipCard(
+                country = country,
+                isFlipped = session.isFlipped,
+                rotation = rotation,
+                compact = compact,
+                speechAvailable = speechAvailable,
+                onFlip = onFlip,
+                onSpeak = { onSpeak(code) },
+                modifier = cardModifier
+            )
+        },
+        bottom = { stacked -> GradeButtons(stacked = stacked, enabled = session.isFlipped, onGrade = onGrade) }
+    )
+}
+
+/** Again / Good / Easy, active once the card is flipped; a hint says so before. */
+@Composable
+private fun GradeButtons(stacked: Boolean, enabled: Boolean, onGrade: (Grade) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = if (enabled) "How well did you know it?" else "Flip the card to grade it",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("flashcard_grade_hint")
+        )
+        val again: @Composable (Modifier) -> Unit = { m -> GradeButton("Again", NeedsPracticeColor, enabled, m.testTag("grade_again_btn")) { onGrade(Grade.AGAIN) } }
+        val good: @Composable (Modifier) -> Unit = { m -> GradeButton("Good", MaterialTheme.colorScheme.primary, enabled, m.testTag("grade_good_btn")) { onGrade(Grade.GOOD) } }
+        val easy: @Composable (Modifier) -> Unit = { m -> GradeButton("Easy", MasteredColor, enabled, m.testTag("grade_easy_btn")) { onGrade(Grade.EASY) } }
+        if (stacked) {
+            again(Modifier.fillMaxWidth())
+            good(Modifier.fillMaxWidth())
+            easy(Modifier.fillMaxWidth())
+        } else {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                again(Modifier.weight(1f))
+                good(Modifier.weight(1f))
+                easy(Modifier.weight(1f))
+            }
+        }
+    }
+}
+
+@Composable
+private fun GradeButton(label: String, color: Color, enabled: Boolean, modifier: Modifier, onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = modifier,
+        colors = ButtonDefaults.buttonColors(containerColor = color),
+        shape = RoundedCornerShape(14.dp)
+    ) {
+        Text(label, fontWeight = FontWeight.Bold)
+    }
+}
+
+/** What the session did: cards remembered, the grades, the streak, and the ways on. */
+@Composable
+private fun StudySummary(
+    session: StudySession,
+    outcome: PracticeStreak.Outcome?,
+    onStudyAgain: () -> Unit,
+    onDone: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val counts = session.counts()
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(20.dp)
+            .verticalScroll(rememberScrollState())
+            .testTag("flashcard_summary"),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            imageVector = Icons.Default.School,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.secondary,
+            modifier = Modifier.size(56.dp)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Session complete",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.semantics { heading() }
+        )
+        Text(
+            text = session.source,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "${session.remembered} of ${session.gradedCards} remembered",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.testTag("study_summary_remembered")
+        )
+        Text(
+            text = "Again ${counts.getValue(Grade.AGAIN)} · Good ${counts.getValue(Grade.GOOD)} · Easy ${counts.getValue(Grade.EASY)}",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.testTag("study_summary_grades")
+        )
+        val streakLine = when (outcome?.kind) {
+            PracticeStreak.Kind.STARTED -> "Streak started: day 1"
+            PracticeStreak.Kind.KEPT -> "Streak kept: ${outcome.days} days"
+            PracticeStreak.Kind.ALREADY_COUNTED -> "${outcome.days}-day streak, already counted today"
+            null ->
+                if (session.gradedCards < StudySession.MIN_FOR_STREAK) {
+                    "Grade at least ${StudySession.MIN_FOR_STREAK} cards for streak credit (you graded ${session.gradedCards})"
+                } else {
+                    null
+                }
+        }
+        if (streakLine != null) {
+            Text(
+                text = streakLine,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.secondary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .padding(top = 8.dp)
+                    .testTag("study_summary_streak")
+            )
+        }
+        Spacer(modifier = Modifier.height(24.dp))
+        Button(
+            onClick = onStudyAgain,
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("flashcard_study_again_btn"),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Text("Study again", fontWeight = FontWeight.Bold)
+        }
+        Spacer(modifier = Modifier.height(10.dp))
+        TextButton(
+            onClick = onDone,
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("flashcard_summary_done_btn")
+        ) {
+            Text("Done", fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -346,31 +684,6 @@ private fun FilterNotice(summary: String, onClear: () -> Unit) =
         noticeTag = "flashcard_filter_notice",
         actionTag = "flashcard_clear_filters_btn",
         onAction = onClear
-    )
-
-/** Says the deck is the weak spots instead of Explore's list, and offers the way back. */
-@Composable
-private fun WeakDeckNotice(count: Int, exploreFiltersSet: Boolean, onShowAll: () -> Unit) =
-    DeckNotice(
-        text = "Weak spots deck: $count ${if (count == 1) "country" else "countries"}, weakest first" +
-            if (exploreFiltersSet) " · Explore filters not applied" else "",
-        actionLabel = "Show all",
-        noticeTag = "flashcard_weak_spots_notice",
-        actionTag = "flashcard_weak_spots_off_btn",
-        onAction = onShowAll,
-        maxLines = 3
-    )
-
-/** Explains why the weak-spots deck is not available yet. */
-@Composable
-private fun WeakSpotsLockedNotice(count: Int, onDismiss: () -> Unit) =
-    DeckNotice(
-        text = "Weak spots unlocks once ${QuizEngine.MIN_POOL} reviewed countries are below mastery (you have $count)",
-        actionLabel = "OK",
-        noticeTag = "flashcard_weak_spots_locked_notice",
-        actionTag = "flashcard_weak_spots_locked_ok_btn",
-        onAction = onDismiss,
-        maxLines = 4
     )
 
 @Composable
@@ -431,52 +744,6 @@ private fun DeckProgress(fraction: Float) {
     )
 }
 
-/** Self-grading buttons: side by side normally, stacked in the landscape side pane. */
-@Composable
-private fun GradeButtons(stacked: Boolean, onGrade: (mastered: Boolean) -> Unit) {
-    if (stacked) {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            NeedsPracticeButton({ onGrade(false) }, Modifier.fillMaxWidth())
-            MasteredButton({ onGrade(true) }, Modifier.fillMaxWidth())
-        }
-    } else {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            NeedsPracticeButton({ onGrade(false) }, Modifier.weight(1f))
-            MasteredButton({ onGrade(true) }, Modifier.weight(1f))
-        }
-    }
-}
-
-@Composable
-private fun NeedsPracticeButton(onClick: () -> Unit, modifier: Modifier) {
-    Button(
-        onClick = onClick,
-        modifier = modifier.testTag("grade_hard_btn"),
-        colors = ButtonDefaults.buttonColors(containerColor = NeedsPracticeColor),
-        shape = RoundedCornerShape(14.dp)
-    ) {
-        Icon(imageVector = Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp))
-        Spacer(modifier = Modifier.width(4.dp))
-        Text("Needs Practice", fontSize = 11.sp, fontWeight = FontWeight.Bold)
-    }
-}
-
-@Composable
-private fun MasteredButton(onClick: () -> Unit, modifier: Modifier) {
-    Button(
-        onClick = onClick,
-        modifier = modifier.testTag("grade_mastered_btn"),
-        colors = ButtonDefaults.buttonColors(containerColor = MasteredColor),
-        shape = RoundedCornerShape(14.dp)
-    ) {
-        Icon(imageVector = Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp))
-        Spacer(modifier = Modifier.width(4.dp))
-        Text("Mastered!", fontSize = 11.sp, fontWeight = FontWeight.Bold)
-    }
-}
 
 /** Interactive 3D flip card: the flag and continent clue on the front, the details on the back. */
 @Composable

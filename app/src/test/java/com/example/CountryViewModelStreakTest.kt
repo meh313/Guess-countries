@@ -5,6 +5,8 @@ import com.example.data.local.AppDatabase
 import com.example.data.local.QuizScoreEntity
 import com.example.data.model.CountryCatalog
 import com.example.data.model.CountryRepository
+import com.example.flashcards.StudySession
+import com.example.progress.Grade
 import com.example.progress.PracticeStreak
 import com.example.progress.PracticeStreak.Kind
 import com.example.progress.PracticeStreak.Outcome
@@ -200,6 +202,67 @@ class CountryViewModelStreakTest {
 
         db.awaitPendingWrites()
         assertEquals(emptyList<Long>(), runBlocking { db.userProgressDao().quizTimestamps() })
+    }
+
+    // --- Study sessions -----------------------------------------------------------------------------------------------
+
+    /** Grades [cards] cards of a study session over the catalog and ends it, then waits for the log row if one is due. */
+    private fun CountryViewModel.studyCards(cards: Int, expectLogged: Boolean) {
+        val before = savedQuizzes()
+        startStudy(StudySession.DECK, CountryCatalog.all.take(20).map { it.code })
+        repeat(cards) {
+            flipStudyCard()
+            gradeStudyCard(Grade.GOOD)
+        }
+        endStudy()
+        if (expectLogged) {
+            val deadline = System.currentTimeMillis() + 10_000
+            while (studyOutcome.value == null || savedQuizzes() == before) {
+                check(System.currentTimeMillis() < deadline) { "the study session was never logged" }
+                shadowOf(Looper.getMainLooper()).idle()
+                Thread.sleep(10)
+            }
+        }
+        db.awaitPendingWrites()
+    }
+
+    @Test
+    fun aStudySessionOfTenCards_startsAStreak_andIsLoggedAsFlashcards() {
+        val vm = newViewModel()
+
+        vm.studyCards(10, expectLogged = true)
+
+        assertEquals(Outcome(Kind.STARTED, 1), vm.studyOutcome.value)
+        val row = runBlocking { db.userProgressDao().getQuizHistory().first() }.single()
+        assertEquals(StudySession.MODE, row.mode)
+        assertEquals(StudySession.DECK, row.continentFilter)
+        assertEquals(10, row.correct)
+        assertEquals(10, row.questionCount)
+        assertEquals(0, row.score)
+        assertEquals(0, row.total)
+        assertEquals(wall, row.timestamp)
+        assertEquals(10, runBlocking { db.userProgressDao().getAllSkills().first() }.size)
+    }
+
+    @Test
+    fun aStudySessionOfNineCards_writesItsGradesButCountsForNothing() {
+        val vm = newViewModel()
+
+        vm.studyCards(9, expectLogged = false)
+
+        assertNull(vm.studyOutcome.value)
+        assertEquals(0, savedQuizzes())
+        assertEquals(9, runBlocking { db.userProgressDao().getAllSkills().first() }.size)
+    }
+
+    @Test
+    fun aStudySessionTheDayAfterAQuiz_keepsTheStreak() {
+        seedQuiz(berlinTime(day = 4, hour = 20))
+        val vm = newViewModel()
+
+        vm.studyCards(10, expectLogged = true)
+
+        assertEquals(Outcome(Kind.KEPT, 2), vm.studyOutcome.value)
     }
 
     @Test
