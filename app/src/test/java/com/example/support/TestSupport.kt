@@ -61,6 +61,9 @@ class FreshDatabaseRule : TestWatcher() {
     }
 
     override fun finished(description: Description) {
+        // A write the test set going (a saved quiz, the last grade) may still be in flight: closing under it throws
+        // on a background thread, and JUnit blames whichever test runs next.
+        AppDatabase.openInstance()?.takeIf { it.isOpen }?.awaitPendingWrites()
         AppDatabase.closeAndReset()
     }
 }

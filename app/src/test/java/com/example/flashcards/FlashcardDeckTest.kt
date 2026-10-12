@@ -50,4 +50,13 @@ class FlashcardDeckTest {
         assertEquals(deck[2].code, FlashcardDeck.nextCode(deck, 1))
         assertEquals(deck[0].code, FlashcardDeck.nextCode(deck, 2))
     }
+
+    @Test
+    fun previousCode_stepsBackAndWrapsAround() {
+        val deck = allCountries.take(3)
+
+        assertEquals(deck[2].code, FlashcardDeck.previousCode(deck, 0))
+        assertEquals(deck[0].code, FlashcardDeck.previousCode(deck, 1))
+        assertEquals(deck[1].code, FlashcardDeck.previousCode(deck, 2))
+    }
 }

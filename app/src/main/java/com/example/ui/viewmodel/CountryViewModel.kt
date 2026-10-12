@@ -19,6 +19,7 @@ import com.example.data.settings.InMemoryUserSettings
 import com.example.data.settings.PrefsUserSettings
 import com.example.data.settings.ReminderPrefs
 import com.example.data.settings.UserSettings
+import com.example.flashcards.StudySession
 import com.example.progress.Grade
 import com.example.progress.PracticeStreak
 import com.example.progress.Skill
@@ -125,6 +126,9 @@ class CountryViewModel(
     /** The codes of the countries whose flag counts as mastered right now (box, score and not lapsed). */
     val masteredFlags: StateFlow<Set<String>> get() = progress.masteredFlags
 
+    /** Per skill, the codes of the countries that count as mastered right now. */
+    val mastered: StateFlow<Map<Skill, Set<String>>> get() = progress.mastered
+
     /** The daily practice streak, worked out from when quizzes finished; see [refreshStreak] for the day rolling over. */
     val streak: StateFlow<PracticeStreak.Summary> get() = progress.streak
 
@@ -175,6 +179,32 @@ class CountryViewModel(
 
     /** A quiz over the countries the finished quiz got wrong; see [QuizStateHolder.practiseMistakes]. */
     fun practiseMistakes() = quiz.practiseMistakes()
+
+    // --- Study ------------------------------------------------------------------------------------------------------
+
+    private val study = StudyStateHolder(repository, viewModelScope, zone, random)
+
+    /** The flashcard study session in progress, or null outside one. */
+    val studySession: StateFlow<StudySession?> get() = study.session
+
+    /** What the finished study session did for the streak; null until known, or when it was too short to count. */
+    val studyOutcome: StateFlow<PracticeStreak.Outcome?> get() = study.outcome
+
+    /** Starts a study session over [codes] from [source] (one of the [StudySession] sources). */
+    fun startStudy(source: String, codes: List<String>) = study.start(source, codes)
+
+    fun flipStudyCard() = study.flip()
+
+    /** Grades the flipped card of the study session; see [StudyStateHolder.grade]. */
+    fun gradeStudyCard(grade: Grade) = study.grade(grade)
+
+    fun undoStudyGrade() = study.undo()
+
+    /** Ends the study session where it stands. */
+    fun endStudy() = study.end()
+
+    /** Leaves the study summary, or an unfinished session. */
+    fun dismissStudy() = study.dismiss()
 
     // --- Explore ----------------------------------------------------------------------------------------------------
 

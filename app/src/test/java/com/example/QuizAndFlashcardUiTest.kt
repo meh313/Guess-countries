@@ -5,6 +5,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -28,6 +29,7 @@ import com.example.progress.Skill
 import com.example.progress.SkillState
 import com.example.data.local.QuizScoreEntity
 import com.example.quiz.QuizEngine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import android.speech.tts.TextToSpeech
 import androidx.compose.ui.test.onAllNodesWithContentDescription
@@ -48,6 +50,7 @@ import org.junit.Assert.assertTrue
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.shadows.ShadowTextToSpeech
 import com.example.support.FreshDatabaseRule
+import com.example.support.awaitQuizPlan
 import com.example.support.awaitWeakSpots
 import com.example.support.boundsOf
 import com.example.support.eventually
@@ -286,7 +289,8 @@ class QuizAndFlashcardUiTest {
     fun stats_countTheSovereignCountriesOnly() {
         tab("stats")
 
-        rule.onNodeWithText("0 / ${sovereign.size}").assertIsDisplayed()
+        // Flags and capitals: two tiles out of the sovereign total.
+        rule.onAllNodesWithText("0 / ${sovereign.size}").assertCountEquals(2)
         // Antarctica would be the row after Oceania; the list is scrolled to its end to prove it is not there.
         rule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("stats_continent_oceania"))
         rule.onNodeWithTag("stats_continent_oceania").assertIsDisplayed()
@@ -626,7 +630,7 @@ class QuizAndFlashcardUiTest {
         val position = byName.indexOf(target)
         tab("flashcards")
         repeat(position) {
-            rule.onNodeWithTag("grade_mastered_btn").performClick()
+            rule.onNodeWithTag("flashcard_next_btn").performClick()
             rule.waitForIdle()
         }
         rule.onNodeWithText("Card ${position + 1} of ${allCountries.size}").assertIsDisplayed()
@@ -643,7 +647,7 @@ class QuizAndFlashcardUiTest {
     fun shuffle_startsAFreshDeckAtTheFirstCard() {
         tab("flashcards")
         repeat(2) {
-            rule.onNodeWithTag("grade_mastered_btn").performClick()
+            rule.onNodeWithTag("flashcard_next_btn").performClick()
             rule.waitForIdle()
         }
         rule.onNodeWithText("Card 3 of ${allCountries.size}").assertIsDisplayed()
@@ -657,7 +661,7 @@ class QuizAndFlashcardUiTest {
     @Test
     fun resetDeck_returnsToTheFirstCard() {
         tab("flashcards")
-        rule.onNodeWithTag("grade_mastered_btn").performClick()
+        rule.onNodeWithTag("flashcard_next_btn").performClick()
         rule.waitForIdle()
         rule.onNodeWithContentDescription("Shuffle Cards").performClick()
         rule.waitForIdle()
@@ -720,7 +724,7 @@ class QuizAndFlashcardUiTest {
     @Test
     fun flashcardPosition_survivesRotation() {
         tab("flashcards")
-        rule.onNodeWithTag("grade_mastered_btn").performClick()
+        rule.onNodeWithTag("flashcard_next_btn").performClick()
         rule.waitForIdle()
         rule.onNodeWithText("Card 2 of ${allCountries.size}").assertIsDisplayed()
 
@@ -842,7 +846,7 @@ class QuizAndFlashcardUiTest {
         rule.onAllNodesWithText("340 pts", substring = false).assertCountEquals(0)
     }
 
-    // --- Weak spots deck ---------------------------------------------------------------------------------------------
+    // --- Study sessions -----------------------------------------------------------------------------------------------
 
     /** Writes reviews straight to the database, one after another, so the order of their effects is certain. */
     private fun review(code: String, vararg results: Boolean) = runBlocking {
@@ -858,24 +862,65 @@ class QuizAndFlashcardUiTest {
         )
     }
 
-    @Test
-    fun flashcards_weakSpotsDeck_isLockedUntilFourCountriesAreWeak() {
+    /** Makes the flags of [codes] due for review: reviewed before, due date long passed. */
+    private fun due(vararg codes: String) = runBlocking {
+        val dao = AppDatabase.getDatabase(ApplicationProvider.getApplicationContext()).userProgressDao()
+        codes.forEach { dao.upsertSkill(SkillProgressEntity.of(it, Skill.FLAG, SkillState(score = 40, box = 2, dueAt = 0L, reviews = 2, correct = 1))) }
+    }
+
+    private fun openStudyChooser() {
         tab("flashcards")
-
-        rule.onNodeWithTag("flashcard_weak_spots_btn").performClick()
+        rule.onNodeWithTag("flashcard_study_btn").performClick()
         rule.waitForIdle()
+    }
 
-        rule.onNodeWithTag("flashcard_weak_spots_locked_notice").assertIsDisplayed()
-        rule.onNodeWithText("Weak spots unlocks once 4 reviewed countries are below mastery (you have 0)").assertIsDisplayed()
-        rule.onNodeWithText("Card 1 of ${allCountries.size}").assertIsDisplayed()
-
-        rule.onNodeWithTag("flashcard_weak_spots_locked_ok_btn").performClick()
+    /** Flips the study card and grades it. */
+    private fun gradeCard(tag: String) {
+        rule.onNodeWithTag("flashcard_flip_card").performClick()
         rule.waitForIdle()
-        rule.onNodeWithTag("flashcard_weak_spots_locked_notice").assertDoesNotExist()
+        rule.onNodeWithTag(tag).performClick()
+        rule.waitForIdle()
     }
 
     @Test
-    fun flashcards_weakSpotsDeck_holdsTheWeakCountriesWeakestFirstAndKeepsItsOrderWhileGrading() {
+    fun flashcards_browseWithPreviousAndNext_withoutGrading() {
+        tab("flashcards")
+        rule.onNodeWithText("Card 1 of ${allCountries.size}").assertIsDisplayed()
+        rule.onNodeWithTag("grade_good_btn").assertDoesNotExist()
+
+        rule.onNodeWithTag("flashcard_next_btn").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithText("Card 2 of ${allCountries.size}").assertIsDisplayed()
+
+        rule.onNodeWithTag("flashcard_prev_btn").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithText("Card 1 of ${allCountries.size}").assertIsDisplayed()
+
+        rule.onNodeWithTag("flashcard_prev_btn").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithText("Card ${allCountries.size} of ${allCountries.size}").assertIsDisplayed()
+        // Browsing writes nothing down.
+        assertTrue(runBlocking { AppDatabase.getDatabase(ApplicationProvider.getApplicationContext()).userProgressDao().getAllSkills().first() }.isEmpty())
+    }
+
+    @Test
+    fun studyChooser_countsItsSources_andLocksTheEmptyOnes() {
+        openStudyChooser()
+
+        rule.onNodeWithText("Study").assertIsDisplayed()
+        rule.onNodeWithTag("study_due_btn").assertIsNotEnabled()
+        rule.onNodeWithText("0 cards due for review").assertIsDisplayed()
+        rule.onNodeWithTag("study_weak_btn").assertIsNotEnabled()
+        rule.onNodeWithTag("study_deck_btn").assertIsEnabled()
+        rule.onNodeWithText("the next 20 cards from here").assertIsDisplayed()
+
+        rule.onNodeWithTag("study_cancel_btn").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithText("Card 1 of ${allCountries.size}").assertIsDisplayed()
+    }
+
+    @Test
+    fun studyWeakSpots_holdsTheWeakCountriesWeakestFirst_andGradesOnlyAfterTheFlip() {
         review("FR", false) // 0
         review("DE", true, false) // 0, reviewed a little later than France
         review("ES", true, true, false) // 20
@@ -884,60 +929,147 @@ class QuizAndFlashcardUiTest {
         review("AQ", false) // not a country
         viewModel.toggleFavorite("IT") // a bookmark is not a review
         rule.awaitWeakSpots(viewModel, 4)
-        tab("flashcards")
+        openStudyChooser()
+        rule.onNodeWithText("4 reviewed, not mastered").assertIsDisplayed()
 
-        rule.onNodeWithTag("flashcard_weak_spots_btn").performClick()
+        rule.onNodeWithTag("study_weak_btn").performClick()
         rule.waitForIdle()
 
-        rule.onNodeWithTag("flashcard_weak_spots_notice").assertIsDisplayed()
-        rule.onNodeWithText("Weak spots deck: 4 countries, weakest first").assertIsDisplayed()
+        rule.onNodeWithText("Study · Weak spots").assertIsDisplayed()
         rule.onNodeWithText("Card 1 of 4").assertIsDisplayed()
+        rule.onNodeWithTag("grade_good_btn").assertIsNotEnabled()
+        rule.onNodeWithText("Flip the card to grade it").assertIsDisplayed()
+        rule.onNodeWithTag("flashcard_undo_btn").assertIsNotEnabled()
         rule.onNodeWithTag("flashcard_flip_card").performClick()
         rule.waitForIdle()
         rule.onNodeWithText("France").assertIsDisplayed()
+        rule.onNodeWithTag("grade_good_btn").assertIsEnabled()
 
-        // Grading France changes its standing, but the deck in hand keeps its four cards and its order.
-        rule.onNodeWithTag("grade_mastered_btn").performClick()
+        rule.onNodeWithTag("grade_good_btn").performClick()
         rule.waitForIdle()
         rule.onNodeWithText("Card 2 of 4").assertIsDisplayed()
+        rule.onNodeWithTag("flashcard_undo_btn").assertIsEnabled()
         rule.onNodeWithTag("flashcard_flip_card").performClick()
         rule.waitForIdle()
         rule.onNodeWithText("Germany").assertIsDisplayed()
     }
 
     @Test
-    fun flashcards_weakSpotsDeck_showAllReturnsToTheExploreDeck() {
-        listOf("FR", "DE", "ES", "JP").forEach { review(it, false) }
-        rule.awaitWeakSpots(viewModel, 4)
-        tab("flashcards")
-        rule.onNodeWithTag("flashcard_weak_spots_btn").performClick()
+    fun studyDueToday_writesEachGradeOneStepLate_andUndoTakesTheLastOneBack() {
+        due("FR", "DE", "ES")
+        rule.awaitQuizPlan(viewModel) { it.due(Skill.FLAG).size == 3 }
+        openStudyChooser()
+        rule.onNodeWithText("3 cards due for review").assertIsDisplayed()
+        rule.onNodeWithTag("study_due_btn").performClick()
         rule.waitForIdle()
-        rule.onNodeWithText("Card 1 of 4").assertIsDisplayed()
+        rule.onNodeWithText("Study · Due today").assertIsDisplayed()
+        val dao = AppDatabase.getDatabase(ApplicationProvider.getApplicationContext()).userProgressDao()
+        fun score(code: String) = runBlocking { dao.getAllSkills().first() }.single { it.countryCode == code }.score
 
-        rule.onNodeWithTag("flashcard_weak_spots_off_btn").performClick()
+        gradeCard("grade_easy_btn") // the first card, pending
+        assertEquals("not written yet", 40, score(viewModel.studySession.value!!.cards[0]))
+        rule.onNodeWithText("Card 2 of 3").assertIsDisplayed()
+
+        rule.onNodeWithTag("flashcard_undo_btn").performClick()
         rule.waitForIdle()
+        rule.onNodeWithText("Card 1 of 3").assertIsDisplayed()
+        rule.onNodeWithText("Flag Meaning").assertIsDisplayed() // back on top, flipped
+        rule.onNodeWithTag("grade_again_btn").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithText("Card 2 of 3").assertIsDisplayed()
 
-        rule.onNodeWithTag("flashcard_weak_spots_notice").assertDoesNotExist()
-        rule.onNodeWithText("Card 1 of ${allCountries.size}").assertIsDisplayed()
+        gradeCard("grade_good_btn") // the second card: the first card's Again is written now
+        val first = viewModel.studySession.value!!.cards[0]
+        rule.eventually("the first card's grade") { assertEquals(40 - 12, score(first)) }
     }
 
     @Test
-    fun flashcards_weakSpotsDeck_ignoresExploresFilters() {
-        listOf("FR", "DE", "ES", "JP").forEach { review(it, false) }
-        rule.awaitWeakSpots(viewModel, 4)
-        tab("explore")
-        rule.onNodeWithTag("sort_menu_btn").performClick()
-        rule.onNodeWithText("Sort by Population").performClick()
-        rule.waitForIdle()
+    fun studyThisDeck_startsAtTheCardInHand_andEndsWithASummary() {
         tab("flashcards")
-        rule.onNodeWithTag("flashcard_filter_notice").assertIsDisplayed()
-
-        rule.onNodeWithTag("flashcard_weak_spots_btn").performClick()
+        rule.onNodeWithTag("flashcard_next_btn").performClick()
+        rule.waitForIdle()
+        val second = byName[1]
+        rule.onNodeWithTag("flashcard_study_btn").performClick()
         rule.waitForIdle()
 
-        rule.onNodeWithTag("flashcard_filter_notice").assertDoesNotExist()
-        rule.onNodeWithText("Weak spots deck: 4 countries, weakest first · Explore filters not applied").assertIsDisplayed()
-        rule.onNodeWithText("Card 1 of 4").assertIsDisplayed()
+        rule.onNodeWithTag("study_deck_btn").performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithText("Study · This deck").assertIsDisplayed()
+        val session = viewModel.studySession.value!!
+        assertEquals(20, session.cards.size)
+        assertEquals(second.code, session.cards.first())
+        rule.onNodeWithTag("flashcard_flip_card").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithText(second.name).assertIsDisplayed()
+
+        rule.onNodeWithTag("grade_good_btn").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithTag("flashcard_end_btn").performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithTag("flashcard_summary").assertIsDisplayed()
+        rule.onNodeWithText("Session complete").assertIsDisplayed()
+        rule.onNodeWithText("1 of 1 remembered").assertIsDisplayed()
+        rule.onNodeWithText("Again 0 · Good 1 · Easy 0").assertIsDisplayed()
+        rule.onNodeWithText("Grade at least 10 cards for streak credit (you graded 1)").assertIsDisplayed()
+
+        rule.onNodeWithTag("flashcard_summary_done_btn").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithText("Card 2 of ${allCountries.size}").assertIsDisplayed()
+        assertNull(viewModel.studySession.value)
+    }
+
+    @Test
+    fun aStudySessionOfTenCards_countsForTheStreak_andShowsInTheLog() {
+        openStudyChooser()
+        rule.onNodeWithTag("study_deck_btn").performClick()
+        rule.waitForIdle()
+
+        // Good and Easy only: an Again would bring a card back as a rehearsal, which counts for nothing.
+        repeat(10) { gradeCard(if (it % 2 == 0) "grade_good_btn" else "grade_easy_btn") }
+        rule.onNodeWithTag("flashcard_end_btn").performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithTag("flashcard_summary").assertIsDisplayed()
+        rule.onNodeWithText("10 of 10 remembered").assertIsDisplayed()
+        rule.onNodeWithText("Again 0 · Good 5 · Easy 5").assertIsDisplayed()
+        rule.eventually("the streak line") { rule.onNodeWithText("Streak started: day 1").assertIsDisplayed() }
+
+        rule.onNodeWithTag("flashcard_study_again_btn").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithText("Study · This deck").assertIsDisplayed()
+        rule.onNodeWithText("Card 1 of 20").assertIsDisplayed()
+        rule.onNodeWithTag("flashcard_end_btn").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithTag("flashcard_summary_done_btn").performClick()
+        rule.waitForIdle()
+
+        tab("stats")
+        rule.eventually("the study session in the log") {
+            rule.onNode(hasScrollAction()).performScrollToNode(hasText("10 of 10 remembered"))
+            rule.onNodeWithText("Flashcards • This deck").assertIsDisplayed()
+        }
+        rule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("stats_quizzes"))
+        // The tile's texts sit in its children; a study session is not a quiz.
+        rule.onNode(hasTestTag("stats_quizzes") and hasAnyDescendant(hasText("0")), useUnmergedTree = true).assertExists()
+        rule.onNodeWithText("1-day streak").assertIsDisplayed()
+    }
+
+    @Test
+    fun aStudySession_survivesRotationAndTabSwitches() {
+        openStudyChooser()
+        rule.onNodeWithTag("study_deck_btn").performClick()
+        rule.waitForIdle()
+        gradeCard("grade_good_btn")
+        rule.onNodeWithText("Card 2 of 20").assertIsDisplayed()
+
+        rotate()
+        rule.onNodeWithText("Card 2 of 20").assertIsDisplayed()
+
+        tab("explore")
+        tab("flashcards")
+        rule.onNodeWithText("Card 2 of 20").assertIsDisplayed()
     }
 
     @Test
@@ -986,7 +1118,7 @@ class QuizAndFlashcardUiTest {
 
         rule.onNodeWithTag("stats_streak").assertIsDisplayed()
         rule.onNodeWithText("No streak yet").assertIsDisplayed()
-        rule.onNodeWithText("Finish a quiz today to start one").assertIsDisplayed()
+        rule.onNodeWithText("Finish a quiz or a study session today to start one").assertIsDisplayed()
     }
 
     @Test

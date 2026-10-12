@@ -4,6 +4,7 @@ import com.example.data.local.QuizAnswerEntity
 import com.example.data.local.QuizScoreEntity
 import com.example.data.local.UserProgressDao
 import com.example.data.local.UserProgressEntity
+import com.example.flashcards.StudySession
 import com.example.progress.Evidence
 import com.example.progress.Grade
 import com.example.progress.Skill
@@ -124,7 +125,25 @@ class CountryRepository(
         progressDao.insertQuizWithAnswers(score, answers)
     }
 
-    /** Saves a quiz row without answers (a study session, or a test fixture) and returns the earlier finish times. */
+    /**
+     * Logs a finished study session like a quiz (mode [StudySession.MODE], no points, [remembered] of [cards] right)
+     * and returns the earlier finish times, so the streak and the reminder count it.
+     */
+    suspend fun saveStudySession(source: String, remembered: Int, cards: Int): List<Long> = withContext(NonCancellable) {
+        progressDao.insertQuizScoreAfterReading(
+            QuizScoreEntity(
+                mode = StudySession.MODE,
+                score = 0,
+                total = 0,
+                continentFilter = source,
+                timestamp = now(),
+                correct = remembered,
+                questionCount = cards
+            )
+        )
+    }
+
+    /** Saves a quiz row without answers (a test fixture) and returns the earlier finish times. */
     suspend fun saveQuizScore(mode: String, score: Int, total: Int, continent: String): List<Long> =
         withContext(NonCancellable) {
             progressDao.insertQuizScoreAfterReading(

@@ -7,16 +7,23 @@ drill them with flashcards, and test yourself with quizzes. Everything runs on t
 
 - **Explore** – search, filter by continent or Saved, sort by name, population, area or continent, open a detail
   sheet and have it read aloud.
-- **Flashcards** – flip through the deck (it follows the Explore filters), shuffle it, and grade yourself.
-  A *Weak spots* deck holds the countries you have practiced but not yet mastered, weakest first.
+- **Flashcards** – browse the deck (it follows the Explore filters) with Previous and Next, shuffle it, and
+  *study*: a session of up to 20 cards from the flags due today, the weak spots or this deck, each graded
+  Again / Good / Easy after the flip (Again brings the card back a few places later; the last grade can be undone).
+  A session of ten or more cards counts as practice for the streak.
 - **Quiz** – flag → country, country → flag (pick the right flag out of four), country → capital,
   flag → continent (always the whole world), a 10-second-per-question speed round and a 60-second blitz
-  (as many flags as you can). Ten questions or fewer, with a streak bonus. *Answers: Normal* puts one
-  look-alike flag among the wrong answers, *Hard* as many as exist (the choice is remembered). The *Weak spots* scope quizzes you on
-  the ten countries you know least.
-- **Stats** – a daily practice streak (a day counts when you finish one quiz; days follow the device's time zone),
-  an optional daily reminder (a notification at a time you pick, only on days without a finished quiz; it asks for
-  the notification permission on Android 13 and newer), mastery per continent and a log of recent quizzes.
+  (as many flags as you can). Ten questions or fewer, with a streak bonus; the questions favour countries you have
+  not seen or that are due for review, and avoid the targets of the last few quizzes. *Answers: Normal* puts one
+  look-alike flag among the wrong answers, *Hard* as many as exist (the choice is remembered). The *Due today* scope
+  reviews what is due, the *Weak spots* scope the ten countries you know least (each in the skill the mode exercises:
+  capitals for the capital quiz). The score screen lists every miss with the flag you picked beside the right one,
+  and offers *Retry* and *Practise mistakes*; a wrong text answer shows the two flags side by side at once. A quiz
+  survives the app being killed in the background.
+- **Stats** – a daily practice streak (a day counts when you finish one quiz or a study session of ten cards; days
+  follow the device's time zone), an optional daily reminder (a notification at a time you pick, only on days without
+  a finished quiz; it asks for the notification permission on Android 13 and newer), mastered flags and capitals,
+  what is due today, mastery per continent and a log of recent quizzes and study sessions.
 
 ### How mastery works
 
@@ -68,22 +75,23 @@ which reads the upload keystore and its passwords from the repository secrets `K
    and the R8 mapping. Pushing a tag `v1.6` does the same.
 
 `versionCode` is derived from the version (`major*10000 + minor*100 + patch`, so `1.6` is `10600`), which
-keeps it increasing without a manual bump. Tick "dry run" to build and verify without publishing; the files
+keeps it increasing without a manual bump. A file `release-notes/<version>.md`, when there is one, is appended
+to the generated release notes. Tick "dry run" to build and verify without publishing; the files
 are then kept as a workflow artifact for a week.
 
 ## Project layout
 
 | Path | What lives there |
 | --- | --- |
-| `quiz/` | Pure quiz rules (`QuizEngine`) and the immutable `QuizSession`; no Android types. |
+| `quiz/` | Pure quiz rules (`QuizEngine`, the weighted `QuestionPicker`), the immutable `QuizSession` and its `QuizSnapshot` for saved state; no Android types. |
 | `progress/` | Pure rules: the practice streak (`PracticeStreak`), computed from when quizzes finished, and per-skill mastery (`SkillMastery`: score, Leitner box, due date). |
 | `reminder/` | The daily reminder: pure schedule rules, the WorkManager scheduler and worker, the notification. |
 | `data/settings/` | `UserSettings`: the few preferences kept in SharedPreferences (answers difficulty, reminder). |
-| `flashcards/` | Deck ordering for the flashcard screen. |
+| `flashcards/` | Deck ordering for the flashcard screen and the immutable `StudySession` (queue, grades, Again re-insertion, undo). |
 | `speech/` | Text-to-speech behind a small `Speech` interface. |
 | `data/model/` | The country catalog, one file per continent (`EuropeCatalog.kt`…, alphabetical), and `CountryRepository`. |
 | `data/local/` | Room database (version 2): bookmarks, skill states, quiz history with every answer. Schemas are exported to `app/schemas/`; `AppDatabase.MIGRATION_1_2` is tested against the committed version 1 schema. |
-| `ui/` | Compose screens, components, theme and `CountryViewModel`. |
+| `ui/` | Compose screens, components, theme and `CountryViewModel`, which hands progress, the quiz and the study session to the holders in `ui/viewmodel/`. |
 | `tools/` | Content pipeline: flag rendering (`render-flags.mjs`, `to-webp.py`, `contact-sheet.py`), catalog generation (`validate-research.py`, `gen-entries.py`, `apply-edits.py`, `gen-flag-art.py`, `flag-checksums.py`), audit input (`export-entries.py`), quiz data (`gen-lookalikes.py` writes `FlagLookAlikes.kt`). |
 | `content/` | Provenance for the catalog: `seed/` (country lists and owner rules), `research/` (first-pass entries with sources), `audit/` (second-pass fixes, doubts and owner decisions per continent). |
 
