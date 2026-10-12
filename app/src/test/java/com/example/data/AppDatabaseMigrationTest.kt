@@ -93,7 +93,8 @@ class AppDatabaseMigrationTest {
     @Test
     fun reviewedCountriesBecomeFlagRows_withTheOldScoreAndABoxFromTheOldThresholds() {
         createVersion1()
-        val start = System.currentTimeMillis()
+        // SQLite's strftime counts whole seconds, so the due dates can sit up to a second before the test's own clock.
+        val start = System.currentTimeMillis() - 1_000
 
         val db = openMigrated()
         db.openHelper.writableDatabase // runs the migration and Room's schema validation

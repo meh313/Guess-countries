@@ -189,7 +189,8 @@ class BlitzTimerTest {
         assertEquals(1, rows.size)
         assertEquals("BLITZ", rows.single().mode)
         assertEquals(10, rows.single().score)
-        assertEquals(1, rows.single().total)
+        assertEquals(1, rows.single().correct)
+        assertEquals("an endless quiz has no best possible score", 0, rows.single().total)
     }
 
     @Test

@@ -736,10 +736,10 @@ class QuizAndFlashcardUiTest {
     @Test
     fun flashcards_weakSpotsDeck_holdsTheWeakCountriesWeakestFirstAndKeepsItsOrderWhileGrading() {
         review("FR", false) // 0
-        review("DE", true, false) // 15
-        review("ES", true, true, false) // 40
-        review("JP", true, true) // 50
-        review("BR", true, true, true) // 75: learned
+        review("DE", true, false) // 0, reviewed a little later than France
+        review("ES", true, true, false) // 20
+        review("JP", true, true) // 40
+        mastered("BR") // not a weak spot
         review("AQ", false) // not a country
         viewModel.toggleFavorite("IT") // a bookmark is not a review
         rule.awaitWeakSpots(viewModel, 4)
@@ -755,7 +755,7 @@ class QuizAndFlashcardUiTest {
         rule.waitForIdle()
         rule.onNodeWithText("France").assertIsDisplayed()
 
-        // Mastering France lifts it out of the weak spots, but the deck in hand keeps its four cards and its order.
+        // Grading France changes its standing, but the deck in hand keeps its four cards and its order.
         rule.onNodeWithTag("grade_mastered_btn").performClick()
         rule.waitForIdle()
         rule.onNodeWithText("Card 2 of 4").assertIsDisplayed()

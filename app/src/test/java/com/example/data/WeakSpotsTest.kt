@@ -50,8 +50,8 @@ class WeakSpotsTest {
     @Test
     fun aMasteredCountryIsNotAWeakSpot_untilItLapses() {
         assertEquals(listOf("FR"), codes("FR" to weak(74), "DE" to mastered))
-        // Twice its interval past the due date, the mastered country is weak again.
-        assertEquals(listOf("DE", "FR"), codes("FR" to weak(74), "DE" to mastered, at = mastered.dueAt + 7 * day + 1))
+        // Twice its interval past the due date, the mastered country is weak again (after FR: it still has the higher score).
+        assertEquals(listOf("FR", "DE"), codes("FR" to weak(74), "DE" to mastered, at = mastered.dueAt + 7 * day + 1))
     }
 
     @Test
