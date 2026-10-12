@@ -403,7 +403,10 @@ fun QuizScreen(
         if (limitMs != null) {
             // Time is measured from when the question was shown, so rotating or switching tabs neither
             // pauses nor restarts it.
-            LaunchedEffect(active.currentIndex, active.questionStartedAt, active.hasAnswered) {
+            LaunchedEffect(active.currentIndex, active.questionStartedAt, active.hasAnswered, active.isPaused) {
+                // Coming back to the screen, the first frame still shows the paused session: its clock must not run
+                // (and time the question out) before the resumed session arrives and restarts this loop.
+                if (active.isPaused) return@LaunchedEffect
                 while (!active.hasAnswered) {
                     val left = limitMs - (viewModel.clockMillis() - active.questionStartedAt)
                     remainingMs = left.coerceIn(0L, limitMs)
@@ -420,7 +423,8 @@ fun QuizScreen(
         val totalMs = active.mode.totalTimeSeconds?.let { it * 1000L }
         var totalRemainingMs by remember(active.startedAt) { mutableLongStateOf(totalMs ?: 0L) }
         if (totalMs != null) {
-            LaunchedEffect(active.startedAt, active.isFinished) {
+            LaunchedEffect(active.startedAt, active.isFinished, active.isPaused) {
+                if (active.isPaused) return@LaunchedEffect
                 while (!active.isFinished) {
                     val left = totalMs - (viewModel.clockMillis() - active.startedAt)
                     totalRemainingMs = left.coerceIn(0L, totalMs)
