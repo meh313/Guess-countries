@@ -5,6 +5,7 @@ import com.example.support.TestWorkManagerRule
 import androidx.test.core.app.ApplicationProvider
 import android.app.Application
 import android.Manifest
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import kotlinx.coroutines.runBlocking
 import com.example.support.drawLatestDialog
@@ -192,6 +193,17 @@ class ScreenshotsTest {
         rule.onNodeWithTag("reminder_time_btn").performClick()
         rule.waitForIdle()
         saveBitmap("stats_time_picker", drawLatestDialog())
+        rule.onNodeWithTag("reminder_time_cancel").performClick()
+        rule.waitForIdle()
+
+        // Settings and About, reached from the gear on Progress.
+        rule.onNodeWithTag("stats_settings_btn").performClick()
+        rule.waitForIdle()
+        save("settings")
+        rule.onNodeWithTag("settings_about_btn").performScrollTo().performClick()
+        rule.waitForIdle()
+        rule.awaitDelivered { rule.onAllNodesWithText("Loading…").fetchSemanticsNodes().isEmpty() }
+        save("about")
     }
 
     /** The same screens in the dark theme: primary-coloured text, dialogs and the switch track used to fall back to Material's defaults. */

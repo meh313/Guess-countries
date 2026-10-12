@@ -1,6 +1,10 @@
 package com.example.ui.screens
 
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.Intent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,6 +27,8 @@ import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.LocationCity
@@ -44,15 +50,22 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import com.example.data.local.UserProgressEntity
 import com.example.data.model.Country
 import com.example.ui.components.formatArea
@@ -70,9 +83,13 @@ fun CountryDetailSheet(
     onDismiss: () -> Unit,
     onSpeak: () -> Unit,
     speechAvailable: Boolean,
-    onToggleFavorite: () -> Unit
+    onToggleFavorite: () -> Unit,
+    /** The web pages this country's facts were checked against; empty for the first catalog's countries. */
+    sources: List<String> = emptyList()
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val context = LocalContext.current
+    var sourcesOpen by rememberSaveable { mutableStateOf(false) }
     val isFavorite = progress?.isFavorite == true
     val compactNumbers = rememberCompactNumberFormat()
     val continentColor = getContinentColor(country.continent)
@@ -357,8 +374,67 @@ fun CountryDetailSheet(
                 }
             }
 
+            if (sources.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(16.dp))
+                // Where the facts above were checked. Plain text until opened; a tap on a link hands it to the browser,
+                // which needs no permission of this app's.
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(role = Role.Button, onClickLabel = if (sourcesOpen) "Hide the sources" else "Show the sources") { sourcesOpen = !sourcesOpen }
+                        .testTag("sheet_sources_btn"),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Sources (${sources.size})",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Icon(
+                        imageVector = if (sourcesOpen) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        contentDescription = null
+                    )
+                }
+                if (sourcesOpen) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 6.dp)
+                            .testTag("sheet_sources"),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = "The pages the facts above were checked against when the catalog was written.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        sources.forEach { url ->
+                            Text(
+                                text = url,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable(role = Role.Button, onClickLabel = "Open in the browser") { openUrl(context, url) }
+                                    .padding(vertical = 2.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(24.dp))
         }
+    }
+}
+
+/** Hands [url] to the browser; nothing happens on a device without one. */
+internal fun openUrl(context: Context, url: String) {
+    try {
+        context.startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
+    } catch (_: ActivityNotFoundException) {
+        // No browser: the address is still on screen to copy.
     }
 }
 

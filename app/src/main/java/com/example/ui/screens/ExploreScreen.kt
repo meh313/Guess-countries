@@ -340,9 +340,11 @@ fun ExploreScreen(
     selectedCountry?.let { country ->
         // Bind the speech engine only once the user can actually ask for it.
         LaunchedEffect(Unit) { viewModel.prepareSpeech() }
+        val sources by viewModel.sources.collectAsStateWithLifecycle()
         CountryDetailSheet(
             country = country,
             progress = userProgressMap[country.code],
+            sources = sources?.of(country.code).orEmpty(),
             onDismiss = { viewModel.selectCountry(null) },
             onSpeak = { viewModel.speakCountryDetails(country) },
             speechAvailable = speechAvailable,

@@ -296,4 +296,25 @@ class UserProgressDaoTest {
 
         assertTrue(runBlocking { dao.answersOf(id) }.isEmpty())
     }
+
+    @Test
+    fun clearAll_emptiesEveryTable_inOneGo() = runBlocking {
+        answer("FR", true, 10L)
+        answer("DE", false, 11L, skill = Skill.CAPITAL)
+        dao.toggleFavorite("JP", 12L)
+        dao.insertQuizWithAnswers(
+            QuizScoreEntity(mode = "FLAG_NAME", score = 10, total = 190, continentFilter = "Global", timestamp = 20L),
+            listOf(QuizAnswerEntity(quizId = 0, position = 0, targetCode = "FR", pickedCode = "FR", pickedText = "France", isCorrect = true, timeMs = 1L))
+        )
+
+        dao.clearAll()
+
+        assertTrue(dao.getAllProgress().first().isEmpty())
+        assertTrue(dao.getAllSkills().first().isEmpty())
+        assertTrue(dao.getQuizHistory().first().isEmpty())
+        assertTrue(dao.recentTargets(5).first().isEmpty())
+        // Life goes on afterwards.
+        answer("FR", true, 30L)
+        assertEquals(1, dao.getAllSkills().first().size)
+    }
 }

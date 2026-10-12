@@ -20,6 +20,10 @@ drill them with flashcards, and test yourself with quizzes. Everything runs on t
   capitals for the capital quiz). The score screen lists every miss with the flag you picked beside the right one,
   and offers *Retry* and *Practise mistakes*; a wrong text answer shows the two flags side by side at once. A quiz
   survives the app being killed in the background.
+- **Settings and About** – theme (system, light, dark) and wallpaper colours on Android 12+, the pace of the timed
+  quizzes (normal, relaxed, no limit), a reset of all progress, and an About page with where the facts come from, the
+  catalog's rules, the licences and the privacy terms. A country's detail sheet lists the pages its facts were checked
+  against (`Sources`), for the countries that went through the research pass.
 - **Stats** – a daily practice streak (a day counts when you finish one quiz or a study session of ten cards; days
   follow the device's time zone), an optional daily reminder (a notification at a time you pick, only on days without
   a finished quiz; it asks for the notification permission on Android 13 and newer), mastered flags and capitals,
@@ -34,6 +38,11 @@ in one sitting. A wrong answer sends the country back to box 1. Continent questi
 evidence: they move the score a little and never past 60. A flag counts as *mastered* at box 3 or higher with a score
 of 75 or more, and lapses out of that if it goes unreviewed for twice its interval. *Weak spots* are the countries
 reviewed but not (or no longer) mastered.
+
+## Privacy
+
+The app has no network permission. Everything stays on the device: progress in the app's own database, a few
+settings in SharedPreferences, both included in Android's backup of the app. There is no account and no analytics.
 
 ## Build
 
@@ -89,10 +98,10 @@ are then kept as a workflow artifact for a week.
 | `data/settings/` | `UserSettings`: the few preferences kept in SharedPreferences (answers difficulty, reminder). |
 | `flashcards/` | Deck ordering for the flashcard screen and the immutable `StudySession` (queue, grades, Again re-insertion, undo). |
 | `speech/` | Text-to-speech behind a small `Speech` interface. |
-| `data/model/` | The country catalog, one file per continent (`EuropeCatalog.kt`…, alphabetical), and `CountryRepository`. |
+| `data/model/` | The country catalog, one file per continent (`EuropeCatalog.kt`…, alphabetical), `CountryRepository`, and `CountrySources` (the per-country source pages, read from the asset `sources.json`). |
 | `data/local/` | Room database (version 2): bookmarks, skill states, quiz history with every answer. Schemas are exported to `app/schemas/`; `AppDatabase.MIGRATION_1_2` is tested against the committed version 1 schema. |
 | `ui/` | Compose screens, components, theme and `CountryViewModel`, which hands progress, the quiz and the study session to the holders in `ui/viewmodel/`. |
-| `tools/` | Content pipeline: flag rendering (`render-flags.mjs`, `to-webp.py`, `contact-sheet.py`), catalog generation (`validate-research.py`, `gen-entries.py`, `apply-edits.py`, `gen-flag-art.py`, `flag-checksums.py`), audit input (`export-entries.py`), quiz data (`gen-lookalikes.py` writes `FlagLookAlikes.kt`). |
+| `tools/` | Content pipeline: flag rendering (`render-flags.mjs`, `to-webp.py`, `contact-sheet.py`), catalog generation (`validate-research.py`, `gen-entries.py`, `apply-edits.py`, `gen-flag-art.py`, `flag-checksums.py`), audit input (`export-entries.py`), quiz data (`gen-lookalikes.py` writes `FlagLookAlikes.kt`), the sources asset (`export-sources.py` writes `app/src/main/assets/sources.json` from the research and audit files; `--check` verifies it). |
 | `content/` | Provenance for the catalog: `seed/` (country lists and owner rules), `research/` (first-pass entries with sources), `audit/` (second-pass fixes, doubts and owner decisions per continent). |
 
 `CountryViewModel` receives its repository, speech engine and clock through the constructor, which is how

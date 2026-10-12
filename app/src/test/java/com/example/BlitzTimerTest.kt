@@ -13,6 +13,8 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import com.example.data.local.AppDatabase
 import com.example.data.model.CountryRepository
+import com.example.data.settings.InMemoryUserSettings
+import com.example.data.settings.TimerPace
 import com.example.quiz.QuizMode
 import com.example.support.FakeSpeech
 import com.example.support.awaitPendingWrites
@@ -134,6 +136,23 @@ class BlitzTimerTest {
         assertEquals(1, session.currentIndex)
         assertTrue(session.current.targetCountry.code != first)
         rule.onNodeWithText("Question 2 · Correct 1").assertIsDisplayed()
+    }
+
+    @Test
+    fun withNoLimit_theNextFlagWaitsForNext_butTheMinuteStillRuns() {
+        db.closeWhenIdle(vm)
+        db = inMemoryDatabase()
+        vm = CountryViewModel(CountryRepository(db.userProgressDao()), FakeSpeech(), clock = { now }, settings = InMemoryUserSettings(timerPace = TimerPace.OFF))
+        show()
+        answerRight()
+
+        rule.mainClock.advanceTimeBy(BLITZ_ADVANCE_MS * 3)
+        assertEquals(0, session.currentIndex)
+        onUi { vm.nextQuizQuestion() }
+        assertEquals(1, session.currentIndex)
+
+        clockAt(60_000)
+        assertTrue(session.isFinished)
     }
 
     @Test

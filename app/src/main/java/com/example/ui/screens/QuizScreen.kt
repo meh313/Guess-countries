@@ -81,6 +81,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.example.data.settings.TimerPace
 import com.example.progress.Skill
 import com.example.progress.SkillMastery
 import com.example.quiz.QuizDifficulty
@@ -123,6 +124,7 @@ fun QuizScreen(
     var selectedMode by rememberSaveable { mutableStateOf(QuizMode.FLAG_NAME) }
     var selectedContinentScope by rememberSaveable { mutableStateOf("Global") }
     val selectedDifficulty by viewModel.quizDifficulty.collectAsStateWithLifecycle()
+    val timerPace by viewModel.timerPace.collectAsStateWithLifecycle()
     // The weak and due countries of the skill the chosen mode exercises: capitals for the capital quiz, else flags.
     val plan by viewModel.quizPlan.collectAsStateWithLifecycle()
     val skill = SkillMastery.skillOf(selectedMode)
@@ -217,7 +219,12 @@ fun QuizScreen(
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                     color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
                                 )
-                                mode.hint?.let { hint ->
+                                // The speed round's hint follows the timer setting.
+                                val hintText = when {
+                                    mode.timeLimitSeconds == null -> mode.hint
+                                    else -> timerPace.limit(mode.timeLimitSeconds)?.let { "$it seconds per question" } ?: "No time limit (see Settings)"
+                                }
+                                hintText?.let { hint ->
                                     Text(
                                         text = hint,
                                         style = MaterialTheme.typography.bodySmall,
@@ -467,7 +474,8 @@ fun QuizScreen(
         }
 
         val view = LocalView.current
-        val limitMs = active.mode.timeLimitSeconds?.let { it * 1000L }
+        // The settings may stretch or lift the per-question limit; the blitz keeps its minute.
+        val limitMs = timerPace.limit(active.mode.timeLimitSeconds)?.let { it * 1000L }
         var remainingMs by remember(active.currentIndex, active.questionStartedAt) { mutableLongStateOf(limitMs ?: 0L) }
         if (limitMs != null) {
             // Time is measured from when the question was shown, so rotating or switching tabs neither
@@ -504,9 +512,10 @@ fun QuizScreen(
                     delay(100)
                 }
             }
-            // After an answer the next flag follows by itself; the Next button is there for the impatient.
-            LaunchedEffect(active.currentIndex, active.hasAnswered) {
-                if (active.hasAnswered && !active.isFinished) {
+            // After an answer the next flag follows by itself; the Next button is there for the impatient. With the
+            // timer set to no limit, the next flag waits for Next.
+            LaunchedEffect(active.currentIndex, active.hasAnswered, timerPace) {
+                if (active.hasAnswered && !active.isFinished && timerPace != TimerPace.OFF) {
                     delay(BLITZ_ADVANCE_MS)
                     viewModel.nextQuizQuestion()
                 }

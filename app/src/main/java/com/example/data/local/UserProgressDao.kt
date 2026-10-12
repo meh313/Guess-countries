@@ -67,6 +67,27 @@ abstract class UserProgressDao {
     /** [insertQuizWithAnswers] for a quiz whose answers were not recorded. */
     suspend fun insertQuizScoreAfterReading(score: QuizScoreEntity): List<Long> = insertQuizWithAnswers(score, emptyList())
 
+    /** Forgets everything the player did: bookmarks, skill states and the whole quiz log, in one transaction. */
+    @Transaction
+    open suspend fun clearAll() {
+        deleteAnswers()
+        deleteQuizzes()
+        deleteSkills()
+        deleteProgress()
+    }
+
+    @Query("DELETE FROM quiz_answers")
+    protected abstract suspend fun deleteAnswers()
+
+    @Query("DELETE FROM quiz_scores")
+    protected abstract suspend fun deleteQuizzes()
+
+    @Query("DELETE FROM skill_progress")
+    protected abstract suspend fun deleteSkills()
+
+    @Query("DELETE FROM user_country_progress")
+    protected abstract suspend fun deleteProgress()
+
     /** Flips the bookmark for [code], creating its row first if the country was never touched. */
     @Transaction
     open suspend fun toggleFavorite(code: String, now: Long) {
