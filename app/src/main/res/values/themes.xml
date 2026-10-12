@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.WorldFlags" parent="android:Theme.DeviceDefault.NoActionBar" />
+    <!-- Compose draws everything; the theme only sets what shows before the first frame and behind dialogs. -->
+    <style name="Theme.WorldFlags" parent="android:Theme.DeviceDefault.NoActionBar">
+        <item name="android:windowBackground">@color/launch_background</item>
+    </style>
 </resources>

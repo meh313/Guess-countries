@@ -807,7 +807,7 @@ private fun FlipCard(
                                 text = country.regionLabel,
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 13.sp,
+                                style = MaterialTheme.typography.labelLarge,
                                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
                             )
                         }
@@ -842,7 +842,7 @@ private fun FlipCard(
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = "Tap to reveal Country Name & Capital",
-                                    fontSize = 13.sp,
+                                    style = MaterialTheme.typography.labelLarge,
                                     fontWeight = FontWeight.Medium,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
                                 )
@@ -933,12 +933,12 @@ private fun FlipCard(
                             Text(
                                 text = "Flag Meaning",
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp,
+                                style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.primary
                             )
                             Text(
                                 text = country.flagDescription,
-                                fontSize = 12.sp,
+                                style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                         }
@@ -954,12 +954,12 @@ private fun FlipCard(
                             Text(
                                 text = "Trivia Fact",
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp,
+                                style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer
                             )
                             Text(
                                 text = country.funFact,
-                                fontSize = 12.sp,
+                                style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer
                             )
                         }
@@ -989,8 +989,8 @@ fun CardDetailPill(
             Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
             Spacer(modifier = Modifier.width(6.dp))
             Column {
-                Text(text = title, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
-                Text(text = detail, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text(text = title, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                Text(text = detail, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
             }
         }
     }

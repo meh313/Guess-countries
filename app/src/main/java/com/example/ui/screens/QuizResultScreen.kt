@@ -4,6 +4,8 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -41,6 +43,7 @@ import com.example.progress.PracticeStreak
 import com.example.quiz.QuizMode
 import com.example.quiz.QuizSession
 import com.example.ui.components.FlagView
+import com.example.ui.components.readingWidth
 
 /**
  * The score screen of a finished quiz, in the window where the quiz was played (not a dialog, so it cannot be
@@ -64,10 +67,12 @@ fun QuizResultScreen(
     BackHandler(onBack = onDone)
     val misses = session.misses
 
+    Box(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+        modifier = Modifier
+            .align(Alignment.TopCenter)
+            .readingWidth()
+            .fillMaxHeight()
             .padding(20.dp)
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -214,6 +219,7 @@ fun QuizResultScreen(
         ) {
             Text("Done", fontWeight = FontWeight.Bold)
         }
+    }
     }
 }
 

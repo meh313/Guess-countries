@@ -5,8 +5,10 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
@@ -16,7 +18,9 @@ import androidx.compose.material.icons.filled.Style
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,7 +32,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -128,47 +136,59 @@ fun MainAppScreen(
         }
     }
 
+    fun isSelected(screen: Screen) = currentRoute == screen.route ||
+        (screen == Screen.Stats && (currentRoute == Screen.SETTINGS || currentRoute == Screen.ABOUT))
+    fun open(screen: Screen) {
+        if (currentRoute != screen.route) {
+            navController.navigate(screen.route) {
+                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                launchSingleTop = true
+                restoreState = true
+            }
+        }
+    }
+    // A bar along the bottom on phones; on a window 600dp or wider (tablets, landscape phones with room) a rail
+    // along the start edge, which leaves the height to the content.
+    val windowWidthDp = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.width.toDp() }
+    // At 1.5 times the font size or more, four labels no longer fit side by side: only the selected tab keeps its label.
+    val showAllLabels = LocalDensity.current.fontScale < 1.5f
+    val useRail = windowWidthDp >= RAIL_MIN_WIDTH_DP.dp
+
     Scaffold(
         bottomBar = {
-            NavigationBar(
-                modifier = Modifier.testTag("bottom_navigation_bar")
-            ) {
-                items.forEach { screen ->
-                    val isSelected = currentRoute == screen.route ||
-                        (screen == Screen.Stats && (currentRoute == Screen.SETTINGS || currentRoute == Screen.ABOUT))
-                    NavigationBarItem(
-                        icon = {
-                            Icon(
-                                imageVector = screen.icon,
-                                contentDescription = null // the label below already names the tab
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = screen.title,
-                                fontSize = 11.sp
-                            )
-                        },
-                        selected = isSelected,
-                        onClick = {
-                            if (currentRoute != screen.route) {
-                                navController.navigate(screen.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
-                                    }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            }
-                        },
-                        modifier = Modifier.testTag("nav_tab_${screen.route}")
-                    )
+            if (!useRail) {
+                NavigationBar(modifier = Modifier.testTag("bottom_navigation_bar")) {
+                    items.forEach { screen ->
+                        NavigationBarItem(
+                            icon = { Icon(imageVector = screen.icon, contentDescription = null) }, // the label names the tab
+                            label = { TabLabel(screen.title) },
+                            alwaysShowLabel = showAllLabels,
+                            selected = isSelected(screen),
+                            onClick = { open(screen) },
+                            modifier = Modifier.testTag("nav_tab_${screen.route}")
+                        )
+                    }
                 }
             }
         },
         modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding)) {
+        Row(modifier = Modifier.padding(innerPadding)) {
+            if (useRail) {
+                NavigationRail(modifier = Modifier.testTag("navigation_rail")) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    items.forEach { screen ->
+                        NavigationRailItem(
+                            icon = { Icon(imageVector = screen.icon, contentDescription = null) },
+                            label = { TabLabel(screen.title) },
+                            alwaysShowLabel = showAllLabels,
+                            selected = isSelected(screen),
+                            onClick = { open(screen) },
+                            modifier = Modifier.testTag("nav_tab_${screen.route}")
+                        )
+                    }
+                }
+            }
             NavHost(
                 navController = navController,
                 startDestination = Screen.Explore.route
@@ -209,16 +229,24 @@ fun MainAppScreen(
             }
             // After the NavHost, whose own effects give the controller its graph: effects run in composition order.
             LaunchedEffect(requestedTab) {
-                val route = items.firstOrNull { it.route == requestedTab }?.route ?: return@LaunchedEffect
-                if (currentRoute != route) {
-                    navController.navigate(route) {
-                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                }
+                val screen = items.firstOrNull { it.route == requestedTab } ?: return@LaunchedEffect
+                open(screen)
                 onTabRequestShown()
             }
         }
     }
 }
+
+/** A tab label on one line: at large font sizes it shrinks a little instead of breaking "Flashcards" in two. */
+@Composable
+private fun TabLabel(title: String) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.labelSmall,
+        maxLines = 1,
+        autoSize = TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = 12.sp)
+    )
+}
+
+/** Windows at least this wide get the navigation rail instead of the bottom bar. */
+const val RAIL_MIN_WIDTH_DP = 600

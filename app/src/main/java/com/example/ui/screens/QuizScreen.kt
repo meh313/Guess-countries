@@ -16,11 +16,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -70,6 +73,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
@@ -89,6 +93,7 @@ import com.example.quiz.QuizEngine
 import com.example.quiz.QuizMode
 import com.example.ui.components.FlagOptionGrid
 import com.example.ui.components.FlagView
+import com.example.ui.components.readingWidth
 import com.example.ui.components.MissComparison
 import com.example.ui.theme.StreakColor
 import com.example.ui.viewmodel.CountryViewModel
@@ -153,10 +158,12 @@ fun QuizScreen(
 
     if (active == null) {
         // QUIZ CONFIGURATION SCREEN
+        Box(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         Column(
-            modifier = modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .readingWidth()
+                .fillMaxHeight()
                 .padding(20.dp)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -164,7 +171,8 @@ fun QuizScreen(
             Text(
                 text = "Geography & Flag Quiz",
                 style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.semantics { heading() }
             )
             Text(
                 text = "Test what you know and keep your streak going",
@@ -179,11 +187,11 @@ fun QuizScreen(
                 text = "Select Mode",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.align(Alignment.Start)
+                modifier = Modifier.align(Alignment.Start).semantics { heading() }
             )
             Spacer(modifier = Modifier.height(10.dp))
 
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.selectableGroup()) {
                 QuizMode.entries.forEach { mode ->
                     val isSelected = selectedMode == mode
                     Card(
@@ -244,7 +252,7 @@ fun QuizScreen(
                 text = "Select Scope",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.align(Alignment.Start)
+                modifier = Modifier.align(Alignment.Start).semantics { heading() }
             )
             Spacer(modifier = Modifier.height(10.dp))
 
@@ -263,7 +271,9 @@ fun QuizScreen(
             }
             // Eight chips: a plain scrolling row, so every chip exists (and can be scrolled to) however narrow the screen.
             Row(
-                modifier = Modifier.horizontalScroll(rememberScrollState()),
+                modifier = Modifier
+                    .horizontalScroll(rememberScrollState())
+                    .selectableGroup(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 SETUP_SCOPES.forEach { scope ->
@@ -359,7 +369,7 @@ fun QuizScreen(
                 text = "Answers",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.align(Alignment.Start)
+                modifier = Modifier.align(Alignment.Start).semantics { heading() }
             )
             Spacer(modifier = Modifier.height(10.dp))
             val difficultyApplies = selectedMode.usesLookAlikes
@@ -373,7 +383,9 @@ fun QuizScreen(
                     .testTag("quiz_difficulty_hint")
             )
             Row(
-                modifier = Modifier.align(Alignment.Start),
+                modifier = Modifier
+                    .align(Alignment.Start)
+                    .selectableGroup(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 QuizDifficulty.entries.forEach { difficulty ->
@@ -416,7 +428,7 @@ fun QuizScreen(
                 enabled = canStart,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp)
+                    .heightIn(min = 56.dp)
                     .testTag("start_quiz_btn"),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
@@ -428,10 +440,11 @@ fun QuizScreen(
                     } else {
                         "Needs at least ${QuizEngine.MIN_POOL} countries"
                     },
-                    fontSize = 16.sp,
+                    style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Bold
                 )
             }
+        }
         }
     } else if (active.isFinished) {
         // SCORE SCREEN, in the window: the misses with both flags, and the ways on.
@@ -514,8 +527,13 @@ fun QuizScreen(
             }
             // After an answer the next flag follows by itself; the Next button is there for the impatient. With the
             // timer set to no limit, the next flag waits for Next.
-            LaunchedEffect(active.currentIndex, active.hasAnswered, timerPace) {
-                if (active.hasAnswered && !active.isFinished && timerPace != TimerPace.OFF) {
+            // With TalkBack's touch exploration on, a flag that changes by itself cannot be explored: wait for Next.
+            val touchExploring = remember(view) {
+                (view.context.getSystemService(android.content.Context.ACCESSIBILITY_SERVICE) as? android.view.accessibility.AccessibilityManager)
+                    ?.isTouchExplorationEnabled == true
+            }
+            LaunchedEffect(active.currentIndex, active.hasAnswered, timerPace, touchExploring) {
+                if (active.hasAnswered && !active.isFinished && timerPace != TimerPace.OFF && !touchExploring) {
                     delay(BLITZ_ADVANCE_MS)
                     viewModel.nextQuizQuestion()
                 }
@@ -533,10 +551,12 @@ fun QuizScreen(
             }
         }
 
+        Box(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         Column(
-            modifier = modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .readingWidth()
+                .fillMaxHeight()
                 .padding(20.dp)
                 .verticalScroll(quizScrollState),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -582,7 +602,7 @@ fun QuizScreen(
                                 text = "Streak ${active.streak}",
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp
+                                style = MaterialTheme.typography.labelMedium
                             )
                         }
                     }
@@ -600,10 +620,14 @@ fun QuizScreen(
 
             if (totalMs != null) {
                 // One quiet description for TalkBack; a ticking bar would be announced constantly.
+                val secondsLeft = (totalRemainingMs + 999) / 1000
                 Column(
                     modifier = Modifier
                         .testTag("quiz_timer")
-                        .clearAndSetSemantics { contentDescription = "${totalMs / 1000} seconds in total" }
+                        .clearAndSetSemantics {
+                            contentDescription = "${totalMs / 1000} seconds in total"
+                            stateDescription = "$secondsLeft seconds left"
+                        }
                 ) {
                     val urgent = totalRemainingMs <= 10_000L
                     LinearProgressIndicator(
@@ -633,11 +657,15 @@ fun QuizScreen(
 
             if (limitMs != null && !active.hasAnswered) {
                 // One quiet description for TalkBack; a ticking bar would be announced constantly.
+                val secondsLeft = (remainingMs + 999) / 1000
                 Column(
                     modifier = Modifier
                         .padding(top = 8.dp)
                         .testTag("quiz_timer")
-                        .clearAndSetSemantics { contentDescription = "${limitMs / 1000} seconds per question" }
+                        .clearAndSetSemantics {
+                            contentDescription = "${limitMs / 1000} seconds per question"
+                            stateDescription = "$secondsLeft seconds left"
+                        }
                 ) {
                     val urgent = remainingMs <= 3_000L
                     LinearProgressIndicator(
@@ -684,7 +712,8 @@ fun QuizScreen(
                         text = q.questionText,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.semantics { heading() }
                     )
                 }
             }
@@ -721,7 +750,7 @@ fun QuizScreen(
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable(enabled = !active.hasAnswered) {
+                            .clickable(enabled = !active.hasAnswered, role = Role.Button) {
                                 viewModel.answerQuiz(index)
                                 view.performAnswerHaptic(correct = isCorrect)
                             }
@@ -816,7 +845,7 @@ fun QuizScreen(
                             )
                             Text(
                                 text = q.targetCountry.funFact,
-                                fontSize = 12.sp,
+                                style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                         }
@@ -830,6 +859,7 @@ fun QuizScreen(
                     }
                 }
             }
+        }
         }
     }
 

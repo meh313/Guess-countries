@@ -20,6 +20,7 @@ import com.example.support.FakeSpeech
 import com.example.support.awaitPendingWrites
 import com.example.support.closeWhenIdle
 import com.example.support.inMemoryDatabase
+import com.example.support.stateDescriptionIs
 import com.example.ui.screens.BLITZ_ADVANCE_MS
 import com.example.ui.screens.QuizScreen
 import com.example.ui.theme.WorldFlagsTheme
@@ -104,6 +105,8 @@ class BlitzTimerTest {
 
         clockAt(15_000)
         countdown("45s left").assertIsDisplayed()
+        // TalkBack can ask for the time left (the state, read on demand) without hearing every tick.
+        rule.onNodeWithTag("quiz_timer").assert(stateDescriptionIs("45 seconds left"))
 
         clockAt(59_100)
         countdown("1s left").assertIsDisplayed()

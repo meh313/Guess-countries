@@ -111,10 +111,12 @@ class ExploreProgressUiTest {
 
         rule.onNodeWithTag("standing_chip_mastered").performClick()
         rule.eventually("one mastered") { rule.onNodeWithText("1 Country").assertIsDisplayed() }
+        rule.onNodeWithTag("explore_grid").performScrollToNode(hasTestTag(card("FR")))
         rule.onNodeWithTag(card("FR")).assertIsDisplayed()
 
         rule.onNodeWithTag("standing_chip_weak").performClick()
         rule.eventually("one learning") { rule.onNodeWithText("1 Country").assertIsDisplayed() }
+        rule.onNodeWithTag("explore_grid").performScrollToNode(hasTestTag(card("DE")))
         rule.onNodeWithTag(card("DE")).assertIsDisplayed()
 
         rule.onNodeWithTag("standing_chip_unseen").performClick()
