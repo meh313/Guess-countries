@@ -264,9 +264,16 @@ class QuizAndFlashcardUiTest {
         rule.onNodeWithTag("quiz_timer").assertDoesNotExist()
     }
 
+    /** A finished quiz as the app saves it, written straight to the database. */
+    private fun savedQuiz(mode: QuizMode, score: Int, total: Int, correct: Int? = null) = runBlocking {
+        AppDatabase.getDatabase(ApplicationProvider.getApplicationContext()).userProgressDao().insertQuizScore(
+            QuizScoreEntity(mode = mode.name, score = score, total = total, continentFilter = "Global", correct = correct)
+        )
+    }
+
     @Test
     fun stats_listsQuizzesByTheirModeTitle() {
-        viewModel.saveQuizResult(QuizMode.SPEED_MATCH.name, 50, 100, "Global")
+        savedQuiz(QuizMode.SPEED_MATCH, score = 50, total = 100)
         tab("stats")
         rule.waitUntil(10_000) { viewModel.quizHistory.value.isNotEmpty() }
 
@@ -682,8 +689,8 @@ class QuizAndFlashcardUiTest {
 
     @Test
     fun stats_listsABlitzByItsCorrectCountAndKeepsItOutOfTheHighestScore() {
-        viewModel.saveQuizResult(QuizMode.BLITZ.name, 340, 14, "Global")
-        viewModel.saveQuizResult(QuizMode.FLAG_NAME.name, 120, 190, "Global")
+        savedQuiz(QuizMode.BLITZ, score = 340, total = 0, correct = 14)
+        savedQuiz(QuizMode.FLAG_NAME, score = 120, total = 190)
         tab("stats")
         rule.waitUntil(10_000) { viewModel.quizHistory.value.size == 2 }
 

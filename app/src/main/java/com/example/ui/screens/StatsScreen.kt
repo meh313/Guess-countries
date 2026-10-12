@@ -271,7 +271,7 @@ fun StatsScreen(
                             color = MaterialTheme.colorScheme.primaryContainer
                         ) {
                             Text(
-                                text = if (entry.mode == QuizMode.BLITZ.name) "${entry.total} correct · ${entry.score} pts" else "${entry.score} pts",
+                                text = if (entry.mode == QuizMode.BLITZ.name) "${entry.correct ?: entry.total} correct · ${entry.score} pts" else "${entry.score} pts",
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
