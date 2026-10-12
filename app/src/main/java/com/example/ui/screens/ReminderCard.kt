@@ -38,7 +38,7 @@ import androidx.compose.material3.TimePickerDialogDefaults
 import androidx.compose.material3.TimePickerDisplayMode
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -66,7 +66,7 @@ import java.util.Calendar
 @Composable
 fun ReminderCard(viewModel: CountryViewModel, modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    val prefs by viewModel.reminder.collectAsState()
+    val prefs by viewModel.reminder.collectAsStateWithLifecycle()
 
     // Whether a notification would be shown, looked at again whenever the screen comes back (settings may have changed).
     var allowed by remember { mutableStateOf(ReminderNotifier.areNotificationsAllowed(context)) }
