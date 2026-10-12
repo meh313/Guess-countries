@@ -50,6 +50,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -78,7 +79,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.LifecycleStartEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.progress.PracticeStreak
 import com.example.quiz.QuizDifficulty
 import com.example.quiz.QuizEngine
@@ -377,9 +380,21 @@ fun QuizScreen(
 
         // The clocks only run while the quiz is on screen: a call, a tab switch or the app going to the background
         // pauses the question and the blitz where they stand, and they go on with the time they had left.
-        LifecycleStartEffect(Unit) {
-            viewModel.resumeQuiz()
-            onStopOrDispose { viewModel.pauseQuiz() }
+        val lifecycleOwner = LocalLifecycleOwner.current
+        DisposableEffect(lifecycleOwner) {
+            val observer = LifecycleEventObserver { _, event ->
+                when (event) {
+                    Lifecycle.Event.ON_START -> viewModel.resumeQuiz()
+                    Lifecycle.Event.ON_STOP -> viewModel.pauseQuiz()
+                    else -> Unit
+                }
+            }
+            viewModel.resumeQuiz() // back on screen (another tab, a rotation): the clocks go on from where they stopped
+            lifecycleOwner.lifecycle.addObserver(observer)
+            onDispose {
+                lifecycleOwner.lifecycle.removeObserver(observer)
+                viewModel.pauseQuiz()
+            }
         }
 
         val view = LocalView.current
