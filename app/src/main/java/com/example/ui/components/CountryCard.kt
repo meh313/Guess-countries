@@ -34,11 +34,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.data.model.Country
+import com.example.ui.continentLabel
 import com.example.ui.theme.GoldAccent
 import com.example.data.local.UserProgressEntity
 
@@ -88,7 +91,7 @@ fun CountryCard(
                     shadowElevation = 2.dp
                 ) {
                     Text(
-                        text = country.continent,
+                        text = continentLabel(country.continent),
                         color = Color.White,
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
@@ -110,7 +113,7 @@ fun CountryCard(
                 ) {
                     Icon(
                         imageVector = if (isFavorite) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                        contentDescription = "Bookmark ${country.name}",
+                        contentDescription = stringResource(R.string.bookmark_country, country.name),
                         tint = if (isFavorite) GoldAccent else Color.White,
                         modifier = Modifier.size(20.dp)
                     )

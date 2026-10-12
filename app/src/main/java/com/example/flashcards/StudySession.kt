@@ -92,6 +92,7 @@ data class StudySession(
     fun settle(): StudySession = if (pending == null) this else copy(graded = graded + pending, pending = null)
 
     companion object {
+        // The sources are stored keys (a session's row in the quiz log keeps one); their labels are string resources.
         const val DUE = "Due today"
         const val WEAK = "Weak spots"
         const val DECK = "This deck"
@@ -102,9 +103,8 @@ data class StudySession(
         /** A session with at least this many cards graded counts as practice for the streak and the reminder. */
         const val MIN_FOR_STREAK = 10
 
-        /** The `mode` of a study session's row in the quiz log. */
+        /** The `mode` of a study session's row in the quiz log; its title is a string resource (`ui/Labels.kt`). */
         const val MODE = "FLASHCARDS"
-        const val MODE_TITLE = "Flashcards"
 
         const val AGAIN_MIN_GAP = 3
         const val AGAIN_MAX_GAP = 5

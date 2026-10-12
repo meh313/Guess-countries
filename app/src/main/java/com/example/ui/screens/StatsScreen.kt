@@ -46,6 +46,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.Role
@@ -53,6 +55,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LifecycleResumeEffect
+import com.example.R
 import com.example.flashcards.StudySession
 import com.example.progress.PracticeStreak
 import com.example.progress.Skill
@@ -60,6 +63,9 @@ import com.example.quiz.QuizMode
 import com.example.ui.components.StatBadge
 import com.example.ui.components.readingWidth
 import com.example.ui.components.getContinentColor
+import com.example.ui.continentLabel
+import com.example.ui.modeTitle
+import com.example.ui.scopeLabel
 import com.example.ui.viewmodel.CountryViewModel
 import java.text.DateFormat
 import java.util.Date
@@ -116,7 +122,7 @@ fun StatsScreen(
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Progress",
+                        text = stringResource(R.string.stats_title),
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier
@@ -124,13 +130,13 @@ fun StatsScreen(
                             .testTag("stats_title")
                     )
                     Text(
-                        text = "Track flag mastery & quiz achievements",
+                        text = stringResource(R.string.stats_subtitle),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
                     )
                 }
                 IconButton(onClick = onOpenSettings, modifier = Modifier.testTag("stats_settings_btn")) {
-                    Icon(imageVector = Icons.Default.Settings, contentDescription = "Settings")
+                    Icon(imageVector = Icons.Default.Settings, contentDescription = stringResource(R.string.stats_settings))
                 }
             }
         }
@@ -143,16 +149,16 @@ fun StatsScreen(
         item {
             TileRow { tile ->
                 StatBadge(
-                    title = "Mastered Flags",
-                    value = "$masteredCount / ${allCountries.size}",
+                    title = stringResource(R.string.stats_mastered_flags),
+                    value = stringResource(R.string.stats_ratio, masteredCount, allCountries.size),
                     icon = Icons.Default.Star,
                     iconColor = Color(0xFFF39C12),
                     modifier = tile
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 StatBadge(
-                    title = "Capitals Known",
-                    value = "$capitalsCount / ${allCountries.size}",
+                    title = stringResource(R.string.stats_capitals_known),
+                    value = stringResource(R.string.stats_ratio, capitalsCount, allCountries.size),
                     icon = Icons.Default.LocationCity,
                     iconColor = Color(0xFF8E44AD),
                     modifier = tile.testTag("stats_capitals")
@@ -163,7 +169,7 @@ fun StatsScreen(
         item {
             TileRow { tile ->
                 StatBadge(
-                    title = "Due Today",
+                    title = stringResource(R.string.stats_due_today),
                     value = "$dueCount",
                     icon = Icons.Default.Today,
                     iconColor = Color(0xFF16A085),
@@ -171,7 +177,7 @@ fun StatsScreen(
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 StatBadge(
-                    title = "Saved",
+                    title = stringResource(R.string.stats_saved),
                     value = "$bookmarkedCount",
                     icon = Icons.Default.Bookmark,
                     iconColor = MaterialTheme.colorScheme.primary,
@@ -183,7 +189,7 @@ fun StatsScreen(
         item {
             TileRow { tile ->
                 StatBadge(
-                    title = "Quizzes Finished",
+                    title = stringResource(R.string.stats_quizzes_finished),
                     value = "$totalQuizzes",
                     icon = Icons.Default.Public,
                     iconColor = Color(0xFF27AE60),
@@ -191,8 +197,8 @@ fun StatsScreen(
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 StatBadge(
-                    title = "Highest Score",
-                    value = "$maxScore pts",
+                    title = stringResource(R.string.stats_highest_score),
+                    value = stringResource(R.string.stats_points, maxScore),
                     icon = Icons.Default.EmojiEvents,
                     iconColor = Color(0xFFE67E22),
                     modifier = tile
@@ -203,7 +209,7 @@ fun StatsScreen(
         // Continent Mastery Progress Breakdown
         item {
             Text(
-                text = "Continent Mastery Breakdown",
+                text = stringResource(R.string.stats_continent_heading),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.semantics { heading() }
@@ -217,11 +223,12 @@ fun StatsScreen(
             val capitalsInContinent = continentCountries.count { it.code in masteredCapitals }
             val progressRatio = if (total > 0) masteredInContinent.toFloat() / total else 0f
             val continentColor = getContinentColor(continent)
+            val continentName = continentLabel(continent)
 
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable(role = Role.Button, onClickLabel = "Show the $continent countries still to learn") { onOpenExplore(continent) }
+                    .clickable(role = Role.Button, onClickLabel = stringResource(R.string.stats_continent_open, continentName)) { onOpenExplore(continent) }
                     .testTag("stats_continent_${continent.lowercase()}"),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -239,7 +246,7 @@ fun StatsScreen(
                                 color = continentColor
                             ) {
                                 Text(
-                                    text = continent,
+                                    text = continentName,
                                     color = Color.White,
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
@@ -250,13 +257,13 @@ fun StatsScreen(
 
                         Column(horizontalAlignment = Alignment.End) {
                             Text(
-                                text = "$masteredInContinent of $total Mastered",
+                                text = stringResource(R.string.stats_mastered_of, masteredInContinent, total),
                                 style = MaterialTheme.typography.bodySmall,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                             )
                             Text(
-                                text = "Capitals: $capitalsInContinent",
+                                text = stringResource(R.string.stats_capitals_count, capitalsInContinent),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -282,7 +289,7 @@ fun StatsScreen(
         item {
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Recent Quiz Log",
+                text = stringResource(R.string.stats_log_heading),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.semantics { heading() }
@@ -298,7 +305,7 @@ fun StatsScreen(
                 ) {
                     Box(modifier = Modifier.padding(20.dp), contentAlignment = Alignment.Center) {
                         Text(
-                            text = "No quizzes yet. Finish a quiz or a study session and it shows up here.",
+                            text = stringResource(R.string.stats_log_empty),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.outline
                         )
@@ -320,12 +327,8 @@ fun StatsScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
-                            val modeTitle = when (entry.mode) {
-                                StudySession.MODE -> StudySession.MODE_TITLE
-                                else -> QuizMode.entries.firstOrNull { it.name == entry.mode }?.title ?: entry.mode
-                            }
                             Text(
-                                text = "$modeTitle • ${entry.continentFilter}",
+                                text = stringResource(R.string.stats_log_entry, modeTitle(entry.mode), scopeLabel(entry.continentFilter)),
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold
                             )
@@ -342,9 +345,9 @@ fun StatsScreen(
                         ) {
                             Text(
                                 text = when (entry.mode) {
-                                    StudySession.MODE -> "${entry.correct ?: 0} of ${entry.questionCount ?: 0} remembered"
-                                    QuizMode.BLITZ.name -> "${entry.correct ?: entry.total} correct · ${entry.score} pts"
-                                    else -> "${entry.score} pts"
+                                    StudySession.MODE -> stringResource(R.string.study_summary_remembered, entry.correct ?: 0, entry.questionCount ?: 0)
+                                    QuizMode.BLITZ.name -> stringResource(R.string.stats_log_blitz, entry.correct ?: entry.total, entry.score)
+                                    else -> stringResource(R.string.stats_points, entry.score)
                                 },
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -372,16 +375,22 @@ private fun TileRow(content: @Composable (tile: Modifier) -> Unit) {
     }
 }
 
-private fun days(n: Int) = if (n == 1) "1 day" else "$n days"
-
 /** The daily practice streak: how long it is, the best one so far, and whether today already counts. */
 @Composable
 private fun StreakCard(streak: PracticeStreak.Summary, modifier: Modifier = Modifier) {
-    val title = if (streak.current == 0) "No streak yet" else "${streak.current}-day streak"
-    val detail = if (streak.best == 0) {
-        "Finish a quiz or a study session today to start one"
+    val title = if (streak.current == 0) {
+        stringResource(R.string.stats_no_streak)
     } else {
-        "Best: ${days(streak.best)} · ${if (streak.practicedToday) "Practiced today" else "Not yet today"}"
+        pluralStringResource(R.plurals.stats_streak_title, streak.current, streak.current)
+    }
+    val detail = if (streak.best == 0) {
+        stringResource(R.string.stats_streak_start)
+    } else {
+        stringResource(
+            R.string.stats_streak_detail,
+            pluralStringResource(R.plurals.stats_streak_best, streak.best, streak.best),
+            if (streak.practicedToday) stringResource(R.string.stats_practiced_today) else stringResource(R.string.stats_not_yet_today)
+        )
     }
     Card(
         modifier = modifier

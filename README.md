@@ -41,6 +41,13 @@ evidence: they move the score a little and never past 60. A flag counts as *mast
 of 75 or more, and lapses out of that if it goes unreviewed for twice its interval. *Weak spots* are the countries
 reviewed but not (or no longer) mastered.
 
+## Languages
+
+Every word the screens show is a string resource (`app/src/main/res/values/strings*.xml`, one file per screen plus
+the shared one); `ui/Labels.kt` maps the stored keys (quiz modes, scopes, continents, sort orders, standings) to
+them, so a translation is a `values-xx/` folder and touches no Kotlin. The layout mirrors in right-to-left locales.
+The catalog itself (names, capitals, flag texts, facts) is English; translating it is a content decision for later.
+
 ## Privacy
 
 The app has no network permission. Everything stays on the device: progress in the app's own database, a few
@@ -106,7 +113,7 @@ are then kept as a workflow artifact for a week.
 | `speech/` | Text-to-speech behind a small `Speech` interface. |
 | `data/model/` | The country catalog, one file per continent (`EuropeCatalog.kt`…, alphabetical), `CountryRepository`, and `CountrySources` (the per-country source pages, read from the asset `sources.json`). |
 | `data/local/` | Room database (version 2): bookmarks, skill states, quiz history with every answer. Schemas are exported to `app/schemas/`; `AppDatabase.MIGRATION_1_2` is tested against the committed version 1 schema. |
-| `ui/` | Compose screens, components, theme and `CountryViewModel`, which hands progress, the quiz and the study session to the holders in `ui/viewmodel/`. |
+| `ui/` | Compose screens, components, theme, `Labels.kt` (the words for the stored keys) and `CountryViewModel`, which hands progress, the quiz and the study session to the holders in `ui/viewmodel/`. |
 | `tools/` | Content pipeline: flag rendering (`render-flags.mjs`, `to-webp.py`, `contact-sheet.py`), catalog generation (`validate-research.py`, `gen-entries.py`, `apply-edits.py`, `gen-flag-art.py`, `flag-checksums.py`), audit input (`export-entries.py`), quiz data (`gen-lookalikes.py` writes `FlagLookAlikes.kt`), the sources asset (`export-sources.py` writes `app/src/main/assets/sources.json` from the research and audit files; `--check` verifies it). |
 | `content/` | Provenance for the catalog: `seed/` (country lists and owner rules), `research/` (first-pass entries with sources), `audit/` (second-pass fixes, doubts and owner decisions per continent). |
 

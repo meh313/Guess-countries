@@ -4,21 +4,19 @@ import com.example.data.model.Country
 import com.example.data.model.FlagLookAlikes
 import kotlin.random.Random
 
+/** The kinds of quiz. The names are stored in the quiz log; the titles and hints the player reads are string resources (`ui/Labels.kt`). */
 enum class QuizMode(
-    val title: String,
     /** Seconds allowed per question, or null when the mode is untimed. */
     val timeLimitSeconds: Int? = null,
-    /** Extra line under the title on the setup screen. */
-    val hint: String? = null,
     /** Seconds for the whole quiz when the mode runs against one clock until it ends, else null. */
     val totalTimeSeconds: Int? = null
 ) {
-    FLAG_NAME("Flag → Country"),
-    PICK_FLAG("Country → Flag", hint = "Pick the right flag out of four"),
-    CAPITAL("Country → Capital"),
-    CONTINENT("Flag → Continent", hint = "Covers the whole world"),
-    SPEED_MATCH("Speed Round", timeLimitSeconds = 10, hint = "10 seconds per question"),
-    BLITZ("60-Second Blitz", hint = "As many flags as you can in one minute", totalTimeSeconds = 60);
+    FLAG_NAME,
+    PICK_FLAG,
+    CAPITAL,
+    CONTINENT,
+    SPEED_MATCH(timeLimitSeconds = 10),
+    BLITZ(totalTimeSeconds = 60);
 
     /** Runs until the clock does, not for a fixed number of questions. */
     val isEndless: Boolean get() = totalTimeSeconds != null
@@ -39,10 +37,10 @@ enum class QuizMode(
     val usesWholeWorld: Boolean get() = this == CONTINENT
 }
 
-/** How many of a question's three wrong answers are flags that look like the right one, where any exist. */
-enum class QuizDifficulty(val title: String, val lookAlikes: Int, val hint: String) {
-    NORMAL("Normal", 1, "One look-alike flag among the answers"),
-    HARD("Hard", 3, "Look-alike flags wherever they exist")
+/** How many of a question's three wrong answers are flags that look like the right one, where any exist. The names are stored; the words are string resources. */
+enum class QuizDifficulty(val lookAlikes: Int) {
+    NORMAL(1),
+    HARD(3)
 }
 
 data class QuizQuestion(
@@ -67,7 +65,10 @@ object QuizEngine {
     const val POINTS_PER_CORRECT = 10
     const val STREAK_BONUS = 2
 
-    val SCOPES = listOf("Global", "Africa", "Americas", "Asia", "Europe", "Oceania")
+    /** The scope over every country. Scopes are stored keys (this, a continent name, or one of the three below); their labels are string resources. */
+    const val GLOBAL = "Global"
+
+    val SCOPES = listOf(GLOBAL, "Africa", "Americas", "Asia", "Europe", "Oceania")
 
     /** A scope that is not a place: the countries the player practiced and has not mastered yet. */
     const val WEAK_SPOTS = "Weak spots"
@@ -94,16 +95,16 @@ object QuizEngine {
         weakSpotsAvailable: Boolean = true,
         dueAvailable: Boolean = true
     ): String = when {
-        mode.usesWholeWorld -> "Global"
-        requested == WEAK_SPOTS && !weakSpotsAvailable -> "Global"
-        requested == DUE && !dueAvailable -> "Global"
+        mode.usesWholeWorld -> GLOBAL
+        requested == WEAK_SPOTS && !weakSpotsAvailable -> GLOBAL
+        requested == DUE && !dueAvailable -> GLOBAL
         else -> requested
     }
 
     /** The countries a quiz in [scope] can ask about. Non-sovereign entries such as Antarctica never appear. */
     fun poolFor(scope: String, countries: List<Country>): List<Country> {
         val sovereign = countries.filter { it.isSovereign }
-        return if (scope == "Global") {
+        return if (scope == GLOBAL) {
             sovereign
         } else {
             sovereign.filter { it.continent.equals(scope, ignoreCase = true) }
@@ -114,7 +115,7 @@ object QuizEngine {
      * Number of questions a quiz over [poolSize] countries has; 0 when the pool is too small. The due and mistakes
      * scopes take their wrong answers from the whole world, so they run over a single country if that is all there is.
      */
-    fun questionCount(poolSize: Int, scope: String = "Global"): Int = when {
+    fun questionCount(poolSize: Int, scope: String = GLOBAL): Int = when {
         scope in HAND_PICKED_SCOPES -> minOf(MAX_QUESTIONS, poolSize)
         poolSize < MIN_POOL -> 0
         else -> minOf(MAX_QUESTIONS, poolSize)
@@ -164,7 +165,7 @@ object QuizEngine {
         return order.take(count)
     }
 
-    /** What a question of [mode] about [target] asks. */
+    /** What a question of [mode] about [target] asks, in English: the screen shows the same wording from resources (`QuizMode.questionText` in `ui/Labels.kt`). */
     fun questionText(mode: QuizMode, target: Country): String = when (mode) {
         QuizMode.FLAG_NAME -> "Which country does this flag belong to?"
         QuizMode.PICK_FLAG -> "Which of these is the flag of ${target.name}?"

@@ -49,12 +49,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.LifecycleResumeEffect
+import com.example.R
 import com.example.reminder.ReminderNotifier
 import com.example.ui.viewmodel.CountryViewModel
 import java.util.Calendar
@@ -124,9 +126,9 @@ fun ReminderCard(viewModel: CountryViewModel, modifier: Modifier = Modifier) {
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(text = "Daily reminder", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(text = stringResource(R.string.reminder_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     Text(
-                        text = "A nudge at $timeLabel, only on days you have not finished a quiz",
+                        text = stringResource(R.string.reminder_detail, timeLabel),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -140,7 +142,7 @@ fun ReminderCard(viewModel: CountryViewModel, modifier: Modifier = Modifier) {
                 TextButton(onClick = { picking = true }, modifier = Modifier.testTag("reminder_time_btn")) {
                     Icon(imageVector = Icons.Default.Schedule, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Remind me at $timeLabel")
+                    Text(stringResource(R.string.reminder_time, timeLabel))
                 }
             }
 
@@ -152,12 +154,12 @@ fun ReminderCard(viewModel: CountryViewModel, modifier: Modifier = Modifier) {
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
-                        text = "Allow notifications for World Flags in system settings to get the reminder.",
+                        text = stringResource(R.string.reminder_blocked, stringResource(R.string.app_name)),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.error
                     )
                     TextButton(onClick = { openNotificationSettings(context) }, modifier = Modifier.testTag("reminder_settings_btn")) {
-                        Text("Open settings")
+                        Text(stringResource(R.string.reminder_open_settings))
                     }
                 }
             }
@@ -194,10 +196,10 @@ private fun ReminderTimeDialog(initialHour: Int, initialMinute: Int, onConfirm: 
                 displayMode = mode
             )
         },
-        dismissButton = { TextButton(onClick = onDismiss, modifier = Modifier.testTag("reminder_time_cancel")) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = onDismiss, modifier = Modifier.testTag("reminder_time_cancel")) { Text(stringResource(R.string.action_cancel)) } },
         confirmButton = {
             TextButton(onClick = { onConfirm(state.hour, state.minute) }, modifier = Modifier.testTag("reminder_time_confirm")) {
-                Text("OK")
+                Text(stringResource(R.string.reminder_ok))
             }
         }
     ) {

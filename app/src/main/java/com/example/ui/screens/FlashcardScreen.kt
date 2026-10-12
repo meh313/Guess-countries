@@ -62,7 +62,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -73,6 +76,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.R
 import com.example.data.model.Country
 import com.example.data.model.SortOption
 import com.example.flashcards.FlashcardDeck
@@ -80,11 +84,15 @@ import com.example.flashcards.StudySession
 import com.example.progress.Grade
 import com.example.progress.PracticeStreak
 import com.example.progress.Skill
+import com.example.ui.CountrySummary
 import com.example.ui.components.FlagAspectRatio
 import com.example.ui.components.FlagView
 import com.example.ui.components.formatPopulation
 import com.example.ui.components.getContinentColor
 import com.example.ui.components.rememberCompactNumberFormat
+import com.example.ui.continentLabel
+import com.example.ui.nounRes
+import com.example.ui.scopeLabel
 import com.example.ui.theme.MasteredColor
 import com.example.ui.theme.NeedsPracticeColor
 import com.example.ui.viewmodel.CountryViewModel
@@ -107,6 +115,7 @@ fun FlashcardScreen(
     val plan by viewModel.quizPlan.collectAsStateWithLifecycle()
     val study by viewModel.studySession.collectAsStateWithLifecycle()
     val speechAvailable by viewModel.speechAvailable.collectAsStateWithLifecycle()
+    val resources = LocalResources.current
     // Bind the speech engine only once a screen that can speak is shown.
     LaunchedEffect(Unit) { viewModel.prepareSpeech() }
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
@@ -131,7 +140,7 @@ fun FlashcardScreen(
             countriesByCode = countriesByCode,
             speechAvailable = speechAvailable,
             onFlip = { viewModel.flipStudyCard() },
-            onSpeak = { code -> countriesByCode[code]?.let { viewModel.speakCountryDetails(it) } },
+            onSpeak = { code -> countriesByCode[code]?.let { viewModel.speakCountryDetails(it, CountrySummary.spoken(resources, it)) } },
             onGrade = { grade ->
                 viewModel.stopSpeaking()
                 viewModel.gradeStudyCard(grade)
@@ -159,10 +168,10 @@ fun FlashcardScreen(
 
     // The deck is shared with Explore's filters and sort order, so say so and offer a way out.
     val filterSummary = listOfNotNull(
-        selectedContinent.takeIf { it != "All" },
-        "Saved only".takeIf { showOnlyBookmarks },
-        searchQuery.takeIf { it.isNotBlank() }?.let { "\"$it\"" },
-        "Sorted by ${sortBy.name.lowercase()}".takeIf { sortBy != SortOption.NAME }
+        continentLabel(selectedContinent).takeIf { selectedContinent != "All" },
+        stringResource(R.string.flashcards_filter_saved_only).takeIf { showOnlyBookmarks },
+        if (searchQuery.isNotBlank()) stringResource(R.string.flashcards_filter_search, searchQuery) else null,
+        if (sortBy != SortOption.NAME) stringResource(R.string.flashcards_filter_sorted_by, stringResource(sortBy.nounRes)) else null
     ).joinToString(" · ")
     val filtersActive = filterSummary.isNotEmpty()
 
@@ -175,7 +184,7 @@ fun FlashcardScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "No flashcards available for current filters.",
+                text = stringResource(R.string.flashcards_empty),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.outline,
                 textAlign = TextAlign.Center
@@ -186,7 +195,7 @@ fun FlashcardScreen(
                     onClick = { viewModel.clearFilters() },
                     modifier = Modifier.testTag("flashcard_empty_clear_filters_btn")
                 ) {
-                    Text("Clear filters")
+                    Text(stringResource(R.string.action_clear_filters))
                 }
             }
         }
@@ -267,7 +276,7 @@ fun FlashcardScreen(
                 compact = compact,
                 speechAvailable = speechAvailable,
                 onFlip = { flippedCode = if (isFlipped) null else currentCountry.code },
-                onSpeak = { viewModel.speakCountryDetails(currentCountry) },
+                onSpeak = { viewModel.speakCountryDetails(currentCountry, CountrySummary.spoken(resources, currentCountry)) },
                 modifier = cardModifier
             )
         },
@@ -349,13 +358,13 @@ private fun DeckHeader(
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "Flashcards",
+                text = stringResource(R.string.flashcards_title),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.semantics { heading() }
             )
             Text(
-                text = "Card ${index + 1} of $total",
+                text = stringResource(R.string.flashcards_card_position, index + 1, total),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
             )
@@ -363,13 +372,13 @@ private fun DeckHeader(
 
         Row {
             IconButton(onClick = onStudy, modifier = Modifier.testTag("flashcard_study_btn")) {
-                Icon(imageVector = Icons.Default.School, contentDescription = "Study", tint = MaterialTheme.colorScheme.primary)
+                Icon(imageVector = Icons.Default.School, contentDescription = stringResource(R.string.study_title), tint = MaterialTheme.colorScheme.primary)
             }
             IconButton(onClick = onShuffle) {
-                Icon(imageVector = Icons.Default.Shuffle, contentDescription = "Shuffle Cards")
+                Icon(imageVector = Icons.Default.Shuffle, contentDescription = stringResource(R.string.flashcards_shuffle))
             }
             IconButton(onClick = onReset) {
-                Icon(imageVector = Icons.Default.Refresh, contentDescription = "Reset Deck")
+                Icon(imageVector = Icons.Default.Refresh, contentDescription = stringResource(R.string.flashcards_reset))
             }
         }
     }
@@ -382,12 +391,12 @@ private fun StepButtons(stacked: Boolean, onStep: (forward: Boolean) -> Unit) {
         OutlinedButton(onClick = { onStep(false) }, modifier = m.testTag("flashcard_prev_btn"), shape = RoundedCornerShape(14.dp)) {
             Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, modifier = Modifier.size(16.dp))
             Spacer(modifier = Modifier.width(4.dp))
-            Text("Previous", fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.flashcards_previous), fontWeight = FontWeight.Bold)
         }
     }
     val next: @Composable (Modifier) -> Unit = { m ->
         Button(onClick = { onStep(true) }, modifier = m.testTag("flashcard_next_btn"), shape = RoundedCornerShape(14.dp)) {
-            Text("Next", fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.flashcards_next), fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.width(4.dp))
             Icon(imageVector = Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, modifier = Modifier.size(16.dp))
         }
@@ -410,28 +419,44 @@ private fun StepButtons(stacked: Boolean, onStep: (forward: Boolean) -> Unit) {
 private fun StudyChooser(dueCount: Int, weakCount: Int, deckCount: Int, onPick: (String) -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Study") },
+        title = { Text(stringResource(R.string.study_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
-                    text = "Up to ${StudySession.DEFAULT_SIZE} cards; grade each one after the flip. Ten or more count as practice.",
+                    text = stringResource(R.string.study_chooser_intro, StudySession.DEFAULT_SIZE),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
-                StudyOption(StudySession.DUE, "Due today", "$dueCount ${cards(dueCount)} due for review", dueCount > 0, "study_due_btn") { onPick(it) }
-                StudyOption(StudySession.WEAK, "Weak spots", "$weakCount reviewed, not mastered", weakCount > 0, "study_weak_btn") { onPick(it) }
-                StudyOption(StudySession.DECK, "This deck", "the next $deckCount ${cards(deckCount)} from here", deckCount > 0, "study_deck_btn") { onPick(it) }
+                StudyOption(
+                    StudySession.DUE,
+                    scopeLabel(StudySession.DUE),
+                    pluralStringResource(R.plurals.study_due_detail, dueCount, dueCount),
+                    dueCount > 0,
+                    "study_due_btn"
+                ) { onPick(it) }
+                StudyOption(
+                    StudySession.WEAK,
+                    scopeLabel(StudySession.WEAK),
+                    stringResource(R.string.study_weak_detail, weakCount),
+                    weakCount > 0,
+                    "study_weak_btn"
+                ) { onPick(it) }
+                StudyOption(
+                    StudySession.DECK,
+                    scopeLabel(StudySession.DECK),
+                    pluralStringResource(R.plurals.study_deck_detail, deckCount, deckCount),
+                    deckCount > 0,
+                    "study_deck_btn"
+                ) { onPick(it) }
             }
         },
         confirmButton = {},
         dismissButton = {
-            TextButton(onClick = onDismiss, modifier = Modifier.testTag("study_cancel_btn")) { Text("Cancel") }
+            TextButton(onClick = onDismiss, modifier = Modifier.testTag("study_cancel_btn")) { Text(stringResource(R.string.action_cancel)) }
         }
     )
 }
-
-private fun cards(n: Int) = if (n == 1) "card" else "cards"
 
 @Composable
 private fun StudyOption(source: String, title: String, detail: String, enabled: Boolean, tag: String, onPick: (String) -> Unit) {
@@ -500,22 +525,26 @@ private fun StudyView(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Study · ${session.source}",
+                        text = stringResource(R.string.study_header, scopeLabel(session.source)),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.semantics { heading() }
                     )
                     Text(
-                        text = "Card ${session.position} of ${session.cards.size}" + if (session.isRehearsal) " · again" else "",
+                        text = if (session.isRehearsal) {
+                            stringResource(R.string.study_position_rehearsal, session.position, session.cards.size)
+                        } else {
+                            stringResource(R.string.flashcards_card_position, session.position, session.cards.size)
+                        },
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                         modifier = Modifier.testTag("study_position")
                     )
                 }
                 IconButton(onClick = onUndo, enabled = session.pending != null, modifier = Modifier.testTag("flashcard_undo_btn")) {
-                    Icon(imageVector = Icons.AutoMirrored.Filled.Undo, contentDescription = "Undo last grade")
+                    Icon(imageVector = Icons.AutoMirrored.Filled.Undo, contentDescription = stringResource(R.string.study_undo))
                 }
-                TextButton(onClick = onEnd, modifier = Modifier.testTag("flashcard_end_btn")) { Text("End") }
+                TextButton(onClick = onEnd, modifier = Modifier.testTag("flashcard_end_btn")) { Text(stringResource(R.string.study_end)) }
             }
             Spacer(modifier = Modifier.height(10.dp))
             DeckProgress(session.gradedCards.toFloat() / session.cards.size)
@@ -541,7 +570,7 @@ private fun StudyView(
 private fun GradeButtons(stacked: Boolean, enabled: Boolean, onGrade: (Grade) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
-            text = if (enabled) "How well did you know it?" else "Flip the card to grade it",
+            text = if (enabled) stringResource(R.string.study_grade_prompt) else stringResource(R.string.study_flip_to_grade),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
@@ -549,9 +578,9 @@ private fun GradeButtons(stacked: Boolean, enabled: Boolean, onGrade: (Grade) ->
                 .fillMaxWidth()
                 .testTag("flashcard_grade_hint")
         )
-        val again: @Composable (Modifier) -> Unit = { m -> GradeButton("Again", NeedsPracticeColor, enabled, m.testTag("grade_again_btn")) { onGrade(Grade.AGAIN) } }
-        val good: @Composable (Modifier) -> Unit = { m -> GradeButton("Good", MaterialTheme.colorScheme.primary, enabled, m.testTag("grade_good_btn")) { onGrade(Grade.GOOD) } }
-        val easy: @Composable (Modifier) -> Unit = { m -> GradeButton("Easy", MasteredColor, enabled, m.testTag("grade_easy_btn")) { onGrade(Grade.EASY) } }
+        val again: @Composable (Modifier) -> Unit = { m -> GradeButton(stringResource(R.string.study_grade_again), NeedsPracticeColor, enabled, m.testTag("grade_again_btn")) { onGrade(Grade.AGAIN) } }
+        val good: @Composable (Modifier) -> Unit = { m -> GradeButton(stringResource(R.string.study_grade_good), MaterialTheme.colorScheme.primary, enabled, m.testTag("grade_good_btn")) { onGrade(Grade.GOOD) } }
+        val easy: @Composable (Modifier) -> Unit = { m -> GradeButton(stringResource(R.string.study_grade_easy), MasteredColor, enabled, m.testTag("grade_easy_btn")) { onGrade(Grade.EASY) } }
         if (stacked) {
             again(Modifier.fillMaxWidth())
             good(Modifier.fillMaxWidth())
@@ -606,38 +635,43 @@ private fun StudySummary(
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Session complete",
+            text = stringResource(R.string.study_summary_title),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
             modifier = Modifier.semantics { heading() }
         )
         Text(
-            text = session.source,
+            text = scopeLabel(session.source),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "${session.remembered} of ${session.gradedCards} remembered",
+            text = stringResource(R.string.study_summary_remembered, session.remembered, session.gradedCards),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.testTag("study_summary_remembered")
         )
         Text(
-            text = "Again ${counts.getValue(Grade.AGAIN)} · Good ${counts.getValue(Grade.GOOD)} · Easy ${counts.getValue(Grade.EASY)}",
+            text = stringResource(
+                R.string.study_summary_grades,
+                counts.getValue(Grade.AGAIN),
+                counts.getValue(Grade.GOOD),
+                counts.getValue(Grade.EASY)
+            ),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.testTag("study_summary_grades")
         )
         val streakLine = when (outcome?.kind) {
-            PracticeStreak.Kind.STARTED -> "Streak started: day 1"
-            PracticeStreak.Kind.KEPT -> "Streak kept: ${outcome.days} days"
-            PracticeStreak.Kind.ALREADY_COUNTED -> "${outcome.days}-day streak, already counted today"
+            PracticeStreak.Kind.STARTED -> stringResource(R.string.streak_started)
+            PracticeStreak.Kind.KEPT -> pluralStringResource(R.plurals.streak_kept, outcome.days, outcome.days)
+            PracticeStreak.Kind.ALREADY_COUNTED -> stringResource(R.string.study_streak_already_counted, outcome.days)
             null ->
                 if (session.gradedCards < StudySession.MIN_FOR_STREAK) {
-                    "Grade at least ${StudySession.MIN_FOR_STREAK} cards for streak credit (you graded ${session.gradedCards})"
+                    stringResource(R.string.study_streak_short, StudySession.MIN_FOR_STREAK, session.gradedCards)
                 } else {
                     null
                 }
@@ -662,7 +696,7 @@ private fun StudySummary(
                 .testTag("flashcard_study_again_btn"),
             shape = RoundedCornerShape(16.dp)
         ) {
-            Text("Study again", fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.study_again), fontWeight = FontWeight.Bold)
         }
         Spacer(modifier = Modifier.height(10.dp))
         TextButton(
@@ -671,7 +705,7 @@ private fun StudySummary(
                 .fillMaxWidth()
                 .testTag("flashcard_summary_done_btn")
         ) {
-            Text("Done", fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.action_done), fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -679,8 +713,8 @@ private fun StudySummary(
 @Composable
 private fun FilterNotice(summary: String, onClear: () -> Unit) =
     DeckNotice(
-        text = "Deck filtered by Explore: $summary",
-        actionLabel = "Clear",
+        text = stringResource(R.string.flashcards_filter_notice, summary),
+        actionLabel = stringResource(R.string.flashcards_action_clear),
         noticeTag = "flashcard_filter_notice",
         actionTag = "flashcard_clear_filters_btn",
         onAction = onClear
@@ -761,6 +795,8 @@ private fun FlipCard(
     val compactNumbers = rememberCompactNumberFormat()
     // Read lazily: the animation only invalidates the graphics layer, and this flips once at 90 degrees.
     val showBack by remember(rotation) { derivedStateOf { rotation.value > 90f } }
+    val flipLabel = if (isFlipped) stringResource(R.string.flashcards_show_flag_again) else stringResource(R.string.flashcards_reveal)
+    val faceDescription = if (isFlipped) stringResource(R.string.flashcards_state_details) else stringResource(R.string.flashcards_state_flag)
 
     Card(
         modifier = modifier
@@ -769,11 +805,11 @@ private fun FlipCard(
                 cameraDistance = 12 * density
             }
             .clickable(
-                onClickLabel = if (isFlipped) "Show the flag again" else "Reveal country name and capital",
+                onClickLabel = flipLabel,
                 role = Role.Button,
                 onClick = onFlip
             )
-            .semantics { stateDescription = if (isFlipped) "Showing country details" else "Showing the flag" }
+            .semantics { stateDescription = faceDescription }
             .testTag("flashcard_flip_card"),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -819,7 +855,7 @@ private fun FlipCard(
                             modifier = Modifier
                                 .width(flagWidth)
                                 .testTag("flashcard_flag"),
-                            contentDescription = "Flag to identify"
+                            contentDescription = stringResource(R.string.flag_to_identify)
                         )
 
                         Spacer(modifier = Modifier.height(gap))
@@ -841,7 +877,7 @@ private fun FlipCard(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = "Tap to reveal Country Name & Capital",
+                                    text = stringResource(R.string.flashcards_tap_to_reveal),
                                     style = MaterialTheme.typography.labelLarge,
                                     fontWeight = FontWeight.Medium,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -877,9 +913,9 @@ private fun FlipCard(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.VolumeUp,
                                 contentDescription = if (speechAvailable) {
-                                    "Read country summary aloud"
+                                    stringResource(R.string.action_read_aloud)
                                 } else {
-                                    "Reading aloud is unavailable on this device"
+                                    stringResource(R.string.read_aloud_unavailable)
                                 },
                                 tint = if (speechAvailable) {
                                     MaterialTheme.colorScheme.primary
@@ -910,14 +946,14 @@ private fun FlipCard(
                     Row(modifier = Modifier.fillMaxWidth()) {
                         CardDetailPill(
                             icon = Icons.Default.LocationCity,
-                            title = "Capital",
+                            title = stringResource(R.string.skill_capital),
                             detail = country.capital,
                             modifier = Modifier.weight(1f)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         CardDetailPill(
                             icon = Icons.Default.People,
-                            title = "Population",
+                            title = stringResource(R.string.flashcards_population),
                             detail = formatPopulation(compactNumbers, country.population),
                             modifier = Modifier.weight(1f)
                         )
@@ -931,7 +967,7 @@ private fun FlipCard(
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             Text(
-                                text = "Flag Meaning",
+                                text = stringResource(R.string.flashcards_flag_meaning),
                                 fontWeight = FontWeight.Bold,
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.primary
@@ -952,7 +988,7 @@ private fun FlipCard(
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             Text(
-                                text = "Trivia Fact",
+                                text = stringResource(R.string.flashcards_trivia),
                                 fontWeight = FontWeight.Bold,
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer

@@ -17,6 +17,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import android.content.Context
+import android.content.res.Resources
+import androidx.test.core.app.ApplicationProvider
+import com.example.ui.CountrySummary
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
@@ -42,6 +46,7 @@ class CountryViewModelSpeechTest {
     }
 
     private val country get() = vm.repository.allCountries.first { it.isSovereign }
+    private val resources: Resources get() = ApplicationProvider.getApplicationContext<Context>().resources
 
     @Test
     fun theEngineIsNotStartedUntilAScreenAsksForSpeech() {
@@ -65,7 +70,7 @@ class CountryViewModelSpeechTest {
     fun speakCountryDetails_sendsTheSummaryWithAnIdForThatCountry() {
         speech.setAvailable(true)
 
-        vm.speakCountryDetails(country)
+        vm.speakCountryDetails(country, CountrySummary.spoken(resources, country))
 
         val (text, id) = speech.spoken.single()
         assertTrue("text was: $text", text.startsWith("${country.name}. Capital is ${country.capital}"))
@@ -78,7 +83,7 @@ class CountryViewModelSpeechTest {
         speech.setAvailable(true)
         val antarctica = vm.repository.allCountries.single { it.code == "AQ" }
 
-        vm.speakCountryDetails(antarctica)
+        vm.speakCountryDetails(antarctica, CountrySummary.spoken(resources, antarctica))
 
         val text = speech.spoken.single().first
         assertEquals("Antarctica. ${antarctica.funFact}", text)
@@ -87,7 +92,7 @@ class CountryViewModelSpeechTest {
 
     @Test
     fun speakCountryDetails_saysNothingWhileSpeechIsUnavailable() {
-        vm.speakCountryDetails(country)
+        vm.speakCountryDetails(country, CountrySummary.spoken(resources, country))
 
         assertTrue(speech.spoken.isEmpty())
     }

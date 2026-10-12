@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
@@ -55,11 +57,11 @@ import com.example.ui.screens.StatsScreen
 import com.example.ui.theme.WorldFlagsTheme
 import com.example.ui.viewmodel.CountryViewModel
 
-sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
-    object Explore : Screen("explore", "Explore", Icons.Default.Public)
-    object Flashcards : Screen("flashcards", "Flashcards", Icons.Default.Style)
-    object Quiz : Screen("quiz", "Quiz", Icons.Default.EmojiEvents)
-    object Stats : Screen("stats", "Progress", Icons.Default.BarChart)
+sealed class Screen(val route: String, @StringRes val titleRes: Int, val icon: ImageVector) {
+    object Explore : Screen("explore", R.string.nav_explore, Icons.Default.Public)
+    object Flashcards : Screen("flashcards", R.string.nav_flashcards, Icons.Default.Style)
+    object Quiz : Screen("quiz", R.string.nav_quiz, Icons.Default.EmojiEvents)
+    object Stats : Screen("stats", R.string.nav_progress, Icons.Default.BarChart)
 
     companion object {
         /** Reached from Progress, not from the bar; Back returns there. */
@@ -161,7 +163,7 @@ fun MainAppScreen(
                     items.forEach { screen ->
                         NavigationBarItem(
                             icon = { Icon(imageVector = screen.icon, contentDescription = null) }, // the label names the tab
-                            label = { TabLabel(screen.title) },
+                            label = { TabLabel(stringResource(screen.titleRes)) },
                             alwaysShowLabel = showAllLabels,
                             selected = isSelected(screen),
                             onClick = { open(screen) },
@@ -180,7 +182,7 @@ fun MainAppScreen(
                     items.forEach { screen ->
                         NavigationRailItem(
                             icon = { Icon(imageVector = screen.icon, contentDescription = null) },
-                            label = { TabLabel(screen.title) },
+                            label = { TabLabel(stringResource(screen.titleRes)) },
                             alwaysShowLabel = showAllLabels,
                             selected = isSelected(screen),
                             onClick = { open(screen) },
