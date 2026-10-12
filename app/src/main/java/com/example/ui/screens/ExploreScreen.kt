@@ -44,7 +44,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -71,13 +71,13 @@ fun ExploreScreen(
     viewModel: CountryViewModel,
     modifier: Modifier = Modifier
 ) {
-    val searchQuery by viewModel.searchQuery.collectAsState()
-    val selectedContinent by viewModel.selectedContinent.collectAsState()
-    val showOnlyBookmarks by viewModel.showOnlyBookmarks.collectAsState()
-    val countries by viewModel.filteredCountries.collectAsState()
-    val userProgressMap by viewModel.userProgressMap.collectAsState()
-    val selectedCountry by viewModel.selectedCountry.collectAsState()
-    val speechAvailable by viewModel.speechAvailable.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
+    val selectedContinent by viewModel.selectedContinent.collectAsStateWithLifecycle()
+    val showOnlyBookmarks by viewModel.showOnlyBookmarks.collectAsStateWithLifecycle()
+    val countries by viewModel.filteredCountries.collectAsStateWithLifecycle()
+    val userProgressMap by viewModel.userProgressMap.collectAsStateWithLifecycle()
+    val selectedCountry by viewModel.selectedCountry.collectAsStateWithLifecycle()
+    val speechAvailable by viewModel.speechAvailable.collectAsStateWithLifecycle()
 
     val continents = listOf("All", "Africa", "Americas", "Asia", "Europe", "Oceania", "Antarctica")
     var showSortMenu by remember { mutableStateOf(false) }

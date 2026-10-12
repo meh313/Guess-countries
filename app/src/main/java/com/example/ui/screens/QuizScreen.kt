@@ -52,7 +52,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
@@ -115,11 +115,11 @@ fun QuizScreen(
 ) {
     val allCountries = viewModel.repository.allCountries
     // The running quiz lives in the ViewModel; the setup choices survive rotation via rememberSaveable.
-    val session by viewModel.quizSession.collectAsState()
+    val session by viewModel.quizSession.collectAsStateWithLifecycle()
     var selectedMode by rememberSaveable { mutableStateOf(QuizMode.FLAG_NAME) }
     var selectedContinentScope by rememberSaveable { mutableStateOf("Global") }
-    val selectedDifficulty by viewModel.quizDifficulty.collectAsState()
-    val weakSpots by viewModel.weakSpots.collectAsState()
+    val selectedDifficulty by viewModel.quizDifficulty.collectAsStateWithLifecycle()
+    val weakSpots by viewModel.weakSpots.collectAsStateWithLifecycle()
     val weakSpotsAvailable = weakSpots.size >= QuizEngine.MIN_POOL
     // Once practice lifts the weak spots out of reach, the choice goes back to Global instead of reviving by itself.
     LaunchedEffect(weakSpotsAvailable) {
@@ -241,7 +241,7 @@ fun QuizScreen(
                     val isWeakSpots = scope == QuizEngine.WEAK_SPOTS
                     val isSelected = shownScope == scope
                     val chipEnabled = scopeApplies && (!isWeakSpots || weakSpotsAvailable)
-                    val contentColor = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                    val contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
                     Surface(
                         shape = RoundedCornerShape(16.dp),
                         color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
@@ -335,7 +335,7 @@ fun QuizScreen(
                     ) {
                         Text(
                             text = difficulty.title,
-                            color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                         )
@@ -767,7 +767,7 @@ fun QuizScreen(
 
     // Finish Celebration Dialog
     if (active?.isFinished == true) {
-        val streakOutcome by viewModel.finishOutcome.collectAsState()
+        val streakOutcome by viewModel.finishOutcome.collectAsStateWithLifecycle()
         AlertDialog(
             onDismissRequest = { viewModel.endQuiz() },
             title = {

@@ -49,7 +49,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.LaunchedEffect
@@ -96,16 +96,16 @@ fun FlashcardScreen(
     viewModel: CountryViewModel,
     modifier: Modifier = Modifier
 ) {
-    val exploreCountries by viewModel.filteredCountries.collectAsState()
-    val weakSpots by viewModel.weakSpots.collectAsState()
+    val exploreCountries by viewModel.filteredCountries.collectAsStateWithLifecycle()
+    val weakSpots by viewModel.weakSpots.collectAsStateWithLifecycle()
     val weakSpotsAvailable = weakSpots.size >= QuizEngine.MIN_POOL
-    val speechAvailable by viewModel.speechAvailable.collectAsState()
+    val speechAvailable by viewModel.speechAvailable.collectAsStateWithLifecycle()
     // Bind the speech engine only once a screen that can speak is shown.
     LaunchedEffect(Unit) { viewModel.prepareSpeech() }
-    val searchQuery by viewModel.searchQuery.collectAsState()
-    val selectedContinent by viewModel.selectedContinent.collectAsState()
-    val showOnlyBookmarks by viewModel.showOnlyBookmarks.collectAsState()
-    val sortBy by viewModel.sortBy.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
+    val selectedContinent by viewModel.selectedContinent.collectAsStateWithLifecycle()
+    val showOnlyBookmarks by viewModel.showOnlyBookmarks.collectAsStateWithLifecycle()
+    val sortBy by viewModel.sortBy.collectAsStateWithLifecycle()
     // Position and flip state are keyed to a country rather than an index, so changing Explore's
     // filters while this tab is away cannot leave a different country showing already flipped.
     var currentCode by rememberSaveable { mutableStateOf<String?>(null) }

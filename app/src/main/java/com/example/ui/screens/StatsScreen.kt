@@ -29,7 +29,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -57,14 +57,14 @@ fun StatsScreen(
     viewModel: CountryViewModel,
     modifier: Modifier = Modifier
 ) {
-    val progressMap by viewModel.userProgressMap.collectAsState()
-    val streak by viewModel.streak.collectAsState()
+    val progressMap by viewModel.userProgressMap.collectAsStateWithLifecycle()
+    val streak by viewModel.streak.collectAsStateWithLifecycle()
     // A day can end while this screen sits open in the background; work the streak out again on every return.
     LifecycleResumeEffect(viewModel) {
         viewModel.refreshStreak()
         onPauseOrDispose { }
     }
-    val quizHistory by viewModel.quizHistory.collectAsState()
+    val quizHistory by viewModel.quizHistory.collectAsStateWithLifecycle()
     // Antarctica cannot be quizzed, so it is not part of the mastery totals.
     val allCountries = viewModel.repository.allCountries.filter { it.isSovereign }
     // Follows the user's locale (and updates if it changes) instead of a fixed US-style pattern.

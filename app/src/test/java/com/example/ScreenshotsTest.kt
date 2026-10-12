@@ -156,4 +156,46 @@ class ScreenshotsTest {
         rule.waitForIdle()
         saveBitmap("stats_time_picker", drawLatestDialog())
     }
+
+    /** The same screens in the dark theme: primary-coloured text, dialogs and the switch track used to fall back to Material's defaults. */
+    @Test
+    @Config(qualifiers = "+night")
+    fun theDarkTheme() {
+        rule.waitForIdle()
+        save("explore_dark")
+
+        val viewModel = ViewModelProvider(rule.activity)[CountryViewModel::class.java]
+        rule.openTab("quiz")
+        save("quiz_setup_dark")
+        viewModel.startQuiz(QuizMode.FLAG_NAME, "Europe")
+        rule.waitForIdle()
+        val question = viewModel.quizSession.value!!.current
+        viewModel.answerQuiz((question.correctAnswerIndex + 1) % question.options.size)
+        rule.waitForIdle()
+        save("quiz_play_dark")
+        while (viewModel.quizSession.value?.isFinished == false) {
+            viewModel.answerQuiz(viewModel.quizSession.value!!.current.correctAnswerIndex)
+            viewModel.nextQuizQuestion()
+        }
+        rule.awaitDelivered { viewModel.finishOutcome.value != null }
+        rule.onNodeWithTag("quiz_finish_streak").assertIsDisplayed()
+        saveBitmap("quiz_finish_dark", drawLatestDialog())
+        viewModel.endQuiz()
+        rule.waitForIdle()
+
+        rule.openTab("flashcards")
+        rule.onNodeWithTag("flashcard_flip_card").performClick()
+        rule.waitForIdle()
+        save("flashcards_back_dark")
+
+        rule.openTab("stats")
+        shadowOf(ApplicationProvider.getApplicationContext<Application>()).grantPermissions(Manifest.permission.POST_NOTIFICATIONS)
+        rule.onNodeWithTag("reminder_switch").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithTag("reminder_time_btn").assertIsDisplayed()
+        save("stats_dark")
+        rule.onNodeWithTag("reminder_time_btn").performClick()
+        rule.waitForIdle()
+        saveBitmap("stats_time_picker_dark", drawLatestDialog())
+    }
 }
