@@ -64,6 +64,9 @@ import com.example.R
 import com.example.data.model.SortOption
 import com.example.ui.components.ContinentChip
 import com.example.ui.components.CountryCard
+import com.example.progress.Skill
+import com.example.ui.components.Standing
+import com.example.ui.components.standing
 import com.example.ui.viewmodel.CountryViewModel
 
 @Composable
@@ -76,6 +79,9 @@ fun ExploreScreen(
     val showOnlyBookmarks by viewModel.showOnlyBookmarks.collectAsStateWithLifecycle()
     val countries by viewModel.filteredCountries.collectAsStateWithLifecycle()
     val userProgressMap by viewModel.userProgressMap.collectAsStateWithLifecycle()
+    val skills by viewModel.skills.collectAsStateWithLifecycle()
+    val standingFilter by viewModel.standingFilter.collectAsStateWithLifecycle()
+    val now = viewModel.repository.now()
     val selectedCountry by viewModel.selectedCountry.collectAsStateWithLifecycle()
     val speechAvailable by viewModel.speechAvailable.collectAsStateWithLifecycle()
 
@@ -187,7 +193,27 @@ fun ExploreScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                // Standing chips: how the player stands on the flag (Progress opens Explore with one of these set).
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp)
+                        .testTag("standing_chips"),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Standing.entries.forEach { standing ->
+                        val selected = standingFilter == standing
+                        FilterChip(
+                            selected = selected,
+                            onClick = { viewModel.onStandingSelect(if (selected) null else standing) },
+                            label = { Text(standing.chipLabel, fontSize = 12.sp) },
+                            shape = RoundedCornerShape(16.dp),
+                            modifier = Modifier.testTag("standing_chip_${standing.name.lowercase()}")
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
 
                 // Sort & Bookmark Filter Bar
                 Row(
@@ -280,8 +306,8 @@ fun ExploreScreen(
 
         if (countries.isEmpty()) {
             item(key = "empty", span = { GridItemSpan(maxLineSpan) }) {
-                val noSavedYet = showOnlyBookmarks && searchQuery.isBlank() && selectedContinent == "All"
-                val anyFilter = showOnlyBookmarks || searchQuery.isNotBlank() || selectedContinent != "All"
+                val noSavedYet = showOnlyBookmarks && searchQuery.isBlank() && selectedContinent == "All" && standingFilter == null
+                val anyFilter = showOnlyBookmarks || searchQuery.isNotBlank() || selectedContinent != "All" || standingFilter != null
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -330,7 +356,9 @@ fun ExploreScreen(
                     country = country,
                     progress = userProgressMap[country.code],
                     onCardClick = { viewModel.selectCountry(country) },
-                    onFavoriteClick = { viewModel.toggleFavorite(country.code) }
+                    onFavoriteClick = { viewModel.toggleFavorite(country.code) },
+                    flagStanding = if (country.isSovereign) skills.standing(country.code, Skill.FLAG, now) else null,
+                    capitalStanding = if (country.isSovereign) skills.standing(country.code, Skill.CAPITAL, now) else null
                 )
             }
         }
@@ -345,6 +373,8 @@ fun ExploreScreen(
             country = country,
             progress = userProgressMap[country.code],
             sources = sources?.of(country.code).orEmpty(),
+            skillStates = if (country.isSovereign) Skill.entries.associateWith { skills[it]?.get(country.code) } else emptyMap(),
+            now = now,
             onDismiss = { viewModel.selectCountry(null) },
             onSpeak = { viewModel.speakCountryDetails(country) },
             speechAvailable = speechAvailable,

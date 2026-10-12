@@ -21,9 +21,11 @@ drill them with flashcards, and test yourself with quizzes. Everything runs on t
   and offers *Retry* and *Practise mistakes*; a wrong text answer shows the two flags side by side at once. A quiz
   survives the app being killed in the background.
 - **Settings and About** – theme (system, light, dark) and wallpaper colours on Android 12+, the pace of the timed
-  quizzes (normal, relaxed, no limit), a reset of all progress, and an About page with where the facts come from, the
-  catalog's rules, the licences and the privacy terms. A country's detail sheet lists the pages its facts were checked
-  against (`Sources`), for the countries that went through the research pass.
+  quizzes (normal, relaxed, no limit), *Export* and *Import* of all progress and settings as a JSON file, a reset of
+  all progress, and an About page with where the facts come from, the catalog's rules, the licences and the privacy
+  terms. A country's detail sheet lists the pages its facts were checked against (`Sources`), for the countries that
+  went through the research pass, and a *Your progress* row per skill; every country card carries two pips (flag,
+  capital) and Explore has Unseen / Learning / Mastered chips, which a tap on a continent on the Progress screen sets.
 - **Stats** – a daily practice streak (a day counts when you finish one quiz or a study session of ten cards; days
   follow the device's time zone), an optional daily reminder (a notification at a time you pick, only on days without
   a finished quiz; it asks for the notification permission on Android 13 and newer), mastered flags and capitals,
@@ -42,7 +44,9 @@ reviewed but not (or no longer) mastered.
 ## Privacy
 
 The app has no network permission. Everything stays on the device: progress in the app's own database, a few
-settings in SharedPreferences, both included in Android's backup of the app. There is no account and no analytics.
+settings in SharedPreferences, both named in the backup rules (`res/xml/backup_rules.xml`, `data_extraction_rules.xml`)
+and so included in Android's backup of the app. Settings > Export writes the same data to a file you keep; Import
+replaces everything with such a file. There is no account and no analytics.
 
 ## Build
 
@@ -95,7 +99,8 @@ are then kept as a workflow artifact for a week.
 | `quiz/` | Pure quiz rules (`QuizEngine`, the weighted `QuestionPicker`), the immutable `QuizSession` and its `QuizSnapshot` for saved state; no Android types. |
 | `progress/` | Pure rules: the practice streak (`PracticeStreak`), computed from when quizzes finished, and per-skill mastery (`SkillMastery`: score, Leitner box, due date). |
 | `reminder/` | The daily reminder: pure schedule rules, the WorkManager scheduler and worker, the notification. |
-| `data/settings/` | `UserSettings`: the few preferences kept in SharedPreferences (answers difficulty, reminder). |
+| `data/settings/` | `UserSettings`: the few preferences kept in SharedPreferences (answers difficulty, reminder, theme, timer pace). |
+| `data/transfer/` | `ProgressTransfer`: the export file format (JSON, format 1) and its reader. |
 | `flashcards/` | Deck ordering for the flashcard screen and the immutable `StudySession` (queue, grades, Again re-insertion, undo). |
 | `speech/` | Text-to-speech behind a small `Speech` interface. |
 | `data/model/` | The country catalog, one file per continent (`EuropeCatalog.kt`…, alphabetical), `CountryRepository`, and `CountrySources` (the per-country source pages, read from the asset `sources.json`). |

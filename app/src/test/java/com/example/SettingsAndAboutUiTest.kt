@@ -142,7 +142,8 @@ class SettingsAndAboutUiTest {
         }
         assertEquals(TimerPace.RELAXED, PrefsUserSettings(ApplicationProvider.getApplicationContext()).timerPace)
 
-        rule.onNodeWithTag("settings_back_btn").performClick()
+        // The screen was scrolled down to the reset button; the back arrow sits at its top.
+        rule.onNodeWithTag("settings_back_btn").performScrollTo().performClick()
         rule.waitForIdle()
         rule.eventually("the streak card") { rule.onNodeWithText("No streak yet").assertIsDisplayed() }
     }
@@ -151,12 +152,13 @@ class SettingsAndAboutUiTest {
     fun about_showsTheVersionTheLicenceTextAndTheWayBack() {
         openSettings()
         rule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("settings_about_btn"))
-        rule.onNodeWithTag("settings_version", useUnmergedTree = true).assert(hasText("Version 2.0", substring = true))
+        val version = ApplicationProvider.getApplicationContext<android.content.Context>().let { it.packageManager.getPackageInfo(it.packageName, 0).versionName }
+        rule.onNodeWithTag("settings_version", useUnmergedTree = true).assert(hasText("Version $version", substring = true))
 
         rule.onNodeWithTag("settings_about_btn").performClick()
         rule.waitForIdle()
 
-        rule.onNodeWithTag("about_version").assert(hasText("World Flags 2.0"))
+        rule.onNodeWithTag("about_version").assert(hasText("World Flags $version"))
         rule.onNodeWithText("Privacy").assertExists()
         rule.eventually("the notices") {
             rule.onNodeWithTag("about_notices").assert(hasText("flag-icons", substring = true))

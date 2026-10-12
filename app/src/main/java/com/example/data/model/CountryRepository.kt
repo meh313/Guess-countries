@@ -4,6 +4,7 @@ import com.example.data.local.QuizAnswerEntity
 import com.example.data.local.QuizScoreEntity
 import com.example.data.local.UserProgressDao
 import com.example.data.local.UserProgressEntity
+import com.example.data.transfer.ProgressSnapshot
 import com.example.flashcards.StudySession
 import com.example.progress.Evidence
 import com.example.progress.Grade
@@ -142,6 +143,12 @@ class CountryRepository(
             )
         )
     }
+
+    /** Everything in the database, for an export file. */
+    suspend fun exportSnapshot(): ProgressSnapshot = progressDao.snapshot(now())
+
+    /** Replaces everything in the database with [snapshot]. */
+    suspend fun importSnapshot(snapshot: ProgressSnapshot) = withContext(NonCancellable) { progressDao.replaceAll(snapshot) }
 
     /** Forgets every bookmark, skill state and logged quiz; the settings are not touched. */
     suspend fun clearProgress() = withContext(NonCancellable) { progressDao.clearAll() }

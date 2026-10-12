@@ -68,6 +68,10 @@ import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import com.example.data.local.UserProgressEntity
 import com.example.data.model.Country
+import com.example.progress.Skill
+import com.example.progress.SkillMastery
+import com.example.progress.SkillState
+import com.example.ui.components.Standing
 import com.example.ui.components.formatArea
 import com.example.ui.components.formatPopulation
 import com.example.ui.components.rememberCompactNumberFormat
@@ -85,7 +89,10 @@ fun CountryDetailSheet(
     speechAvailable: Boolean,
     onToggleFavorite: () -> Unit,
     /** The web pages this country's facts were checked against; empty for the first catalog's countries. */
-    sources: List<String> = emptyList()
+    sources: List<String> = emptyList(),
+    /** The player's state per skill (null where never reviewed); empty hides the progress row (Antarctica). */
+    skillStates: Map<Skill, SkillState?> = emptyMap(),
+    now: Long = System.currentTimeMillis()
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val context = LocalContext.current
@@ -290,6 +297,34 @@ fun CountryDetailSheet(
                 )
             }
 
+            if (skillStates.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(20.dp))
+                Text(
+                    text = "Your progress",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("sheet_progress")
+                ) {
+                    Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Skill.entries.forEach { skill ->
+                            val state = skillStates[skill]
+                            Text(
+                                text = "${if (skill == Skill.FLAG) "Flag" else "Capital"}: ${describeStanding(state, now)}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(20.dp))
 
             // Flag Meaning & History
@@ -427,6 +462,22 @@ fun CountryDetailSheet(
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
+}
+
+/** One line on a skill: "Mastered · box 4 · next review in 12 days", "Learning · box 1 · due now", or "Not reviewed yet". */
+internal fun describeStanding(state: SkillState?, now: Long): String {
+    if (state == null || state.isNew) return "Not reviewed yet"
+    val standing = Standing.of(state, now)
+    val head = if (standing == Standing.MASTERED) "Mastered" else "Learning"
+    // Rounded up: a review 23 hours away is tomorrow's.
+    val days = ((state.dueAt - now + SkillMastery.DAY_MILLIS - 1) / SkillMastery.DAY_MILLIS).toInt()
+    val due = when {
+        state.dueAt <= now -> "due now"
+        days <= 1 -> "next review tomorrow"
+        else -> "next review in $days days"
+    }
+    val last = if (state.lastResult > 0) "last answer right" else "last answer wrong"
+    return "$head · box ${state.box} · $due · $last"
 }
 
 /** Hands [url] to the browser; nothing happens on a device without one. */
