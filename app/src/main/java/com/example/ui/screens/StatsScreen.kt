@@ -1,6 +1,7 @@
 package com.example.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -43,6 +44,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -61,7 +63,9 @@ import java.util.Date
 fun StatsScreen(
     viewModel: CountryViewModel,
     modifier: Modifier = Modifier,
-    onOpenSettings: () -> Unit = {}
+    onOpenSettings: () -> Unit = {},
+    /** Opens Explore with the continent (and the countries still to learn) filtered in. */
+    onOpenExplore: (continent: String) -> Unit = {}
 ) {
     val progressMap by viewModel.userProgressMap.collectAsStateWithLifecycle()
     val mastered by viewModel.mastered.collectAsStateWithLifecycle()
@@ -203,7 +207,10 @@ fun StatsScreen(
             val continentColor = getContinentColor(continent)
 
             Card(
-                modifier = Modifier.fillMaxWidth().testTag("stats_continent_${continent.lowercase()}"),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(role = Role.Button, onClickLabel = "Show the $continent countries still to learn") { onOpenExplore(continent) }
+                    .testTag("stats_continent_${continent.lowercase()}"),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)

@@ -317,4 +317,33 @@ class UserProgressDaoTest {
         answer("FR", true, 30L)
         assertEquals(1, dao.getAllSkills().first().size)
     }
+
+    @Test
+    fun snapshotAndReplaceAll_carryEveryTableAcross_andReplaceWhatWasThere() = runBlocking {
+        answer("FR", true, 10L)
+        answer("DE", false, 11L, skill = Skill.CAPITAL)
+        dao.toggleFavorite("JP", 12L)
+        dao.insertQuizWithAnswers(
+            QuizScoreEntity(mode = "FLAG_NAME", score = 10, total = 190, continentFilter = "Global", timestamp = 20L),
+            listOf(QuizAnswerEntity(quizId = 0, position = 0, targetCode = "FR", pickedCode = "FR", pickedText = "France", isCorrect = true, timeMs = 1L))
+        )
+        val snapshot = dao.snapshot(exportedAt = 99L)
+        assertEquals(3, snapshot.progress.size)
+        assertEquals(2, snapshot.skills.size)
+        assertEquals(1, snapshot.quizzes.size)
+        assertEquals(1, snapshot.answers.size)
+        assertEquals(snapshot.quizzes.single().id, snapshot.answers.single().quizId)
+        assertEquals(99L, snapshot.exportedAt)
+
+        // Something else happens, then the snapshot replaces it.
+        dao.clearAll()
+        answer("BR", true, 30L)
+        dao.replaceAll(snapshot)
+
+        assertEquals(snapshot.progress.toSet(), dao.getAllProgress().first().toSet())
+        assertEquals(snapshot.skills.toSet(), dao.getAllSkills().first().toSet())
+        assertEquals(snapshot.quizzes, dao.getQuizHistory().first())
+        assertEquals(listOf("FR"), dao.recentTargets(1).first())
+        assertEquals(1, dao.answersOf(snapshot.quizzes.single().id).size)
+    }
 }

@@ -48,7 +48,10 @@ fun CountryCard(
     progress: UserProgressEntity?,
     onCardClick: () -> Unit,
     onFavoriteClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    /** How the player stands on this country's flag and capital; null hides the indicator (Antarctica). */
+    flagStanding: Standing? = null,
+    capitalStanding: Standing? = null
 ) {
     val isFavorite = progress?.isFavorite == true
     val compactNumbers = rememberCompactNumberFormat()
@@ -172,10 +175,12 @@ fun CountryCard(
                     )
                 }
 
-                Surface(
-                    shape = RoundedCornerShape(4.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant
-                ) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    if (flagStanding != null && capitalStanding != null) MasteryPips(flagStanding, capitalStanding)
+                    Surface(
+                        shape = RoundedCornerShape(4.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant
+                    ) {
                     Text(
                         text = country.code,
                         fontSize = 10.sp,
@@ -183,6 +188,7 @@ fun CountryCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                     )
+                    }
                 }
             }
         }

@@ -2,6 +2,8 @@ package com.example.ui.screens
 
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -41,6 +43,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,7 +57,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.data.settings.ThemeMode
 import com.example.data.settings.TimerPace
+import com.example.data.transfer.ProgressTransfer
 import com.example.ui.viewmodel.CountryViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Settings: the look of the app, the pace of the timed quizzes, the reset of everything learned, and the way to
@@ -72,6 +79,41 @@ fun SettingsScreen(
     var confirmReset by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
     val version = remember(context) { appVersion(context) }
+    val scope = rememberCoroutineScope()
+    // What the last export or import did, shown under the buttons.
+    var transferNote by rememberSaveable { mutableStateOf<String?>(null) }
+    // An import replaces everything, so the file is read first and the player asked before it is applied.
+    var pendingImport by remember { mutableStateOf<String?>(null) }
+
+    val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            transferNote = try {
+                val json = viewModel.exportJson()
+                withContext(Dispatchers.IO) {
+                    context.contentResolver.openOutputStream(uri)?.bufferedWriter()?.use { it.write(json) }
+                        ?: error("The file could not be opened for writing.")
+                }
+                "Exported to ${uri.lastPathSegment ?: "the chosen file"}."
+            } catch (e: Exception) {
+                "Export failed: ${e.message ?: e.javaClass.simpleName}"
+            }
+        }
+    }
+    val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            try {
+                val text = withContext(Dispatchers.IO) {
+                    context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
+                        ?: error("The file could not be opened.")
+                }
+                pendingImport = text
+            } catch (e: Exception) {
+                transferNote = "Import failed: ${e.message ?: e.javaClass.simpleName}"
+            }
+        }
+    }
 
     Column(
         modifier = modifier
@@ -144,6 +186,44 @@ fun SettingsScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(10.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedButton(
+                    onClick = { exportLauncher.launch(ProgressTransfer.fileName(System.currentTimeMillis())) },
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("settings_export_btn"),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Text("Export", fontWeight = FontWeight.Bold)
+                }
+                OutlinedButton(
+                    onClick = { importLauncher.launch(arrayOf("application/json", "text/*", "application/octet-stream")) },
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("settings_import_btn"),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Text("Import", fontWeight = FontWeight.Bold)
+                }
+            }
+            Text(
+                text = "Export writes a file with your progress and settings; Import replaces everything with such a file.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 6.dp)
+            )
+            transferNote?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Bold,
+                    color = if (it.contains("failed") || it.contains("not")) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .padding(top = 6.dp)
+                        .testTag("settings_transfer_note")
+                )
+            }
+            Spacer(modifier = Modifier.height(10.dp))
             OutlinedButton(
                 onClick = { confirmReset = true },
                 modifier = Modifier
@@ -178,6 +258,33 @@ fun SettingsScreen(
                 Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null)
             }
         }
+    }
+
+    pendingImport?.let { text ->
+        AlertDialog(
+            onDismissRequest = { pendingImport = null },
+            title = { Text("Import this file?") },
+            text = { Text("Everything here is replaced by the file: bookmarks, every country's standing, the quiz log and the settings. This cannot be undone.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        pendingImport = null
+                        scope.launch {
+                            transferNote = viewModel.importJson(text).fold(
+                                onSuccess = { "Imported ${it.quizzes.size} quizzes, ${it.skills.size} skill records and ${it.progress.size} countries." },
+                                onFailure = { it.message ?: "Import failed." }
+                            )
+                        }
+                    },
+                    modifier = Modifier.testTag("settings_import_confirm_btn")
+                ) {
+                    Text("Replace")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingImport = null }, modifier = Modifier.testTag("settings_import_cancel_btn")) { Text("Keep mine") }
+            }
+        )
     }
 
     if (confirmReset) {

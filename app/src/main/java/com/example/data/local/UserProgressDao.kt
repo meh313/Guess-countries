@@ -7,6 +7,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import com.example.progress.Evidence
 import com.example.progress.Grade
+import com.example.data.transfer.ProgressSnapshot
 import com.example.progress.Skill
 import com.example.progress.SkillMastery
 import com.example.progress.SkillState
@@ -66,6 +67,43 @@ abstract class UserProgressDao {
 
     /** [insertQuizWithAnswers] for a quiz whose answers were not recorded. */
     suspend fun insertQuizScoreAfterReading(score: QuizScoreEntity): List<Long> = insertQuizWithAnswers(score, emptyList())
+
+    /** Every row of every table, for an export. */
+    @Transaction
+    open suspend fun snapshot(exportedAt: Long): ProgressSnapshot =
+        ProgressSnapshot(allProgressOnce(), allSkillsOnce(), allQuizzesOnce(), allAnswersOnce(), emptyMap(), exportedAt)
+
+    /** Replaces everything with [snapshot] (an import), in one transaction: what was there before is gone. */
+    @Transaction
+    open suspend fun replaceAll(snapshot: ProgressSnapshot) {
+        clearAll()
+        if (snapshot.progress.isNotEmpty()) insertProgressRows(snapshot.progress)
+        if (snapshot.skills.isNotEmpty()) insertSkillRows(snapshot.skills)
+        // Quizzes keep their ids, so their answers still point at them.
+        if (snapshot.quizzes.isNotEmpty()) insertQuizRows(snapshot.quizzes)
+        if (snapshot.answers.isNotEmpty()) insertAnswers(snapshot.answers.map { it.copy(id = 0) })
+    }
+
+    @Query("SELECT * FROM user_country_progress")
+    protected abstract suspend fun allProgressOnce(): List<UserProgressEntity>
+
+    @Query("SELECT * FROM skill_progress")
+    protected abstract suspend fun allSkillsOnce(): List<SkillProgressEntity>
+
+    @Query("SELECT * FROM quiz_scores ORDER BY id")
+    protected abstract suspend fun allQuizzesOnce(): List<QuizScoreEntity>
+
+    @Query("SELECT * FROM quiz_answers ORDER BY quizId, position")
+    protected abstract suspend fun allAnswersOnce(): List<QuizAnswerEntity>
+
+    @Insert
+    protected abstract suspend fun insertProgressRows(rows: List<UserProgressEntity>)
+
+    @Insert
+    protected abstract suspend fun insertSkillRows(rows: List<SkillProgressEntity>)
+
+    @Insert
+    protected abstract suspend fun insertQuizRows(rows: List<QuizScoreEntity>)
 
     /** Forgets everything the player did: bookmarks, skill states and the whole quiz log, in one transaction. */
     @Transaction

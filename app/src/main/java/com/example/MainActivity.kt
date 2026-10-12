@@ -38,6 +38,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.ui.screens.AboutScreen
+import com.example.ui.components.Standing
 import com.example.ui.screens.ExploreScreen
 import com.example.ui.screens.SettingsScreen
 import com.example.ui.screens.FlashcardScreen
@@ -182,7 +183,18 @@ fun MainAppScreen(
                     QuizScreen(viewModel = viewModel)
                 }
                 composable(Screen.Stats.route) {
-                    StatsScreen(viewModel = viewModel, onOpenSettings = { navController.navigate(Screen.SETTINGS) { launchSingleTop = true } })
+                    StatsScreen(
+                        viewModel = viewModel,
+                        onOpenSettings = { navController.navigate(Screen.SETTINGS) { launchSingleTop = true } },
+                        onOpenExplore = { continent ->
+                            viewModel.showInExplore(continent, Standing.WEAK)
+                            navController.navigate(Screen.Explore.route) {
+                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
+                    )
                 }
                 composable(Screen.SETTINGS) {
                     SettingsScreen(

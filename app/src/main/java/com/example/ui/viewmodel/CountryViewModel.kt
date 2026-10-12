@@ -23,6 +23,8 @@ import com.example.data.settings.ReminderPrefs
 import com.example.data.settings.ThemeMode
 import com.example.data.settings.TimerPace
 import com.example.data.settings.UserSettings
+import com.example.data.transfer.ProgressSnapshot
+import com.example.data.transfer.ProgressTransfer
 import com.example.flashcards.StudySession
 import com.example.progress.Grade
 import com.example.progress.PracticeStreak
@@ -36,6 +38,8 @@ import com.example.reminder.ReminderScheduler
 import com.example.reminder.WorkManagerReminderScheduler
 import com.example.speech.AndroidSpeech
 import com.example.speech.Speech
+import com.example.ui.components.Standing
+import com.example.ui.components.standing
 import java.util.TimeZone
 import kotlin.random.Random
 import kotlinx.coroutines.Dispatchers
@@ -83,6 +87,9 @@ class CountryViewModel(
 
     val searchQuery = MutableStateFlow("")
     val selectedContinent = MutableStateFlow("All")
+
+    /** Explore's standing chip: only the countries the player stands on so in the flag skill; null for all. */
+    val standingFilter = MutableStateFlow<Standing?>(null)
     val sortBy = MutableStateFlow(SortOption.NAME)
     val showOnlyBookmarks = MutableStateFlow(false)
     val selectedCountry = MutableStateFlow<Country?>(null)
@@ -181,6 +188,37 @@ class CountryViewModel(
     /** A flashcard self-grade: light evidence about the flag, never enough on its own to master it. */
     fun gradeFlashcard(countryCode: String, grade: Grade) = progress.recordGrade(countryCode, grade)
 
+    /** The export file's text: the database and the settings. */
+    suspend fun exportJson(): String {
+        val snapshot = repository.exportSnapshot()
+        val settingsMap = mapOf(
+            "quizDifficulty" to settings.quizDifficulty.name,
+            "reminderEnabled" to settings.reminderEnabled.toString(),
+            "reminderMinuteOfDay" to settings.reminderMinuteOfDay.toString(),
+            "themeMode" to settings.themeMode.name,
+            "dynamicColor" to settings.dynamicColor.toString(),
+            "timerPace" to settings.timerPace.name
+        )
+        return ProgressTransfer.toJson(snapshot.copy(settings = settingsMap))
+    }
+
+    /**
+     * Reads an export file's text and, when it is one of ours, replaces everything with it: the database in one
+     * transaction, then the settings it carries. Returns what was imported, or why the text was refused.
+     */
+    suspend fun importJson(json: String): Result<ProgressSnapshot> =
+        ProgressTransfer.fromJson(json).onSuccess { snapshot ->
+            quiz.end()
+            study.dismiss()
+            repository.importSnapshot(snapshot)
+            snapshot.settings["quizDifficulty"]?.let { name -> QuizDifficulty.entries.firstOrNull { it.name == name } }?.let(::setQuizDifficulty)
+            snapshot.settings["themeMode"]?.let { name -> ThemeMode.entries.firstOrNull { it.name == name } }?.let(::setThemeMode)
+            snapshot.settings["dynamicColor"]?.toBooleanStrictOrNull()?.let(::setDynamicColor)
+            snapshot.settings["timerPace"]?.let { name -> TimerPace.entries.firstOrNull { it.name == name } }?.let(::setTimerPace)
+            snapshot.settings["reminderMinuteOfDay"]?.toIntOrNull()?.let { setReminderTime(it / 60, it % 60) }
+            snapshot.settings["reminderEnabled"]?.toBooleanStrictOrNull()?.let(::setReminderEnabled)
+        }
+
     /** Forgets every bookmark, skill state and logged quiz, and drops any quiz or study session in progress. */
     fun resetProgress() {
         quiz.end()
@@ -256,19 +294,22 @@ class CountryViewModel(
 
     // --- Explore ----------------------------------------------------------------------------------------------------
 
+    private data class ExploreFilters(val query: String, val continent: String, val sort: SortOption, val bookmarksOnly: Boolean, val standing: Standing?)
+
+    private val exploreFilters = combine(searchQuery, selectedContinent, sortBy, showOnlyBookmarks, standingFilter, ::ExploreFilters)
+
     val filteredCountries: StateFlow<List<Country>> = combine(
-        searchQuery,
-        selectedContinent,
-        sortBy,
-        showOnlyBookmarks,
-        progress.userProgressMap
-    ) { query, continent, sort, bookmarksOnly, progressMap ->
-        val filtered = repository.filterCountries(query, continent, sort)
-        if (bookmarksOnly) {
-            filtered.filter { progressMap[it.code]?.isFavorite == true }
-        } else {
-            filtered
+        exploreFilters,
+        progress.userProgressMap,
+        progress.skills
+    ) { filters, progressMap, skills ->
+        var filtered = repository.filterCountries(filters.query, filters.continent, filters.sort)
+        if (filters.bookmarksOnly) filtered = filtered.filter { progressMap[it.code]?.isFavorite == true }
+        filters.standing?.let { wanted ->
+            val now = repository.now()
+            filtered = filtered.filter { it.isSovereign && skills.standing(it.code, Skill.FLAG, now) == wanted }
         }
+        filtered
     }
         // Filtering and sorting 197 entries is cheap, but it runs on every keystroke and every progress write: keep it
         // off the main thread.
@@ -302,6 +343,18 @@ class CountryViewModel(
         selectedContinent.value = continent
     }
 
+    fun onStandingSelect(standing: Standing?) {
+        standingFilter.value = standing
+    }
+
+    /** Explore filtered to [continent] and [standing]: what a tap on a Progress continent card opens. */
+    fun showInExplore(continent: String, standing: Standing?) {
+        searchQuery.value = ""
+        showOnlyBookmarks.value = false
+        selectedContinent.value = continent
+        standingFilter.value = standing
+    }
+
     fun onSortSelect(sort: SortOption) {
         sortBy.value = sort
     }
@@ -315,6 +368,7 @@ class CountryViewModel(
         searchQuery.value = ""
         selectedContinent.value = "All"
         showOnlyBookmarks.value = false
+        standingFilter.value = null
         sortBy.value = SortOption.NAME
     }
 
