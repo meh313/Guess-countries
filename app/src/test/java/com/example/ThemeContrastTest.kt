@@ -85,9 +85,17 @@ class ThemeContrastTest {
             "primaryContainer" to (s.primaryContainer to s.onPrimaryContainer),
             "secondaryContainer" to (s.secondaryContainer to s.onSecondaryContainer),
             "tertiaryContainer" to (s.tertiaryContainer to s.onTertiaryContainer),
+            "surfaceContainerLowest" to (s.surfaceContainerLowest to s.onSurface),
+            "surfaceContainerLow" to (s.surfaceContainerLow to s.onSurface),
             "surfaceContainer" to (s.surfaceContainer to s.onSurface),
+            "surfaceContainerHigh" to (s.surfaceContainerHigh to s.onSurface),
+            "surfaceContainerHighest" to (s.surfaceContainerHighest to s.onSurface),
             "primary" to (s.primary to s.onPrimary),
-            "secondary" to (s.secondary to s.onSecondary)
+            "secondary" to (s.secondary to s.onSecondary),
+            // Text buttons, "Score:", "Flag Meaning" and the icons draw the primary colour as text.
+            "primary text on background" to (s.background to s.primary),
+            "primary text on surface" to (s.surface to s.primary),
+            "primary text on surfaceContainerHigh" to (s.surfaceContainerHigh to s.primary)
         )
 
     @Test
@@ -101,10 +109,21 @@ class ThemeContrastTest {
     }
 
     private fun assertNotMaterialDefaults(s: ColorScheme) {
-        // Unset roles silently fall back to the baseline purple palette; the nav bar and cards used to show it.
-        assertTrue(s.secondaryContainer != Color(0xFFE8DEF8))
-        assertTrue(s.primaryContainer != Color(0xFFEADDFF))
-        assertTrue(s.surfaceContainer != Color(0xFFF3EDF7))
+        // Unset roles silently fall back to the baseline purple palette; the nav bar, cards, dialogs and the switch
+        // track used to show it. Both themes' defaults are listed, so the check holds whichever scheme is passed.
+        val lavender = setOf(
+            Color(0xFFE8DEF8), Color(0xFFEADDFF), Color(0xFFF3EDF7), Color(0xFFF7F2FA), Color(0xFFECE6F0), Color(0xFFE6E0E9),
+            Color(0xFF4A4458), Color(0xFF4F378B), Color(0xFF211F26), Color(0xFF1D1B20), Color(0xFF2B2930), Color(0xFF36343B)
+        )
+        mapOf(
+            "secondaryContainer" to s.secondaryContainer,
+            "primaryContainer" to s.primaryContainer,
+            "surfaceContainerLowest" to s.surfaceContainerLowest,
+            "surfaceContainerLow" to s.surfaceContainerLow,
+            "surfaceContainer" to s.surfaceContainer,
+            "surfaceContainerHigh" to s.surfaceContainerHigh,
+            "surfaceContainerHighest" to s.surfaceContainerHighest
+        ).forEach { (name, color) -> assertTrue("$name is Material's default", color !in lavender) }
     }
 
     @Test

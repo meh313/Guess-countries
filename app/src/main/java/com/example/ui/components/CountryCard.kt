@@ -34,11 +34,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.data.model.Country
+import com.example.ui.continentLabel
 import com.example.ui.theme.GoldAccent
 import com.example.data.local.UserProgressEntity
 
@@ -48,7 +51,10 @@ fun CountryCard(
     progress: UserProgressEntity?,
     onCardClick: () -> Unit,
     onFavoriteClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    /** How the player stands on this country's flag and capital; null hides the indicator (Antarctica). */
+    flagStanding: Standing? = null,
+    capitalStanding: Standing? = null
 ) {
     val isFavorite = progress?.isFavorite == true
     val compactNumbers = rememberCompactNumberFormat()
@@ -85,9 +91,9 @@ fun CountryCard(
                     shadowElevation = 2.dp
                 ) {
                     Text(
-                        text = country.continent,
+                        text = continentLabel(country.continent),
                         color = Color.White,
-                        fontSize = 10.sp,
+                        style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                     )
@@ -107,7 +113,7 @@ fun CountryCard(
                 ) {
                     Icon(
                         imageVector = if (isFavorite) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                        contentDescription = "Bookmark ${country.name}",
+                        contentDescription = stringResource(R.string.bookmark_country, country.name),
                         tint = if (isFavorite) GoldAccent else Color.White,
                         modifier = Modifier.size(20.dp)
                     )
@@ -172,17 +178,20 @@ fun CountryCard(
                     )
                 }
 
-                Surface(
-                    shape = RoundedCornerShape(4.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant
-                ) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    if (flagStanding != null && capitalStanding != null) MasteryPips(flagStanding, capitalStanding)
+                    Surface(
+                        shape = RoundedCornerShape(4.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant
+                    ) {
                     Text(
                         text = country.code,
-                        fontSize = 10.sp,
+                        style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                     )
+                    }
                 }
             }
         }

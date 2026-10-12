@@ -1,19 +1,20 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample data extraction rules file; uncomment and customize as necessary.
-   See https://developer.android.com/about/versions/12/backup-restore#xml-changes
-   for details.
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+   What Android 12+ backs up to the cloud and moves to a new device: the progress database (with its WAL and
+   shared-memory files) and the settings file. Nothing else: WorkManager's own database is not listed, because the
+   app plans the reminder again at every start from the setting it keeps.
 -->
 <data-extraction-rules>
     <cloud-backup>
-        <!-- TODO: Use <include> and <exclude> to control what is backed up.
-        <include .../>
-        <exclude .../>
-        -->
+        <include domain="database" path="world_flags_db" />
+        <include domain="database" path="world_flags_db-wal" />
+        <include domain="database" path="world_flags_db-shm" />
+        <include domain="sharedpref" path="settings.xml" />
     </cloud-backup>
-    <!--
     <device-transfer>
-        <include .../>
-        <exclude .../>
+        <include domain="database" path="world_flags_db" />
+        <include domain="database" path="world_flags_db-wal" />
+        <include domain="database" path="world_flags_db-shm" />
+        <include domain="sharedpref" path="settings.xml" />
     </device-transfer>
-    -->
 </data-extraction-rules>

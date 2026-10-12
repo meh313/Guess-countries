@@ -2,8 +2,10 @@ package com.example.ui.viewmodel
 
 import android.app.Application
 import android.os.SystemClock
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
@@ -12,15 +14,23 @@ import com.example.data.local.QuizScoreEntity
 import com.example.data.local.UserProgressEntity
 import com.example.data.model.Country
 import com.example.data.model.CountryRepository
+import com.example.data.model.CountrySources
 import com.example.data.model.SortOption
-import com.example.data.model.WeakSpots
+import com.example.data.settings.Appearance
 import com.example.data.settings.InMemoryUserSettings
 import com.example.data.settings.PrefsUserSettings
 import com.example.data.settings.ReminderPrefs
+import com.example.data.settings.ThemeMode
+import com.example.data.settings.TimerPace
 import com.example.data.settings.UserSettings
+import com.example.data.transfer.ProgressSnapshot
+import com.example.data.transfer.ProgressTransfer
+import com.example.flashcards.StudySession
+import com.example.progress.Grade
 import com.example.progress.PracticeStreak
+import com.example.progress.Skill
+import com.example.progress.SkillState
 import com.example.quiz.QuizDifficulty
-import com.example.quiz.QuizEngine
 import com.example.quiz.QuizMode
 import com.example.quiz.QuizSession
 import com.example.reminder.NoReminderScheduler
@@ -28,21 +38,24 @@ import com.example.reminder.ReminderScheduler
 import com.example.reminder.WorkManagerReminderScheduler
 import com.example.speech.AndroidSpeech
 import com.example.speech.Speech
+import com.example.ui.components.Standing
+import com.example.ui.components.standing
 import java.util.TimeZone
+import kotlin.random.Random
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * State for every screen. Its collaborators are passed in, so tests can supply an in-memory database
- * and a fake [Speech]; the app builds the real ones in [Factory].
+ * State for every screen: the Explore filters, speech, the settings, and the progress and quiz state it hands to
+ * [ProgressStateHolder] and [QuizStateHolder]. Its collaborators are passed in, so tests can supply an in-memory
+ * database and a fake [Speech]; the app builds the real ones in [Factory].
  */
 class CountryViewModel(
     val repository: CountryRepository,
@@ -54,11 +67,29 @@ class CountryViewModel(
     /** Settings that outlive the app process; in tests an in-memory copy. */
     private val settings: UserSettings = InMemoryUserSettings(),
     /** Plans the daily reminder; does nothing unless the app supplies the WorkManager one. */
-    private val reminderScheduler: ReminderScheduler = NoReminderScheduler
+    private val reminderScheduler: ReminderScheduler = NoReminderScheduler,
+    /** Shuffles questions and answers; tests can seed it. */
+    random: Random = Random.Default,
+    /** Where the quiz in progress is kept across process death; the app passes the activity's, tests may pass none. */
+    savedStateHandle: SavedStateHandle? = null,
+    /** Reads the per-country sources (an asset); null when the app has none to show, as in most tests. */
+    private val sourcesLoader: (suspend () -> CountrySources)? = null
 ) : ViewModel() {
+
+    private val _sources = MutableStateFlow<CountrySources?>(null)
+
+    /** The web pages each country's facts were checked against, once read; null until then or without a loader. */
+    val sources: StateFlow<CountrySources?> = _sources
+
+    init {
+        sourcesLoader?.let { load -> viewModelScope.launch(Dispatchers.IO) { _sources.value = load() } }
+    }
 
     val searchQuery = MutableStateFlow("")
     val selectedContinent = MutableStateFlow("All")
+
+    /** Explore's standing chip: only the countries the player stands on so in the flag skill; null for all. */
+    val standingFilter = MutableStateFlow<Standing?>(null)
     val sortBy = MutableStateFlow(SortOption.NAME)
     val showOnlyBookmarks = MutableStateFlow(false)
     val selectedCountry = MutableStateFlow<Country?>(null)
@@ -71,6 +102,31 @@ class CountryViewModel(
     fun setQuizDifficulty(difficulty: QuizDifficulty) {
         settings.quizDifficulty = difficulty
         _quizDifficulty.value = difficulty
+    }
+
+    private val _appearance = MutableStateFlow(Appearance(settings.themeMode, settings.dynamicColor))
+
+    /** The theme choice and whether wallpaper colours are on, remembered across restarts. */
+    val appearance: StateFlow<Appearance> = _appearance
+
+    fun setThemeMode(mode: ThemeMode) {
+        settings.themeMode = mode
+        _appearance.update { it.copy(themeMode = mode) }
+    }
+
+    fun setDynamicColor(enabled: Boolean) {
+        settings.dynamicColor = enabled
+        _appearance.update { it.copy(dynamicColor = enabled) }
+    }
+
+    private val _timerPace = MutableStateFlow(settings.timerPace)
+
+    /** How fast the timed quizzes run, remembered across restarts. */
+    val timerPace: StateFlow<TimerPace> = _timerPace
+
+    fun setTimerPace(pace: TimerPace) {
+        settings.timerPace = pace
+        _timerPace.value = pace
     }
 
     private val _reminder = MutableStateFlow(ReminderPrefs(settings.reminderEnabled, settings.reminderMinuteOfDay))
@@ -99,54 +155,161 @@ class CountryViewModel(
         if (_reminder.value.enabled) reminderScheduler.schedule(minuteOfDay)
     }
 
-    private val _quizSession = MutableStateFlow<QuizSession?>(null)
+    // --- Progress ---------------------------------------------------------------------------------------------------
 
-    /** The quiz in progress, or null on the setup screen. Lives here so it survives rotation and tab switches. */
-    val quizSession: StateFlow<QuizSession?> = _quizSession
+    private val progress = ProgressStateHolder(repository, viewModelScope, zone)
 
-    val userProgressMap: StateFlow<Map<String, UserProgressEntity>> = repository.progress
-        .map { list -> list.associateBy { it.countryCode } }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+    val userProgressMap: StateFlow<Map<String, UserProgressEntity>> get() = progress.userProgressMap
+    val quizHistory: StateFlow<List<QuizScoreEntity>> get() = progress.quizHistory
 
-    val quizHistory: StateFlow<List<QuizScoreEntity>> = repository.quizHistory
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    /** Every country's standing in every skill, as the database has it. */
+    val skills: StateFlow<Map<Skill, Map<String, SkillState>>> get() = progress.skills
 
-    /**
-     * The countries practiced but not yet mastered, weakest first. Derived from [userProgressMap], so the progress
-     * table has one observer however many screens read it; the quiz setup screen keeps it current while it is shown.
-     */
-    val weakSpots: StateFlow<List<Country>> = userProgressMap
-        .map { WeakSpots.select(it.values.toList(), repository.allCountries) }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    /** Weak and due countries per skill and the recent targets, for the quiz setup screen. */
+    val quizPlan: StateFlow<QuizPlan> get() = progress.quizPlan
 
-    private val streakRefresh = MutableStateFlow(0)
+    /** The countries whose flag was practiced but is not (or no longer) mastered, weakest first. */
+    val weakSpots: StateFlow<List<Country>> get() = progress.weakSpots
+
+    /** The codes of the countries whose flag counts as mastered right now (box, score and not lapsed). */
+    val masteredFlags: StateFlow<Set<String>> get() = progress.masteredFlags
+
+    /** Per skill, the codes of the countries that count as mastered right now. */
+    val mastered: StateFlow<Map<Skill, Set<String>>> get() = progress.mastered
 
     /** The daily practice streak, worked out from when quizzes finished; see [refreshStreak] for the day rolling over. */
-    val streak: StateFlow<PracticeStreak.Summary> = combine(quizHistory, streakRefresh) { history, _ ->
-        PracticeStreak.summary(history.map { it.timestamp }, repository.now(), zone())
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PracticeStreak.NONE)
+    val streak: StateFlow<PracticeStreak.Summary> get() = progress.streak
 
-    /** Works the streak out again against the current time: a day can end while the Progress screen is open. */
-    fun refreshStreak() = streakRefresh.update { it + 1 }
+    /** Works the streak, the mastery counts and the due countries out again against the current time. */
+    fun refreshStreak() = progress.refreshClock()
 
-    private val _finishOutcome = MutableStateFlow<PracticeStreak.Outcome?>(null)
+    fun toggleFavorite(countryCode: String) = progress.toggleFavorite(countryCode)
+
+    /** A flashcard self-grade: light evidence about the flag, never enough on its own to master it. */
+    fun gradeFlashcard(countryCode: String, grade: Grade) = progress.recordGrade(countryCode, grade)
+
+    /** The export file's text: the database and the settings. */
+    suspend fun exportJson(): String {
+        val snapshot = repository.exportSnapshot()
+        val settingsMap = mapOf(
+            "quizDifficulty" to settings.quizDifficulty.name,
+            "reminderEnabled" to settings.reminderEnabled.toString(),
+            "reminderMinuteOfDay" to settings.reminderMinuteOfDay.toString(),
+            "themeMode" to settings.themeMode.name,
+            "dynamicColor" to settings.dynamicColor.toString(),
+            "timerPace" to settings.timerPace.name
+        )
+        return ProgressTransfer.toJson(snapshot.copy(settings = settingsMap))
+    }
+
+    /**
+     * Reads an export file's text and, when it is one of ours, replaces everything with it: the database in one
+     * transaction, then the settings it carries. Returns what was imported, or why the text was refused.
+     */
+    suspend fun importJson(json: String): Result<ProgressSnapshot> =
+        ProgressTransfer.fromJson(json).onSuccess { snapshot ->
+            quiz.end()
+            study.dismiss()
+            repository.importSnapshot(snapshot)
+            snapshot.settings["quizDifficulty"]?.let { name -> QuizDifficulty.entries.firstOrNull { it.name == name } }?.let(::setQuizDifficulty)
+            snapshot.settings["themeMode"]?.let { name -> ThemeMode.entries.firstOrNull { it.name == name } }?.let(::setThemeMode)
+            snapshot.settings["dynamicColor"]?.toBooleanStrictOrNull()?.let(::setDynamicColor)
+            snapshot.settings["timerPace"]?.let { name -> TimerPace.entries.firstOrNull { it.name == name } }?.let(::setTimerPace)
+            snapshot.settings["reminderMinuteOfDay"]?.toIntOrNull()?.let { setReminderTime(it / 60, it % 60) }
+            snapshot.settings["reminderEnabled"]?.toBooleanStrictOrNull()?.let(::setReminderEnabled)
+        }
+
+    /** Forgets every bookmark, skill state and logged quiz, and drops any quiz or study session in progress. */
+    fun resetProgress() {
+        quiz.end()
+        study.dismiss()
+        viewModelScope.launch { repository.clearProgress() }
+    }
+
+    // --- Quiz -------------------------------------------------------------------------------------------------------
+
+    private val quiz = QuizStateHolder(repository, progress, viewModelScope, clock, zone, random, savedStateHandle)
+
+    /** The quiz in progress, or null on the setup screen. Lives here so it survives rotation and tab switches. */
+    val quizSession: StateFlow<QuizSession?> get() = quiz.session
 
     /** What the quiz that just finished did to the streak, for its score screen; null until it is known. */
-    val finishOutcome: StateFlow<PracticeStreak.Outcome?> = _finishOutcome
+    val finishOutcome: StateFlow<PracticeStreak.Outcome?> get() = quiz.finishOutcome
+
+    /** Starts a quiz; does nothing if [scope] has nothing to ask about. See [QuizStateHolder.start]. */
+    fun startQuiz(mode: QuizMode, scope: String, difficulty: QuizDifficulty = QuizDifficulty.NORMAL) = quiz.start(mode, scope, difficulty)
+
+    /** The clock timed questions run on, so the screen can show how much time is left. */
+    fun clockMillis(): Long = quiz.clockMillis()
+
+    /** The quiz left the screen (another tab, the app in the background): its clocks stop until [resumeQuiz]. */
+    fun pauseQuiz() = quiz.pause()
+
+    /** The quiz is on screen again: the clocks go on with the time they had left. */
+    fun resumeQuiz() = quiz.resume()
+
+    /** Called when a timed question runs out of time: counts as a wrong answer. */
+    fun timeOutQuiz() = quiz.timeOut()
+
+    fun answerQuiz(index: Int) = quiz.answer(index)
+
+    fun nextQuizQuestion() = quiz.next()
+
+    /** The clock of an endless quiz ran out: end it where it stands and keep the score. */
+    fun finishQuiz() = quiz.finish()
+
+    fun endQuiz() = quiz.end()
+
+    /** The finished quiz again from the top. */
+    fun retryQuiz() = quiz.retry()
+
+    /** A quiz over the countries the finished quiz got wrong; see [QuizStateHolder.practiseMistakes]. */
+    fun practiseMistakes() = quiz.practiseMistakes()
+
+    // --- Study ------------------------------------------------------------------------------------------------------
+
+    private val study = StudyStateHolder(repository, viewModelScope, zone, random)
+
+    /** The flashcard study session in progress, or null outside one. */
+    val studySession: StateFlow<StudySession?> get() = study.session
+
+    /** What the finished study session did for the streak; null until known, or when it was too short to count. */
+    val studyOutcome: StateFlow<PracticeStreak.Outcome?> get() = study.outcome
+
+    /** Starts a study session over [codes] from [source] (one of the [StudySession] sources). */
+    fun startStudy(source: String, codes: List<String>) = study.start(source, codes)
+
+    fun flipStudyCard() = study.flip()
+
+    /** Grades the flipped card of the study session; see [StudyStateHolder.grade]. */
+    fun gradeStudyCard(grade: Grade) = study.grade(grade)
+
+    fun undoStudyGrade() = study.undo()
+
+    /** Ends the study session where it stands. */
+    fun endStudy() = study.end()
+
+    /** Leaves the study summary, or an unfinished session. */
+    fun dismissStudy() = study.dismiss()
+
+    // --- Explore ----------------------------------------------------------------------------------------------------
+
+    private data class ExploreFilters(val query: String, val continent: String, val sort: SortOption, val bookmarksOnly: Boolean, val standing: Standing?)
+
+    private val exploreFilters = combine(searchQuery, selectedContinent, sortBy, showOnlyBookmarks, standingFilter, ::ExploreFilters)
 
     val filteredCountries: StateFlow<List<Country>> = combine(
-        searchQuery,
-        selectedContinent,
-        sortBy,
-        showOnlyBookmarks,
-        userProgressMap
-    ) { query, continent, sort, bookmarksOnly, progressMap ->
-        val filtered = repository.filterCountries(query, continent, sort)
-        if (bookmarksOnly) {
-            filtered.filter { progressMap[it.code]?.isFavorite == true }
-        } else {
-            filtered
+        exploreFilters,
+        progress.userProgressMap,
+        progress.skills
+    ) { filters, progressMap, skills ->
+        var filtered = repository.filterCountries(filters.query, filters.continent, filters.sort)
+        if (filters.bookmarksOnly) filtered = filtered.filter { progressMap[it.code]?.isFavorite == true }
+        filters.standing?.let { wanted ->
+            val now = repository.now()
+            filtered = filtered.filter { it.isSovereign && skills.standing(it.code, Skill.FLAG, now) == wanted }
         }
+        filtered
     }
         // Filtering and sorting 197 entries is cheap, but it runs on every keystroke and every progress write: keep it
         // off the main thread.
@@ -161,15 +324,9 @@ class CountryViewModel(
 
     fun stopSpeaking() = speech.stop()
 
-    fun speakCountryDetails(country: Country) {
-        // Antarctica has no capital, and its name is its continent: say neither as if they were news.
-        val place = when {
-            country.isSovereign -> "Capital is ${country.capital}, located in ${country.continent}."
-            !country.continent.equals(country.name, ignoreCase = true) -> "Located in ${country.continent}."
-            else -> ""
-        }
-        val text = listOf("${country.name}.", place, country.funFact).filter { it.isNotBlank() }.joinToString(" ")
-        speech.speak(text, "country_tts_${country.code}")
+    /** Reads [summary] (see [com.example.ui.CountrySummary.spoken]) aloud as the one utterance about [country]. */
+    fun speakCountryDetails(country: Country, summary: String) {
+        speech.speak(summary, "country_tts_${country.code}")
     }
 
     fun onSearchQueryChange(query: String) {
@@ -178,6 +335,18 @@ class CountryViewModel(
 
     fun onContinentSelect(continent: String) {
         selectedContinent.value = continent
+    }
+
+    fun onStandingSelect(standing: Standing?) {
+        standingFilter.value = standing
+    }
+
+    /** Explore filtered to [continent] and [standing]: what a tap on a Progress continent card opens. */
+    fun showInExplore(continent: String, standing: Standing?) {
+        searchQuery.value = ""
+        showOnlyBookmarks.value = false
+        selectedContinent.value = continent
+        standingFilter.value = standing
     }
 
     fun onSortSelect(sort: SortOption) {
@@ -193,120 +362,13 @@ class CountryViewModel(
         searchQuery.value = ""
         selectedContinent.value = "All"
         showOnlyBookmarks.value = false
+        standingFilter.value = null
         sortBy.value = SortOption.NAME
     }
 
     fun selectCountry(country: Country?) {
         if (country == null) stopSpeaking()
         selectedCountry.value = country
-    }
-
-    fun toggleFavorite(countryCode: String) {
-        viewModelScope.launch { repository.toggleFavorite(countryCode) }
-    }
-
-    fun updateMastery(countryCode: String, isCorrect: Boolean) {
-        viewModelScope.launch { repository.recordReview(countryCode, isCorrect) }
-    }
-
-    /**
-     * Starts a quiz over the full country list; does nothing if [scope] has too few countries. The weak-spots scope
-     * asks about the weakest ten (every weak spot in the endless blitz) but takes the wrong answers, look-alike flags
-     * included, from the whole world.
-     */
-    fun startQuiz(mode: QuizMode, scope: String, difficulty: QuizDifficulty = QuizDifficulty.NORMAL) {
-        val weak = weakSpots.value
-        val effectiveScope = QuizEngine.effectiveScope(mode, scope, weakSpotsAvailable = weak.size >= QuizEngine.MIN_POOL)
-        val questions = if (effectiveScope == QuizEngine.WEAK_SPOTS) {
-            val targets = if (mode.isEndless) weak else weak.take(QuizEngine.MAX_QUESTIONS)
-            val world = QuizEngine.poolFor("Global", repository.allCountries)
-            QuizEngine.generate(targets, mode, difficulty = difficulty, answerPool = world)
-        } else {
-            val pool = QuizEngine.poolFor(effectiveScope, repository.allCountries)
-            QuizEngine.generate(pool, mode, difficulty = difficulty)
-        }
-        if (questions.isEmpty()) return
-        _finishOutcome.value = null
-        _quizSession.value = QuizSession(
-            mode = mode,
-            scope = effectiveScope,
-            questions = questions,
-            difficulty = difficulty,
-            questionStartedAt = clock(),
-            startedAt = clock()
-        )
-    }
-
-    /** The clock timed questions run on, so the screen can show how much time is left. */
-    fun clockMillis(): Long = clock()
-
-    /** The quiz left the screen (another tab, the app in the background): its clocks stop until [resumeQuiz]. */
-    fun pauseQuiz() {
-        val session = _quizSession.value ?: return
-        val updated = session.pause(clock())
-        if (updated !== session) _quizSession.value = updated
-    }
-
-    /** The quiz is on screen again: the clocks go on with the time they had left. */
-    fun resumeQuiz() {
-        val session = _quizSession.value ?: return
-        val updated = session.resume(clock())
-        if (updated !== session) _quizSession.value = updated
-    }
-
-    /** Called when a timed question runs out of time: counts as a wrong answer. */
-    fun timeOutQuiz() {
-        val session = _quizSession.value ?: return
-        val updated = session.timeOut()
-        if (updated === session) return
-        _quizSession.value = updated
-        updateMastery(session.current.targetCountry.code, false)
-    }
-
-    fun answerQuiz(index: Int) {
-        val session = _quizSession.value ?: return
-        val updated = session.answer(index)
-        if (updated === session) return
-        _quizSession.value = updated
-        updateMastery(session.current.targetCountry.code, index == session.current.correctAnswerIndex)
-    }
-
-    fun nextQuizQuestion() {
-        val session = _quizSession.value ?: return
-        val updated = session.next(clock())
-        if (updated === session) return
-        _quizSession.value = updated
-        if (updated.isFinished) onQuizFinished(updated)
-    }
-
-    /** The clock of an endless quiz ran out: end it where it stands and keep the score. */
-    fun finishQuiz() {
-        val session = _quizSession.value ?: return
-        val updated = session.finish()
-        if (updated === session) return
-        _quizSession.value = updated
-        onQuizFinished(updated)
-    }
-
-    /** Fixed-length quizzes are scored out of the best possible; an endless one by how many were right. */
-    private fun onQuizFinished(session: QuizSession) {
-        val total = if (session.mode.isEndless) session.correct else session.maxScore
-        // The save hands back the finish times before this one, so "already counted today" means an earlier quiz.
-        viewModelScope.launch {
-            val earlier = repository.saveQuizScore(session.mode.name, session.score, total, session.scope)
-            _finishOutcome.value = PracticeStreak.outcome(earlier, repository.now(), zone())
-        }
-    }
-
-    fun endQuiz() {
-        _quizSession.value = null
-        _finishOutcome.value = null
-    }
-
-    fun saveQuizResult(mode: String, score: Int, total: Int, continent: String) {
-        viewModelScope.launch {
-            repository.saveQuizScore(mode, score, total, continent)
-        }
     }
 
     override fun onCleared() {
@@ -323,7 +385,9 @@ class CountryViewModel(
                     repository = CountryRepository(AppDatabase.getDatabase(app).userProgressDao()),
                     speech = AndroidSpeech(app),
                     settings = PrefsUserSettings(app),
-                    reminderScheduler = WorkManagerReminderScheduler(app)
+                    reminderScheduler = WorkManagerReminderScheduler(app),
+                    savedStateHandle = createSavedStateHandle(),
+                    sourcesLoader = { CountrySources.load(app) }
                 )
             }
         }

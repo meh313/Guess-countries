@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.ui.unit.sp
 
 @Composable
@@ -60,15 +61,19 @@ fun StatBadge(
             }
             Spacer(modifier = Modifier.width(12.dp))
             Column {
+                // "190 pts" used to wrap at large font sizes; the value shrinks a little instead of breaking.
                 Text(
                     text = value,
-                    fontSize = 20.sp,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    autoSize = TextAutoSize.StepBased(minFontSize = 14.sp, maxFontSize = 22.sp),
+                    modifier = Modifier.fillMaxWidth()
                 )
                 Text(
                     text = title,
-                    fontSize = 12.sp,
+                    style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f)
                 )
             }

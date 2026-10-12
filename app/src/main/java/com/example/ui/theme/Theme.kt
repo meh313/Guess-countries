@@ -12,13 +12,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = OceanBluePrimary,
+    primary = DarkPrimary,
     secondary = GoldAccent,
     tertiary = EmeraldGreen,
     background = DarkNavyBackground,
     surface = DarkNavySurface,
     surfaceVariant = DarkNavyCard,
-    onPrimary = Color.White,
+    onPrimary = DarkOnPrimary,
     onSecondary = Color.Black,
     onBackground = Color(0xFFF1F5F9),
     onSurface = Color(0xFFF8FAFC),
@@ -28,7 +28,13 @@ private val DarkColorScheme = darkColorScheme(
     onSecondaryContainer = DarkOnSecondaryContainer,
     tertiaryContainer = DarkTertiaryContainer,
     onTertiaryContainer = DarkOnTertiaryContainer,
-    surfaceContainer = DarkSurfaceContainer
+    surfaceContainerLowest = DarkSurfaceContainerLowest,
+    surfaceContainerLow = DarkSurfaceContainerLow,
+    surfaceContainer = DarkSurfaceContainer,
+    surfaceContainerHigh = DarkSurfaceContainerHigh,
+    surfaceContainerHighest = DarkSurfaceContainerHighest,
+    surfaceBright = DarkSurfaceBright,
+    surfaceDim = DarkSurfaceDim
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -48,7 +54,13 @@ private val LightColorScheme = lightColorScheme(
     onSecondaryContainer = LightOnSecondaryContainer,
     tertiaryContainer = LightTertiaryContainer,
     onTertiaryContainer = LightOnTertiaryContainer,
-    surfaceContainer = LightSurfaceContainer
+    surfaceContainerLowest = LightSurfaceContainerLowest,
+    surfaceContainerLow = LightSurfaceContainerLow,
+    surfaceContainer = LightSurfaceContainer,
+    surfaceContainerHigh = LightSurfaceContainerHigh,
+    surfaceContainerHighest = LightSurfaceContainerHighest,
+    surfaceBright = LightSurfaceBright,
+    surfaceDim = LightSurfaceDim
 )
 
 @Composable
