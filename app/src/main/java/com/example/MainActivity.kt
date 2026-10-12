@@ -65,10 +65,13 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    /** The activity is already running (SINGLE_TOP) and a notification was tapped: switch tabs, keep everything else. */
+    /**
+     * The activity is already running (SINGLE_TOP) and a notification was tapped: switch tabs, keep everything else.
+     * The intent is not stored with setIntent: nothing reads it after onCreate, and keeping one with NEW_TASK on a
+     * running activity stops Robolectric's ActivityScenario from ever seeing the activity destroyed.
+     */
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        setIntent(intent)
         intent.requestedTab()?.let { requestedTab.value = it }
     }
 

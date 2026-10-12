@@ -56,7 +56,11 @@ class MainActivityIntentTest {
         assertNotNull("the quiz in progress must survive the tap", viewModel.quizSession.value)
     }
 
-    /** onNewIntent is protected; the framework calls it, so the test does too, the only way it can. */
+    /**
+     * onNewIntent is protected; the framework calls it, so the test does too, the only way it can. (MainActivity does
+     * not call setIntent there on purpose: under Robolectric an intent with NEW_TASK stored on a running activity
+     * keeps ActivityScenario from ever seeing it destroyed, and nothing reads the intent after onCreate.)
+     */
     private fun MainActivity.deliverNewIntent(intent: Intent) {
         val method = MainActivity::class.java.getDeclaredMethod("onNewIntent", Intent::class.java)
         method.isAccessible = true
