@@ -72,16 +72,25 @@ object QuizEngine {
     /** A scope that is not a place: the countries the player practiced and has not mastered yet. */
     const val WEAK_SPOTS = "Weak spots"
 
+    /** A scope that is not a place: the countries whose review in the quiz's skill is due. */
+    const val DUE = "Due today"
+
     private const val DISTRACTORS = 3
     private val ANSWER_CONTINENTS = listOf("Africa", "Americas", "Asia", "Europe", "Oceania")
 
     /**
-     * The scope a quiz of [mode] actually uses: [requested], except modes that always cover the world, and the weak
-     * spots once there are too few of them left to ask about.
+     * The scope a quiz of [mode] actually uses: [requested], except modes that always cover the world, the weak
+     * spots once there are too few of them left to ask about, and the due countries once there are none.
      */
-    fun effectiveScope(mode: QuizMode, requested: String, weakSpotsAvailable: Boolean = true): String = when {
+    fun effectiveScope(
+        mode: QuizMode,
+        requested: String,
+        weakSpotsAvailable: Boolean = true,
+        dueAvailable: Boolean = true
+    ): String = when {
         mode.usesWholeWorld -> "Global"
         requested == WEAK_SPOTS && !weakSpotsAvailable -> "Global"
+        requested == DUE && !dueAvailable -> "Global"
         else -> requested
     }
 
@@ -95,9 +104,15 @@ object QuizEngine {
         }
     }
 
-    /** Number of questions a quiz over [poolSize] countries has; 0 when the pool is too small. */
-    fun questionCount(poolSize: Int): Int =
-        if (poolSize < MIN_POOL) 0 else minOf(MAX_QUESTIONS, poolSize)
+    /**
+     * Number of questions a quiz over [poolSize] countries has; 0 when the pool is too small. The due scope takes
+     * its wrong answers from the whole world, so it runs over a single country if that is all that is due.
+     */
+    fun questionCount(poolSize: Int, scope: String = "Global"): Int = when {
+        scope == DUE -> minOf(MAX_QUESTIONS, poolSize)
+        poolSize < MIN_POOL -> 0
+        else -> minOf(MAX_QUESTIONS, poolSize)
+    }
 
     fun pointsForCorrectAnswer(streak: Int): Int = POINTS_PER_CORRECT + streak * STREAK_BONUS
 
@@ -106,55 +121,69 @@ object QuizEngine {
         POINTS_PER_CORRECT * questionCount + STREAK_BONUS * (questionCount * (questionCount - 1) / 2)
 
     /**
-     * Up to [MAX_QUESTIONS] questions about countries of [pool]. Wrong answers come from [answerPool], which is
-     * [pool] unless the targets are a hand-picked subset (weak spots) and the answers should still be drawn from a
-     * wider set. [difficulty] sets how many wrong answers are look-alike flags (flag-based modes only).
+     * Up to [MAX_QUESTIONS] questions about countries of [pool], the first ten of [order] (every country of the pool
+     * once; a plain shuffle unless the caller weighs them, see [QuestionPicker]). Wrong answers come from
+     * [answerPool], which is [pool] unless the targets are a hand-picked subset (weak spots, due countries) and the
+     * answers should still be drawn from a wider set; it needs [MIN_POOL] countries, the targets only one.
+     * [difficulty] sets how many wrong answers are look-alike flags (flag-based modes only).
      */
     fun generate(
         pool: List<Country>,
         mode: QuizMode,
         random: Random = Random.Default,
         difficulty: QuizDifficulty = QuizDifficulty.NORMAL,
-        answerPool: List<Country> = pool
+        answerPool: List<Country> = pool,
+        order: (List<Country>) -> List<Country> = { it.shuffled(random) }
     ): List<QuizQuestion> {
-        if (pool.size < MIN_POOL) return emptyList()
+        if (pool.isEmpty() || answerPool.size < MIN_POOL) return emptyList()
         val lookAlikes = if (mode.usesLookAlikes) difficulty.lookAlikes else 0
-        val targets = if (mode.isEndless) endlessOrder(pool, BLITZ_QUESTIONS, random) else pool.shuffled(random).take(MAX_QUESTIONS)
+        val first = order(pool)
+        require(first.size == pool.size && first.toSet() == pool.toSet()) { "order must return every country of the pool once" }
+        val targets = if (mode.isEndless) endlessOrder(pool, first, BLITZ_QUESTIONS, random) else first.take(MAX_QUESTIONS)
         return targets.map { target -> question(answerPool, target, mode, lookAlikes, random) }
     }
 
     /**
-     * [count] targets taken from successive shuffles of [pool]: nobody comes up twice before every other country
-     * has, and the same country never follows itself across two shuffles.
+     * [count] targets: [first], then successive shuffles of [pool], so nobody comes up twice before every other
+     * country has, and the same country never follows itself across two rounds.
      */
-    private fun endlessOrder(pool: List<Country>, count: Int, random: Random): List<Country> {
+    private fun endlessOrder(pool: List<Country>, first: List<Country>, count: Int, random: Random): List<Country> {
         val order = ArrayList<Country>(count)
+        order.addAll(first)
         while (order.size < count) {
             val round = pool.shuffled(random).toMutableList()
-            if (order.isNotEmpty() && round[0] == order.last()) java.util.Collections.swap(round, 0, 1)
+            if (round.size > 1 && round[0] == order.last()) java.util.Collections.swap(round, 0, 1)
             order.addAll(round)
         }
         return order.take(count)
     }
 
-    private fun question(pool: List<Country>, target: Country, mode: QuizMode, lookAlikes: Int, random: Random): QuizQuestion =
-        when (mode) {
-            QuizMode.FLAG_NAME ->
-                countryChoice(target, "Which country does this flag belong to?", wrongCountries(pool, target, random, lookAlikes) { it.name }, random) { it.name }
+    /** What a question of [mode] about [target] asks. */
+    fun questionText(mode: QuizMode, target: Country): String = when (mode) {
+        QuizMode.FLAG_NAME -> "Which country does this flag belong to?"
+        QuizMode.PICK_FLAG -> "Which of these is the flag of ${target.name}?"
+        QuizMode.CAPITAL -> "What is the capital city of ${target.name}?"
+        QuizMode.CONTINENT -> "Which continent does this flag belong to?"
+        QuizMode.BLITZ -> "Which country is this?"
+        QuizMode.SPEED_MATCH -> "Identify the country for this flag:"
+    }
+
+    private fun question(pool: List<Country>, target: Country, mode: QuizMode, lookAlikes: Int, random: Random): QuizQuestion {
+        val text = questionText(mode, target)
+        return when (mode) {
+            QuizMode.FLAG_NAME, QuizMode.BLITZ, QuizMode.SPEED_MATCH ->
+                countryChoice(target, text, wrongCountries(pool, target, random, lookAlikes) { it.name }, random) { it.name }
             QuizMode.PICK_FLAG ->
-                countryChoice(target, "Which of these is the flag of ${target.name}?", wrongCountries(pool, target, random, lookAlikes) { it.code }, random) { it.code }
+                countryChoice(target, text, wrongCountries(pool, target, random, lookAlikes) { it.code }, random) { it.code }
             QuizMode.CAPITAL ->
-                countryChoice(target, "What is the capital city of ${target.name}?", wrongCountries(pool, target, random, 0) { it.quizCapital }, random) { it.quizCapital }
+                countryChoice(target, text, wrongCountries(pool, target, random, 0) { it.quizCapital }, random) { it.quizCapital }
             QuizMode.CONTINENT -> {
                 val wrong = (ANSWER_CONTINENTS - target.continent).shuffled(random).take(DISTRACTORS)
                 val options = (wrong + target.continent).shuffled(random)
-                QuizQuestion(target, "Which continent does this flag belong to?", options, options.indexOf(target.continent))
+                QuizQuestion(target, text, options, options.indexOf(target.continent))
             }
-            QuizMode.BLITZ ->
-                countryChoice(target, "Which country is this?", wrongCountries(pool, target, random, lookAlikes) { it.name }, random) { it.name }
-            QuizMode.SPEED_MATCH ->
-                countryChoice(target, "Identify the country for this flag:", wrongCountries(pool, target, random, lookAlikes) { it.name }, random) { it.name }
         }
+    }
 
     /**
      * Countries whose answer text differs from the target's and from each other, so no two options can look identical.
