@@ -70,7 +70,7 @@ class SettingsAndAboutUiTest {
         rule.onNodeWithTag("settings_back_btn").performClick()
         rule.waitForIdle()
 
-        rule.onNodeWithText("Geography Progress").assertIsDisplayed()
+        rule.onNodeWithTag("stats_title").assertIsDisplayed()
     }
 
     @Test

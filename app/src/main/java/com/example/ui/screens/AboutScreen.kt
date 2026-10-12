@@ -2,6 +2,8 @@ package com.example.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,6 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.heading
@@ -28,6 +31,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
+import com.example.ui.components.readingWidth
 import kotlinx.coroutines.withContext
 
 /** The app's GitHub repository, where the catalog's research and audit files live. */
@@ -50,10 +54,12 @@ fun AboutScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
         }
     }
 
+    Box(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+        modifier = Modifier
+            .align(Alignment.TopCenter)
+            .readingWidth()
+            .fillMaxHeight()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 12.dp)
             .testTag("about_screen")
@@ -120,6 +126,7 @@ fun AboutScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
             )
         }
         Spacer(modifier = Modifier.height(16.dp))
+    }
     }
 }
 

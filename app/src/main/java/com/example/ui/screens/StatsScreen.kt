@@ -5,6 +5,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -41,9 +43,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -54,6 +58,7 @@ import com.example.progress.PracticeStreak
 import com.example.progress.Skill
 import com.example.quiz.QuizMode
 import com.example.ui.components.StatBadge
+import com.example.ui.components.readingWidth
 import com.example.ui.components.getContinentColor
 import com.example.ui.viewmodel.CountryViewModel
 import java.text.DateFormat
@@ -97,20 +102,26 @@ fun StatsScreen(
 
     val continents = listOf("Africa", "Americas", "Asia", "Europe", "Oceania")
 
+    Box(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
     LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(20.dp),
+        modifier = Modifier
+            .align(Alignment.TopCenter)
+            .readingWidth()
+            .fillMaxHeight()
+            .padding(horizontal = 20.dp),
+        contentPadding = PaddingValues(vertical = 20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Geography Progress",
+                        text = "Progress",
                         style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .semantics { heading() }
+                            .testTag("stats_title")
                     )
                     Text(
                         text = "Track flag mastery & quiz achievements",
@@ -130,13 +141,13 @@ fun StatsScreen(
 
         // Top Metric Grid
         item {
-            Row(modifier = Modifier.fillMaxWidth()) {
+            TileRow { tile ->
                 StatBadge(
                     title = "Mastered Flags",
                     value = "$masteredCount / ${allCountries.size}",
                     icon = Icons.Default.Star,
                     iconColor = Color(0xFFF39C12),
-                    modifier = Modifier.weight(1f)
+                    modifier = tile
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 StatBadge(
@@ -144,39 +155,39 @@ fun StatsScreen(
                     value = "$capitalsCount / ${allCountries.size}",
                     icon = Icons.Default.LocationCity,
                     iconColor = Color(0xFF8E44AD),
-                    modifier = Modifier.weight(1f).testTag("stats_capitals")
+                    modifier = tile.testTag("stats_capitals")
                 )
             }
         }
 
         item {
-            Row(modifier = Modifier.fillMaxWidth()) {
+            TileRow { tile ->
                 StatBadge(
                     title = "Due Today",
                     value = "$dueCount",
                     icon = Icons.Default.Today,
                     iconColor = Color(0xFF16A085),
-                    modifier = Modifier.weight(1f).testTag("stats_due")
+                    modifier = tile.testTag("stats_due")
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 StatBadge(
-                    title = "Saved Bookmarks",
+                    title = "Saved",
                     value = "$bookmarkedCount",
                     icon = Icons.Default.Bookmark,
                     iconColor = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.weight(1f)
+                    modifier = tile
                 )
             }
         }
 
         item {
-            Row(modifier = Modifier.fillMaxWidth()) {
+            TileRow { tile ->
                 StatBadge(
                     title = "Quizzes Finished",
                     value = "$totalQuizzes",
                     icon = Icons.Default.Public,
                     iconColor = Color(0xFF27AE60),
-                    modifier = Modifier.weight(1f).testTag("stats_quizzes")
+                    modifier = tile.testTag("stats_quizzes")
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 StatBadge(
@@ -184,7 +195,7 @@ fun StatsScreen(
                     value = "$maxScore pts",
                     icon = Icons.Default.EmojiEvents,
                     iconColor = Color(0xFFE67E22),
-                    modifier = Modifier.weight(1f)
+                    modifier = tile
                 )
             }
         }
@@ -194,7 +205,8 @@ fun StatsScreen(
             Text(
                 text = "Continent Mastery Breakdown",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.semantics { heading() }
             )
         }
 
@@ -229,7 +241,7 @@ fun StatsScreen(
                                 Text(
                                     text = continent,
                                     color = Color.White,
-                                    fontSize = 11.sp,
+                                    style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                 )
@@ -272,7 +284,8 @@ fun StatsScreen(
             Text(
                 text = "Recent Quiz Log",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.semantics { heading() }
             )
         }
 
@@ -342,6 +355,20 @@ fun StatsScreen(
                 }
             }
         }
+    }
+    }
+}
+
+/**
+ * Two tiles side by side, or one under the other once the font is 1.5 times its size or more: a half-width tile
+ * cannot hold "0 / 196" at that size on a phone.
+ */
+@Composable
+private fun TileRow(content: @Composable (tile: Modifier) -> Unit) {
+    if (LocalDensity.current.fontScale >= 1.5f) {
+        Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) { content(Modifier.fillMaxWidth()) }
+    } else {
+        Row(modifier = Modifier.fillMaxWidth()) { content(Modifier.weight(1f)) }
     }
 }
 

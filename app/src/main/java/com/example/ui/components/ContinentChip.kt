@@ -63,7 +63,7 @@ fun ContinentChip(
             Text(
                 text = continent,
                 color = contentColor,
-                fontSize = 13.sp,
+                style = MaterialTheme.typography.labelLarge,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
             )
         }

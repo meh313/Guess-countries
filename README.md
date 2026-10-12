@@ -59,7 +59,8 @@ Requires JDK 21 and the Android SDK (compileSdk 37, targetSdk 36). The Gradle wr
 ```
 
 The unit tests include Compose UI tests that drive the real activity under Robolectric, so no emulator is
-needed.
+needed. They run the screens at phone, landscape and tablet sizes and at twice the font size; a window 600dp or
+wider gets a navigation rail and columns held to a reading width.
 
 ### Release builds
 

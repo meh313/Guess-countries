@@ -24,6 +24,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Public
@@ -54,6 +55,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -87,6 +95,8 @@ fun ExploreScreen(
 
     val continents = listOf("All", "Africa", "Americas", "Asia", "Europe", "Oceania", "Antarctica")
     var showSortMenu by remember { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
+    val sortBy by viewModel.sortBy.collectAsStateWithLifecycle()
 
     // One scrolling grid: the banner and the controls are full-width items. That keeps countries
     // visible in landscape and on tablets, where a fixed header used to fill the whole screen,
@@ -111,7 +121,7 @@ fun ExploreScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(130.dp)
+                        .heightIn(min = 130.dp)
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.img_world_banner),
@@ -123,7 +133,8 @@ fun ExploreScreen(
 
                     Column(
                         modifier = Modifier
-                            .fillMaxSize()
+                            .fillMaxWidth()
+                            .heightIn(min = 130.dp)
                             .padding(16.dp),
                         verticalArrangement = Arrangement.Center
                     ) {
@@ -131,7 +142,8 @@ fun ExploreScreen(
                             text = "World Explorer",
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = Color.White,
+                            modifier = Modifier.semantics { heading() }
                         )
                         Text(
                             text = "Discover countries, flags & continents across the globe",
@@ -173,7 +185,10 @@ fun ExploreScreen(
                         focusedBorderColor = MaterialTheme.colorScheme.primary,
                         unfocusedBorderColor = Color.Transparent
                     ),
-                    singleLine = true
+                    singleLine = true,
+                    // The keyboard's action key reads Search and puts the keyboard away; the list already filtered.
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() })
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -206,7 +221,7 @@ fun ExploreScreen(
                         FilterChip(
                             selected = selected,
                             onClick = { viewModel.onStandingSelect(if (selected) null else standing) },
-                            label = { Text(standing.chipLabel, fontSize = 12.sp) },
+                            label = { Text(standing.chipLabel, style = MaterialTheme.typography.labelMedium) },
                             shape = RoundedCornerShape(16.dp),
                             modifier = Modifier.testTag("standing_chip_${standing.name.lowercase()}")
                         )
@@ -233,7 +248,7 @@ fun ExploreScreen(
                         FilterChip(
                             selected = showOnlyBookmarks,
                             onClick = { viewModel.toggleBookmarksOnlyFilter() },
-                            label = { Text("Saved", fontSize = 12.sp) },
+                            label = { Text("Saved", style = MaterialTheme.typography.labelMedium) },
                             leadingIcon = {
                                 Icon(
                                     imageVector = if (showOnlyBookmarks) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
@@ -269,34 +284,26 @@ fun ExploreScreen(
                                 expanded = showSortMenu,
                                 onDismissRequest = { showSortMenu = false }
                             ) {
-                                DropdownMenuItem(
-                                    text = { Text("Sort by Name") },
-                                    onClick = {
-                                        viewModel.onSortSelect(SortOption.NAME)
-                                        showSortMenu = false
-                                    }
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("Sort by Population") },
-                                    onClick = {
-                                        viewModel.onSortSelect(SortOption.POPULATION)
-                                        showSortMenu = false
-                                    }
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("Sort by Area") },
-                                    onClick = {
-                                        viewModel.onSortSelect(SortOption.AREA)
-                                        showSortMenu = false
-                                    }
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("Sort by Continent") },
-                                    onClick = {
-                                        viewModel.onSortSelect(SortOption.CONTINENT)
-                                        showSortMenu = false
-                                    }
-                                )
+                                // The current order is ticked, so the menu says what the list is doing.
+                                listOf(
+                                    SortOption.NAME to "Sort by Name",
+                                    SortOption.POPULATION to "Sort by Population",
+                                    SortOption.AREA to "Sort by Area",
+                                    SortOption.CONTINENT to "Sort by Continent"
+                                ).forEach { (option, label) ->
+                                    val current = sortBy == option
+                                    DropdownMenuItem(
+                                        text = { Text(label) },
+                                        trailingIcon = { if (current) Icon(imageVector = Icons.Default.Check, contentDescription = null) },
+                                        onClick = {
+                                            viewModel.onSortSelect(option)
+                                            showSortMenu = false
+                                        },
+                                        modifier = Modifier
+                                            .semantics { selected = current }
+                                            .testTag("sort_option_${option.name.lowercase()}")
+                                    )
+                                }
                             }
                         }
                     }

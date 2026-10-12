@@ -247,4 +247,29 @@ class ScreenshotsTest {
         rule.waitForIdle()
         saveBitmap("stats_time_picker_dark", drawLatestDialog())
     }
+
+    /** A tablet: the rail on the start edge and the columns held to their reading width. */
+    @Test
+    @Config(qualifiers = "w840dp-h1180dp-xhdpi")
+    fun aTablet() {
+        rule.waitForIdle()
+        save("explore_tablet")
+        rule.openTab("quiz")
+        save("quiz_setup_tablet")
+        rule.openTab("stats")
+        save("stats_tablet")
+    }
+
+    /** Fonts at twice their size: nothing clipped, buttons and the banner grow. */
+    @Test
+    @Config(qualifiers = "w360dp-h800dp-xxhdpi", fontScale = 2f)
+    fun hugeFonts() {
+        rule.waitForIdle()
+        save("explore_huge_fonts")
+        rule.openTab("quiz")
+        rule.onNodeWithTag("start_quiz_btn").performScrollTo()
+        save("quiz_setup_huge_fonts")
+        rule.openTab("stats")
+        save("stats_huge_fonts")
+    }
 }

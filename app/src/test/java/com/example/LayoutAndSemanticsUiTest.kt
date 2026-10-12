@@ -11,6 +11,10 @@ import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertIsToggleable
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.hasAnyChild
+import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.performTextInput
@@ -78,10 +82,12 @@ class LayoutAndSemanticsUiTest {
     @Test
     @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
     fun phone_exploreShowsTwoColumns() {
-        val (first, second, third) = cardsByName.take(3).map { rule.boundsOf(it) }
+        val (first, second) = cardsByName.take(2).map { rule.boundsOf(it) }
         assertEquals("the first two countries share a row", first.top, second.top, 1f)
         assertTrue("they sit side by side", first.right <= second.left + 1f)
-        assertTrue("the third starts the next row", third.top > first.top)
+        // The controls above the grid leave the second row below the fold; bring it in and compare with the second card.
+        rule.onNodeWithTag("explore_grid").performScrollToNode(hasTestTag(cardsByName[2]))
+        assertTrue("the third starts the next row", rule.boundsOf(cardsByName[2]).top > rule.boundsOf(cardsByName[1]).top)
     }
 
     @Test
@@ -423,10 +429,13 @@ class LayoutAndSemanticsUiTest {
 
         val expected = allCountries.sortedWith(CountryRepository.byContinentThenName).take(4).map { "country_card_${it.code.lowercase()}" }
         assertTrue("test needs the first cards to differ from the by-name order", expected != cardsByName.take(4))
-        val cards = expected.map { rule.boundsOf(it) }
-        cards.zipWithNext().forEachIndexed { i, (a, b) ->
+        // Neighbours are compared one pair at a time, each pair scrolled into view (the grid composes what is visible).
+        expected.zipWithNext().forEach { (before, after) ->
+            rule.onNodeWithTag("explore_grid").performScrollToNode(hasTestTag(after))
+            val a = rule.boundsOf(before)
+            val b = rule.boundsOf(after)
             val inReadingOrder = a.top < b.top - 1f || (kotlin.math.abs(a.top - b.top) <= 1f && a.left < b.left)
-            assertTrue("${expected[i]} should come before ${expected[i + 1]}: $a then $b", inReadingOrder)
+            assertTrue("$before should come before $after: $a then $b", inReadingOrder)
         }
         rule.onNodeWithTag("country_card_aq").assertDoesNotExist()
     }
@@ -529,5 +538,131 @@ class LayoutAndSemanticsUiTest {
         rule.waitForIdle()
 
         rule.onNodeWithTag("flashcard_flip_card").assert(stateDescriptionIs("Showing country details"))
+    }
+
+    // ---- Wide windows: the rail and the reading width ----------------------------------------------
+
+    @Test
+    @Config(sdk = [36], qualifiers = "w840dp-h1180dp-xhdpi")
+    fun tablet_navigatesWithARailInsteadOfABottomBar() {
+        rule.onNodeWithTag("navigation_rail").assertIsDisplayed()
+        rule.onNodeWithTag("bottom_navigation_bar").assertDoesNotExist()
+
+        rule.onNodeWithTag("nav_tab_quiz").performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithTag("nav_tab_quiz").assertIsSelected()
+        rule.onNodeWithText("Geography & Flag Quiz").assertIsDisplayed()
+        // The rail takes the start edge; the content starts to its right.
+        val rail = rule.boundsOf("navigation_rail")
+        val start = rule.boundsOf("start_quiz_btn")
+        assertTrue("content $start overlaps the rail $rail", start.left >= rail.right - 1f)
+    }
+
+    @Test
+    @Config(sdk = [36], qualifiers = "w840dp-h1180dp-xhdpi")
+    fun tablet_quizAndProgressColumnsStayAtReadingWidth_andCentred() {
+        val windowWidth = rule.activity.resources.displayMetrics.widthPixels.toFloat()
+        rule.openTab("quiz")
+        val start = rule.boundsOf("start_quiz_btn")
+        assertTrue("start button is ${start.width / density}dp wide", start.width / density <= 600.5f)
+        val railWidth = rule.boundsOf("navigation_rail").width
+        val contentCentre = railWidth + (windowWidth - railWidth) / 2
+        assertEquals("start button is centred in the content area", contentCentre, (start.left + start.right) / 2, 2f)
+
+        rule.openTab("stats")
+        val streak = rule.boundsOf("stats_streak")
+        assertTrue("streak card is ${streak.width / density}dp wide", streak.width / density <= 600.5f)
+    }
+
+    @Test
+    @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
+    fun phone_keepsTheBottomBar() {
+        rule.onNodeWithTag("bottom_navigation_bar").assertIsDisplayed()
+        rule.onNodeWithTag("navigation_rail").assertDoesNotExist()
+    }
+
+    // ---- Large fonts -----------------------------------------------------------------------------
+
+    @Test
+    @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi", fontScale = 2f)
+    fun hugeFonts_theStartButtonAndTheBannerGrowInsteadOfClipping() {
+        rule.openTab("quiz")
+        rule.onNodeWithTag("start_quiz_btn").performScrollTo()
+        val button = rule.onNodeWithTag("start_quiz_btn")
+        val text = button.fetchSemanticsNode().config[SemanticsProperties.Text].joinToString()
+        assertTrue("the button says what it starts: $text", text.startsWith("Start"))
+        val layouts = mutableListOf<TextLayoutResult>()
+        rule.onNodeWithText(text, useUnmergedTree = true).fetchSemanticsNode().config[SemanticsActions.GetTextLayoutResult].action!!.invoke(layouts)
+        assertFalse("the start label is cut off", layouts.single().hasVisualOverflow)
+        assertTrue("the button grew past 56dp (${button.fetchSemanticsNode().boundsInRoot.height / density}dp)",
+            button.fetchSemanticsNode().boundsInRoot.height / density >= 56f)
+
+        rule.openTab("explore")
+        val title = rule.onNodeWithText("World Explorer").fetchSemanticsNode().boundsInRoot
+        val subtitle = rule.onNodeWithText("Discover countries, flags & continents across the globe").fetchSemanticsNode().boundsInRoot
+        assertTrue("the banner title is inside the window", title.top >= 0f)
+        assertTrue("the subtitle sits under the title", subtitle.top >= title.bottom - 1f)
+    }
+
+    @Test
+    @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi", fontScale = 2f)
+    fun hugeFonts_theProgressTilesKeepTheirValuesOnOneLine() {
+        rule.openTab("stats")
+        rule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("stats_quizzes"))
+        for (value in listOf("0 pts")) {
+            val layouts = mutableListOf<TextLayoutResult>()
+            rule.onNodeWithText(value, useUnmergedTree = true).fetchSemanticsNode().config[SemanticsActions.GetTextLayoutResult].action!!.invoke(layouts)
+            assertEquals("'$value' stays on one line", 1, layouts.single().lineCount)
+        }
+    }
+
+    // ---- Headings, groups and roles ----------------------------------------------------------------
+
+    @Test
+    @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
+    fun sectionTitles_areHeadings_andChoiceRowsAreGroups() {
+        rule.onNodeWithText("World Explorer").assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
+
+        rule.openTab("quiz")
+        for (title in listOf("Geography & Flag Quiz", "Select Mode", "Select Scope", "Answers")) {
+            rule.onNodeWithText(title).performScrollTo().assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
+        }
+        // The mode cards form one radio group, as do the scope chips and the Answers chips.
+        rule.onNode(hasAnyChild(hasTestTag("quiz_mode_flag_name"))).assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.SelectableGroup))
+        rule.onNode(hasAnyChild(hasTestTag("quiz_scope_global"))).assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.SelectableGroup))
+        rule.onNode(hasAnyChild(hasTestTag("quiz_difficulty_normal"))).assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.SelectableGroup))
+
+        rule.openTab("stats")
+        rule.onNodeWithTag("stats_title").assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
+        rule.onNode(hasScrollAction()).performScrollToNode(hasText("Continent Mastery Breakdown"))
+        rule.onNodeWithText("Continent Mastery Breakdown").assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
+    }
+
+    @Test
+    @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
+    fun textAnswerCards_areButtons_andTheQuestionIsAHeading() {
+        rule.openTab("quiz")
+        rule.onNodeWithTag("start_quiz_btn").performScrollTo().performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithTag("quiz_option_0").assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, androidx.compose.ui.semantics.Role.Button))
+        val question = ViewModelProvider(rule.activity)[CountryViewModel::class.java].quizSession.value!!.current.questionText
+        rule.onNodeWithText(question).assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
+    }
+
+    @Test
+    @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
+    fun sortMenu_ticksTheCurrentOrder() {
+        rule.onNodeWithTag("sort_menu_btn").performClick()
+        rule.onNodeWithTag("sort_option_name").assertIsSelected()
+        rule.onNodeWithTag("sort_option_area").assertIsNotSelected()
+
+        rule.onNodeWithTag("sort_option_area").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithTag("sort_menu_btn").performClick()
+
+        rule.onNodeWithTag("sort_option_area").assertIsSelected()
+        rule.onNodeWithTag("sort_option_name").assertIsNotSelected()
     }
 }

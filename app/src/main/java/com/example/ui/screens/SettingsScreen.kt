@@ -8,6 +8,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -59,6 +61,7 @@ import com.example.data.settings.ThemeMode
 import com.example.data.settings.TimerPace
 import com.example.data.transfer.ProgressTransfer
 import com.example.ui.viewmodel.CountryViewModel
+import com.example.ui.components.readingWidth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -115,10 +118,12 @@ fun SettingsScreen(
         }
     }
 
+    Box(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+        modifier = Modifier
+            .align(Alignment.TopCenter)
+            .readingWidth()
+            .fillMaxHeight()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 12.dp)
     ) {
@@ -258,6 +263,7 @@ fun SettingsScreen(
                 Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null)
             }
         }
+    }
     }
 
     pendingImport?.let { text ->
