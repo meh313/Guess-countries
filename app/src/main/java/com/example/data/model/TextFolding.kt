@@ -18,5 +18,14 @@ fun fold(text: String): String =
         .map { SPECIAL_LETTERS[it] ?: it.toString() }
         .joinToString("")
 
-/** The key the country lists sort names by. */
-val Country.nameSortKey: String get() = fold(name)
+private val SAINT = Regex("\\bsaint\\b")
+private val NOT_A_WORD = Regex("[^a-z0-9]+")
+
+/**
+ * [fold] for searching: words only, separated by single spaces, and "Saint" written as "St", so "St Lucia",
+ * "St. Lucia" and "Saint Lucia" are the same query and "cote d" still finds Côte d'Ivoire.
+ */
+fun searchKey(text: String): String = NOT_A_WORD.replace(SAINT.replace(fold(text), "st"), " ").trim()
+
+/** True when [needle] starts a word of this search key ("uk" in "ukraine", not in "yamoussoukro"). */
+fun String.hasWordStarting(needle: String): Boolean = startsWith(needle) || contains(" $needle")

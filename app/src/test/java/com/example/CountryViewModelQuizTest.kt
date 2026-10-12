@@ -452,12 +452,18 @@ class CountryViewModelQuizTest {
     }
 
     /** The weak spots follow the database through Room's invalidation, which needs the main looper to deliver. */
+    /** The weak spots are shared only while collected (the quiz setup screen does that); here a collector stands in. */
     private fun CountryViewModel.awaitWeakSpots(count: Int) {
-        val deadline = System.currentTimeMillis() + 10_000
-        while (weakSpots.value.size != count) {
-            check(System.currentTimeMillis() < deadline) { "weak spots stayed at ${weakSpots.value.size}, wanted $count" }
-            shadowOf(Looper.getMainLooper()).idle()
-            Thread.sleep(10)
+        val collector = CoroutineScope(Dispatchers.Default).launch { weakSpots.collect {} }
+        try {
+            val deadline = System.currentTimeMillis() + 10_000
+            while (weakSpots.value.size != count) {
+                check(System.currentTimeMillis() < deadline) { "weak spots stayed at ${weakSpots.value.size}, wanted $count" }
+                shadowOf(Looper.getMainLooper()).idle()
+                Thread.sleep(10)
+            }
+        } finally {
+            collector.cancel()
         }
     }
 

@@ -29,10 +29,12 @@ import com.example.reminder.WorkManagerReminderScheduler
 import com.example.speech.AndroidSpeech
 import com.example.speech.Speech
 import java.util.TimeZone
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -110,17 +112,17 @@ class CountryViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     /**
-     * The countries practiced but not yet mastered, weakest first. Kept up to date for the life of the ViewModel
-     * (one observer on a table of at most 197 rows) so a quiz can start from it the moment the button is tapped.
+     * The countries practiced but not yet mastered, weakest first. Derived from [userProgressMap], so the progress
+     * table has one observer however many screens read it; the quiz setup screen keeps it current while it is shown.
      */
-    val weakSpots: StateFlow<List<Country>> = repository.progress
-        .map { WeakSpots.select(it, repository.allCountries) }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    val weakSpots: StateFlow<List<Country>> = userProgressMap
+        .map { WeakSpots.select(it.values.toList(), repository.allCountries) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val streakRefresh = MutableStateFlow(0)
 
     /** The daily practice streak, worked out from when quizzes finished; see [refreshStreak] for the day rolling over. */
-    val streak: StateFlow<PracticeStreak.Summary> = combine(repository.quizHistory, streakRefresh) { history, _ ->
+    val streak: StateFlow<PracticeStreak.Summary> = combine(quizHistory, streakRefresh) { history, _ ->
         PracticeStreak.summary(history.map { it.timestamp }, repository.now(), zone())
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PracticeStreak.NONE)
 
@@ -145,7 +147,11 @@ class CountryViewModel(
         } else {
             filtered
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), repository.filterCountries("", "All", SortOption.NAME))
+    }
+        // Filtering and sorting 197 entries is cheap, but it runs on every keystroke and every progress write: keep it
+        // off the main thread.
+        .flowOn(Dispatchers.Default)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), repository.filterCountries("", "All", SortOption.NAME))
 
     /** True once speech is ready; the UI disables its speak buttons until then. */
     val speechAvailable: StateFlow<Boolean> = speech.isAvailable
@@ -233,6 +239,20 @@ class CountryViewModel(
 
     /** The clock timed questions run on, so the screen can show how much time is left. */
     fun clockMillis(): Long = clock()
+
+    /** The quiz left the screen (another tab, the app in the background): its clocks stop until [resumeQuiz]. */
+    fun pauseQuiz() {
+        val session = _quizSession.value ?: return
+        val updated = session.pause(clock())
+        if (updated !== session) _quizSession.value = updated
+    }
+
+    /** The quiz is on screen again: the clocks go on with the time they had left. */
+    fun resumeQuiz() {
+        val session = _quizSession.value ?: return
+        val updated = session.resume(clock())
+        if (updated !== session) _quizSession.value = updated
+    }
 
     /** Called when a timed question runs out of time: counts as a wrong answer. */
     fun timeOutQuiz() {

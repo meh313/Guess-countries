@@ -21,6 +21,55 @@ class QuizSessionTest {
             QuizEngine.generate(sovereign.take(poolSize), QuizMode.CAPITAL)
         )
 
+    // --- Pausing: the clocks stop while the quiz is off screen -------------------------------------------------------
+
+    private fun timed() = session(mode = QuizMode.SPEED_MATCH).copy(questionStartedAt = 1_000L, startedAt = 500L)
+
+    @Test
+    fun pause_stopsTheClocks_andResumeGivesBackTheTimeAway() {
+        val paused = timed().pause(3_000L)
+        assertTrue(paused.isPaused)
+
+        val resumed = paused.resume(10_000L)
+
+        assertFalse(resumed.isPaused)
+        // Seven seconds away: both clocks move forward by exactly that, so the time left is what it was.
+        assertEquals(8_000L, resumed.questionStartedAt)
+        assertEquals(7_500L, resumed.startedAt)
+    }
+
+    @Test
+    fun pause_isIgnoredWhenAlreadyPaused_orWhenTheQuizIsOver() {
+        val paused = timed().pause(3_000L)
+        assertSame(paused, paused.pause(4_000L))
+
+        val finished = timed().finish()
+        assertSame(finished, finished.pause(3_000L))
+    }
+
+    @Test
+    fun resume_isIgnoredWhenNotPaused() {
+        val s = timed()
+        assertSame(s, s.resume(5_000L))
+    }
+
+    @Test
+    fun aClockThatWentBackwardsWhilePaused_costsNoTime() {
+        val resumed = timed().pause(3_000L).resume(2_000L)
+
+        assertFalse(resumed.isPaused)
+        assertEquals(1_000L, resumed.questionStartedAt)
+        assertEquals(500L, resumed.startedAt)
+    }
+
+    @Test
+    fun answersAndMovingOnStillWorkAfterAPause() {
+        val s = timed().pause(3_000L).resume(4_000L)
+        val answered = s.answer(s.current.correctAnswerIndex)
+        assertEquals(10, answered.score)
+        assertEquals(1, answered.next(now = 9_000L).currentIndex)
+    }
+
     @Test
     fun everyContinentScopeThatCanStartPlaysToTheEndWithoutCrashing() {
         // Regression: the last "Next" used to index past the end whenever the pool had < 10 countries.

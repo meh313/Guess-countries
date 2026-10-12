@@ -84,6 +84,8 @@ fun ReminderCard(viewModel: CountryViewModel, modifier: Modifier = Modifier) {
         if (granted && allowed) viewModel.setReminderEnabled(true) else blocked = true
     }
 
+    val timeLabel = rememberTimeLabel(prefs.hour, prefs.minute)
+
     val onSwitch: (Boolean) -> Unit = { on ->
         // Look at the settings as they are at this tap, not as they were when the card was last drawn.
         allowed = ReminderNotifier.areNotificationsAllowed(context)
@@ -97,8 +99,6 @@ fun ReminderCard(viewModel: CountryViewModel, modifier: Modifier = Modifier) {
             else -> blocked = true
         }
     }
-
-    val timeLabel = rememberTimeLabel(prefs.hour, prefs.minute)
 
     Card(
         modifier = modifier
@@ -126,7 +126,7 @@ fun ReminderCard(viewModel: CountryViewModel, modifier: Modifier = Modifier) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(text = "Daily reminder", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     Text(
-                        text = "A nudge in the evening, only on days you have not finished a quiz",
+                        text = "A nudge at $timeLabel, only on days you have not finished a quiz",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

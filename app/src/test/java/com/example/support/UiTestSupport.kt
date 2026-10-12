@@ -10,6 +10,9 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.robolectric.Shadows.shadowOf
 
 /** Taps a bottom-navigation tab of the real activity. [route] is "explore", "flashcards", "quiz" or "stats". */
@@ -55,9 +58,18 @@ fun contrastRatio(a: Color, b: Color): Double {
 fun ComposeTestRule.awaitWeakSpots(viewModel: CountryViewModel, count: Int, timeoutMillis: Long = 10_000) =
     awaitWeakSpotsWhere(viewModel, timeoutMillis) { it == count }
 
-/** Waits until the number of weak spots satisfies [accept], handing Room's results to the main thread meanwhile. */
-fun ComposeTestRule.awaitWeakSpotsWhere(viewModel: CountryViewModel, timeoutMillis: Long = 10_000, accept: (Int) -> Boolean) =
-    awaitDelivered(timeoutMillis) { accept(viewModel.weakSpots.value.size) }
+/**
+ * Waits until the number of weak spots satisfies [accept], handing Room's results to the main thread meanwhile. The
+ * weak spots are shared only while something collects them, so a collector runs for the duration of the wait.
+ */
+fun ComposeTestRule.awaitWeakSpotsWhere(viewModel: CountryViewModel, timeoutMillis: Long = 10_000, accept: (Int) -> Boolean) {
+    val collector = CoroutineScope(Dispatchers.Default).launch { viewModel.weakSpots.collect {} }
+    try {
+        awaitDelivered(timeoutMillis) { accept(viewModel.weakSpots.value.size) }
+    } finally {
+        collector.cancel()
+    }
+}
 
 /**
  * Waits until [condition] holds. Values that come out of Room reach the main thread through its message queue, which

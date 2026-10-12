@@ -33,9 +33,20 @@ class AndroidSpeech(private val context: Context) : Speech {
 
     override fun prepare() {
         if (engine != null) return
-        engine = TextToSpeech(context) { status ->
-            if (status == TextToSpeech.SUCCESS) available.value = selectEnglish()
+        var failed = false
+        val started = TextToSpeech(context) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                available.value = selectEnglish()
+            } else {
+                // No engine could be bound (none installed, or it crashed). Drop it so the next prepare tries again
+                // instead of leaving a dead engine in place for the life of the ViewModel. Android reports a bind
+                // failure from inside the constructor, so this may run before the assignment below.
+                failed = true
+                engine?.shutdown()
+                engine = null
+            }
         }
+        if (!failed) engine = started
     }
 
     /** Uses the first English variant the engine has voice data for. */

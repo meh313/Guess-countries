@@ -78,6 +78,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.LifecycleStartEffect
 import com.example.progress.PracticeStreak
 import com.example.quiz.QuizDifficulty
 import com.example.quiz.QuizEngine
@@ -143,7 +144,7 @@ fun QuizScreen(
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "Test your knowledge & climb the leaderboard!",
+                text = "Test what you know and keep your streak going",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
             )
@@ -373,6 +374,13 @@ fun QuizScreen(
 
         // The quiz now outlives the screen, so offer a way out (Back asks first).
         BackHandler(enabled = !active.isFinished) { showQuitConfirm = true }
+
+        // The clocks only run while the quiz is on screen: a call, a tab switch or the app going to the background
+        // pauses the question and the blitz where they stand, and they go on with the time they had left.
+        LifecycleStartEffect(Unit) {
+            viewModel.resumeQuiz()
+            onStopOrDispose { viewModel.pauseQuiz() }
+        }
 
         val view = LocalView.current
         val limitMs = active.mode.timeLimitSeconds?.let { it * 1000L }

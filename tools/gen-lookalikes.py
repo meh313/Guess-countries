@@ -1,6 +1,6 @@
 """Generates FlagLookAlikes.kt: for every sovereign country, the flags people most often confuse with it.
 
-    python3 tools/gen-lookalikes.py [--threshold 14.0] [--sheet /tmp/lookalikes] [--stats]
+    python3 tools/gen-lookalikes.py [--threshold 18.0] [--sheet /tmp/lookalikes] [--stats]
 
 How: each shipped flag (app/src/main/res/drawable-nodpi/flag_xx.webp) is flattened onto white, shrunk to 16x12 and
 converted to CIELAB. The distance of two flags is the mean per-pixel Lab distance, taking the smallest over the
@@ -40,8 +40,11 @@ CURATED = [
     'GN ML SN CM',          # red, yellow and green
     'HN SV NI AR GT UY',    # Central American and Argentine blue-white-blue
     'BH QA',                # white with a serrated edge
-    'EG IQ SY YE',          # red-white-black bands
+    'EG IQ YE',             # red-white-black bands (Syria left in 2025: its flag is green-white-black again)
     'TR TN',                # red with a white crescent
+    'HT LI',                # blue over red with an emblem (identical at the 1936 Olympics)
+    'SO FM',                # light blue with white stars
+    'KE SS',                # black, red and green with a white fimbriation
     'AT LV PE CA',          # red-white-red
     'BE DE',                # black, yellow and red
     'BG HU',                # white, green, red
@@ -180,7 +183,8 @@ def sheets(result, names, folder):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--threshold', type=float, default=14.0)
+    # 18 is what the shipped map was generated with; lower values drop pairs such as Hungary/Iran and Niger/India.
+    ap.add_argument('--threshold', type=float, default=18.0)
     ap.add_argument('--sheet')
     ap.add_argument('--stats', action='store_true')
     ap.add_argument('--out', default=str(OUT))

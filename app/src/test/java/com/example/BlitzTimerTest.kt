@@ -1,5 +1,8 @@
 package com.example
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
@@ -187,6 +190,27 @@ class BlitzTimerTest {
         assertEquals("BLITZ", rows.single().mode)
         assertEquals(10, rows.single().score)
         assertEquals(1, rows.single().total)
+    }
+
+    @Test
+    fun leavingTheScreen_pausesTheMinute_andComingBackGoesOnWhereItStopped() {
+        vm.startQuiz(QuizMode.BLITZ, "Global")
+        var visible by mutableStateOf(true)
+        rule.setContent { WorldFlagsTheme { if (visible) QuizScreen(vm) } }
+        rule.mainClock.advanceTimeBy(200)
+        clockAt(15_000)
+        countdown("45s left").assertIsDisplayed()
+
+        onUi { visible = false }
+        rule.mainClock.advanceTimeBy(250)
+        now = 100_000
+        onUi { visible = true }
+        rule.mainClock.advanceTimeBy(250)
+
+        assertFalse(session.isFinished)
+        countdown("45s left").assertIsDisplayed()
+        clockAt(100_000 + 45_000)
+        assertTrue(session.isFinished)
     }
 
     @Test
