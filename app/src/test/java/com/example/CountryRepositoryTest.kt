@@ -99,7 +99,9 @@ class CountryRepositoryTest {
         assertEquals(listOf("LC"), found("St Lucia"))
         assertEquals(listOf("LC"), found("St. Lucia"))
         assertEquals(listOf("LC"), found("Saint Lucia"))
-        assertEquals(setOf("KN", "LC", "VC"), found("st").toSet())
+        // The three Saints come first; Stockholm (a capital) and "State of ..." (official names) follow.
+        assertEquals(setOf("KN", "LC", "VC"), found("st").take(3).toSet())
+        assertTrue("SE" in found("st"))
     }
 
     @Test
@@ -113,7 +115,8 @@ class CountryRepositoryTest {
     @Test
     fun search_putsAWholeNameBeforeNamesThatMerelyStartWithIt_thenCapitals() {
         assertEquals("IN", found("India").first())
-        assertEquals(listOf("IN", "ID"), found("Ind"))
+        // India and Indonesia by name, then the "Independent State of ..." official names.
+        assertEquals(listOf("IN", "ID"), found("Ind").take(2))
         // "Pa" starts Panama, Papua New Guinea... (names) before Paris (a capital).
         val pa = found("Pa")
         assertTrue(pa.indexOf("PA") < pa.indexOf("FR"))
