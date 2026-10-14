@@ -257,7 +257,7 @@ class CountryViewModel(
 
     // --- Quiz -------------------------------------------------------------------------------------------------------
 
-    private val quiz = QuizStateHolder(repository, progress, viewModelScope, clock, zone, random, savedStateHandle)
+    private val quiz = QuizStateHolder(repository, progress, settings, viewModelScope, clock, zone, random, savedStateHandle)
 
     /** The quiz in progress, or null on the setup screen. Lives here so it survives rotation and tab switches. */
     val quizSession: StateFlow<QuizSession?> get() = quiz.session

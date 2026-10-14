@@ -30,12 +30,15 @@ abstract class UserProgressDao {
     @Query("SELECT * FROM quiz_scores ORDER BY timestamp DESC")
     abstract fun getQuizHistory(): Flow<List<QuizScoreEntity>>
 
-    /** The targets of the last [quizzes] quizzes (study sessions aside), so the next quiz can look elsewhere first. */
+    /**
+     * Every target of every quiz (study sessions aside) saved at or after [since], with the quiz's mode and time, so
+     * the next quiz can look elsewhere first for the skill it exercises.
+     */
     @Query(
-        "SELECT targetCode FROM quiz_answers WHERE quizId IN " +
-            "(SELECT id FROM quiz_scores WHERE mode != 'FLASHCARDS' ORDER BY timestamp DESC LIMIT :quizzes)"
+        "SELECT a.targetCode AS code, s.mode AS mode, s.timestamp AS at FROM quiz_answers a " +
+            "JOIN quiz_scores s ON s.id = a.quizId WHERE s.mode != 'FLASHCARDS' AND s.timestamp >= :since"
     )
-    abstract fun recentTargets(quizzes: Int): Flow<List<String>>
+    abstract fun recentTargets(since: Long): Flow<List<RecentTarget>>
 
     @Query("SELECT * FROM quiz_answers WHERE quizId = :quizId ORDER BY position")
     abstract suspend fun answersOf(quizId: Long): List<QuizAnswerEntity>
@@ -171,3 +174,6 @@ abstract class UserProgressDao {
     @Query("UPDATE user_country_progress SET isFavorite = NOT isFavorite WHERE countryCode = :code")
     protected abstract suspend fun flipFavorite(code: String)
 }
+
+/** One target of a recent quiz: the country asked about, the quiz's mode (a [com.example.quiz.QuizMode] name) and when it was saved. */
+data class RecentTarget(val code: String, val mode: String, val at: Long)

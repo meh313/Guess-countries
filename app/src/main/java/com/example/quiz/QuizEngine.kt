@@ -49,7 +49,14 @@ data class QuizQuestion(
     val options: List<String>,
     val correctAnswerIndex: Int,
     /** The country behind each option, in the order of [options]; null where the option is not a country (a continent). */
-    val optionCodes: List<String?> = List(options.size) { null }
+    val optionCodes: List<String?> = List(options.size) { null },
+    /**
+     * Every option that counts as right: the catalog's answer, plus the other continent of a country that straddles
+     * two (see [QuizEngine.ALSO_ACCEPTED]).
+     */
+    val acceptedIndices: Set<Int> = setOf(correctAnswerIndex),
+    /** A question asked again (a miss re-asked at the end, a retried quiz): its answer is light evidence only. */
+    val light: Boolean = false
 )
 
 /** Pure quiz rules: which countries are eligible, how questions are built and how answers score. */
@@ -84,6 +91,21 @@ object QuizEngine {
 
     private const val DISTRACTORS = 3
     private val ANSWER_CONTINENTS = listOf("Africa", "Americas", "Asia", "Europe", "Oceania")
+
+    /**
+     * Countries that straddle two continents, with the continent the catalog does not list them under: a continent
+     * question about one of them always offers it and accepts it, since geography and convention disagree.
+     */
+    val ALSO_ACCEPTED: Map<String, String> = mapOf(
+        "CY" to "Europe",
+        "GE" to "Europe",
+        "AM" to "Europe",
+        "AZ" to "Europe",
+        "TR" to "Europe",
+        "KZ" to "Europe",
+        "RU" to "Asia",
+        "EG" to "Asia"
+    )
 
     /**
      * The scope a quiz of [mode] actually uses: [requested], except modes that always cover the world, the weak
@@ -185,11 +207,34 @@ object QuizEngine {
             QuizMode.CAPITAL ->
                 countryChoice(target, text, wrongCountries(pool, target, random, 0) { it.quizCapital }, random) { it.quizCapital }
             QuizMode.CONTINENT -> {
-                val wrong = (ANSWER_CONTINENTS - target.continent).shuffled(random).take(DISTRACTORS)
-                val options = (wrong + target.continent).shuffled(random)
-                QuizQuestion(target, text, options, options.indexOf(target.continent))
+                // A country on two continents always has its other continent among the options, in place of one
+                // random wrong continent, and either answer counts.
+                val alsoAccepted = ALSO_ACCEPTED[target.code]?.takeIf { it != target.continent }
+                val fixed = listOfNotNull(alsoAccepted)
+                val wrong = (ANSWER_CONTINENTS - target.continent - fixed.toSet()).shuffled(random).take(DISTRACTORS - fixed.size)
+                val options = (wrong + fixed + target.continent).shuffled(random)
+                val correct = options.indexOf(target.continent)
+                val accepted = setOfNotNull(correct, alsoAccepted?.let { options.indexOf(it) })
+                QuizQuestion(target, text, options, correct, acceptedIndices = accepted)
             }
         }
+    }
+
+    /**
+     * [question] with the same options in a new order: the right answer, the accepted alternatives and the country
+     * behind each option move with their option. A retried quiz asks this, so the position of the answer is not
+     * remembered from the first run.
+     */
+    fun reshuffle(question: QuizQuestion, random: Random): QuizQuestion {
+        val order = question.options.indices.shuffled(random) // order[new] = old
+        val newIndexOf = IntArray(order.size)
+        order.forEachIndexed { new, old -> newIndexOf[old] = new }
+        return question.copy(
+            options = order.map { question.options[it] },
+            optionCodes = order.map { question.optionCodes.getOrNull(it) },
+            correctAnswerIndex = newIndexOf[question.correctAnswerIndex],
+            acceptedIndices = question.acceptedIndices.mapNotNull { newIndexOf.getOrNull(it) }.toSet()
+        )
     }
 
     /**

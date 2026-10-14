@@ -3,6 +3,7 @@ package com.example.quiz
 import com.example.data.model.FlagLookAlikes
 import kotlin.random.Random
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -498,5 +499,65 @@ class QuizEngineTest {
             val q = questionAbout("IE", QuizDifficulty.HARD, seed, QuizMode.BLITZ)
             assertEquals("seed=$seed ${q.options}", similar, wrongNames(q).toSet())
         }
+    }
+
+    // --- countries on two continents, and reshuffling ---
+
+    @Test
+    fun alsoAccepted_namesTheContinentTheCatalogDoesNotListEachCountryUnder() {
+        assertEquals(setOf("CY", "GE", "AM", "AZ", "TR", "KZ", "RU", "EG"), QuizEngine.ALSO_ACCEPTED.keys)
+        QuizEngine.ALSO_ACCEPTED.forEach { (code, other) ->
+            assertNotEquals(code, country(code).continent, other)
+            assertTrue(code, other in setOf("Africa", "Americas", "Asia", "Europe", "Oceania"))
+        }
+    }
+
+    @Test
+    fun continentQuestions_aboutCyprus_alwaysOfferEuropeAndAcceptIt() {
+        for (seed in 1..40) {
+            val q = questionAbout("CY", QuizDifficulty.NORMAL, seed, QuizMode.CONTINENT)
+            assertEquals("seed=$seed ${q.options}", "Asia", q.correctOption())
+            assertTrue("seed=$seed ${q.options}", "Europe" in q.options)
+            assertEquals("seed=$seed ${q.options}", 4, q.options.distinct().size)
+            assertEquals("seed=$seed", setOf(q.options.indexOf("Asia"), q.options.indexOf("Europe")), q.acceptedIndices)
+            assertTrue("seed=$seed", q.correctAnswerIndex in q.acceptedIndices)
+        }
+    }
+
+    @Test
+    fun continentQuestions_aboutACountryOnOneContinent_acceptOnlyItsContinent() {
+        for (seed in 1..20) {
+            val q = questionAbout("FR", QuizDifficulty.NORMAL, seed, QuizMode.CONTINENT)
+            assertEquals("seed=$seed", setOf(q.correctAnswerIndex), q.acceptedIndices)
+        }
+        // Every other mode accepts its one right answer, and a fresh question is never light.
+        for (mode in QuizMode.entries) {
+            QuizEngine.generate(sovereign, mode, Random(3)).forEach { q ->
+                if (mode != QuizMode.CONTINENT) assertEquals("mode=$mode", setOf(q.correctAnswerIndex), q.acceptedIndices)
+                assertTrue("mode=$mode", !q.light)
+            }
+        }
+    }
+
+    @Test
+    fun reshuffle_keepsTheSameOptions_andMovesTheRightAnswersWithThem() {
+        val flag = questionAbout("IE", QuizDifficulty.HARD, 4)
+        val continent = questionAbout("CY", QuizDifficulty.NORMAL, 4, QuizMode.CONTINENT)
+        var moved = 0
+        for (seed in 1..30) {
+            for (q in listOf(flag, continent)) {
+                val r = QuizEngine.reshuffle(q, Random(seed))
+                assertEquals(q.targetCountry, r.targetCountry)
+                assertEquals(q.questionText, r.questionText)
+                assertEquals(q.light, r.light)
+                assertEquals(q.options.toSet(), r.options.toSet())
+                assertEquals(q.options.zip(q.optionCodes).toSet(), r.options.zip(r.optionCodes).toSet())
+                assertEquals(q.correctOption(), r.correctOption())
+                assertTrue(r.correctAnswerIndex in r.options.indices)
+                assertEquals(q.acceptedIndices.map { q.options[it] }.toSet(), r.acceptedIndices.map { r.options[it] }.toSet())
+                if (r.correctAnswerIndex != q.correctAnswerIndex) moved++
+            }
+        }
+        assertTrue("the right answer moved in $moved of 60 reshuffles", moved >= 20)
     }
 }

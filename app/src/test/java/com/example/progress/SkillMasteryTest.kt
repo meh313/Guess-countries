@@ -14,27 +14,34 @@ class SkillMasteryTest {
 
     private fun fullRight(s: SkillState, at: Long = now) = SkillMastery.afterAnswer(s, correct = true, evidence = Evidence.FULL, now = at)
     private fun fullWrong(s: SkillState, at: Long = now) = SkillMastery.afterAnswer(s, correct = false, evidence = Evidence.FULL, now = at)
+    private fun timedRight(s: SkillState, at: Long = now) = SkillMastery.afterAnswer(s, correct = true, evidence = Evidence.TIMED, now = at)
+    private fun timedWrong(s: SkillState, at: Long = now) = SkillMastery.afterAnswer(s, correct = false, evidence = Evidence.TIMED, now = at)
     private fun lightRight(s: SkillState, at: Long = now) = SkillMastery.afterAnswer(s, correct = true, evidence = Evidence.LIGHT, now = at)
     private fun lightWrong(s: SkillState, at: Long = now) = SkillMastery.afterAnswer(s, correct = false, evidence = Evidence.LIGHT, now = at)
 
     // --- which skill, which evidence --------------------------------------------------------------------------------
 
     @Test
-    fun theCapitalQuizIsTheCapitalSkill_everyOtherModeIsTheFlag() {
+    fun theCapitalAndContinentQuizzesAreTheirOwnSkills_everyOtherModeIsTheFlag() {
         assertEquals(Skill.CAPITAL, SkillMastery.skillOf(QuizMode.CAPITAL))
-        for (mode in QuizMode.entries - QuizMode.CAPITAL) assertEquals(mode.name, Skill.FLAG, SkillMastery.skillOf(mode))
+        assertEquals(Skill.CONTINENT, SkillMastery.skillOf(QuizMode.CONTINENT))
+        for (mode in QuizMode.entries - QuizMode.CAPITAL - QuizMode.CONTINENT) assertEquals(mode.name, Skill.FLAG, SkillMastery.skillOf(mode))
     }
 
     @Test
-    fun onlyTheContinentQuizIsLightEvidence() {
+    fun theContinentQuizIsLight_theTimedModesAreTimed_theRestIsFullEvidence() {
         assertEquals(Evidence.LIGHT, SkillMastery.evidenceOf(QuizMode.CONTINENT))
-        for (mode in QuizMode.entries - QuizMode.CONTINENT) assertEquals(mode.name, Evidence.FULL, SkillMastery.evidenceOf(mode))
+        assertEquals(Evidence.TIMED, SkillMastery.evidenceOf(QuizMode.SPEED_MATCH))
+        assertEquals(Evidence.TIMED, SkillMastery.evidenceOf(QuizMode.BLITZ))
+        for (mode in QuizMode.entries - QuizMode.CONTINENT - QuizMode.SPEED_MATCH - QuizMode.BLITZ) {
+            assertEquals(mode.name, Evidence.FULL, SkillMastery.evidenceOf(mode))
+        }
     }
 
     @Test
     fun intervalsGrowWithTheBox() {
-        assertEquals(listOf(0L, 1 * day, 3 * day, 7 * day, 14 * day, 30 * day), (0..5).map { SkillMastery.intervalMillis(it) })
-        assertEquals(30 * day, SkillMastery.intervalMillis(9))
+        assertEquals(listOf(0L, 1 * day, 3 * day, 7 * day, 21 * day, 60 * day), (0..5).map { SkillMastery.intervalMillis(it) })
+        assertEquals(60 * day, SkillMastery.intervalMillis(9))
     }
 
     // --- a right quiz answer ------------------------------------------------------------------------------------------
@@ -83,6 +90,7 @@ class SkillMasteryTest {
         assertFalse("the score is still below the line", SkillMastery.isMastered(s, now + 4 * day))
         s = fullRight(s, at = now + 11 * day)                       // box 4, score 80
         assertTrue(SkillMastery.isMastered(s, now + 11 * day))
+        assertEquals(now + 11 * day + 21 * day, s.dueAt)
     }
 
     @Test
@@ -91,21 +99,55 @@ class SkillMasteryTest {
         s = fullRight(s)
         assertEquals(100, s.score)
         assertEquals(5, s.box)
-        assertEquals(now + 30 * day, s.dueAt)
+        assertEquals(now + 60 * day, s.dueAt)
+    }
+
+    @Test
+    fun aTimedRightAnswer_countsLikeAFullOne() {
+        val due = SkillState(score = 20, box = 1, dueAt = now - 1, reviews = 1, correct = 1)
+        assertEquals(fullRight(due), timedRight(due))
+        assertEquals(fullRight(SkillState()), timedRight(SkillState()))
     }
 
     // --- a wrong quiz answer ------------------------------------------------------------------------------------------
 
     @Test
-    fun aWrongAnswer_dropsTheScoreAndSendsTheCountryBackToBoxOne() {
+    fun aWrongAnswer_dropsTheScoreAndTwoBoxes() {
         val s = fullWrong(SkillState(score = 80, box = 4, dueAt = now + 5 * day, reviews = 6, correct = 6))
-        assertEquals(SkillState(score = 60, box = 1, dueAt = now + day, reviews = 7, correct = 6, lastResult = -1, lastReviewed = now), s)
+        assertEquals(SkillState(score = 60, box = 2, dueAt = now + 3 * day, reviews = 7, correct = 6, lastResult = -1, lastReviewed = now), s)
+    }
+
+    @Test
+    fun twoBoxesDown_fromFiveIsThree_fromTwoIsOne_andOneStaysOne() {
+        val five = fullWrong(SkillState(score = 100, box = 5, dueAt = now + 10 * day, reviews = 9, correct = 9))
+        assertEquals(3, five.box)
+        assertEquals(now + 7 * day, five.dueAt)
+
+        val two = fullWrong(SkillState(score = 40, box = 2, dueAt = now + day, reviews = 2, correct = 2))
+        assertEquals(1, two.box)
+        assertEquals(now + day, two.dueAt)
+
+        val one = fullWrong(SkillState(score = 20, box = 1, dueAt = now - 1, reviews = 1, correct = 1))
+        assertEquals(1, one.box)
+        assertEquals(now + day, one.dueAt)
+
+        val never = fullWrong(SkillState())
+        assertEquals(SkillState(score = 0, box = 1, dueAt = now + day, reviews = 1, correct = 0, lastResult = -1, lastReviewed = now), never)
+    }
+
+    @Test
+    fun aTimedMiss_dropsOneBoxAndHalfTheScore() {
+        val s = timedWrong(SkillState(score = 100, box = 5, dueAt = now + 10 * day, reviews = 9, correct = 9))
+        assertEquals(SkillState(score = 90, box = 4, dueAt = now + 21 * day, reviews = 10, correct = 9, lastResult = -1, lastReviewed = now), s)
+        assertEquals(SkillMastery.FULL_WRONG / 2, SkillMastery.TIMED_WRONG)
+        assertEquals(1, timedWrong(SkillState(score = 20, box = 1, dueAt = now - 1, reviews = 1, correct = 1)).box)
     }
 
     @Test
     fun theScoreNeverGoesBelowZero() {
         assertEquals(0, fullWrong(SkillState(score = 5, box = 1, reviews = 1)).score)
         assertEquals(0, fullWrong(SkillState()).score)
+        assertEquals(0, timedWrong(SkillState(score = 5, box = 1, reviews = 1)).score)
     }
 
     // --- light evidence -----------------------------------------------------------------------------------------------
@@ -137,6 +179,13 @@ class SkillMasteryTest {
     }
 
     @Test
+    fun aLightRightAnswerOnADueItem_keepsItDue() {
+        val s = lightRight(SkillState(score = 20, box = 2, dueAt = now - 1, reviews = 2, correct = 1))
+        assertEquals(now - 1, s.dueAt)
+        assertTrue("a continent pick is no review of the flag", SkillMastery.isDue(s, now))
+    }
+
+    @Test
     fun aLightWrongAnswer_dropsOneBoxButNeverBelowOne() {
         val s = lightWrong(SkillState(score = 50, box = 3, dueAt = now + 5 * day, reviews = 4, correct = 3))
         assertEquals(42, s.score)
@@ -148,31 +197,72 @@ class SkillMasteryTest {
     // --- flashcard grades ---------------------------------------------------------------------------------------------
 
     @Test
-    fun again_isAResetLikeAWrongAnswer() {
+    fun again_dropsTwoBoxes() {
         val s = SkillMastery.afterGrade(SkillState(score = 50, box = 3, dueAt = now + day, reviews = 3, correct = 3), Grade.AGAIN, now)
         assertEquals(38, s.score)
         assertEquals(1, s.box)
         assertEquals(now + day, s.dueAt)
         assertEquals(-1, s.lastResult)
+
+        val five = SkillMastery.afterGrade(SkillState(score = 90, box = 5, dueAt = now - 1, reviews = 9, correct = 9), Grade.AGAIN, now)
+        assertEquals("not a reset to box 1", 3, five.box)
+        assertEquals(now + 7 * day, five.dueAt)
+        assertEquals(78, five.score)
     }
 
     @Test
-    fun good_isLightEvidenceOfKnowing() {
-        assertEquals(lightRight(SkillState(score = 20, box = 1, dueAt = now - 1, reviews = 1, correct = 1)),
-            SkillMastery.afterGrade(SkillState(score = 20, box = 1, dueAt = now - 1, reviews = 1, correct = 1), Grade.GOOD, now))
+    fun good_beforeItIsDue_isLightEvidenceOfKnowing_andKeepsTheDate() {
+        val before = SkillState(score = 20, box = 1, dueAt = now + day, reviews = 1, correct = 1)
+        assertEquals(lightRight(before), SkillMastery.afterGrade(before, Grade.GOOD, now))
+        assertEquals(now + day, SkillMastery.afterGrade(before, Grade.GOOD, now).dueAt)
     }
 
     @Test
-    fun easy_promotesWhenDueButStaysUnderTheCap() {
+    fun good_onADueCard_reschedulesItAtItsBox_soItLeavesTheDueList() {
+        val due = SkillState(score = 20, box = 2, dueAt = now - 1, reviews = 2, correct = 1)
+        val s = SkillMastery.afterGrade(due, Grade.GOOD, now)
+        assertEquals(28, s.score)
+        assertEquals(2, s.box)
+        assertEquals(now + 3 * day, s.dueAt)
+        assertFalse(SkillMastery.isDue(s, now))
+        assertTrue(SkillMastery.isDue(s, now + 3 * day))
+
+        val five = SkillMastery.afterGrade(SkillState(score = 90, box = 5, dueAt = now - 1, reviews = 9, correct = 9), Grade.GOOD, now)
+        assertEquals(5, five.box)
+        assertEquals(now + 60 * day, five.dueAt)
+    }
+
+    @Test
+    fun good_onANewCard_isDueTomorrow() {
+        val s = SkillMastery.afterGrade(SkillState(), Grade.GOOD, now)
+        assertEquals(1, s.box)
+        assertEquals(now + day, s.dueAt)
+    }
+
+    @Test
+    fun easy_promotesWhenDue_butNeverPastBoxTwo() {
         var s = SkillState()
-        s = SkillMastery.afterGrade(s, Grade.EASY, now)                // box 1
-        s = SkillMastery.afterGrade(s, Grade.EASY, now + day)          // box 2
-        s = SkillMastery.afterGrade(s, Grade.EASY, now + 4 * day)      // box 3
-        assertEquals(3, s.box)
+        s = SkillMastery.afterGrade(s, Grade.EASY, now)                // box 1, due +1d
+        assertEquals(1, s.box)
+        s = SkillMastery.afterGrade(s, Grade.EASY, now + day)          // box 2, due +3d
+        assertEquals(2, s.box)
+        assertEquals(now + 4 * day, s.dueAt)
+        s = SkillMastery.afterGrade(s, Grade.EASY, now + 4 * day)      // due again: stays box 2, rescheduled
+        assertEquals(SkillMastery.SELF_GRADE_MAX_BOX, s.box)
+        assertEquals(now + 7 * day, s.dueAt)
         assertEquals(36, s.score)
-        assertFalse("three Easy grades never master a flag", SkillMastery.isMastered(s, now + 4 * day))
+        assertFalse("Easy grades alone never master a flag", SkillMastery.isMastered(s, now + 4 * day))
         repeat(10) { s = SkillMastery.afterGrade(s, Grade.EASY, now + 100 * day) }
+        assertEquals(2, s.box)
         assertEquals(SkillMastery.LIGHT_CAP, s.score)
+    }
+
+    @Test
+    fun easy_onADueCardAboveBoxTwo_reschedulesItWithoutMovingIt() {
+        val s = SkillMastery.afterGrade(SkillState(score = 80, box = 4, dueAt = now - 1, reviews = 4, correct = 4), Grade.EASY, now)
+        assertEquals(4, s.box)
+        assertEquals(now + 21 * day, s.dueAt)
+        assertEquals("above the light cap the score stays", 80, s.score)
     }
 
     @Test
@@ -207,6 +297,13 @@ class SkillMasteryTest {
     }
 
     @Test
+    fun aBoxFiveCountry_lapsesAfterFourMonthsWithoutAReview() {
+        val top = SkillState(score = 100, box = 5, dueAt = now + 60 * day, reviews = 9, correct = 9)
+        assertTrue(SkillMastery.isMastered(top, now + 120 * day))
+        assertFalse(SkillMastery.isMastered(top, now + 120 * day + 1))
+    }
+
+    @Test
     fun dueMeansReviewedBeforeAndPastItsDate() {
         assertFalse("never reviewed is unseen, not due", SkillMastery.isDue(SkillState(), now))
         assertTrue(SkillMastery.isDue(mastered.copy(dueAt = now), now))
@@ -227,6 +324,8 @@ class SkillMasteryTest {
     @Test
     fun theMigratedBoxes_meanWhatTheReleaseNotesSay() {
         // 100 -> box 3 due in 7 days: mastered until it lapses. 75 -> box 2: two due reviews from mastery. Below: box 1.
+        // The migration's due windows (1, 3, 7 days) are the intervals of boxes 1..3, which the longer top boxes left alone.
+        assertEquals(listOf(1 * day, 3 * day, 7 * day), (1..3).map { SkillMastery.intervalMillis(it) })
         assertTrue(SkillMastery.isMastered(SkillState(score = 100, box = 3, dueAt = now + 7 * day, reviews = 4, correct = 4), now))
         assertFalse(SkillMastery.isMastered(SkillState(score = 75, box = 2, dueAt = now + 3 * day, reviews = 3, correct = 3), now))
         assertTrue(SkillMastery.isWeak(SkillState(score = 75, box = 2, dueAt = now + 3 * day, reviews = 3, correct = 3), now))

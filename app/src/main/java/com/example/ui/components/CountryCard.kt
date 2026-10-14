@@ -148,7 +148,7 @@ fun CountryCard(
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = country.quizCapital,
+                    text = if (country.isSovereign) country.quizCapital else stringResource(R.string.card_no_capital),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                     maxLines = 1,

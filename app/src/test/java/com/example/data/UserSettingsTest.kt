@@ -111,6 +111,32 @@ class UserSettingsTest {
     }
 
     @Test
+    fun theNewItemsCount_startsAtZeroWithNoDay() {
+        assertEquals(0, PrefsUserSettings(context).newItemsToday)
+        assertEquals("", PrefsUserSettings(context).newItemsDay)
+        assertEquals(0, InMemoryUserSettings().newItemsToday)
+        assertEquals("", InMemoryUserSettings().newItemsDay)
+    }
+
+    @Test
+    fun theNewItemsCountAndItsDay_areKeptForTheNextInstance_underTheirKeys() {
+        PrefsUserSettings(context).apply {
+            newItemsToday = 7
+            newItemsDay = "2026-10-14"
+        }
+
+        val next = PrefsUserSettings(context)
+        assertEquals(7, next.newItemsToday)
+        assertEquals("2026-10-14", next.newItemsDay)
+        val prefs = context.getSharedPreferences(PrefsUserSettings.FILE, Context.MODE_PRIVATE)
+        assertEquals(7, prefs.getInt("new_items_today", -1))
+        assertEquals("2026-10-14", prefs.getString("new_items_day", null))
+        // A negative count makes no sense and is held at zero.
+        next.newItemsToday = -3
+        assertEquals(0, PrefsUserSettings(context).newItemsToday)
+    }
+
+    @Test
     fun theThemeMode_decidesDarkFromTheSystemOnlyWhenItSaysSo() {
         assertEquals(true, ThemeMode.SYSTEM.isDark(systemDark = true))
         assertEquals(false, ThemeMode.SYSTEM.isDark(systemDark = false))

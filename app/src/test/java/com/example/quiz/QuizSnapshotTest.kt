@@ -2,6 +2,7 @@ package com.example.quiz
 
 import kotlin.random.Random
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -115,5 +116,38 @@ class QuizSnapshotTest {
         assertNull(snapshot.copy(currentIndex = 99).restore(allCountries, now = 9_000L))
         assertNull(snapshot.copy(times = snapshot.times.drop(1)).restore(allCountries, now = 9_000L))
         assertNull(snapshot.copy(questions = emptyList(), picks = emptyList(), times = emptyList()).restore(allCountries, now = 9_000L))
+    }
+
+    @Test
+    fun theReaskedFlag_theLightMarks_andTheAcceptedAlternatives_roundTrip() {
+        val cyprusAndThree = allCountries.filter { it.code in setOf("CY", "FR", "DE", "JP") }
+        val questions = QuizEngine.generate(cyprusAndThree, QuizMode.CONTINENT, Random(2))
+        val cyprus = questions.single { it.targetCountry.code == "CY" }
+        assertEquals("Cyprus accepts two continents", 2, cyprus.acceptedIndices.size)
+        var before = QuizSession(QuizMode.CONTINENT, "Global", questions, questionStartedAt = 1_000L, startedAt = 1_000L)
+        before = before.answer((before.current.correctAnswerIndex + 1) % 4, now = 1_200L)
+        before = before.reask(listOf(before.current.copy(light = true)), now = 1_500L)
+        assertTrue(before.reasked)
+
+        val snapshot = QuizSnapshot.of(before, now = 1_700L)
+        val after = snapshot.restore(allCountries, now = 9_000L)!!
+
+        assertTrue(snapshot.reasked)
+        assertTrue(after.reasked)
+        assertEquals(before.questions, after.questions)
+        assertEquals(cyprus.acceptedIndices, after.questions.single { it.targetCountry.code == "CY" }.acceptedIndices)
+        assertEquals(listOf(false, false, false, false, true), after.questions.map { it.light })
+        assertEquals(before.answers, after.answers)
+        assertEquals(before.currentIndex, after.currentIndex)
+    }
+
+    @Test
+    fun aSnapshotQuestionWithoutTheNewFields_readsAsAPlainOne() {
+        val q = QuizSnapshot.Question("FR", listOf("a", "b", "c", "d"), listOf(null, null, null, null), 2)
+        assertEquals(setOf(2), q.acceptedIndices)
+        assertFalse(q.light)
+        val fresh = QuizSnapshot.of(session(), now = 1_000L)
+        assertFalse(fresh.reasked)
+        assertFalse(fresh.restore(allCountries, now = 2_000L)!!.reasked)
     }
 }

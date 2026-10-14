@@ -16,14 +16,16 @@ import org.robolectric.annotation.Config
 @Config(sdk = [36])
 class FormattersTest {
 
+    private val resources: android.content.res.Resources = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>().resources
+
     private fun compact(locale: Locale) = CompactDecimalFormat.getInstance(locale, CompactDecimalFormat.CompactStyle.SHORT)
 
     @Test
     fun population_isShortAndCarriesTheYearOfTheEstimate() {
         val year = CountryCatalog.DATA_YEAR
-        assertEquals("68M ($year est.)", formatPopulation(compact(Locale.US), 68_300_000L))
-        assertEquals("5.3M ($year est.)", formatPopulation(compact(Locale.US), 5_300_000L))
-        assertEquals("1.4B ($year est.)", formatPopulation(compact(Locale.US), 1_450_000_000L))
+        assertEquals("68M ($year est.)", formatPopulation(resources, compact(Locale.US), 68_300_000L))
+        assertEquals("5.3M ($year est.)", formatPopulation(resources, compact(Locale.US), 5_300_000L))
+        assertEquals("1.4B ($year est.)", formatPopulation(resources, compact(Locale.US), 1_450_000_000L))
     }
 
     @Test
@@ -35,7 +37,7 @@ class FormattersTest {
 
     @Test
     fun numbersFollowTheLocale() {
-        val german = formatPopulation(compact(Locale.GERMANY), 68_300_000L)
+        val german = formatPopulation(resources, compact(Locale.GERMANY), 68_300_000L)
         assertTrue("german: $german", german.contains("Mio."))
     }
 

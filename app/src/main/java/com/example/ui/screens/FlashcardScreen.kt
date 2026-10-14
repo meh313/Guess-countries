@@ -241,13 +241,14 @@ fun FlashcardScreen(
         flippedCode = null
     }
     // "This deck" starts at the card in hand and goes on in the deck's order.
-    val deckFromHere = { (deck.drop(index) + deck.take(index)).map { it.code } }
+    // Antarctica stays in the deck to browse but never in a study session: there is no flag skill to grade it on.
+    val deckFromHere = { (deck.drop(index) + deck.take(index)).filter { it.isSovereign }.map { it.code } }
 
     if (showStudyChooser) {
         StudyChooser(
             dueCount = due.size,
             weakCount = weak.size,
-            deckCount = minOf(deck.size, StudySession.DEFAULT_SIZE),
+            deckCount = minOf(deck.count { it.isSovereign }, StudySession.DEFAULT_SIZE),
             onPick = { source ->
                 showStudyChooser = false
                 viewModel.stopSpeaking()
@@ -960,7 +961,7 @@ private fun FlipCard(
                         CardDetailPill(
                             icon = Icons.Default.People,
                             title = stringResource(R.string.flashcards_population),
-                            detail = formatPopulation(compactNumbers, country.population),
+                            detail = formatPopulation(compactNumbers, country),
                             modifier = Modifier.weight(1f)
                         )
                     }

@@ -108,8 +108,11 @@ import com.example.ui.titleRes
 import com.example.ui.viewmodel.CountryViewModel
 import kotlinx.coroutines.delay
 
-/** How long a blitz answer stays on screen before the next flag, in milliseconds. */
+/** How long a right blitz answer stays on screen before the next flag, in milliseconds. */
 internal const val BLITZ_ADVANCE_MS = 800L
+
+/** How long a wrong blitz answer stays on screen, in milliseconds: long enough to take in the right answer. */
+internal const val BLITZ_WRONG_HOLD_MS = 2000L
 
 private val QuizMode.icon: ImageVector
     get() = when (this) {
@@ -550,7 +553,9 @@ fun QuizScreen(
             }
             LaunchedEffect(active.currentIndex, active.hasAnswered, timerPace, touchExploring) {
                 if (active.hasAnswered && !active.isFinished && timerPace != TimerPace.OFF && !touchExploring) {
-                    delay(BLITZ_ADVANCE_MS)
+                    val picked = active.selectedAnswerIndex
+                    val right = picked != null && picked in active.current.acceptedIndices
+                    delay(if (right) BLITZ_ADVANCE_MS else BLITZ_WRONG_HOLD_MS)
                     viewModel.nextQuizQuestion()
                 }
             }
@@ -716,7 +721,7 @@ fun QuizScreen(
                     answered = active.hasAnswered,
                     onPick = { index ->
                         viewModel.answerQuiz(index)
-                        view.performAnswerHaptic(correct = index == q.correctAnswerIndex)
+                        view.performAnswerHaptic(correct = index in q.acceptedIndices)
                     }
                 )
             } else Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -724,7 +729,8 @@ fun QuizScreen(
                 val wrongAnswerDescription = stringResource(R.string.quiz_option_incorrect)
                 q.options.forEachIndexed { index, optionText ->
                     val isSelected = active.selectedAnswerIndex == index
-                    val isCorrect = index == q.correctAnswerIndex
+                    // The catalog's answer, or an accepted alternative (a country on two continents) the player picked.
+                    val isCorrect = index == q.correctAnswerIndex || (isSelected && index in q.acceptedIndices)
 
                     val containerColor = when {
                         !active.hasAnswered -> MaterialTheme.colorScheme.surface
@@ -786,10 +792,14 @@ fun QuizScreen(
             if (active.hasAnswered) {
                 // For "pick the flag" the options are country codes, so say the country instead.
                 val answerText = if (active.mode.answersAreFlags) q.targetCountry.name else q.options[q.correctAnswerIndex]
+                val picked = active.selectedAnswerIndex
                 val result = when {
                     active.timedOut -> stringResource(R.string.quiz_result_timeout, answerText)
-                    active.selectedAnswerIndex == q.correctAnswerIndex ->
+                    picked == q.correctAnswerIndex ->
                         stringResource(R.string.quiz_result_correct, QuizEngine.pointsForCorrectAnswer(active.streak - 1))
+                    // A country on two continents: the other continent counts, and the line says why.
+                    picked != null && picked in q.acceptedIndices ->
+                        stringResource(R.string.quiz_result_also_counted, q.options[picked], answerText)
                     else -> stringResource(R.string.quiz_result_wrong, answerText)
                 }
                 Card(

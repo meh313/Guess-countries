@@ -299,4 +299,77 @@ class QuizSessionTest {
         assertEquals(5_000L, s.startedAt)
         assertEquals(9_000L, s.questionStartedAt)
     }
+
+    // --- Accepted alternatives, misses and re-asking ---------------------------------------------------------------
+
+    /** A continent question about Cyprus: Asia is the catalog's answer, Europe counts too. */
+    private fun cyprus(): QuizQuestion {
+        val cy = allCountries.single { it.code == "CY" }
+        return QuizQuestion(cy, "Which continent does this flag belong to?", listOf("Asia", "Africa", "Europe", "Oceania"), 0, acceptedIndices = setOf(0, 2))
+    }
+
+    @Test
+    fun anAcceptedAlternative_countsAsRight() {
+        val s = QuizSession(QuizMode.CONTINENT, "Global", listOf(cyprus()))
+
+        val europe = s.answer(2)
+
+        assertEquals(10, europe.score)
+        assertEquals(1, europe.streak)
+        assertEquals(1, europe.correct)
+        assertTrue(europe.answers.single().correct)
+        assertTrue(europe.misses.isEmpty())
+        // The catalog's answer still counts, and the real wrong ones do not.
+        assertEquals(10, s.answer(0).score)
+        assertEquals(0, s.answer(1).score)
+        assertFalse(s.answer(3).answers.single().correct)
+    }
+
+    @Test
+    fun misses_listEachCountryOnce_byItsFirstMiss() {
+        val q = cyprus()
+        var s = QuizSession(QuizMode.CONTINENT, "Global", listOf(q, q.copy(light = true)))
+        s = s.answer(1).next().answer(3)
+
+        assertEquals(2, s.answers.size)
+        assertEquals(1, s.misses.size)
+        assertEquals(1, s.misses.single().pickedIndex)
+    }
+
+    @Test
+    fun reask_appendsTheQuestions_movesOnToThem_andMarksTheQuiz() {
+        var s = sessionOf(4)
+        repeat(3) { s = s.answer(s.current.correctAnswerIndex).next() }
+        s = s.answer((s.current.correctAnswerIndex + 1) % 4)
+        assertTrue(s.isLastQuestion && !s.reasked)
+        val again = s.current.copy(light = true)
+
+        val reasked = s.reask(listOf(again), now = 7_000L)
+
+        assertTrue(reasked.reasked)
+        assertFalse(reasked.isFinished)
+        assertEquals(5, reasked.questions.size)
+        assertEquals(4, reasked.currentIndex)
+        assertTrue(reasked.current.light)
+        assertFalse(reasked.hasAnswered)
+        assertEquals(7_000L, reasked.questionStartedAt)
+        assertEquals(QuizEngine.maxScore(5), reasked.maxScore)
+
+        val finished = reasked.answer(reasked.current.correctAnswerIndex).next()
+        assertTrue(finished.isFinished)
+        assertEquals(5, finished.answers.size)
+        assertEquals("the first miss stays a miss, listed once", 1, finished.misses.size)
+    }
+
+    @Test
+    fun reask_isIgnoredUntilTheQuestionIsAnswered_afterTheEnd_orWithNothingToAdd() {
+        val open = sessionOf(4)
+        assertSame(open, open.reask(listOf(open.current)))
+
+        val answered = open.answer(0)
+        assertSame(answered, answered.reask(emptyList()))
+
+        val finished = sessionOf(4).playThrough()
+        assertSame(finished, finished.reask(listOf(finished.current)))
+    }
 }

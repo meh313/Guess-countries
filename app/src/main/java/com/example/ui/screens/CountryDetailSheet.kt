@@ -266,7 +266,7 @@ fun CountryDetailSheet(
                 DetailMetricCard(
                     icon = Icons.Default.People,
                     label = stringResource(R.string.sheet_fact_population),
-                    value = formatPopulation(compactNumbers, country.population),
+                    value = formatPopulation(compactNumbers, country),
                     modifier = Modifier.weight(1f)
                 )
             }

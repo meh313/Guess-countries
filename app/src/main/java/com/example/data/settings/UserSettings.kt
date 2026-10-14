@@ -30,6 +30,12 @@ interface UserSettings {
 
     /** How fast the timed quizzes run. */
     var timerPace: TimerPace
+
+    /** How many never-seen countries the quizzes of [newItemsDay] have introduced so far; see `QuizStateHolder.NEW_PER_DAY`. */
+    var newItemsToday: Int
+
+    /** The local day (`yyyy-MM-dd`) [newItemsToday] counts; a new day starts the count again. Empty until the first quiz. */
+    var newItemsDay: String
 }
 
 /** Which colour scheme the app uses. */
@@ -75,7 +81,9 @@ class InMemoryUserSettings(
     override var themeMode: ThemeMode = ThemeMode.SYSTEM,
     override var dynamicColor: Boolean = false,
     override var timerPace: TimerPace = TimerPace.NORMAL,
-    override var reminderDueAt: Long = 0L
+    override var reminderDueAt: Long = 0L,
+    override var newItemsToday: Int = 0,
+    override var newItemsDay: String = ""
 ) : UserSettings
 
 class PrefsUserSettings(context: Context) : UserSettings {
@@ -112,6 +120,14 @@ class PrefsUserSettings(context: Context) : UserSettings {
         get() = prefs.getString(KEY_TIMER_PACE, null)?.let { stored -> TimerPace.entries.firstOrNull { it.name == stored } } ?: TimerPace.NORMAL
         set(value) = prefs.edit { putString(KEY_TIMER_PACE, value.name) }
 
+    override var newItemsToday: Int
+        get() = prefs.getInt(KEY_NEW_ITEMS_TODAY, 0).coerceAtLeast(0)
+        set(value) = prefs.edit { putInt(KEY_NEW_ITEMS_TODAY, value.coerceAtLeast(0)) }
+
+    override var newItemsDay: String
+        get() = prefs.getString(KEY_NEW_ITEMS_DAY, null) ?: ""
+        set(value) = prefs.edit { putString(KEY_NEW_ITEMS_DAY, value) }
+
     companion object {
         const val FILE = "settings"
         private const val KEY_DIFFICULTY = "quiz_difficulty"
@@ -121,5 +137,7 @@ class PrefsUserSettings(context: Context) : UserSettings {
         private const val KEY_THEME = "theme_mode"
         private const val KEY_DYNAMIC_COLOR = "dynamic_color"
         private const val KEY_TIMER_PACE = "timer_pace"
+        private const val KEY_NEW_ITEMS_TODAY = "new_items_today"
+        private const val KEY_NEW_ITEMS_DAY = "new_items_day"
     }
 }

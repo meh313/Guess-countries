@@ -26,10 +26,22 @@ data class QuizSnapshot(
     /** How long the current question has been open, in milliseconds, not counting time paused. */
     val questionElapsedMs: Long,
     /** How long the quiz has been running, in milliseconds, not counting time paused. */
-    val totalElapsedMs: Long
+    val totalElapsedMs: Long,
+    /** Whether the misses were already asked again at the end. */
+    val reasked: Boolean = false
 ) {
-    /** One question: the country asked about, the options as shown and the country behind each (null for a continent). */
-    data class Question(val targetCode: String, val options: List<String>, val optionCodes: List<String?>, val correctAnswerIndex: Int)
+    /**
+     * One question: the country asked about, the options as shown, the country behind each (null for a continent),
+     * every option that counts as right and whether the question is a light one (asked again).
+     */
+    data class Question(
+        val targetCode: String,
+        val options: List<String>,
+        val optionCodes: List<String?>,
+        val correctAnswerIndex: Int,
+        val acceptedIndices: Set<Int> = setOf(correctAnswerIndex),
+        val light: Boolean = false
+    )
 
     /**
      * The session this snapshot describes, paused at [now] with the time it had spent, so resuming it on screen
@@ -39,7 +51,7 @@ data class QuizSnapshot(
         val byCode = countries.associateBy { it.code }
         val rebuilt = questions.map { q ->
             val target = byCode[q.targetCode] ?: return null
-            QuizQuestion(target, QuizEngine.questionText(mode, target), q.options, q.correctAnswerIndex, q.optionCodes)
+            QuizQuestion(target, QuizEngine.questionText(mode, target), q.options, q.correctAnswerIndex, q.optionCodes, q.acceptedIndices, q.light)
         }
         if (rebuilt.isEmpty() || currentIndex !in rebuilt.indices || picks.size != times.size || picks.size > rebuilt.size) return null
         val answers = picks.indices.map { i -> QuizSession.AnswerRecord(rebuilt[i], picks[i], times[i]) }
@@ -57,7 +69,8 @@ data class QuizSnapshot(
             correct = correct,
             startedAt = now - totalElapsedMs,
             pausedAt = now,
-            answers = answers
+            answers = answers,
+            reasked = reasked
         )
     }
 
@@ -69,7 +82,7 @@ data class QuizSnapshot(
                 mode = session.mode,
                 scope = session.scope,
                 difficulty = session.difficulty,
-                questions = session.questions.map { Question(it.targetCountry.code, it.options, it.optionCodes, it.correctAnswerIndex) },
+                questions = session.questions.map { Question(it.targetCountry.code, it.options, it.optionCodes, it.correctAnswerIndex, it.acceptedIndices, it.light) },
                 currentIndex = session.currentIndex,
                 score = session.score,
                 streak = session.streak,
@@ -79,7 +92,8 @@ data class QuizSnapshot(
                 picks = session.answers.map { it.pickedIndex },
                 times = session.answers.map { it.timeMs },
                 questionElapsedMs = (until - session.questionStartedAt).coerceAtLeast(0L),
-                totalElapsedMs = (until - session.startedAt).coerceAtLeast(0L)
+                totalElapsedMs = (until - session.startedAt).coerceAtLeast(0L),
+                reasked = session.reasked
             )
         }
     }

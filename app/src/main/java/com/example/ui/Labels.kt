@@ -125,6 +125,7 @@ val Skill.labelRes: Int
     @StringRes get() = when (this) {
         Skill.FLAG -> R.string.skill_flag
         Skill.CAPITAL -> R.string.skill_capital
+        Skill.CONTINENT -> R.string.skill_continent
     }
 
 /** The resource for a continent name of the catalog (or "All"), null for a name that is not one. */

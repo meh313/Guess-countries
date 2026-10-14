@@ -4,6 +4,7 @@ import android.os.Looper
 import androidx.lifecycle.SavedStateHandle
 import com.example.data.local.AppDatabase
 import com.example.data.local.QuizScoreEntity
+import com.example.data.local.RecentTarget
 import com.example.data.local.SkillProgressEntity
 import com.example.data.model.CountryRepository
 import com.example.flashcards.StudySession
@@ -18,6 +19,7 @@ import com.example.data.model.Country
 import com.example.data.model.SortOption
 import com.example.data.settings.InMemoryUserSettings
 import com.example.quiz.QuizDifficulty
+import com.example.quiz.QuestionPicker
 import com.example.quiz.QuizEngine
 import com.example.quiz.QuizMode
 import com.example.quiz.QuizSession
@@ -28,6 +30,7 @@ import com.example.support.inMemoryDatabase
 import com.example.ui.viewmodel.CountryViewModel
 import com.example.ui.viewmodel.QuizPlan
 import com.example.ui.viewmodel.QuizStateHolder
+import java.util.TimeZone
 import kotlin.random.Random
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -72,11 +75,13 @@ class CountryViewModelQuizTest {
     private fun newViewModel(
         countries: List<Country> = CountryCatalog.all,
         random: Random = Random.Default,
-        savedState: SavedStateHandle = SavedStateHandle()
+        savedState: SavedStateHandle = SavedStateHandle(),
+        settings: InMemoryUserSettings = InMemoryUserSettings()
     ) = CountryViewModel(
         CountryRepository(db.userProgressDao(), countries),
         FakeSpeech(),
         clock = { now },
+        settings = settings,
         random = random,
         savedStateHandle = savedState
     ).also { created += it }
@@ -770,44 +775,120 @@ class CountryViewModelQuizTest {
     }
 
     @Test
-    fun startQuiz_global_asksAboutUnseenCountriesBeforeMasteredOnes() {
+    fun startQuiz_global_bringsInAFewUnseenCountries_andChecksMasteredOnesForTheRest() {
         val world = sovereign.take(14)
         world.drop(4).forEach { masteredRow(it.code) }
         val unseen = world.take(4).map { it.code }.toSet()
 
-        var opensWithUnseen = 0
-        val unseenPositions = mutableListOf<Int>()
-        val masteredPositions = mutableListOf<Int>()
-        for (seed in 1..50) {
+        for (seed in 1..20) {
             val vm = newViewModel(world, random = Random(seed))
             vm.awaitPlan("ten mastered") { it.skills[Skill.FLAG]?.size == 10 }
             vm.startQuiz(QuizMode.FLAG_NAME, "Global")
             val targets = vm.quizSession.value!!.targets()
-            if (targets.first() in unseen) opensWithUnseen++
-            targets.forEachIndexed { i, code -> (if (code in unseen) unseenPositions else masteredPositions) += i }
+            assertEquals("seed=$seed", 10, targets.size)
+            // Nothing is due or weak: three new countries per quiz, then checks on the mastered ones.
+            assertEquals("seed=$seed $targets", QuestionPicker.NEW_PER_QUIZ, targets.count { it in unseen })
         }
-        // Weights 4 against 0.5: an unseen country opens about five quizzes in six and sits near the front.
-        assertTrue("opens with an unseen country in $opensWithUnseen of 50", opensWithUnseen >= 35)
-        assertTrue("unseen at ${unseenPositions.average()}", unseenPositions.average() <= 3.5)
-        assertTrue("mastered at ${masteredPositions.average()}", masteredPositions.average() >= 4.5)
     }
 
     @Test
-    fun startQuiz_global_looksPastTheTargetsOfTheLastQuizzesFirst() {
-        val world = sovereign.take(20)
-        val first = newViewModel(world, random = Random(1))
-        first.startQuiz(QuizMode.FLAG_NAME, "Global")
-        val recent = first.quizSession.value!!.targets().toSet()
+    fun startQuiz_global_asksSevenDueFlagsFirst_whenMoreAreDue() {
+        val dueCodes = sovereign.take(15).map { it.code }
+        dueCodes.forEach { reviewedRow(it, Skill.FLAG, dueAt = 1_000L) } // due long ago
+        val vm = newViewModel(random = Random(3))
+        vm.awaitPlan("fifteen due flags") { it.due(Skill.FLAG).size == 15 }
+
+        vm.startQuiz(QuizMode.FLAG_NAME, "Global")
+
+        val targets = vm.quizSession.value!!.targets()
+        assertEquals(10, targets.size)
+        assertEquals("seven due reviews, the rest new: $targets", QuestionPicker.DUE_SHARE, targets.count { it in dueCodes })
+        assertEquals(targets.distinct(), targets)
+    }
+
+    @Test
+    fun startQuiz_global_withTheDaysNewAllowanceSpent_stillAsksTenQuestions() {
+        val today = QuizStateHolder.dayStamp(System.currentTimeMillis(), TimeZone.getDefault())
+        val settings = InMemoryUserSettings(newItemsToday = QuizStateHolder.NEW_PER_DAY, newItemsDay = today)
+        val vm = newViewModel(settings = settings)
+
+        vm.startQuiz(QuizMode.FLAG_NAME, "Global")
+
+        assertEquals(10, vm.quizSession.value!!.questions.size)
+        assertEquals("the day stamp stands", today, settings.newItemsDay)
+    }
+
+    @Test
+    fun startQuiz_global_countsTheUnseenCountriesItIntroduces_andStartsOverOnANewDay() {
+        val today = QuizStateHolder.dayStamp(System.currentTimeMillis(), TimeZone.getDefault())
+        val settings = InMemoryUserSettings(newItemsToday = 12, newItemsDay = "2000-01-01")
+        val vm = newViewModel(settings = settings)
+
+        vm.startQuiz(QuizMode.FLAG_NAME, "Global")
+
+        // A new day: the count starts again, and a quiz over a player with no progress is ten unseen countries.
+        assertEquals(today, settings.newItemsDay)
+        assertEquals(10, settings.newItemsToday)
+
+        vm.endQuiz()
+        vm.startQuiz(QuizMode.BLITZ, "Global")
+        assertEquals("the blitz introduces nothing", 10, settings.newItemsToday)
+    }
+
+    @Test
+    fun theWeakSpotsAndDueScopes_doNotCountAgainstTheNewAllowance() {
+        reviewWrong(twelveWeak)
+        val settings = InMemoryUserSettings()
+        val vm = newViewModel(settings = settings)
+        vm.awaitWeakSpots(12)
+
+        vm.startQuiz(QuizMode.FLAG_NAME, QuizEngine.WEAK_SPOTS)
+
+        assertEquals(QuizEngine.WEAK_SPOTS, vm.quizSession.value!!.scope)
+        assertEquals(0, settings.newItemsToday)
+    }
+
+    // --- Recency per skill ----------------------------------------------------------------------------------------------
+
+    @Test
+    fun recent_countsACountryOnlyForTheSkillItWasAskedIn_andOnlyWithinTheWindow() {
+        val now = 10_000_000L
+        val tenMinutes = 10 * 60 * 1000L
+        val plan = QuizPlan(
+            skills = emptyMap(),
+            recent = listOf(
+                RecentTarget("FR", QuizMode.CAPITAL.name, now - tenMinutes),
+                RecentTarget("DE", QuizMode.FLAG_NAME.name, now - tenMinutes),
+                RecentTarget("JP", QuizMode.BLITZ.name, now - QuestionPicker.RECENT_WINDOW_MILLIS - 1),
+                RecentTarget("BR", QuizMode.CONTINENT.name, now),
+                RecentTarget("IT", "SOME_FUTURE_MODE", now)
+            ),
+            weak = emptyMap(),
+            due = emptyMap()
+        )
+
+        assertEquals("a flag asked ten minutes ago in a capital quiz is not recent for a flag quiz", setOf("DE"), plan.recent(Skill.FLAG, now))
+        assertEquals(setOf("FR"), plan.recent(Skill.CAPITAL, now))
+        assertEquals(setOf("BR"), plan.recent(Skill.CONTINENT, now))
+        assertTrue(plan.recent(Skill.FLAG, now + QuestionPicker.RECENT_WINDOW_MILLIS).isEmpty())
+    }
+
+    @Test
+    fun quizPlan_readsTheRecentTargetsOfTheLastQuizzes_withTheirMode() {
+        val first = newViewModel(random = Random(1))
+        first.startQuiz(QuizMode.CAPITAL, "Global")
+        val asked = first.quizSession.value!!.targets().toSet()
         first.playToTheEnd()
         db.awaitPendingWrites()
 
-        for (seed in 1..20) {
-            val vm = newViewModel(world, random = Random(seed))
-            vm.awaitPlan("ten recent targets") { it.recentTargets.size == 10 }
-            vm.startQuiz(QuizMode.FLAG_NAME, "Global")
-            val repeats = vm.quizSession.value!!.targets().count { it in recent }
-            assertTrue("seed=$seed repeats $repeats of the last quiz's ten", repeats <= 5)
-        }
+        val vm = newViewModel(random = Random(2))
+        vm.awaitPlan("ten recent targets") { it.recent.size == 10 }
+
+        val plan = vm.quizPlan.value
+        val now = System.currentTimeMillis()
+        assertEquals(asked, plan.recent(Skill.CAPITAL, now))
+        assertTrue("a capital quiz leaves no recent flags", plan.recent(Skill.FLAG, now).isEmpty())
+        assertTrue(plan.recent.all { it.mode == QuizMode.CAPITAL.name && it.at <= now })
     }
 
     @Test
@@ -831,27 +912,208 @@ class CountryViewModelQuizTest {
     }
 
     @Test
-    fun retryQuiz_startsTheSameQuestionsAgain_andSavesTheSecondRunToo() {
-        val vm = newViewModel()
+    fun retryQuiz_asksTheSameTenQuestionsWithTheOptionsReshuffled_andSavesTheSecondRunToo() {
+        val vm = newViewModel(random = Random(11))
         vm.startQuiz(QuizMode.CAPITAL, "Europe", QuizDifficulty.HARD)
         vm.playMissingAllBut(setOf(0))
         val first = vm.quizSession.value!!
+        assertEquals("two misses were asked again", 12, first.questions.size)
 
         vm.retryQuiz()
 
         val again = vm.quizSession.value!!
-        assertEquals(first.questions, again.questions)
+        assertEquals("the re-asked questions are left out", first.questions.take(10).map { it.targetCountry }, again.questions.map { it.targetCountry })
+        again.questions.forEachIndexed { i, q ->
+            val original = first.questions[i]
+            assertEquals(original.options.toSet(), q.options.toSet())
+            assertEquals(original.options.zip(original.optionCodes).toSet(), q.options.zip(q.optionCodes).toSet())
+            assertEquals(original.options[original.correctAnswerIndex], q.options[q.correctAnswerIndex])
+            assertTrue(q.light)
+        }
+        assertTrue("at least one right answer moved", again.questions.indices.any { first.questions[it].correctAnswerIndex != again.questions[it].correctAnswerIndex })
         assertEquals(first.mode, again.mode)
         assertEquals(first.scope, again.scope)
         assertEquals(first.difficulty, again.difficulty)
         assertEquals(0, again.currentIndex)
         assertEquals(0, again.score)
+        assertFalse(again.reasked)
         assertTrue(again.answers.isEmpty())
         assertNull(vm.finishOutcome.value)
 
         vm.playToTheEnd()
         db.awaitPendingWrites()
         assertEquals(2, runBlocking { db.userProgressDao().getQuizHistory().first() }.size)
+    }
+
+    @Test
+    fun retryQuiz_recordsLightEvidence_sinceTheAnswersWereJustShown() {
+        val vm = newViewModel(random = Random(12))
+        vm.startQuiz(QuizMode.FLAG_NAME, "Global")
+        val target = vm.quizSession.value!!.current.targetCountry.code
+        vm.playToTheEnd()
+        db.awaitPendingWrites()
+        assertEquals("a full right answer on a new flag", 20, skillRow(target)!!.score)
+
+        vm.retryQuiz()
+        vm.answerQuiz(vm.quizSession.value!!.current.correctAnswerIndex)
+        db.awaitPendingWrites()
+
+        val row = skillRow(target)!!
+        assertEquals("light evidence adds a little, not the full twenty", 28, row.score)
+        assertEquals(2, row.reviews)
+    }
+
+    // --- Misses asked again -------------------------------------------------------------------------------------------
+
+    @Test
+    fun twoMisses_areAskedAgainOnceAtTheEnd_asLightEvidence() {
+        val vm = newViewModel(random = Random(21))
+        vm.startQuiz(QuizMode.FLAG_NAME, "Global")
+        val missedCodes = mutableListOf<String>()
+        var n = 0
+        while (vm.quizSession.value?.isFinished == false) {
+            val q = vm.quizSession.value!!.current
+            if (n in setOf(1, 4, 6)) {
+                missedCodes += q.targetCountry.code
+                vm.answerQuiz((q.correctAnswerIndex + 1) % q.options.size)
+            } else {
+                vm.answerQuiz(q.correctAnswerIndex)
+            }
+            vm.nextQuizQuestion()
+            if (n == 9) assertFalse("ten questions in, the quiz goes on with the misses", vm.quizSession.value!!.isFinished)
+            n++
+            check(n <= 20) { "quiz never finished" }
+        }
+
+        val finished = vm.quizSession.value!!
+        assertTrue(finished.reasked)
+        assertEquals(12, finished.questions.size)
+        assertEquals(12, finished.answers.size)
+        assertTrue("the last two are light", finished.questions.takeLast(2).all { it.light })
+        assertTrue("the first ten are not", finished.questions.take(10).none { it.light })
+        assertEquals("the first two misses, in order", missedCodes.take(2), finished.questions.takeLast(2).map { it.targetCountry.code })
+        assertEquals("each missed country is listed once", missedCodes, finished.misses.map { it.question.targetCountry.code })
+        assertEquals(9, finished.correct)
+        assertEquals(QuizEngine.maxScore(12), finished.maxScore)
+
+        // The re-asked right answer is light evidence: a full one would have taken the score from 0 to 20.
+        db.awaitPendingWrites()
+        val row = skillRow(missedCodes.first())!!
+        assertEquals(2, row.reviews)
+        assertEquals(8, row.score)
+        val saved = awaitQuizHistory { it.isNotEmpty() }.single()
+        assertEquals(12, saved.questionCount)
+    }
+
+    @Test
+    fun aQuizWithoutMisses_isNotExtended_andTheMissesAreAskedAgainOnlyOnce() {
+        val vm = newViewModel(random = Random(22))
+        vm.startQuiz(QuizMode.CAPITAL, "Asia")
+        vm.playToTheEnd()
+        val perfect = vm.quizSession.value!!
+        assertTrue(perfect.isFinished)
+        assertFalse(perfect.reasked)
+        assertEquals(10, perfect.questions.size)
+
+        vm.endQuiz()
+        vm.startQuiz(QuizMode.CAPITAL, "Asia")
+        // Every answer wrong, the re-asked ones too: the quiz still ends after the one extra round.
+        vm.playMissingAllBut(emptySet())
+        val finished = vm.quizSession.value!!
+        assertTrue(finished.isFinished)
+        assertTrue(finished.reasked)
+        assertEquals(12, finished.questions.size)
+        assertEquals(10, finished.misses.size)
+    }
+
+    @Test
+    fun theBlitz_neverAsksItsMissesAgain() {
+        val vm = newViewModel(random = Random(23))
+        vm.startQuiz(QuizMode.BLITZ, "Global")
+        var n = 0
+        while (vm.quizSession.value?.isFinished == false) {
+            val q = vm.quizSession.value!!.current
+            vm.answerQuiz((q.correctAnswerIndex + 1) % q.options.size)
+            vm.nextQuizQuestion()
+            check(++n <= QuizEngine.BLITZ_QUESTIONS) { "the blitz never finished" }
+        }
+
+        val finished = vm.quizSession.value!!
+        assertEquals(QuizEngine.BLITZ_QUESTIONS, finished.questions.size)
+        assertEquals(QuizEngine.BLITZ_QUESTIONS, finished.answers.size)
+        assertFalse(finished.reasked)
+        assertTrue(finished.questions.none { it.light })
+    }
+
+    @Test
+    fun theReaskAndTheLightMarks_surviveTheProcessThroughTheSavedState() {
+        val handle = SavedStateHandle()
+        val vm = newViewModel(random = Random(24), savedState = handle)
+        vm.startQuiz(QuizMode.FLAG_NAME, "Global")
+        var n = 0
+        while (!vm.quizSession.value!!.reasked) {
+            val q = vm.quizSession.value!!.current
+            vm.answerQuiz(if (n < 2) (q.correctAnswerIndex + 1) % q.options.size else q.correctAnswerIndex)
+            vm.nextQuizQuestion()
+            check(++n <= 10)
+        }
+        val before = vm.quizSession.value!!
+        assertTrue(before.current.light)
+
+        val revived = newViewModel(savedState = handle.saved())
+
+        val after = revived.quizSession.value!!
+        assertTrue(after.reasked)
+        assertEquals(before.questions, after.questions)
+        assertEquals(before.answers, after.answers)
+        assertEquals(10, after.currentIndex)
+    }
+
+    @Test
+    fun aContinentQuestionAboutACountryOnTwoContinents_acceptsEither_andSurvivesTheSavedState() {
+        val handle = SavedStateHandle()
+        val cyprusAndThree = allCountries.filter { it.code in setOf("CY", "FR", "DE", "JP") }
+        val vm = newViewModel(cyprusAndThree, random = Random(25), savedState = handle)
+        vm.startQuiz(QuizMode.CONTINENT, "Global")
+        val s = vm.quizSession.value!!
+        val cyprus = s.questions.single { it.targetCountry.code == "CY" }
+        assertEquals(setOf(cyprus.options.indexOf("Asia"), cyprus.options.indexOf("Europe")), cyprus.acceptedIndices)
+
+        val revived = newViewModel(cyprusAndThree, savedState = handle.saved())
+        assertEquals(s.questions, revived.quizSession.value!!.questions)
+
+        // Answering Europe for Cyprus counts, and is recorded as a right answer.
+        while (vm.quizSession.value!!.current.targetCountry.code != "CY") {
+            vm.answerQuiz(vm.quizSession.value!!.current.correctAnswerIndex)
+            vm.nextQuizQuestion()
+        }
+        vm.answerQuiz(cyprus.options.indexOf("Europe"))
+        val answered = vm.quizSession.value!!
+        assertTrue(answered.answers.last().correct)
+        awaitCondition("the review to be saved") { skillRow("CY") != null }
+        assertEquals(Skill.CONTINENT.name, skillRow("CY")!!.skill)
+        assertEquals(1, skillRow("CY")!!.correct)
+    }
+
+    @Test
+    fun anOlderSavedQuiz_withoutTheNewFields_restoresAsAPlainOne() {
+        val handle = SavedStateHandle()
+        val vm = newViewModel(random = Random(26), savedState = handle)
+        vm.startQuiz(QuizMode.FLAG_NAME, "Global")
+        val before = vm.quizSession.value!!
+        val state = handle.savedStateProvider().saveState()
+        val bundle = state.getBundle(QuizStateHolder.SAVED_QUIZ)!!
+        bundle.remove("accepted")
+        bundle.remove("light")
+        bundle.remove("reasked")
+
+        val revived = newViewModel(savedState = SavedStateHandle.createHandle(state, null))
+
+        val after = revived.quizSession.value!!
+        assertEquals(before.questions, after.questions)
+        assertFalse(after.reasked)
+        assertTrue(after.questions.none { it.light })
+        assertTrue(after.questions.all { it.acceptedIndices == setOf(it.correctAnswerIndex) })
     }
 
     @Test
