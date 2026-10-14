@@ -93,6 +93,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.R
+import com.example.data.model.TellApart
 import com.example.data.settings.TimerPace
 import com.example.progress.Skill
 import com.example.progress.SkillMastery
@@ -103,6 +104,8 @@ import com.example.ui.components.FlagOptionGrid
 import com.example.ui.components.FlagView
 import com.example.ui.components.readingWidth
 import com.example.ui.components.MissComparison
+import com.example.ui.components.TellApartLine
+import com.example.ui.components.tellApartLine
 import com.example.ui.hintRes
 import com.example.ui.questionText
 import com.example.ui.scopeLabel
@@ -823,6 +826,12 @@ fun QuizScreen(
                         stringResource(R.string.quiz_result_also_counted, q.options[picked], answerText)
                     else -> stringResource(R.string.quiz_result_wrong, answerText)
                 }
+                // The country whose flag or name was picked by mistake, when there is one: a continent has no flag,
+                // and a timeout picked nothing.
+                val pickedCountry = active.selectedAnswerIndex
+                    ?.takeIf { it != q.correctAnswerIndex && !active.timedOut }
+                    ?.let { q.optionCodes.getOrNull(it) }
+                    ?.let { countriesByCode[it] }
                 Card(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
                     shape = RoundedCornerShape(16.dp)
@@ -838,13 +847,15 @@ fun QuizScreen(
                                 .semantics { liveRegion = LiveRegionMode.Polite }
                                 .testTag("quiz_result")
                         )
+                        // A wrong flag in the grid: the two flags are already side by side there, so one line under
+                        // the result says how to tell them apart next time (or how to spot the right one).
+                        if (pickedCountry != null && !active.mode.isEndless && active.mode.answersAreFlags) {
+                            tellApartLine(q.targetCountry, TellApart.tip(pickedCountry.code, q.targetCountry.code))?.let { cue ->
+                                TellApartLine(text = cue, modifier = Modifier.padding(bottom = 10.dp).testTag("quiz_tell_apart"))
+                            }
+                        }
                         // A wrong text answer shows the flag that was picked beside the right one, the one time the two
-                        // are seen together. The flag grid names its flags itself, a continent has no flag, and a blitz
-                        // has no time.
-                        val pickedCountry = active.selectedAnswerIndex
-                            ?.takeIf { it != q.correctAnswerIndex && !active.timedOut }
-                            ?.let { q.optionCodes.getOrNull(it) }
-                            ?.let { countriesByCode[it] }
+                        // are seen together. The flag grid names its flags itself, and a blitz has no time.
                         if (pickedCountry != null && !active.mode.isEndless && !active.mode.answersAreFlags) {
                             val capitals = active.mode == QuizMode.CAPITAL
                             MissComparison(

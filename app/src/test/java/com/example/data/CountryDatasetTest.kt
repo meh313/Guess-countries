@@ -272,4 +272,39 @@ class CountryDatasetTest {
     fun antarcticaComesLast() {
         assertEquals("AQ", allCountries.last().code)
     }
+
+    // --- Spot-it cues -------------------------------------------------------------------------------------------
+
+    private val colourWords = listOf(
+        "red", "white", "blue", "green", "yellow", "black", "orange", "gold", "maroon", "purple", "brown", "grey",
+        "gray", "pink", "saffron", "crimson", "turquoise", "indigo", "copper", "silver"
+    )
+
+    @Test
+    fun everyCountryHasASpotItCue_ofOneShortSentence() {
+        allCountries.forEach { c ->
+            assertTrue("${c.code}: no cue", c.spotIt.isNotBlank())
+            assertTrue("${c.code}: ${c.spotIt.length} chars: ${c.spotIt}", c.spotIt.length in 25..90)
+            assertTrue("${c.code}: no full stop: ${c.spotIt}", c.spotIt.endsWith("."))
+            assertTrue("${c.code}: names the country: ${c.spotIt}", !c.spotIt.contains(c.name))
+            assertTrue("${c.code}: emoji in the cue", c.spotIt.none { it.code > 0x2FFF })
+        }
+    }
+
+    @Test
+    fun aSpotItCueNamesOnlyTheColoursTheFlagHas() {
+        allCountries.forEach { c ->
+            // "Light Blue" in the list allows "light blue" and "blue" in the cue.
+            val allowed = c.flagColors.flatMap { it.lowercase().split(" ") }.toSet()
+            val used = colourWords.filter { word -> Regex("\\b$word\\b", RegexOption.IGNORE_CASE).containsMatchIn(c.spotIt) }
+            val strangers = used.filter { it !in allowed && !(it == "gray" && "grey" in allowed) && !(it == "grey" && "gray" in allowed) }
+            assertTrue("${c.code}: cue says $strangers but the flag has $allowed: ${c.spotIt}", strangers.isEmpty())
+        }
+    }
+
+    @Test
+    fun noTwoSpotItCuesAreTheSame() {
+        val repeated = allCountries.groupBy { it.spotIt }.filterValues { it.size > 1 }.mapValues { (_, v) -> v.map { it.code } }
+        assertTrue("the same cue for $repeated", repeated.isEmpty())
+    }
 }

@@ -83,4 +83,9 @@
     <string name="miss_description">You picked %1$s, the answer is %2$s</string>
     <string name="miss_you_picked">You picked</string>
     <string name="miss_correct">Correct</string>
+    <string name="miss_description_with_cue">%1$s. %2$s</string>
+
+    <!-- How to recognise a flag, and how to tell two look-alikes apart -->
+    <string name="spot_it_label">Spot it</string>
+    <string name="spot_it_line">%1$s: %2$s</string>
 </resources>

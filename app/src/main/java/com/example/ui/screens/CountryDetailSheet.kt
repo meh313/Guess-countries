@@ -353,12 +353,29 @@ fun CountryDetailSheet(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text(
-                    text = country.flagDescription,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(14.dp),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                Column(modifier = Modifier.padding(14.dp)) {
+                    // How to recognise the flag at a glance comes first; the symbolism is the longer read.
+                    if (country.spotIt.isNotBlank()) {
+                        Text(
+                            text = stringResource(R.string.spot_it_label),
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = country.spotIt,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.testTag("sheet_spot_it")
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                    }
+                    Text(
+                        text = country.flagDescription,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))

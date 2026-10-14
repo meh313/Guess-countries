@@ -21,7 +21,8 @@ object AfricaCatalog {
             languages = listOf("Arabic", "Tamazight"),
             currency = "Algerian Dinar (DA)",
             landmarks = listOf("Casbah of Algiers", "Timgad", "Tassili n'Ajjer"),
-            funFact = "Algeria is the largest country in Africa by area, yet most of its land is Sahara desert, so most of its people live near the Mediterranean coast."
+            funFact = "Algeria is the largest country in Africa by area, yet most of its land is Sahara desert, so most of its people live near the Mediterranean coast.",
+            spotIt = "Green at the pole and white at the fly, with a red crescent and star across the join."
         ),
         Country(
             code = "AO",
@@ -38,7 +39,8 @@ object AfricaCatalog {
             languages = listOf("Portuguese"),
             currency = "Angolan Kwanza (Kz)",
             landmarks = listOf("Kalandula Falls", "Tundavala Gap", "Fortress of São Miguel (Luanda)"),
-            funFact = "Kalandula Falls on the Lucala River drop about 105 meters across a curtain some 400 meters wide and rank among Africa's largest waterfalls by volume."
+            funFact = "Kalandula Falls on the Lucala River drop about 105 meters across a curtain some 400 meters wide and rank among Africa's largest waterfalls by volume.",
+            spotIt = "Red over black halves with a yellow cogwheel, machete and star in the centre."
         ),
         Country(
             code = "BJ",
@@ -56,6 +58,7 @@ object AfricaCatalog {
             currency = "West African CFA Franc (CFA)",
             landmarks = listOf("Royal Palaces of Abomey", "Pendjari National Park", "Ganvié Stilt Village"),
             funFact = "The Kingdom of Dahomey, which ruled southern Benin before the French, was famous for its elite units of female soldiers, known in Europe as the Dahomey Amazons.",
+            spotIt = "A green vertical band at the pole, then yellow over red horizontal bands.",
             quizCapital = "Porto-Novo"
         ),
         Country(
@@ -74,6 +77,7 @@ object AfricaCatalog {
             currency = "Botswana Pula (BWP)",
             landmarks = listOf("Okavango Delta", "Chobe National Park", "Tsodilo Hills"),
             funFact = "The Okavango Delta, one of the world's largest inland deltas, whose river never reaches the sea, became UNESCO's 1,000th World Heritage Site in 2014.",
+            spotIt = "Light blue with a thin black horizontal stripe edged in white across the middle.",
             driveSide = "Left"
         ),
         Country(
@@ -91,7 +95,8 @@ object AfricaCatalog {
             languages = listOf("Mooré", "Dyula", "Fula"),
             currency = "West African CFA Franc (CFA)",
             landmarks = listOf("Ruins of Loropéni", "Sindou Peaks", "Grand Mosque of Bobo-Dioulasso"),
-            funFact = "The name Burkina Faso, adopted in 1984, joins words from two local languages, Mooré and Dyula, and means roughly land of upright, honest people."
+            funFact = "The name Burkina Faso, adopted in 1984, joins words from two local languages, Mooré and Dyula, and means roughly land of upright, honest people.",
+            spotIt = "Red over green horizontal halves with a yellow star in the centre."
         ),
         Country(
             code = "BI",
@@ -109,6 +114,7 @@ object AfricaCatalog {
             currency = "Burundian Franc (FBu)",
             landmarks = listOf("Lake Tanganyika", "Kibira National Park", "Karera Falls"),
             funFact = "Burundi's ritual dance of the royal drum, with a dozen or more drums played in a semicircle, is on UNESCO's list of intangible cultural heritage.",
+            spotIt = "White diagonal cross on red and green, with three red stars in a white central disc.",
             quizCapital = "Gitega"
         ),
         Country(
@@ -126,7 +132,8 @@ object AfricaCatalog {
             languages = listOf("French", "English"),
             currency = "Central African CFA Franc (FCFA)",
             landmarks = listOf("Mount Cameroon", "Waza National Park", "Dja Faunal Reserve"),
-            funFact = "Cameroon is often called Africa in miniature: beaches, desert, mountains, rainforest and savanna all lie within one country."
+            funFact = "Cameroon is often called Africa in miniature: beaches, desert, mountains, rainforest and savanna all lie within one country.",
+            spotIt = "Green, red and yellow vertical bands with a yellow star on the central red band."
         ),
         Country(
             code = "CV",
@@ -143,7 +150,8 @@ object AfricaCatalog {
             languages = listOf("Portuguese"),
             currency = "Cape Verdean Escudo (CVE)",
             landmarks = listOf("Pico do Fogo", "Cidade Velha", "Santa Maria Beach (Sal)"),
-            funFact = "No one lived on the islands until Portuguese sailors arrived in the 1450s; Ribeira Grande, now Cidade Velha, became the first European town in the tropics."
+            funFact = "No one lived on the islands until Portuguese sailors arrived in the 1450s; Ribeira Grande, now Cidade Velha, became the first European town in the tropics.",
+            spotIt = "Blue with a white-red-white stripe low down and a ring of ten yellow stars."
         ),
         Country(
             code = "CF",
@@ -160,7 +168,8 @@ object AfricaCatalog {
             languages = listOf("Sango", "French"),
             currency = "Central African CFA Franc (FCFA)",
             landmarks = listOf("Boali Falls", "Dzanga-Sangha Special Reserve", "Manovo-Gounda St Floris National Park"),
-            funFact = "At Dzanga Bai, a forest clearing in the southwest, African forest elephants gather all year round to dig up and eat mineral-rich soil."
+            funFact = "At Dzanga Bai, a forest clearing in the southwest, African forest elephants gather all year round to dig up and eat mineral-rich soil.",
+            spotIt = "Blue, white, green and yellow bands crossed by a red vertical stripe, yellow star at top."
         ),
         Country(
             code = "TD",
@@ -177,7 +186,8 @@ object AfricaCatalog {
             languages = listOf("French", "Arabic"),
             currency = "Central African CFA Franc (FCFA)",
             landmarks = listOf("Lake Chad", "Zakouma National Park", "Ennedi Massif"),
-            funFact = "Emi Koussi, a huge volcano in Chad's Tibesti Mountains, rises about 3,400 meters and is the highest peak in the whole Sahara Desert."
+            funFact = "Emi Koussi, a huge volcano in Chad's Tibesti Mountains, rises about 3,400 meters and is the highest peak in the whole Sahara Desert.",
+            spotIt = "Blue, yellow and red vertical bands, the same as Romania's but a deeper blue."
         ),
         Country(
             code = "KM",
@@ -194,7 +204,8 @@ object AfricaCatalog {
             languages = listOf("Comorian", "Arabic", "French"),
             currency = "Comorian Franc (FC)",
             landmarks = listOf("Mount Karthala", "Old Friday Mosque (Moroni)", "Mohéli National Park"),
-            funFact = "The coelacanth, a deep-sea fish thought extinct until 1938, was found again off the Comoros island of Anjouan in 1952 and still lives in Comorian waters."
+            funFact = "The coelacanth, a deep-sea fish thought extinct until 1938, was found again off the Comoros island of Anjouan in 1952 and still lives in Comorian waters.",
+            spotIt = "Yellow, white, red and blue bands behind a green triangle with a white crescent and stars."
         ),
         Country(
             code = "CD",
@@ -211,7 +222,8 @@ object AfricaCatalog {
             languages = listOf("French", "Kikongo", "Lingala", "Swahili", "Tshiluba"),
             currency = "Congolese Franc (FC)",
             landmarks = listOf("Virunga National Park", "Mount Nyiragongo", "Congo River"),
-            funFact = "The Congo River, which gives the country its name, is the deepest river in the world, with measured depths of about 220 meters, and crosses the equator twice."
+            funFact = "The Congo River, which gives the country its name, is the deepest river in the world, with measured depths of about 220 meters, and crosses the equator twice.",
+            spotIt = "Light blue with a yellow-edged red diagonal stripe and a yellow star at the top corner."
         ),
         Country(
             code = "DJ",
@@ -228,7 +240,8 @@ object AfricaCatalog {
             languages = listOf("French", "Arabic"),
             currency = "Djiboutian Franc (Fdj)",
             landmarks = listOf("Lake Assal", "Lake Abbe", "Day Forest National Park"),
-            funFact = "Lake Assal in Djibouti lies about 155 meters below sea level, the lowest point on land in Africa, and its water is saltier than the Dead Sea."
+            funFact = "Lake Assal in Djibouti lies about 155 meters below sea level, the lowest point on land in Africa, and its water is saltier than the Dead Sea.",
+            spotIt = "Light blue over green halves with a white triangle at the pole holding a red star."
         ),
         Country(
             code = "EG",
@@ -245,7 +258,8 @@ object AfricaCatalog {
             languages = listOf("Arabic"),
             currency = "Egyptian Pound (E£)",
             landmarks = listOf("Great Pyramids of Giza", "Sphinx", "Luxor Temple"),
-            funFact = "The Great Pyramid of Giza was the world's tallest human-made structure for more than 3,700 years."
+            funFact = "The Great Pyramid of Giza was the world's tallest human-made structure for more than 3,700 years.",
+            spotIt = "Red, white and black horizontal bands with a gold eagle on the white band."
         ),
         Country(
             code = "GQ",
@@ -263,6 +277,7 @@ object AfricaCatalog {
             currency = "Central African CFA Franc (FCFA)",
             landmarks = listOf("Pico Basilé (Bioko)", "Monte Alén National Park", "Malabo Cathedral"),
             funFact = "Equatorial Guinea is the only sovereign African state with Spanish as an official language; its land spans mainland Río Muni and islands such as Bioko.",
+            spotIt = "Green, white and red bands, a blue triangle at the pole and a tree emblem on the white.",
             quizCapital = "Ciudad de la Paz"
         ),
         Country(
@@ -280,7 +295,8 @@ object AfricaCatalog {
             languages = listOf("Tigrinya", "Arabic", "English"),
             currency = "Eritrean Nakfa (Nfk)",
             landmarks = listOf("Fiat Tagliero Building (Asmara)", "Dahlak Archipelago", "Massawa Old Town"),
-            funFact = "Eritrea takes its name from the ancient Greek name for the Red Sea, the Erythraean Sea, which forms the country's entire coastline."
+            funFact = "Eritrea takes its name from the ancient Greek name for the Red Sea, the Erythraean Sea, which forms the country's entire coastline.",
+            spotIt = "A red triangle from the pole splits green above from blue below, with a gold olive wreath."
         ),
         Country(
             code = "SZ",
@@ -298,6 +314,7 @@ object AfricaCatalog {
             currency = "Swazi Lilangeni (SZL)",
             landmarks = listOf("Hlane Royal National Park", "Mlilwane Wildlife Sanctuary", "Sibebe Rock"),
             funFact = "In 2018 King Mswati III renamed Swaziland as Eswatini, which means land of the Swazis, partly to avoid confusion with Switzerland.",
+            spotIt = "Blue, red, blue bands with yellow edges and a black and white shield across the red.",
             driveSide = "Left",
             quizCapital = "Mbabane"
         ),
@@ -316,7 +333,8 @@ object AfricaCatalog {
             languages = listOf("Afar", "Amharic", "Oromo", "Somali", "Tigrinya"),
             currency = "Ethiopian Birr (Br)",
             landmarks = listOf("Rock-Hewn Churches (Lalibela)", "Simien Mountains National Park", "Fasil Ghebbi (Gondar)"),
-            funFact = "Ethiopia keeps its own calendar with 13 months, twelve of 30 days plus a short one, and its year count runs seven to eight years behind the Western one."
+            funFact = "Ethiopia keeps its own calendar with 13 months, twelve of 30 days plus a short one, and its year count runs seven to eight years behind the Western one.",
+            spotIt = "Green, yellow and red horizontal bands with a blue disc and yellow star in the centre."
         ),
         Country(
             code = "GA",
@@ -333,7 +351,8 @@ object AfricaCatalog {
             languages = listOf("French"),
             currency = "Central African CFA Franc (FCFA)",
             landmarks = listOf("Loango National Park", "Lopé National Park", "Kongou Falls (Ivindo National Park)"),
-            funFact = "Rainforest covers nearly nine tenths of Gabon, and the equator runs right through the country, home to 13 national parks including Lopé and Loango."
+            funFact = "Rainforest covers nearly nine tenths of Gabon, and the equator runs right through the country, home to 13 national parks including Lopé and Loango.",
+            spotIt = "Green, yellow and blue horizontal bands, plain, with the blue at the bottom."
         ),
         Country(
             code = "GM",
@@ -350,7 +369,8 @@ object AfricaCatalog {
             languages = listOf("English"),
             currency = "Gambian Dalasi (D)",
             landmarks = listOf("Kunta Kinteh Island", "Arch 22 (Banjul)", "Wassu Stone Circles"),
-            funFact = "The Gambia is the smallest country on mainland Africa: a narrow strip along the Gambia River, surrounded by Senegal except for its Atlantic coast."
+            funFact = "The Gambia is the smallest country on mainland Africa: a narrow strip along the Gambia River, surrounded by Senegal except for its Atlantic coast.",
+            spotIt = "Red, blue and green horizontal bands, the blue edged in thin white stripes."
         ),
         Country(
             code = "GH",
@@ -367,7 +387,8 @@ object AfricaCatalog {
             languages = listOf("English"),
             currency = "Ghanaian Cedi (GH₵)",
             landmarks = listOf("Cape Coast Castle", "Kakum National Park", "Lake Volta"),
-            funFact = "Lake Volta, formed when the Akosombo Dam was completed in 1965, is one of the largest artificial lakes in the world by surface area."
+            funFact = "Lake Volta, formed when the Akosombo Dam was completed in 1965, is one of the largest artificial lakes in the world by surface area.",
+            spotIt = "Red, gold and green horizontal bands with a black star in the centre."
         ),
         Country(
             code = "GN",
@@ -384,7 +405,8 @@ object AfricaCatalog {
             languages = listOf("French"),
             currency = "Guinean Franc (FG)",
             landmarks = listOf("Mount Nimba", "Fouta Djallon Highlands", "Îles de Los (Conakry)"),
-            funFact = "The Niger River rises in Guinea's highlands only about 240 km from the Atlantic, yet runs 4,180 km through Mali and Niger before reaching the sea in Nigeria."
+            funFact = "The Niger River rises in Guinea's highlands only about 240 km from the Atlantic, yet runs 4,180 km through Mali and Niger before reaching the sea in Nigeria.",
+            spotIt = "Red, yellow and green vertical bands, red at the pole, with no emblem."
         ),
         Country(
             code = "GW",
@@ -401,7 +423,8 @@ object AfricaCatalog {
             languages = listOf("Portuguese"),
             currency = "West African CFA Franc (CFA)",
             landmarks = listOf("Bijagós Archipelago", "Orango Islands National Park", "Amura Fort (Bissau)"),
-            funFact = "The Bijagós Archipelago off Guinea-Bissau's coast has 88 islands and islets and is home to rare saltwater hippos that swim in the sea between them."
+            funFact = "The Bijagós Archipelago off Guinea-Bissau's coast has 88 islands and islets and is home to rare saltwater hippos that swim in the sea between them.",
+            spotIt = "A red vertical band at the pole with a black star, then yellow over green halves."
         ),
         Country(
             code = "CI",
@@ -419,6 +442,7 @@ object AfricaCatalog {
             currency = "West African CFA Franc (CFA)",
             landmarks = listOf("Basilica of Our Lady of Peace (Yamoussoukro)", "Taï National Park", "Comoé National Park"),
             funFact = "The Basilica of Our Lady of Peace in Yamoussoukro, modeled on St Peter's in Rome, is listed by Guinness World Records as the largest church in the world.",
+            spotIt = "Orange, white and green vertical bands with orange at the pole.",
             quizCapital = "Yamoussoukro"
         ),
         Country(
@@ -437,6 +461,7 @@ object AfricaCatalog {
             currency = "Kenyan Shilling (KSh)",
             landmarks = listOf("Maasai Mara National Reserve", "Mount Kenya", "Amboseli National Park"),
             funFact = "Each year over a million wildebeest travel between Tanzania's Serengeti and Kenya's Maasai Mara, braving crocodiles as they cross the Mara River.",
+            spotIt = "Black, red and green bands split by white lines, with a Maasai shield and spears.",
             driveSide = "Left"
         ),
         Country(
@@ -455,6 +480,7 @@ object AfricaCatalog {
             currency = "Lesotho Loti (LSL), South African Rand (R)",
             landmarks = listOf("Maletsunyane Falls", "Thaba Bosiu", "Katse Dam"),
             funFact = "Lesotho is the only country that lies entirely above 1,000 meters; even its lowest point is about 1,400 meters above sea level.",
+            spotIt = "Blue, white and green horizontal bands with a black conical hat on the white band.",
             driveSide = "Left"
         ),
         Country(
@@ -472,7 +498,8 @@ object AfricaCatalog {
             languages = listOf("English"),
             currency = "Liberian Dollar (L\$), US Dollar (US\$)",
             landmarks = listOf("Sapo National Park", "Providence Island (Monrovia)", "Kpatawee Waterfall"),
-            funFact = "Liberia's capital Monrovia was founded in 1822 by settlers from the United States and renamed in 1824 after James Monroe, the US president at the time."
+            funFact = "Liberia's capital Monrovia was founded in 1822 by settlers from the United States and renamed in 1824 after James Monroe, the US president at the time.",
+            spotIt = "Eleven red and white stripes with a single white star on a blue canton."
         ),
         Country(
             code = "LY",
@@ -489,7 +516,8 @@ object AfricaCatalog {
             languages = listOf("Arabic"),
             currency = "Libyan Dinar (LD)",
             landmarks = listOf("Leptis Magna", "Sabratha", "Cyrene"),
-            funFact = "Leptis Magna, a Roman city east of Tripoli, was the birthplace of Emperor Septimius Severus and is among the best-preserved Roman sites in the Mediterranean."
+            funFact = "Leptis Magna, a Roman city east of Tripoli, was the birthplace of Emperor Septimius Severus and is among the best-preserved Roman sites in the Mediterranean.",
+            spotIt = "Red, black and green bands, the black widest, with a white crescent and star."
         ),
         Country(
             code = "MG",
@@ -506,7 +534,8 @@ object AfricaCatalog {
             languages = listOf("Malagasy", "French"),
             currency = "Malagasy Ariary (Ar)",
             landmarks = listOf("Avenue of the Baobabs (Morondava)", "Tsingy de Bemaraha National Park", "Royal Hill of Ambohimanga"),
-            funFact = "Madagascar broke away from India about 90 million years ago, and around 90% of its wildlife, including lemurs, lives nowhere else on Earth."
+            funFact = "Madagascar broke away from India about 90 million years ago, and around 90% of its wildlife, including lemurs, lives nowhere else on Earth.",
+            spotIt = "A white vertical band at the pole, then red over green horizontal bands."
         ),
         Country(
             code = "MW",
@@ -524,6 +553,7 @@ object AfricaCatalog {
             currency = "Malawian Kwacha (MK)",
             landmarks = listOf("Lake Malawi", "Mount Mulanje", "Liwonde National Park"),
             funFact = "Lake Malawi holds more kinds of fish than any other lake on Earth, including hundreds of colorful cichlids that live nowhere else.",
+            spotIt = "Black, red and green horizontal bands with a red rising sun on the black band.",
             driveSide = "Left"
         ),
         Country(
@@ -541,7 +571,8 @@ object AfricaCatalog {
             languages = listOf("Bambara", "Bobo", "Bozo", "Dogon", "Fula", "Hassaniya Arabic", "Kassonke", "Maninke", "Minyanka", "Senufo", "Songhay", "Soninke", "Tamasheq"),
             currency = "West African CFA Franc (CFA)",
             landmarks = listOf("Great Mosque of Djenné", "Timbuktu", "Bandiagara Escarpment"),
-            funFact = "The Great Mosque of Djenné is the largest mud-brick building in the world, and the whole town replasters it by hand in a festival every year."
+            funFact = "The Great Mosque of Djenné is the largest mud-brick building in the world, and the whole town replasters it by hand in a festival every year.",
+            spotIt = "Green, gold and red vertical bands with green at the pole and no emblem."
         ),
         Country(
             code = "MR",
@@ -558,7 +589,8 @@ object AfricaCatalog {
             languages = listOf("Arabic", "Pulaar", "Soninke", "Wolof"),
             currency = "Mauritanian Ouguiya (UM)",
             landmarks = listOf("Richat Structure", "Banc d'Arguin National Park", "Chinguetti"),
-            funFact = "The Richat Structure near Ouadane, nicknamed the Eye of Africa, is an eroded rock dome about 40 km across that is easy to spot from space."
+            funFact = "The Richat Structure near Ouadane, nicknamed the Eye of Africa, is an eroded rock dome about 40 km across that is easy to spot from space.",
+            spotIt = "Green with a gold crescent and star between two red bands at top and bottom."
         ),
         Country(
             code = "MU",
@@ -576,6 +608,7 @@ object AfricaCatalog {
             currency = "Mauritian Rupee (Rs)",
             landmarks = listOf("Le Morne Brabant", "Seven Coloured Earths (Chamarel)", "Black River Gorges National Park"),
             funFact = "Mauritius was the only home of the dodo, a flightless bird that died out within a century of Dutch sailors first landing there in 1598.",
+            spotIt = "Four horizontal bands, red, blue, yellow and green, with no emblem.",
             driveSide = "Left"
         ),
         Country(
@@ -593,7 +626,8 @@ object AfricaCatalog {
             languages = listOf("Arabic", "Amazigh (Tamazight)"),
             currency = "Moroccan Dirham (DH)",
             landmarks = listOf("Chefchaouen (Blue City)", "Marrakech Medina", "Hassan II Mosque"),
-            funFact = "Fez's al-Qarawiyyin, founded in 859 by Fatima al-Fihri, is listed by Guinness as the world's oldest continually operating educational institution."
+            funFact = "Fez's al-Qarawiyyin, founded in 859 by Fatima al-Fihri, is listed by Guinness as the world's oldest continually operating educational institution.",
+            spotIt = "Red field with a green interlaced five-pointed star in the centre."
         ),
         Country(
             code = "MZ",
@@ -611,6 +645,7 @@ object AfricaCatalog {
             currency = "Mozambican Metical (MT)",
             landmarks = listOf("Island of Mozambique", "Bazaruto Archipelago", "Gorongosa National Park"),
             funFact = "Mozambique is named after the Island of Mozambique, a coral island only about 3 km long that was the capital of Portuguese East Africa until 1898.",
+            spotIt = "Green, black and yellow bands with a red triangle at the pole, a yellow star and a rifle.",
             driveSide = "Left"
         ),
         Country(
@@ -629,6 +664,7 @@ object AfricaCatalog {
             currency = "Namibian Dollar (N\$), South African Rand (R)",
             landmarks = listOf("Etosha National Park", "Sossusvlei", "Fish River Canyon"),
             funFact = "Namibia is named after the Namib Desert along its Atlantic coast, which is often considered the oldest desert in the world.",
+            spotIt = "A red diagonal stripe edged in white splits blue with a gold sun from green below.",
             driveSide = "Left"
         ),
         Country(
@@ -646,7 +682,8 @@ object AfricaCatalog {
             languages = listOf("Hausa"),
             currency = "West African CFA Franc (CFA)",
             landmarks = listOf("Agadez Mosque", "W National Park", "Aïr Mountains"),
-            funFact = "The minaret of the Agadez Mosque, about 27 meters tall and first built in 1515, is described as the tallest mud-brick structure in the world."
+            funFact = "The minaret of the Agadez Mosque, about 27 meters tall and first built in 1515, is described as the tallest mud-brick structure in the world.",
+            spotIt = "Orange, white and green horizontal bands with an orange disc in the centre."
         ),
         Country(
             code = "NG",
@@ -663,7 +700,8 @@ object AfricaCatalog {
             languages = listOf("English", "Hausa", "Yoruba", "Igbo"),
             currency = "Nigerian Naira (₦)",
             landmarks = listOf("Zuma Rock", "Lekki Conservation Centre", "Osun-Osogbo Sacred Grove"),
-            funFact = "Nigeria's Nollywood film industry took off in the 1990s with low-budget home videos and ranks among the world's most prolific by number of films."
+            funFact = "Nigeria's Nollywood film industry took off in the 1990s with low-budget home videos and ranks among the world's most prolific by number of films.",
+            spotIt = "Green, white and green vertical bands with no emblem."
         ),
         Country(
             code = "CG",
@@ -680,7 +718,8 @@ object AfricaCatalog {
             languages = listOf("French", "Lingala", "Kituba"),
             currency = "Central African CFA Franc (FCFA)",
             landmarks = listOf("Basilique Sainte-Anne (Brazzaville)", "Odzala-Kokoua National Park", "Nouabalé-Ndoki National Park"),
-            funFact = "Brazzaville faces Kinshasa across the Congo River; nowhere else in the world do two national capitals sit within sight of each other on opposite banks."
+            funFact = "Brazzaville faces Kinshasa across the Congo River; nowhere else in the world do two national capitals sit within sight of each other on opposite banks.",
+            spotIt = "Green, yellow and red in diagonal bands, green at the pole and red at the fly."
         ),
         Country(
             code = "RW",
@@ -697,7 +736,8 @@ object AfricaCatalog {
             languages = listOf("Kinyarwanda", "English", "French", "Swahili"),
             currency = "Rwandan Franc (RWF)",
             landmarks = listOf("Volcanoes National Park", "Lake Kivu", "Kigali Genocide Memorial"),
-            funFact = "Rwanda is called the land of a thousand hills, and its Volcanoes National Park is one of the few places on Earth where wild mountain gorillas live."
+            funFact = "Rwanda is called the land of a thousand hills, and its Volcanoes National Park is one of the few places on Earth where wild mountain gorillas live.",
+            spotIt = "Light blue top half over yellow and green bands, with a yellow sun at the fly."
         ),
         Country(
             code = "ST",
@@ -714,7 +754,8 @@ object AfricaCatalog {
             languages = listOf("Portuguese"),
             currency = "São Tomé and Príncipe Dobra (Db)",
             landmarks = listOf("Pico Cão Grande", "Obô Natural Park (São Tomé)", "Ilhéu das Rolas"),
-            funFact = "Both main islands are volcanic, and the equator crosses Ilhéu das Rolas, a tiny islet just off the island of São Tomé."
+            funFact = "Both main islands are volcanic, and the equator crosses Ilhéu das Rolas, a tiny islet just off the island of São Tomé.",
+            spotIt = "Green, yellow and green bands, two black stars on the yellow, red triangle at the pole."
         ),
         Country(
             code = "SN",
@@ -731,7 +772,8 @@ object AfricaCatalog {
             languages = listOf("French"),
             currency = "West African CFA Franc (CFA)",
             landmarks = listOf("Gorée Island (Dakar)", "Lake Retba", "African Renaissance Monument (Dakar)"),
-            funFact = "Pointe des Almadies, on the Cap-Vert peninsula in Dakar, is the westernmost point of mainland Africa."
+            funFact = "Pointe des Almadies, on the Cap-Vert peninsula in Dakar, is the westernmost point of mainland Africa.",
+            spotIt = "Green, gold and red vertical bands with a green star in the middle."
         ),
         Country(
             code = "SC",
@@ -749,6 +791,7 @@ object AfricaCatalog {
             currency = "Seychellois Rupee (SCR)",
             landmarks = listOf("Vallée de Mai (Praslin)", "Anse Source d'Argent (La Digue)", "Aldabra Atoll"),
             funFact = "The coco de mer palm, which grows wild only on the Seychelles islands of Praslin and Curieuse, produces the largest seed in the plant kingdom, up to 25 kg.",
+            spotIt = "Five rays of blue, yellow, red, white and green fanning out from the bottom corner.",
             driveSide = "Left"
         ),
         Country(
@@ -766,7 +809,8 @@ object AfricaCatalog {
             languages = listOf("English"),
             currency = "Sierra Leonean Leone (Le)",
             landmarks = listOf("Tacugama Chimpanzee Sanctuary (Freetown)", "Bunce Island", "Tiwai Island"),
-            funFact = "Freetown was founded in 1792 as a home for formerly enslaved people from Nova Scotia and sits on the largest natural harbor in Africa."
+            funFact = "Freetown was founded in 1792 as a home for formerly enslaved people from Nova Scotia and sits on the largest natural harbor in Africa.",
+            spotIt = "Green, white and blue horizontal bands with no emblem, green at the top."
         ),
         Country(
             code = "SO",
@@ -783,7 +827,8 @@ object AfricaCatalog {
             languages = listOf("Somali", "Arabic"),
             currency = "Somali Shilling (SOS)",
             landmarks = listOf("Laas Geel (Hargeisa)", "Lido Beach (Mogadishu)", "Mosque of Islamic Solidarity (Mogadishu)"),
-            funFact = "Somalia has the longest coastline of any country on mainland Africa, stretching more than 3,000 km along the Gulf of Aden and the Indian Ocean."
+            funFact = "Somalia has the longest coastline of any country on mainland Africa, stretching more than 3,000 km along the Gulf of Aden and the Indian Ocean.",
+            spotIt = "Light blue with a single large white star in the centre."
         ),
         Country(
             code = "ZA",
@@ -801,6 +846,7 @@ object AfricaCatalog {
             currency = "South African Rand (R)",
             landmarks = listOf("Table Mountain", "Kruger National Park", "Robben Island"),
             funFact = "South Africa completely surrounds another country: the small mountain kingdom of Lesotho lies entirely inside its borders.",
+            spotIt = "A green Y shape lying on its side, black triangle at the pole, red above and blue below.",
             driveSide = "Left",
             quizCapital = "Pretoria"
         ),
@@ -819,7 +865,8 @@ object AfricaCatalog {
             languages = listOf("English"),
             currency = "South Sudanese Pound (SSP)",
             landmarks = listOf("Boma National Park", "Sudd Wetland", "Nimule National Park"),
-            funFact = "Millions of antelope move each year across South Sudan's plains to Ethiopia and back, one of the largest land animal migrations on Earth."
+            funFact = "Millions of antelope move each year across South Sudan's plains to Ethiopia and back, one of the largest land animal migrations on Earth.",
+            spotIt = "Black, red and green bands edged in white, a blue triangle with a yellow star at the pole."
         ),
         Country(
             code = "SD",
@@ -836,7 +883,8 @@ object AfricaCatalog {
             languages = listOf("Arabic", "English"),
             currency = "Sudanese Pound (SDG)",
             landmarks = listOf("Pyramids of Meroë", "Jebel Barkal", "Sanganeb Marine National Park"),
-            funFact = "Sudan has more pyramids than Egypt: the kings and queens of Kush built around 255 steep-sided pyramids at Meroë, Nuri and other sites along the Nile."
+            funFact = "Sudan has more pyramids than Egypt: the kings and queens of Kush built around 255 steep-sided pyramids at Meroë, Nuri and other sites along the Nile.",
+            spotIt = "Red, white and black horizontal bands with a green triangle at the pole."
         ),
         Country(
             code = "TZ",
@@ -854,6 +902,7 @@ object AfricaCatalog {
             currency = "Tanzanian Shilling (TSh)",
             landmarks = listOf("Mount Kilimanjaro", "Serengeti National Park", "Stone Town (Zanzibar)"),
             funFact = "Mount Kilimanjaro, Africa's highest mountain at 5,895 meters above sea level, stands in northern Tanzania.",
+            spotIt = "Green upper and blue lower triangles split by a black diagonal edged in yellow.",
             driveSide = "Left"
         ),
         Country(
@@ -871,7 +920,8 @@ object AfricaCatalog {
             languages = listOf("French"),
             currency = "West African CFA Franc (CFA)",
             landmarks = listOf("Koutammakou", "Mount Agou", "Lake Togo"),
-            funFact = "Togo is a narrow strip of land: about 579 km from north to south, but only 56 km of coastline and never more than 160 km wide."
+            funFact = "Togo is a narrow strip of land: about 579 km from north to south, but only 56 km of coastline and never more than 160 km wide.",
+            spotIt = "Five green and yellow stripes with a white star on a red canton."
         ),
         Country(
             code = "TN",
@@ -888,7 +938,8 @@ object AfricaCatalog {
             languages = listOf("Arabic"),
             currency = "Tunisian Dinar (TND)",
             landmarks = listOf("Amphitheatre of El Jem", "Ruins of Carthage", "Great Mosque of Kairouan"),
-            funFact = "Tunisia holds Cape Angela, the northernmost point of mainland Africa, and the ruins of ancient Carthage, Rome's great rival, lie beside its capital Tunis."
+            funFact = "Tunisia holds Cape Angela, the northernmost point of mainland Africa, and the ruins of ancient Carthage, Rome's great rival, lie beside its capital Tunis.",
+            spotIt = "Red with a white central disc holding a red crescent and star."
         ),
         Country(
             code = "UG",
@@ -906,6 +957,7 @@ object AfricaCatalog {
             currency = "Ugandan Shilling (USh)",
             landmarks = listOf("Murchison Falls National Park", "Bwindi Impenetrable National Park", "Source of the Nile (Jinja)"),
             funFact = "The White Nile begins its long journey to the Mediterranean at Jinja in Uganda, flowing out of Lake Victoria, the world's second-largest freshwater lake.",
+            spotIt = "Six black, yellow and red stripes with a crested crane on a white disc in the centre.",
             driveSide = "Left"
         ),
         Country(
@@ -924,6 +976,7 @@ object AfricaCatalog {
             currency = "Zambian Kwacha (K)",
             landmarks = listOf("Victoria Falls", "South Luangwa National Park", "Lake Kariba"),
             funFact = "Victoria Falls on the Zambezi River is known locally as Mosi-oa-Tunya, the smoke that thunders, for the spray that rises high above the gorge.",
+            spotIt = "Green with red, black and orange vertical stripes and an orange eagle at the lower fly.",
             driveSide = "Left"
         ),
         Country(
@@ -942,6 +995,7 @@ object AfricaCatalog {
             currency = "Zimbabwe Gold (ZiG), US Dollar (US\$)",
             landmarks = listOf("Great Zimbabwe", "Hwange National Park", "Matobo Hills"),
             funFact = "The country is named after Great Zimbabwe, a stone city begun in the 11th century; the name comes from Shona words meaning large houses of stone.",
+            spotIt = "Green, gold, red and black stripes, white triangle at the pole with a bird on a red star.",
             driveSide = "Left"
         )
     )

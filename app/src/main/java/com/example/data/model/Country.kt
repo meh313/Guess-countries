@@ -26,7 +26,12 @@ data class Country(
      * False for Antarctica: a continent with no government, capital, currency or official flag. It stays
      * browsable but is left out of quizzes and mastery totals.
      */
-    val isSovereign: Boolean = true
+    val isSovereign: Boolean = true,
+    /**
+     * How to recognise the flag at a glance, in one short sentence ("Three vertical bands, blue at the pole, then
+     * white and red."). Shown on the flashcard back, in the detail sheet and after a miss. Empty until written.
+     */
+    val spotIt: String = ""
 ) {
     /** "Africa · Southern Africa", or just "Antarctica" where the subregion repeats the continent. */
     val regionLabel: String

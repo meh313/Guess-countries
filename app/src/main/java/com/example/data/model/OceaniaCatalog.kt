@@ -22,6 +22,7 @@ object OceaniaCatalog {
             currency = "Australian Dollar (A$)",
             landmarks = listOf("Sydney Opera House", "Great Barrier Reef", "Uluru (Ayers Rock)"),
             funFact = "Most of Australia's mammals and over 80% of its reptiles, frogs and flowering plants are found nowhere else on Earth.",
+            spotIt = "Dark blue, the Union Jack, a big seven-pointed white star below it and five smaller stars.",
             driveSide = "Left"
         ),
         Country(
@@ -40,6 +41,7 @@ object OceaniaCatalog {
             currency = "Fijian Dollar (FJ$)",
             landmarks = listOf("Mamanuca Islands", "Sri Siva Subramaniya Temple", "Bouma National Heritage Park"),
             funFact = "Fiji consists of an archipelago of more than 330 islands, of which only about 110 are permanently inhabited.",
+            spotIt = "Light blue with the Union Jack in the canton and a shield with a red cross in the fly.",
             driveSide = "Left"
         ),
         Country(
@@ -58,6 +60,7 @@ object OceaniaCatalog {
             currency = "Australian Dollar (A\$)",
             landmarks = listOf("Phoenix Islands Protected Area", "Kiritimati Atoll", "Battle of Tarawa Sites (Betio)"),
             funFact = "Kiribati's islands lie in all four hemispheres: north and south of the Equator and both east and west of the 180th meridian.",
+            spotIt = "Red upper half with a gold bird over a rising gold sun, above blue and white wavy stripes.",
             driveSide = "Left"
         ),
         Country(
@@ -75,7 +78,8 @@ object OceaniaCatalog {
             languages = listOf("Marshallese", "English"),
             currency = "US Dollar (US\$)",
             landmarks = listOf("Bikini Atoll", "Kwajalein Atoll", "Laura Beach (Majuro)"),
-            funFact = "Marshallese stick charts of coconut-leaf ribs and shells show ocean swell patterns; navigators memorized them before a voyage and did not consult them at sea."
+            funFact = "Marshallese stick charts of coconut-leaf ribs and shells show ocean swell patterns; navigators memorized them before a voyage and did not consult them at sea.",
+            spotIt = "Blue with an orange and white ray widening to the fly and a spiky white star at the pole."
         ),
         Country(
             code = "FM",
@@ -92,7 +96,8 @@ object OceaniaCatalog {
             languages = listOf("English"),
             currency = "US Dollar (US\$)",
             landmarks = listOf("Nan Madol (Pohnpei)", "Chuuk Lagoon", "Sokehs Rock (Pohnpei)"),
-            funFact = "Off Pohnpei lie the ruins of Nan Madol, a city of some 90 artificial islets built of basalt columns and linked by canals, nicknamed the Venice of the Pacific."
+            funFact = "Off Pohnpei lie the ruins of Nan Madol, a city of some 90 artificial islets built of basalt columns and linked by canals, nicknamed the Venice of the Pacific.",
+            spotIt = "Light blue with four small white stars set in a diamond, not one large star."
         ),
         Country(
             code = "NR",
@@ -110,6 +115,7 @@ object OceaniaCatalog {
             currency = "Australian Dollar (A\$)",
             landmarks = listOf("Buada Lagoon", "Anibare Bay", "Command Ridge"),
             funFact = "Nauru is the world's smallest island country and has no official capital; its central plateau was heavily mined for phosphate from ancient seabird droppings.",
+            spotIt = "Dark blue with a thin yellow stripe across it and a twelve-pointed white star just below.",
             driveSide = "Left",
             quizCapital = "Yaren"
         ),
@@ -129,6 +135,7 @@ object OceaniaCatalog {
             currency = "New Zealand Dollar (NZ$)",
             landmarks = listOf("Milford Sound", "Hobbiton Movie Set", "Aoraki / Mount Cook"),
             funFact = "In 1893, New Zealand became the first self-governing country to let all women vote in parliamentary elections.",
+            spotIt = "Dark blue with the Union Jack in the canton and four red, white-edged stars.",
             driveSide = "Left"
         ),
         Country(
@@ -146,7 +153,8 @@ object OceaniaCatalog {
             languages = listOf("Palauan", "English"),
             currency = "US Dollar (US\$)",
             landmarks = listOf("Rock Islands Southern Lagoon", "Jellyfish Lake (Eil Malk)", "Ngardmau Waterfall (Babeldaob)"),
-            funFact = "In 2009 Palau declared the world's first shark sanctuary, banning commercial shark fishing across about 600,000 square kilometers of its ocean."
+            funFact = "In 2009 Palau declared the world's first shark sanctuary, banning commercial shark fishing across about 600,000 square kilometers of its ocean.",
+            spotIt = "Light blue with a yellow disc set a little towards the pole."
         ),
         Country(
             code = "PG",
@@ -164,6 +172,7 @@ object OceaniaCatalog {
             currency = "Papua New Guinean Kina (K)",
             landmarks = listOf("Kokoda Track", "Mount Wilhelm", "Sepik River"),
             funFact = "Papua New Guinea has over 800 living languages, more than any other country, and shares the island of New Guinea with Indonesia.",
+            spotIt = "Diagonal split: red above with a gold bird of paradise, black below with five white stars.",
             driveSide = "Left"
         ),
         Country(
@@ -182,6 +191,7 @@ object OceaniaCatalog {
             currency = "Samoan Tālā (WS\$)",
             landmarks = listOf("To Sua Ocean Trench (Upolu)", "Robert Louis Stevenson Museum (Apia)", "Alofaaga Blowholes (Savaiʻi)"),
             funFact = "At the end of 2011 Samoa moved across the International Date Line, skipping Friday 30 December so it could share a working week with Australia and New Zealand.",
+            spotIt = "Red field with a blue canton holding five white stars; no cross anywhere.",
             driveSide = "Left"
         ),
         Country(
@@ -200,6 +210,7 @@ object OceaniaCatalog {
             currency = "Solomon Islands Dollar (SI\$)",
             landmarks = listOf("Marovo Lagoon", "East Rennell", "Guadalcanal American Memorial (Honiara)"),
             funFact = "In 1943 two Solomon Islanders, Biuku Gasa and Eroni Kumana, paddled a canoe to help rescue future US President John F. Kennedy after his boat sank.",
+            spotIt = "Blue over green, split by a thin yellow diagonal, with five white stars near the pole.",
             driveSide = "Left"
         ),
         Country(
@@ -218,6 +229,7 @@ object OceaniaCatalog {
             currency = "Tongan Paʻanga (T\$)",
             landmarks = listOf("Haʻamonga ʻa Maui Trilithon (Tongatapu)", "Mapuʻa ʻa Vaea Blowholes (Tongatapu)", "Royal Palace (Nukuʻalofa)"),
             funFact = "Tonga's written constitution dates from 1875, and although the kingdom was under British protection from 1900 to 1970 it was never a colony.",
+            spotIt = "Red field with a white canton bearing a plain red cross; no stars anywhere.",
             driveSide = "Left"
         ),
         Country(
@@ -236,6 +248,7 @@ object OceaniaCatalog {
             currency = "Australian Dollar (A\$)",
             landmarks = listOf("Funafuti Conservation Area (Funafuti)", "Funafuti Lagoon", "Fongafale (Funafuti)"),
             funFact = "Tuvalu's highest point is only about 4.6 meters above sea level, on the island of Niulakita, making it one of the lowest-lying countries on Earth.",
+            spotIt = "Light blue with the Union Jack in the canton and nine yellow stars scattered in the fly.",
             driveSide = "Left"
         ),
         Country(
@@ -253,7 +266,8 @@ object OceaniaCatalog {
             languages = listOf("Bislama", "English", "French"),
             currency = "Vanuatu Vatu (VT)",
             landmarks = listOf("Mount Yasur (Tanna)", "Champagne Beach (Espiritu Santo)", "Chief Roi Mata's Domain (Efate)"),
-            funFact = "On Pentecost Island men leap from wooden towers 20 to 30 meters high with vines tied to their ankles, a ritual called land diving."
+            funFact = "On Pentecost Island men leap from wooden towers 20 to 30 meters high with vines tied to their ankles, a ritual called land diving.",
+            spotIt = "Red over green, a black triangle at the pole and a yellow Y edged in black between them."
         )
     )
 }
