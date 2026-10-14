@@ -858,7 +858,6 @@ private fun FlipCard(
     modifier: Modifier = Modifier
 ) {
     val continentColor = getContinentColor(country.continent)
-    val compactNumbers = rememberCompactNumberFormat()
     // Read lazily: the animation only invalidates the graphics layer, and this flips once at 90 degrees.
     val showBack by remember(rotation) { derivedStateOf { rotation.value > 90f } }
     val flipLabel = if (isFlipped) stringResource(R.string.flashcards_show_flag_again) else stringResource(R.string.flashcards_reveal)
@@ -954,113 +953,152 @@ private fun FlipCard(
                 }
             } else {
                 // BACK OF CARD: Details & Facts
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .graphicsLayer { rotationY = 180f } // Fix mirror effect
-                        .padding(20.dp)
-                        .verticalScroll(rememberScrollState()),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = country.flagEmoji,
-                            fontSize = 36.sp
-                        )
+                FlashcardBack(
+                    country = country,
+                    speechState = speechState,
+                    speechAvailable = speechAvailable,
+                    onInstallVoiceData = onInstallVoiceData,
+                    onSpeak = onSpeak,
+                    modifier = Modifier.graphicsLayer { rotationY = 180f } // Fix mirror effect
+                )
+            }
+        }
+    }
+}
 
-                        if (speechState == Speech.State.MISSING_DATA) {
-                            TextButton(onClick = onInstallVoiceData, modifier = Modifier.testTag("flashcard_install_voice_btn")) {
-                                Text(stringResource(R.string.settings_speech_install))
-                            }
-                        } else {
-                            SpeakButton(
-                                speechState = speechState,
-                                speechAvailable = speechAvailable,
-                                onSpeak = onSpeak,
-                                modifier = Modifier.testTag("flashcard_speak_btn")
-                            )
-                        }
-                    }
+/**
+ * The back of a flashcard: the name, the capital and population, how to spot the flag and what it means, then the
+ * trivia. Its own composable so the back can be shown without the deck around it.
+ */
+@Composable
+internal fun FlashcardBack(
+    country: Country,
+    speechState: Speech.State,
+    speechAvailable: Boolean,
+    onInstallVoiceData: () -> Unit,
+    onSpeak: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val compactNumbers = rememberCompactNumberFormat()
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(20.dp)
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = country.flagEmoji,
+                fontSize = 36.sp
+            )
 
-                    Text(
-                        text = country.name,
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Text(
-                        text = country.officialName,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                        textAlign = TextAlign.Center
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Details Summary Grid
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        CardDetailPill(
-                            icon = Icons.Default.LocationCity,
-                            title = stringResource(R.string.skill_capital),
-                            detail = country.capital,
-                            modifier = Modifier.weight(1f)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        CardDetailPill(
-                            icon = Icons.Default.People,
-                            title = stringResource(R.string.flashcards_population),
-                            detail = formatPopulation(compactNumbers, country),
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Text(
-                                text = stringResource(R.string.flashcards_flag_meaning),
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            Text(
-                                text = country.flagDescription,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f)),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Text(
-                                text = stringResource(R.string.flashcards_trivia),
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer
-                            )
-                            Text(
-                                text = country.funFact,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer
-                            )
-                        }
-                    }
+            if (speechState == Speech.State.MISSING_DATA) {
+                TextButton(onClick = onInstallVoiceData, modifier = Modifier.testTag("flashcard_install_voice_btn")) {
+                    Text(stringResource(R.string.settings_speech_install))
                 }
+            } else {
+                SpeakButton(
+                    speechState = speechState,
+                    speechAvailable = speechAvailable,
+                    onSpeak = onSpeak,
+                    modifier = Modifier.testTag("flashcard_speak_btn")
+                )
+            }
+        }
+
+        Text(
+            text = country.name,
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
+        )
+
+        Text(
+            text = country.officialName,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Details Summary Grid
+        Row(modifier = Modifier.fillMaxWidth()) {
+            CardDetailPill(
+                icon = Icons.Default.LocationCity,
+                title = stringResource(R.string.skill_capital),
+                detail = country.capital,
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            CardDetailPill(
+                icon = Icons.Default.People,
+                title = stringResource(R.string.flashcards_population),
+                detail = formatPopulation(compactNumbers, country),
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Card(
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Column(modifier = Modifier.padding(12.dp)) {
+                // What to look for comes before what it means: the cue is the line that wins the next quiz.
+                if (country.spotIt.isNotBlank()) {
+                    Text(
+                        text = stringResource(R.string.spot_it_label),
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = country.spotIt,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.testTag("flashcard_spot_it")
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+                Text(
+                    text = stringResource(R.string.flashcards_flag_meaning),
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = country.flagDescription,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Card(
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f)),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Column(modifier = Modifier.padding(12.dp)) {
+                Text(
+                    text = stringResource(R.string.flashcards_trivia),
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+                Text(
+                    text = country.funFact,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
             }
         }
     }

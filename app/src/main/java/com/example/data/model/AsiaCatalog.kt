@@ -21,7 +21,8 @@ object AsiaCatalog {
             languages = listOf("Pashto", "Dari"),
             currency = "Afghan Afghani (AFN)",
             landmarks = listOf("Band-e Amir National Park", "Minaret of Jam", "Blue Mosque (Mazar-i-Sharif)"),
-            funFact = "Band-e Amir, Afghanistan's first national park, is a chain of six deep blue lakes held back by natural dams of travertine rock formed from mineral-rich water."
+            funFact = "Band-e Amir, Afghanistan's first national park, is a chain of six deep blue lakes held back by natural dams of travertine rock formed from mineral-rich water.",
+            spotIt = "Black, red and green vertical bands with a white mosque emblem on the red."
         ),
         Country(
             code = "AM",
@@ -38,7 +39,8 @@ object AsiaCatalog {
             languages = listOf("Armenian"),
             currency = "Armenian Dram (֏)",
             landmarks = listOf("Geghard Monastery", "Lake Sevan", "Khor Virap Monastery"),
-            funFact = "Armenia is traditionally held to be the first country to adopt Christianity as its state religion, in the year 301."
+            funFact = "Armenia is traditionally held to be the first country to adopt Christianity as its state religion, in the year 301.",
+            spotIt = "Three horizontal bands: red on top, then blue, then orange at the bottom."
         ),
         Country(
             code = "AZ",
@@ -55,7 +57,8 @@ object AsiaCatalog {
             languages = listOf("Azerbaijani"),
             currency = "Azerbaijani Manat (₼)",
             landmarks = listOf("Maiden Tower (Baku)", "Flame Towers (Baku)", "Gobustan Rock Art"),
-            funFact = "Azerbaijan is nicknamed the Land of Fire: at Yanar Dag near Baku, natural gas seeping from a hillside feeds flames that never go out."
+            funFact = "Azerbaijan is nicknamed the Land of Fire: at Yanar Dag near Baku, natural gas seeping from a hillside feeds flames that never go out.",
+            spotIt = "Light blue over red over green, with a white crescent and eight-point star."
         ),
         Country(
             code = "BH",
@@ -72,7 +75,8 @@ object AsiaCatalog {
             languages = listOf("Arabic"),
             currency = "Bahraini Dinar (BHD)",
             landmarks = listOf("Bahrain Fort", "Tree of Life", "Al Fateh Grand Mosque (Manama)"),
-            funFact = "Bahrain is an island country in the Persian Gulf, joined to Saudi Arabia by the 25-kilometer King Fahd Causeway."
+            funFact = "Bahrain is an island country in the Persian Gulf, joined to Saudi Arabia by the 25-kilometer King Fahd Causeway.",
+            spotIt = "White band at the pole joined to red by five serrated points; Qatar has nine."
         ),
         Country(
             code = "BD",
@@ -90,6 +94,7 @@ object AsiaCatalog {
             currency = "Bangladeshi Taka (৳)",
             landmarks = listOf("Sundarbans", "Cox's Bazar Beach", "Sixty Dome Mosque (Bagerhat)"),
             funFact = "Bangladesh lies on the world's largest river delta, built by the Ganges, Brahmaputra and Meghna, and holds most of the Sundarbans, the largest mangrove forest.",
+            spotIt = "Green field with a red disc set slightly towards the pole.",
             driveSide = "Left"
         ),
         Country(
@@ -108,6 +113,7 @@ object AsiaCatalog {
             currency = "Bhutanese Ngultrum (Nu.)",
             landmarks = listOf("Tiger's Nest Monastery (Paro)", "Punakha Dzong", "Buddha Dordenma (Thimphu)"),
             funFact = "Bhutan's constitution says at least 60% of the land must stay under forest for all time, and the country is guided by Gross National Happiness.",
+            spotIt = "Split diagonally, yellow above and orange below, with a white dragon across the join.",
             driveSide = "Left"
         ),
         Country(
@@ -126,6 +132,7 @@ object AsiaCatalog {
             currency = "Brunei Dollar (B\$)",
             landmarks = listOf("Sultan Omar Ali Saifuddien Mosque (Bandar Seri Begawan)", "Kampong Ayer (Bandar Seri Begawan)", "Ulu Temburong National Park"),
             funFact = "Brunei is the only sovereign country lying entirely on the island of Borneo, and the Malaysian district of Limbang splits it into two separate parts.",
+            spotIt = "Yellow with a white and a black diagonal stripe and a red crest in the centre.",
             driveSide = "Left"
         ),
         Country(
@@ -143,7 +150,8 @@ object AsiaCatalog {
             languages = listOf("Khmer"),
             currency = "Cambodian Riel (៛)",
             landmarks = listOf("Angkor Wat (Siem Reap)", "Royal Palace (Phnom Penh)", "Bayon Temple (Angkor Thom)"),
-            funFact = "Each rainy season the Tonlé Sap river reverses its flow, and the Mekong's floodwater swells Tonlé Sap lake to several times its dry-season size."
+            funFact = "Each rainy season the Tonlé Sap river reverses its flow, and the Mekong's floodwater swells Tonlé Sap lake to several times its dry-season size.",
+            spotIt = "Blue, red, blue horizontal bands with a white temple drawn on the wide red band."
         ),
         Country(
             code = "CN",
@@ -160,7 +168,8 @@ object AsiaCatalog {
             languages = listOf("Mandarin Chinese"),
             currency = "Chinese Yuan (¥)",
             landmarks = listOf("Great Wall of China", "Forbidden City", "Terracotta Army"),
-            funFact = "The Great Wall is not one wall but many, built by different dynasties from the 7th century BC; the Ming-era defenses alone stretch about 8,850 km."
+            funFact = "The Great Wall is not one wall but many, built by different dynasties from the 7th century BC; the Ming-era defenses alone stretch about 8,850 km.",
+            spotIt = "Red with one large yellow star and four small ones arcing beside it in the canton."
         ),
         Country(
             code = "CY",
@@ -178,6 +187,7 @@ object AsiaCatalog {
             currency = "Euro (€)",
             landmarks = listOf("Tombs of the Kings (Paphos)", "Kourion", "Aphrodite's Rock"),
             funFact = "The island was so rich in copper in ancient times that the Latin word for the metal, cuprum, comes from its name.",
+            spotIt = "White with a copper-coloured island map above two green olive branches.",
             driveSide = "Left"
         ),
         Country(
@@ -195,7 +205,8 @@ object AsiaCatalog {
             languages = listOf("Georgian"),
             currency = "Georgian Lari (₾)",
             landmarks = listOf("Gergeti Trinity Church", "Narikala Fortress (Tbilisi)", "Vardzia"),
-            funFact = "Georgians have made wine for about 8,000 years, fermenting it in large clay jars called qvevri buried in the ground, a method listed by UNESCO."
+            funFact = "Georgians have made wine for about 8,000 years, fermenting it in large clay jars called qvevri buried in the ground, a method listed by UNESCO.",
+            spotIt = "White with a red cross reaching the edges and a small red cross in each quarter."
         ),
         Country(
             code = "IN",
@@ -213,6 +224,7 @@ object AsiaCatalog {
             currency = "Indian Rupee (₹)",
             landmarks = listOf("Taj Mahal", "Varanasi Ghats", "Amer Fort"),
             funFact = "Hinduism, Buddhism, Jainism and Sikhism all began in the Indian subcontinent, and India has the world's largest population.",
+            spotIt = "Saffron over white over green, with a navy 24-spoke wheel in the centre.",
             driveSide = "Left"
         ),
         Country(
@@ -231,6 +243,7 @@ object AsiaCatalog {
             currency = "Indonesian Rupiah (Rp)",
             landmarks = listOf("Borobudur (Java)", "Komodo National Park", "Mount Bromo (Java)"),
             funFact = "The Komodo dragon, the largest living lizard, lives in the wild only on a few Indonesian islands such as Komodo, Rinca and Flores.",
+            spotIt = "Red over white; wider than Monaco's near-square flag.",
             driveSide = "Left"
         ),
         Country(
@@ -248,7 +261,8 @@ object AsiaCatalog {
             languages = listOf("Persian"),
             currency = "Iranian Rial (IRR)",
             landmarks = listOf("Persepolis", "Naqsh-e Jahan Square (Isfahan)", "Mount Damavand"),
-            funFact = "Iran was called Persia by outsiders until 1935; the ruins of Persepolis, a royal city begun around 518 BC, still stand near Shiraz."
+            funFact = "Iran was called Persia by outsiders until 1935; the ruins of Persepolis, a royal city begun around 518 BC, still stand near Shiraz.",
+            spotIt = "Green, white and red bands with a red tulip emblem and script along the band edges."
         ),
         Country(
             code = "IQ",
@@ -265,7 +279,8 @@ object AsiaCatalog {
             languages = listOf("Arabic", "Kurdish"),
             currency = "Iraqi Dinar (IQD)",
             landmarks = listOf("Ziggurat of Ur", "Great Mosque of Samarra", "Erbil Citadel"),
-            funFact = "Iraq covers ancient Mesopotamia, the land between the Tigris and Euphrates rivers, where the Sumerians developed one of the first writing systems."
+            funFact = "Iraq covers ancient Mesopotamia, the land between the Tigris and Euphrates rivers, where the Sumerians developed one of the first writing systems.",
+            spotIt = "Red, white and black bands with green Arabic script and no emblem on the white."
         ),
         Country(
             code = "JP",
@@ -283,6 +298,7 @@ object AsiaCatalog {
             currency = "Japanese Yen (¥)",
             landmarks = listOf("Mount Fuji", "Fushimi Inari Shrine", "Tokyo Tower"),
             funFact = "Japan is an archipelago of thousands of islands, and mountains cover most of its land, so most people live on narrow coastal plains.",
+            spotIt = "White with one red disc in the centre.",
             driveSide = "Left"
         ),
         Country(
@@ -300,7 +316,8 @@ object AsiaCatalog {
             languages = listOf("Arabic"),
             currency = "Jordanian Dinar (JOD)",
             landmarks = listOf("Petra", "Wadi Rum", "Jerash"),
-            funFact = "Petra, carved into rose-colored sandstone by the Nabataeans over 2,000 years ago, stayed unknown to Europeans until a Swiss traveler reached it in 1812."
+            funFact = "Petra, carved into rose-colored sandstone by the Nabataeans over 2,000 years ago, stayed unknown to Europeans until a Swiss traveler reached it in 1812.",
+            spotIt = "Black, white and green bands with a red hoist triangle bearing a small white star."
         ),
         Country(
             code = "KZ",
@@ -317,7 +334,8 @@ object AsiaCatalog {
             languages = listOf("Kazakh", "Russian"),
             currency = "Kazakhstani Tenge (₸)",
             landmarks = listOf("Baikonur Cosmodrome", "Mausoleum of Khoja Ahmed Yasawi (Turkestan)", "Charyn Canyon"),
-            funFact = "Baikonur Cosmodrome in Kazakhstan launched both Sputnik 1 in 1957 and Yuri Gagarin, the first human in space, in 1961."
+            funFact = "Baikonur Cosmodrome in Kazakhstan launched both Sputnik 1 in 1957 and Yuri Gagarin, the first human in space, in 1961.",
+            spotIt = "Light blue with a gold sun above a soaring eagle and a gold ornament strip at the pole."
         ),
         Country(
             code = "KW",
@@ -334,7 +352,8 @@ object AsiaCatalog {
             languages = listOf("Arabic"),
             currency = "Kuwaiti Dinar (KWD)",
             landmarks = listOf("Kuwait Towers", "Grand Mosque (Kuwait City)", "Failaka Island"),
-            funFact = "Oil was first found at Kuwait's Burgan field in 1938; it is one of the largest oil fields on Earth and the basis of the country's wealth."
+            funFact = "Oil was first found at Kuwait's Burgan field in 1938; it is one of the largest oil fields on Earth and the basis of the country's wealth.",
+            spotIt = "Green, white and red bands with a black trapezium at the pole."
         ),
         Country(
             code = "KG",
@@ -351,7 +370,8 @@ object AsiaCatalog {
             languages = listOf("Kyrgyz", "Russian"),
             currency = "Kyrgyzstani Som (KGS)",
             landmarks = listOf("Issyk-Kul", "Burana Tower", "Tash Rabat"),
-            funFact = "Lake Issyk-Kul sits 1,607 meters up in the mountains yet almost never freezes, because its water is slightly salty; its name means hot lake in Kyrgyz."
+            funFact = "Lake Issyk-Kul sits 1,607 meters up in the mountains yet almost never freezes, because its water is slightly salty; its name means hot lake in Kyrgyz.",
+            spotIt = "Red with a gold sun whose centre holds a crossed yurt-crown pattern."
         ),
         Country(
             code = "LA",
@@ -368,7 +388,8 @@ object AsiaCatalog {
             languages = listOf("Lao"),
             currency = "Lao Kip (₭)",
             landmarks = listOf("Pha That Luang (Vientiane)", "Luang Prabang", "Plain of Jars"),
-            funFact = "Laos is the only landlocked country in Southeast Asia; the Mekong River forms much of its western border with Thailand."
+            funFact = "Laos is the only landlocked country in Southeast Asia; the Mekong River forms much of its western border with Thailand.",
+            spotIt = "Red, blue, red bands with a white disc on the wide blue middle band."
         ),
         Country(
             code = "LB",
@@ -385,7 +406,8 @@ object AsiaCatalog {
             languages = listOf("Arabic"),
             currency = "Lebanese Pound (LBP)",
             landmarks = listOf("Baalbek", "Jeita Grotto", "Byblos"),
-            funFact = "The Phoenicians of Byblos, Tyre and Sidon on Lebanon's coast spread an alphabet around 1000 BC that became the ancestor of the Greek and Latin letters."
+            funFact = "The Phoenicians of Byblos, Tyre and Sidon on Lebanon's coast spread an alphabet around 1000 BC that became the ancestor of the Greek and Latin letters.",
+            spotIt = "Red bands top and bottom around a wide white band with a green cedar tree."
         ),
         Country(
             code = "MY",
@@ -403,6 +425,7 @@ object AsiaCatalog {
             currency = "Malaysian Ringgit (RM)",
             landmarks = listOf("Petronas Twin Towers (Kuala Lumpur)", "Batu Caves", "Mount Kinabalu"),
             funFact = "Malaysia is split in two by the South China Sea: Peninsular Malaysia on the Asian mainland and the states of Sabah and Sarawak on the island of Borneo.",
+            spotIt = "Fourteen red and white stripes with a blue canton holding a yellow crescent and star.",
             driveSide = "Left",
             quizCapital = "Kuala Lumpur"
         ),
@@ -422,6 +445,7 @@ object AsiaCatalog {
             currency = "Maldivian Rufiyaa (MVR)",
             landmarks = listOf("Malé Friday Mosque", "Baa Atoll Biosphere Reserve", "Addu Atoll"),
             funFact = "The Maldives is the world's lowest-lying country: its roughly 1,200 coral islands average only about 1.5 meters above sea level.",
+            spotIt = "Red border around a green rectangle with a white crescent opening to the fly.",
             driveSide = "Left"
         ),
         Country(
@@ -439,7 +463,8 @@ object AsiaCatalog {
             languages = listOf("Mongolian"),
             currency = "Mongolian Tögrög (₮)",
             landmarks = listOf("Gobi Desert", "Genghis Khan Equestrian Statue (Tsonjin Boldog)", "Erdene Zuu Monastery (Kharkhorin)"),
-            funFact = "Mongolia is the world's most sparsely populated country, and many families still live as nomadic herders in round felt tents called gers."
+            funFact = "Mongolia is the world's most sparsely populated country, and many families still live as nomadic herders in round felt tents called gers.",
+            spotIt = "Red, blue, red vertical bands with a gold soyombo emblem on the pole band."
         ),
         Country(
             code = "MM",
@@ -456,7 +481,8 @@ object AsiaCatalog {
             languages = listOf("Burmese"),
             currency = "Myanmar Kyat (K)",
             landmarks = listOf("Shwedagon Pagoda (Yangon)", "Bagan", "Inle Lake"),
-            funFact = "The ancient city of Bagan holds the remains of more than 2,000 Buddhist temples and pagodas built mainly between the 11th and 13th centuries."
+            funFact = "The ancient city of Bagan holds the remains of more than 2,000 Buddhist temples and pagodas built mainly between the 11th and 13th centuries.",
+            spotIt = "Yellow, green and red bands with a large white star in the centre."
         ),
         Country(
             code = "NP",
@@ -474,6 +500,7 @@ object AsiaCatalog {
             currency = "Nepalese Rupee (NPR)",
             landmarks = listOf("Mount Everest", "Boudhanath Stupa (Kathmandu)", "Lumbini"),
             funFact = "Nepal contains eight of the world's ten highest mountains, including Mount Everest, and was never colonized by a European power.",
+            spotIt = "Two stacked crimson triangles edged in blue, with a white moon and sun.",
             driveSide = "Left"
         ),
         Country(
@@ -491,7 +518,8 @@ object AsiaCatalog {
             languages = listOf("Korean"),
             currency = "North Korean Won (₩)",
             landmarks = listOf("Juche Tower (Pyongyang)", "Arch of Triumph (Pyongyang)", "Mount Paektu"),
-            funFact = "Mount Paektu, a volcano on the border with China, is the highest peak of the Korean Peninsula and holds a deep crater lake called Heaven Lake."
+            funFact = "Mount Paektu, a volcano on the border with China, is the highest peak of the Korean Peninsula and holds a deep crater lake called Heaven Lake.",
+            spotIt = "Blue bands at the edges, thin white stripes, and a red star in a white disc on red."
         ),
         Country(
             code = "OM",
@@ -508,7 +536,8 @@ object AsiaCatalog {
             languages = listOf("Arabic"),
             currency = "Omani Rial (OMR)",
             landmarks = listOf("Sultan Qaboos Grand Mosque (Muscat)", "Nizwa Fort", "Wahiba Sands"),
-            funFact = "In 1840 Sultan Said bin Sultan moved Oman's capital from Muscat to Zanzibar, off East Africa; after his death in 1856 his empire was split in two."
+            funFact = "In 1840 Sultan Said bin Sultan moved Oman's capital from Muscat to Zanzibar, off East Africa; after his death in 1856 his empire was split in two.",
+            spotIt = "Red band at the pole with a white crest; white over red over green to the fly."
         ),
         Country(
             code = "PK",
@@ -526,6 +555,7 @@ object AsiaCatalog {
             currency = "Pakistani Rupee (₨)",
             landmarks = listOf("Badshahi Mosque (Lahore)", "Mohenjo-daro", "Faisal Mosque (Islamabad)"),
             funFact = "Mohenjo-daro in Sindh, built around 2500 BC by the Indus Valley Civilization, had grid streets, covered drains and more than 700 wells.",
+            spotIt = "Green with a white stripe at the pole and a white crescent and star.",
             driveSide = "Left"
         ),
         Country(
@@ -544,6 +574,7 @@ object AsiaCatalog {
             currency = "No currency of its own (shekel, Jordanian dinar and US dollar are used)",
             landmarks = listOf("Church of the Nativity (Bethlehem)", "Hisham's Palace (Jericho)", "Ibrahimi Mosque (Hebron)"),
             funFact = "Jericho, in the Jordan Valley about 258 meters below sea level, is among the oldest cities in the world, settled for around 11,000 years.",
+            spotIt = "Black, white and green bands with a plain red triangle at the pole; no star.",
             quizCapital = "Al Quds"
         ),
         Country(
@@ -561,7 +592,8 @@ object AsiaCatalog {
             languages = listOf("Filipino", "English"),
             currency = "Philippine Peso (₱)",
             landmarks = listOf("Banaue Rice Terraces", "Chocolate Hills (Bohol)", "Mayon Volcano"),
-            funFact = "The Philippines is an archipelago of more than 7,000 islands, grouped into three main regions: Luzon, the Visayas and Mindanao."
+            funFact = "The Philippines is an archipelago of more than 7,000 islands, grouped into three main regions: Luzon, the Visayas and Mindanao.",
+            spotIt = "White triangle at the pole with a gold sun and three stars; blue over red to the fly."
         ),
         Country(
             code = "QA",
@@ -578,7 +610,8 @@ object AsiaCatalog {
             languages = listOf("Arabic"),
             currency = "Qatari Riyal (QAR)",
             landmarks = listOf("Museum of Islamic Art (Doha)", "Souq Waqif (Doha)", "Al Zubarah Fort"),
-            funFact = "Qatar hosted the 2022 FIFA World Cup, the first held in the Middle East and the first played in November and December; Argentina beat France in the final."
+            funFact = "Qatar hosted the 2022 FIFA World Cup, the first held in the Middle East and the first played in November and December; Argentina beat France in the final.",
+            spotIt = "Maroon with a white band at the pole, the two joined by nine serrated points."
         ),
         Country(
             code = "SA",
@@ -595,7 +628,8 @@ object AsiaCatalog {
             languages = listOf("Arabic"),
             currency = "Saudi Riyal (SAR)",
             landmarks = listOf("Hegra (Al-Ula)", "Masmak Fortress", "Kingdom Centre Tower"),
-            funFact = "Saudi Arabia has no permanent natural rivers; its dry valleys, called wadis, fill with water only after heavy rain."
+            funFact = "Saudi Arabia has no permanent natural rivers; its dry valleys, called wadis, fill with water only after heavy rain.",
+            spotIt = "Green with a white Arabic inscription above a horizontal white sword."
         ),
         Country(
             code = "SG",
@@ -613,6 +647,7 @@ object AsiaCatalog {
             currency = "Singapore Dollar (S\$)",
             landmarks = listOf("Marina Bay Sands", "Gardens by the Bay", "Singapore Botanic Gardens"),
             funFact = "Singapore covered about 580 square kilometers in the 1960s and has since added well over 100 square kilometers by reclaiming land from the sea.",
+            spotIt = "Red over white, with a white crescent and five small stars in the canton.",
             driveSide = "Left"
         ),
         Country(
@@ -630,7 +665,8 @@ object AsiaCatalog {
             languages = listOf("Korean"),
             currency = "South Korean Won (₩)",
             landmarks = listOf("Gyeongbokgung Palace", "Jeju Island", "N Seoul Tower"),
-            funFact = "Korea's alphabet, Hangul, was created in the 1440s by King Sejong the Great to help ordinary people learn to read and write."
+            funFact = "Korea's alphabet, Hangul, was created in the 1440s by King Sejong the Great to help ordinary people learn to read and write.",
+            spotIt = "White with a red-and-blue yin-yang disc framed by four black trigrams."
         ),
         Country(
             code = "LK",
@@ -648,6 +684,7 @@ object AsiaCatalog {
             currency = "Sri Lankan Rupee (Rs)",
             landmarks = listOf("Sigiriya", "Temple of the Tooth (Kandy)", "Galle Fort"),
             funFact = "Sigiriya, a 5th-century royal palace and fortress, sits on top of a rock that rises about 180 meters above the plains of central Sri Lanka.",
+            spotIt = "Gold-bordered: green and orange stripes at the pole, a gold lion with sword on maroon.",
             driveSide = "Left",
             quizCapital = "Sri Jayawardenepura Kotte"
         ),
@@ -666,7 +703,8 @@ object AsiaCatalog {
             languages = listOf("Arabic"),
             currency = "Syrian Pound (SYP)",
             landmarks = listOf("Umayyad Mosque (Damascus)", "Palmyra", "Krak des Chevaliers"),
-            funFact = "Damascus has been settled since the 3rd millennium BC and is often called one of the oldest continuously inhabited cities in the world."
+            funFact = "Damascus has been settled since the 3rd millennium BC and is often called one of the oldest continuously inhabited cities in the world.",
+            spotIt = "Green, white and black bands with three red stars on the white."
         ),
         Country(
             code = "TW",
@@ -683,7 +721,8 @@ object AsiaCatalog {
             languages = listOf("Mandarin Chinese"),
             currency = "New Taiwan Dollar (NT\$)",
             landmarks = listOf("Taipei 101", "Taroko Gorge", "Sun Moon Lake"),
-            funFact = "Taiwan has its own government, elections and currency, but its status is disputed: China claims it, and most countries do not recognize it as a state."
+            funFact = "Taiwan has its own government, elections and currency, but its status is disputed: China claims it, and most countries do not recognize it as a state.",
+            spotIt = "Red with a blue canton holding a white sun with twelve rays."
         ),
         Country(
             code = "TJ",
@@ -700,7 +739,8 @@ object AsiaCatalog {
             languages = listOf("Tajik"),
             currency = "Tajikistani Somoni (TJS)",
             landmarks = listOf("Pamir Highway", "Iskanderkul", "Hisor Fortress"),
-            funFact = "Mountains cover over 90% of Tajikistan; Ismoil Somoni Peak in the Pamirs, at 7,495 meters, was the highest point in the former Soviet Union."
+            funFact = "Mountains cover over 90% of Tajikistan; Ismoil Somoni Peak in the Pamirs, at 7,495 meters, was the highest point in the former Soviet Union.",
+            spotIt = "Red, white and green bands with a gold crown under seven stars on the white."
         ),
         Country(
             code = "TH",
@@ -718,6 +758,7 @@ object AsiaCatalog {
             currency = "Thai Baht (฿)",
             landmarks = listOf("Grand Palace (Bangkok)", "Wat Arun", "Phi Phi Islands"),
             funFact = "Bangkok's full ceremonial name has 168 letters, which Guinness World Records lists as the longest place name; Thais shorten it to Krung Thep.",
+            spotIt = "Red, white, blue, white, red; the blue middle band is twice the width.",
             driveSide = "Left"
         ),
         Country(
@@ -736,6 +777,7 @@ object AsiaCatalog {
             currency = "US Dollar (US\$)",
             landmarks = listOf("Cristo Rei (Dili)", "Atauro Island", "Mount Ramelau"),
             funFact = "Timor-Leste became the first new sovereign state of the 21st century when its independence was restored on 20 May 2002.",
+            spotIt = "Red with a yellow arrowhead at the pole, a black triangle inside it and a white star.",
             driveSide = "Left"
         ),
         Country(
@@ -753,7 +795,8 @@ object AsiaCatalog {
             languages = listOf("Turkish"),
             currency = "Turkish Lira (₺)",
             landmarks = listOf("Hagia Sophia (Istanbul)", "Cappadocia", "Pamukkale"),
-            funFact = "Istanbul lies on two continents: the Bosphorus strait runs through the city, with one side in Europe and the other in Asia."
+            funFact = "Istanbul lies on two continents: the Bosphorus strait runs through the city, with one side in Europe and the other in Asia.",
+            spotIt = "Red with a white crescent and star towards the pole; the star sits clear of the crescent."
         ),
         Country(
             code = "TM",
@@ -770,7 +813,8 @@ object AsiaCatalog {
             languages = listOf("Turkmen"),
             currency = "Turkmenistani Manat (TMT)",
             landmarks = listOf("Darvaza Gas Crater", "Ancient Merv", "Kunya-Urgench"),
-            funFact = "Ashgabat, Turkmenistan's capital, entered Guinness World Records in 2013 for the world's highest density of white marble-clad buildings: 543 of them."
+            funFact = "Ashgabat, Turkmenistan's capital, entered Guinness World Records in 2013 for the world's highest density of white marble-clad buildings: 543 of them.",
+            spotIt = "Green with a red carpet-pattern stripe at the pole and a white crescent with five stars."
         ),
         Country(
             code = "AE",
@@ -787,7 +831,8 @@ object AsiaCatalog {
             languages = listOf("Arabic"),
             currency = "UAE Dirham (AED)",
             landmarks = listOf("Burj Khalifa (Dubai)", "Sheikh Zayed Grand Mosque (Abu Dhabi)", "Palm Jumeirah (Dubai)"),
-            funFact = "The UAE is a union of seven emirates: six joined on 2 December 1971 and Ras Al Khaimah followed in 1972, with Abu Dhabi as the capital."
+            funFact = "The UAE is a union of seven emirates: six joined on 2 December 1971 and Ras Al Khaimah followed in 1972, with Abu Dhabi as the capital.",
+            spotIt = "Red vertical band at the pole; green, white and black horizontal bands to the fly."
         ),
         Country(
             code = "UZ",
@@ -804,7 +849,8 @@ object AsiaCatalog {
             languages = listOf("Uzbek"),
             currency = "Uzbekistani Sum (UZS)",
             landmarks = listOf("Registan (Samarkand)", "Itchan Kala (Khiva)", "Kalyan Minaret (Bukhara)"),
-            funFact = "Uzbekistan is one of only two doubly landlocked countries on Earth, meaning all of its neighbors are landlocked too; the other is Liechtenstein."
+            funFact = "Uzbekistan is one of only two doubly landlocked countries on Earth, meaning all of its neighbors are landlocked too; the other is Liechtenstein.",
+            spotIt = "Blue, white and green bands split by thin red lines, with a crescent and twelve stars."
         ),
         Country(
             code = "VN",
@@ -821,7 +867,8 @@ object AsiaCatalog {
             languages = listOf("Vietnamese"),
             currency = "Vietnamese Đồng (₫)",
             landmarks = listOf("Ha Long Bay", "Hoi An Ancient Town", "Cu Chi Tunnels"),
-            funFact = "Vietnam is one of the world's top coffee producers, and egg coffee (cà phê trứng), made with whipped egg yolk, was invented in Hanoi in the 1940s."
+            funFact = "Vietnam is one of the world's top coffee producers, and egg coffee (cà phê trứng), made with whipped egg yolk, was invented in Hanoi in the 1940s.",
+            spotIt = "Red with a single large yellow five-point star in the centre."
         ),
         Country(
             code = "YE",
@@ -838,7 +885,8 @@ object AsiaCatalog {
             languages = listOf("Arabic"),
             currency = "Yemeni Rial (YER)",
             landmarks = listOf("Old City of Sanaa", "Shibam (Hadhramaut)", "Socotra Archipelago"),
-            funFact = "About a third of the plant species on Yemen's island of Socotra, including the umbrella-shaped dragon's blood tree, grow nowhere else on Earth."
+            funFact = "About a third of the plant species on Yemen's island of Socotra, including the umbrella-shaped dragon's blood tree, grow nowhere else on Earth.",
+            spotIt = "Plain red, white and black horizontal bands with no emblem at all."
         )
     )
 }

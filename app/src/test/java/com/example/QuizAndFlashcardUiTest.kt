@@ -62,6 +62,15 @@ import org.junit.rules.RuleChain
 import org.junit.Test
 import org.junit.runner.RunWith
 import com.example.ui.CountrySummary
+import androidx.activity.compose.setContent
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.test.onAllNodesWithTag
+import com.example.data.model.Country
+import com.example.data.model.TellApart
+import com.example.speech.Speech
+import com.example.ui.components.MissComparison
+import com.example.ui.screens.FlashcardBack
+import com.example.ui.theme.WorldFlagsTheme
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
@@ -514,10 +523,94 @@ class QuizAndFlashcardUiTest {
         rule.onNodeWithTag("quiz_option_$wrong").performScrollTo().performClick()
         rule.waitForIdle()
 
+        val expected = missDescription("You picked ${picked.name}, the answer is ${q.targetCountry.name}", picked, q.targetCountry)
         rule.onNodeWithTag("quiz_miss_comparison").performScrollTo()
-            .assert(SemanticsMatcher.expectValue(SemanticsProperties.ContentDescription, listOf("You picked ${picked.name}, the answer is ${q.targetCountry.name}")))
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.ContentDescription, listOf(expected)))
         rule.onNodeWithText("You picked", useUnmergedTree = true).assertExists()
         rule.onNodeWithText("Correct", useUnmergedTree = true).assertExists()
+    }
+
+    /** The line under a miss, as the screen builds it: the pair's tip, else the right flag's cue, else nothing. */
+    private fun tellApartLine(picked: Country, correct: Country): String? =
+        TellApart.tip(picked.code, correct.code) ?: correct.spotIt.takeIf { it.isNotBlank() }?.let { "Spot it: $it" }
+
+    /** What TalkBack reads for a miss comparison: the outcome, then the tell-apart line when there is one. */
+    private fun missDescription(outcome: String, picked: Country, correct: Country): String =
+        tellApartLine(picked, correct)?.let { "$outcome. $it" } ?: outcome
+
+    private val latvia = allCountries.single { it.code == "LV" }
+    private val austria = allCountries.single { it.code == "AT" }
+
+    private fun showMissComparison(picked: Country, correct: Country, tip: String?) {
+        rule.activityRule.scenario.onActivity { activity ->
+            activity.setContent { WorldFlagsTheme { MissComparison(picked = picked, correct = correct, tip = tip) } }
+        }
+        rule.waitForIdle()
+    }
+
+    @Test
+    fun missComparison_withoutATip_saysHowToSpotTheRightFlag() {
+        val correct = latvia.copy(spotIt = "Two maroon bands around a thin white one.")
+
+        showMissComparison(picked = austria.copy(spotIt = "Red, white, red, in equal bands."), correct = correct, tip = null)
+
+        rule.onNodeWithTag("miss_tell_apart", useUnmergedTree = true).assert(hasText("Spot it: Two maroon bands around a thin white one."))
+        rule.onNodeWithTag("quiz_miss_comparison").assert(
+            SemanticsMatcher.expectValue(
+                SemanticsProperties.ContentDescription,
+                listOf("You picked Austria, the answer is Latvia. Spot it: Two maroon bands around a thin white one.")
+            )
+        )
+    }
+
+    @Test
+    fun missComparison_withATip_showsTheTipInsteadOfTheCue() {
+        val correct = latvia.copy(spotIt = "Two maroon bands around a thin white one.")
+
+        showMissComparison(picked = austria, correct = correct, tip = "Latvia's red is a deep maroon and its white band is thin.")
+
+        rule.onNodeWithTag("miss_tell_apart", useUnmergedTree = true).assert(hasText("Latvia's red is a deep maroon and its white band is thin."))
+        rule.onAllNodesWithText("Spot it", substring = true, useUnmergedTree = true).assertCountEquals(0)
+        rule.onNodeWithTag("quiz_miss_comparison").assert(
+            SemanticsMatcher.expectValue(
+                SemanticsProperties.ContentDescription,
+                listOf("You picked Austria, the answer is Latvia. Latvia's red is a deep maroon and its white band is thin.")
+            )
+        )
+    }
+
+    @Test
+    fun missComparison_withNeitherATipNorACue_showsOnlyTheTwoFlags() {
+        showMissComparison(picked = austria, correct = latvia.copy(spotIt = ""), tip = null)
+
+        rule.onAllNodesWithTag("miss_tell_apart", useUnmergedTree = true).assertCountEquals(0)
+        rule.onNodeWithTag("quiz_miss_comparison").assert(
+            SemanticsMatcher.expectValue(SemanticsProperties.ContentDescription, listOf("You picked Austria, the answer is Latvia"))
+        )
+    }
+
+    @Test
+    fun flashcardBack_opensTheFlagCardWithHowToSpotIt_andSkipsItWhenThereIsNone() {
+        val shown = mutableStateOf(latvia.copy(spotIt = "Two maroon bands around a thin white one."))
+        rule.activityRule.scenario.onActivity { activity ->
+            activity.setContent {
+                WorldFlagsTheme {
+                    FlashcardBack(country = shown.value, speechState = Speech.State.IDLE, speechAvailable = false, onInstallVoiceData = {}, onSpeak = {})
+                }
+            }
+        }
+        rule.waitForIdle()
+
+        rule.onNodeWithTag("flashcard_spot_it").performScrollTo().assert(hasText("Two maroon bands around a thin white one."))
+        rule.onNodeWithText("Spot it").assertIsDisplayed()
+        // The cue sits above the flag meaning, in the same card.
+        assertTrue(rule.boundsOf("flashcard_spot_it").bottom <= rule.onNodeWithText("Flag meaning").fetchSemanticsNode().boundsInRoot.top)
+
+        rule.runOnUiThread { shown.value = latvia.copy(spotIt = "") }
+        rule.waitForIdle()
+        rule.onAllNodesWithTag("flashcard_spot_it").assertCountEquals(0)
+        rule.onAllNodesWithText("Spot it").assertCountEquals(0)
+        rule.onNodeWithText("Flag meaning").assertIsDisplayed()
     }
 
     @Test
@@ -541,7 +634,11 @@ class QuizAndFlashcardUiTest {
         rule.onNodeWithTag("quiz_option_$wrong").performScrollTo().performClick()
         rule.waitForIdle()
 
-        val expected = "You picked ${picked.quizCapital}, ${picked.name}, the answer is ${q.targetCountry.quizCapital}, ${q.targetCountry.name}"
+        val expected = missDescription(
+            "You picked ${picked.quizCapital}, ${picked.name}, the answer is ${q.targetCountry.quizCapital}, ${q.targetCountry.name}",
+            picked,
+            q.targetCountry
+        )
         rule.onNodeWithTag("quiz_miss_comparison").performScrollTo()
             .assert(SemanticsMatcher.expectValue(SemanticsProperties.ContentDescription, listOf(expected)))
     }
@@ -830,6 +927,22 @@ class QuizAndFlashcardUiTest {
         rule.onNodeWithTag("quiz_result").assert(hasText("Not quite. The answer is ${q.targetCountry.name}"))
         rule.onNodeWithTag("quiz_option_$wrong").assert(stateDescriptionIs("Your answer, incorrect"))
         rule.onNodeWithTag("quiz_option_${q.correctAnswerIndex}").assert(stateDescriptionIs("Correct answer"))
+        // Under the result, the line for next time: how the two flags differ, or how to spot the right one.
+        val picked = allCountries.single { it.code == q.options[wrong] }
+        val line = tellApartLine(picked, q.targetCountry)
+        if (line == null) rule.onAllNodesWithTag("quiz_tell_apart").assertCountEquals(0)
+        else rule.onNodeWithTag("quiz_tell_apart").performScrollTo().assert(hasText(line))
+    }
+
+    @Test
+    fun pickTheFlag_aRightAnswerShowsNoTellApartLine() {
+        startQuizIn(QuizMode.PICK_FLAG)
+        val q = viewModel.quizSession.value!!.current
+
+        rule.onNodeWithTag("quiz_option_${q.correctAnswerIndex}").performScrollTo().performClick()
+        rule.waitForIdle()
+
+        rule.onAllNodesWithTag("quiz_tell_apart").assertCountEquals(0)
     }
 
     @Test

@@ -22,6 +22,7 @@ import android.content.res.Resources
 import androidx.test.core.app.ApplicationProvider
 import com.example.speech.Speech
 import com.example.ui.CountrySummary
+import com.example.ui.continentLabel
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
@@ -89,6 +90,18 @@ class CountryViewModelSpeechTest {
     }
 
     @Test
+    fun spoken_saysHowToSpotTheFlag_betweenThePlaceAndTheFunFact_onlyWhenThereIsACue() {
+        val cue = "Three vertical bands: blue at the pole, then white, then red."
+        val place = "Capital is ${country.capital}, located in ${resources.continentLabel(country.continent)}."
+
+        val withCue = CountrySummary.spoken(resources, country.copy(spotIt = cue))
+        val withoutCue = CountrySummary.spoken(resources, country.copy(spotIt = ""))
+
+        assertEquals("${country.name}. $place $cue ${country.funFact}", withCue)
+        assertEquals("${country.name}. $place ${country.funFact}", withoutCue)
+    }
+
+    @Test
     fun speakCountryDetails_forAntarcticaDoesNotInventACapital() {
         speech.setAvailable(true)
         val antarctica = vm.repository.allCountries.single { it.code == "AQ" }
@@ -96,7 +109,8 @@ class CountryViewModelSpeechTest {
         vm.speakCountryDetails(antarctica, CountrySummary.spoken(resources, antarctica))
 
         val text = speech.spoken.single().first
-        assertEquals("Antarctica. ${antarctica.funFact}", text)
+        // No capital, no currency: the name, how to spot the flag, and the fact.
+        assertEquals("Antarctica. ${antarctica.spotIt} ${antarctica.funFact}", text)
         assertFalse(text, text.contains("Capital"))
     }
 

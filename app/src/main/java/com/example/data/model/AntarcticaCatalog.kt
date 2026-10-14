@@ -22,6 +22,7 @@ object AntarcticaCatalog {
             currency = "None (stations use their home countries' currencies)",
             landmarks = listOf("South Pole Station", "Blood Falls", "Mount Erebus"),
             funFact = "Antarctica holds about 90% of the world's ice and is the coldest, windiest and driest continent.",
+            spotIt = "Plain blue with a white silhouette map of the continent in the centre.",
             driveSide = "N/A",
             quizCapital = "None",
             isSovereign = false

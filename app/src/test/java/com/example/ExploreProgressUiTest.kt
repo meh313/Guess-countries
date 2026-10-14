@@ -226,6 +226,44 @@ class ExploreProgressUiTest {
     }
 
     @Test
+    fun theSheet_opensTheFlagSectionWithHowToSpotIt_andSkipsItWhenThereIsNone() {
+        val france = allCountries.first { it.code == "FR" }
+        val shown = mutableStateOf(france.copy(spotIt = "Three vertical bands: blue at the pole, then white, then red."))
+        rule.activityRule.scenario.onActivity { activity ->
+            (activity as ComponentActivity).setContent {
+                WorldFlagsTheme {
+                    CountryDetailSheet(
+                        country = shown.value,
+                        progress = null,
+                        onDismiss = {},
+                        onSpeak = {},
+                        speechAvailable = false,
+                        onToggleFavorite = {}
+                    )
+                }
+            }
+        }
+        rule.waitForIdle()
+
+        rule.onNode(hasScrollAction() and hasTestTag("country_detail_sheet_fr")).performScrollToNode(hasTestTag("sheet_spot_it"))
+        rule.onNodeWithTag("sheet_spot_it").assert(hasText("Three vertical bands: blue at the pole, then white, then red."))
+        rule.onNodeWithText("Spot it").assertIsDisplayed()
+        // The cue comes before the symbolism, under the flag heading.
+        // Positions, not clipped bounds: the symbolism may sit below the fold of this small window.
+        val cue = rule.onNodeWithTag("sheet_spot_it").fetchSemanticsNode()
+        val symbolism = rule.onNodeWithText(france.flagDescription).fetchSemanticsNode()
+        assertTrue(
+            "cue at ${cue.positionInRoot.y}, symbolism at ${symbolism.positionInRoot.y}",
+            cue.positionInRoot.y + cue.size.height <= symbolism.positionInRoot.y
+        )
+
+        rule.runOnUiThread { shown.value = france.copy(spotIt = "") }
+        rule.waitForIdle()
+        rule.onAllNodesWithTag("sheet_spot_it").assertCountEquals(0)
+        rule.onAllNodesWithText("Spot it").assertCountEquals(0)
+    }
+
+    @Test
     fun aContinentOnProgress_opensExploreOnItsCountriesStillToLearn() {
         learning("FR")
         learning("DE")

@@ -22,6 +22,7 @@ object AmericasCatalog {
             currency = "East Caribbean Dollar (EC\$)",
             landmarks = listOf("Nelson's Dockyard (English Harbour)", "Shirley Heights", "Devil's Bridge"),
             funFact = "Nelson's Dockyard on Antigua is the only continuously working Georgian-era naval dockyard in the world and part of a UNESCO World Heritage Site.",
+            spotIt = "A red V frames a black top, a half gold sun, then blue and white bands.",
             driveSide = "Left"
         ),
         Country(
@@ -39,7 +40,8 @@ object AmericasCatalog {
             languages = listOf("Spanish"),
             currency = "Argentine Peso ($)",
             landmarks = listOf("Perito Moreno Glacier", "Obelisk of Buenos Aires", "Iguazu Falls"),
-            funFact = "Tango took shape in the late 1800s in the port districts of Buenos Aires and Montevideo, and Argentina and Uruguay share its UNESCO heritage listing."
+            funFact = "Tango took shape in the late 1800s in the port districts of Buenos Aires and Montevideo, and Argentina and Uruguay share its UNESCO heritage listing.",
+            spotIt = "Light blue, white, light blue bands with a yellow sun with a face on the white."
         ),
         Country(
             code = "BS",
@@ -57,6 +59,7 @@ object AmericasCatalog {
             currency = "Bahamian Dollar (B\$)",
             landmarks = listOf("Dean's Blue Hole (Long Island)", "Exuma Cays", "Atlantis Paradise Island"),
             funFact = "In 1492 Christopher Columbus made his first landfall in the Americas on an island in the Bahamas, which he named San Salvador.",
+            spotIt = "Black triangle at the pole over light blue, gold, light blue horizontal bands.",
             driveSide = "Left"
         ),
         Country(
@@ -75,6 +78,7 @@ object AmericasCatalog {
             currency = "Barbadian Dollar (Bds\$)",
             landmarks = listOf("Harrison's Cave", "Bathsheba", "Garrison Historic Area (Bridgetown)"),
             funFact = "Barbados became a republic on 30 November 2021, exactly 55 years after independence, replacing the British monarch with a Barbadian president.",
+            spotIt = "Blue, gold, blue vertical bands with a black broken trident on the gold.",
             driveSide = "Left"
         ),
         Country(
@@ -92,7 +96,8 @@ object AmericasCatalog {
             languages = listOf("English"),
             currency = "Belize Dollar (BZ\$)",
             landmarks = listOf("Great Blue Hole", "Belize Barrier Reef", "Caracol"),
-            funFact = "Belize's capital, Belmopan, was built inland after Hurricane Hattie devastated the old capital, Belize City, in 1961."
+            funFact = "Belize's capital, Belmopan, was built inland after Hurricane Hattie devastated the old capital, Belize City, in 1961.",
+            spotIt = "Blue field, thin red stripes top and bottom, a large white disc with the arms."
         ),
         Country(
             code = "BO",
@@ -110,6 +115,7 @@ object AmericasCatalog {
             currency = "Bolivian Boliviano (Bs)",
             landmarks = listOf("Salar de Uyuni", "Lake Titicaca", "Tiwanaku"),
             funFact = "Bolivia's Salar de Uyuni is the world's largest salt flat, over 10,000 square kilometers; after rain a thin sheet of water turns it into a giant mirror.",
+            spotIt = "Red, yellow, green horizontal bands with the arms on the yellow middle.",
             quizCapital = "Sucre"
         ),
         Country(
@@ -127,7 +133,8 @@ object AmericasCatalog {
             languages = listOf("Portuguese"),
             currency = "Brazilian Real (R$)",
             landmarks = listOf("Christ the Redeemer", "Iguazu Falls", "Amazon Rainforest"),
-            funFact = "Brazil is the only country in the Americas where Portuguese is the official language."
+            funFact = "Brazil is the only country in the Americas where Portuguese is the official language.",
+            spotIt = "Green field, yellow diamond, and a starry blue disc crossed by a white band."
         ),
         Country(
             code = "CA",
@@ -144,7 +151,8 @@ object AmericasCatalog {
             languages = listOf("English", "French"),
             currency = "Canadian Dollar (C$)",
             landmarks = listOf("CN Tower", "Banff National Park", "Niagara Falls"),
-            funFact = "Canada has more lakes than any other country, and the longest coastline in the world, touching three oceans."
+            funFact = "Canada has more lakes than any other country, and the longest coastline in the world, touching three oceans.",
+            spotIt = "Red, white, red vertical bands with a red maple leaf on the wide white middle."
         ),
         Country(
             code = "CL",
@@ -161,7 +169,8 @@ object AmericasCatalog {
             languages = listOf("Spanish"),
             currency = "Chilean Peso ($)",
             landmarks = listOf("Torres del Paine", "Easter Island Moai", "Atacama Desert"),
-            funFact = "The Atacama Desert in northern Chile is the driest non-polar desert on Earth, and some parts have gone years in a row without any rain."
+            funFact = "The Atacama Desert in northern Chile is the driest non-polar desert on Earth, and some parts have gone years in a row without any rain.",
+            spotIt = "White over red with a blue square in the top pole corner holding one white star."
         ),
         Country(
             code = "CO",
@@ -178,7 +187,8 @@ object AmericasCatalog {
             languages = listOf("Spanish"),
             currency = "Colombian Peso ($)",
             landmarks = listOf("Salt Cathedral of Zipaquirá", "Cartagena Old Town", "Tayrona National Park"),
-            funFact = "Colombia is one of the world's megadiverse countries: it covers under 1% of Earth's land but holds close to 10% of the planet's biodiversity."
+            funFact = "Colombia is one of the world's megadiverse countries: it covers under 1% of Earth's land but holds close to 10% of the planet's biodiversity.",
+            spotIt = "Yellow, blue, red horizontal bands, the yellow taking the top half, no arms or stars."
         ),
         Country(
             code = "CR",
@@ -195,7 +205,8 @@ object AmericasCatalog {
             languages = listOf("Spanish"),
             currency = "Costa Rican Colón (₡)",
             landmarks = listOf("Arenal Volcano", "Monteverde Cloud Forest", "Manuel Antonio National Park"),
-            funFact = "Costa Rica abolished its army in 1948, and the ban was written into its constitution in 1949."
+            funFact = "Costa Rica abolished its army in 1948, and the ban was written into its constitution in 1949.",
+            spotIt = "Blue, white, red, white, blue bands; the red middle is the widest, no arms."
         ),
         Country(
             code = "CU",
@@ -212,7 +223,8 @@ object AmericasCatalog {
             languages = listOf("Spanish"),
             currency = "Cuban Peso (CUP)",
             landmarks = listOf("Old Havana", "Viñales Valley", "Morro Castle (Havana)"),
-            funFact = "Cuba is the only home of the bee hummingbird, the smallest bird on Earth, which is about 5.5 cm long and weighs around 2 grams."
+            funFact = "Cuba is the only home of the bee hummingbird, the smallest bird on Earth, which is about 5.5 cm long and weighs around 2 grams.",
+            spotIt = "Blue, white, blue, white, blue stripes; a red triangle at the pole with a white star."
         ),
         Country(
             code = "DM",
@@ -230,6 +242,7 @@ object AmericasCatalog {
             currency = "East Caribbean Dollar (EC\$)",
             landmarks = listOf("Boiling Lake", "Morne Trois Pitons National Park", "Trafalgar Falls"),
             funFact = "Dominica's Boiling Lake, a flooded volcanic vent in Morne Trois Pitons National Park, is the second-largest hot lake on Earth and really does bubble.",
+            spotIt = "Green field with a yellow, black and white cross and a red disc holding a parrot.",
             driveSide = "Left"
         ),
         Country(
@@ -247,7 +260,8 @@ object AmericasCatalog {
             languages = listOf("Spanish"),
             currency = "Dominican Peso (RD\$)",
             landmarks = listOf("Colonial Zone (Santo Domingo)", "Pico Duarte", "Lake Enriquillo"),
-            funFact = "Santo Domingo, founded in the 1490s, is home to the first cathedral, palace, monastery and fortress that Europeans built in the Americas."
+            funFact = "Santo Domingo, founded in the 1490s, is home to the first cathedral, palace, monastery and fortress that Europeans built in the Americas.",
+            spotIt = "White cross over blue and red quarters, blue at the top pole corner, arms in the centre."
         ),
         Country(
             code = "EC",
@@ -264,7 +278,8 @@ object AmericasCatalog {
             languages = listOf("Spanish"),
             currency = "US Dollar (US\$)",
             landmarks = listOf("Galápagos Islands", "Cotopaxi", "Historic Center of Quito"),
-            funFact = "The summit of Ecuador's Chimborazo volcano is the farthest point on Earth's surface from the planet's center, because Earth bulges at the equator."
+            funFact = "The summit of Ecuador's Chimborazo volcano is the farthest point on Earth's surface from the planet's center, because Earth bulges at the equator.",
+            spotIt = "Yellow, blue, red bands, yellow the top half, with a large condor and arms in the centre."
         ),
         Country(
             code = "SV",
@@ -281,7 +296,8 @@ object AmericasCatalog {
             languages = listOf("Spanish"),
             currency = "US Dollar (US\$)",
             landmarks = listOf("Joya de Cerén", "Santa Ana Volcano", "Tazumal"),
-            funFact = "El Salvador is the only Central American country with no Caribbean coast; all of its shoreline faces the Pacific Ocean."
+            funFact = "El Salvador is the only Central American country with no Caribbean coast; all of its shoreline faces the Pacific Ocean.",
+            spotIt = "Blue, white, blue bands with wreathed arms and a ring of gold letters on the white."
         ),
         Country(
             code = "GD",
@@ -299,6 +315,7 @@ object AmericasCatalog {
             currency = "East Caribbean Dollar (EC\$)",
             landmarks = listOf("Grand Anse Beach", "Molinere Underwater Sculpture Park", "Grand Etang National Park"),
             funFact = "The world's first underwater sculpture park opened in 2006 in Molinere Bay, off Grenada's west coast, with statues by British sculptor Jason deCaires Taylor.",
+            spotIt = "Red border with six gold stars frames gold and green triangles, a star in a red disc.",
             driveSide = "Left"
         ),
         Country(
@@ -316,7 +333,8 @@ object AmericasCatalog {
             languages = listOf("Spanish"),
             currency = "Guatemalan Quetzal (Q)",
             landmarks = listOf("Tikal", "Lake Atitlán", "Antigua Guatemala"),
-            funFact = "Guatemala's money, the quetzal, is named after its national bird, whose long green tail feathers were used as a form of payment by the ancient Maya."
+            funFact = "Guatemala's money, the quetzal, is named after its national bird, whose long green tail feathers were used as a form of payment by the ancient Maya.",
+            spotIt = "Blue, white, blue vertical bands with a green quetzal over a scroll on the white."
         ),
         Country(
             code = "GY",
@@ -334,6 +352,7 @@ object AmericasCatalog {
             currency = "Guyanese Dollar (G\$)",
             landmarks = listOf("Kaieteur Falls", "St George's Cathedral (Georgetown)", "Iwokrama Rainforest"),
             funFact = "Guyana's Kaieteur Falls drops about 226 meters in a single plunge, around four times the height of Niagara Falls, deep in the rainforest.",
+            spotIt = "Green field with a white-edged gold arrowhead and a black-edged red triangle at the pole.",
             driveSide = "Left"
         ),
         Country(
@@ -351,7 +370,8 @@ object AmericasCatalog {
             languages = listOf("French", "Haitian Creole"),
             currency = "Haitian Gourde (G)",
             landmarks = listOf("Citadelle Laferrière", "Sans-Souci Palace", "Bassin Bleu (Jacmel)"),
-            funFact = "Haiti declared independence in 1804 after a revolution by enslaved people, making it the first nation founded by a successful slave revolt."
+            funFact = "Haiti declared independence in 1804 after a revolution by enslaved people, making it the first nation founded by a successful slave revolt.",
+            spotIt = "Blue over red horizontal bands with a white panel of arms, a palm tree, in the centre."
         ),
         Country(
             code = "HN",
@@ -368,7 +388,8 @@ object AmericasCatalog {
             languages = listOf("Spanish"),
             currency = "Honduran Lempira (L)",
             landmarks = listOf("Copán Ruins", "Roatán (Bay Islands)", "Río Plátano Biosphere Reserve"),
-            funFact = "The Maya city of Copán in western Honduras has a stairway carved with about 2,200 glyphs, the longest known Maya hieroglyphic text."
+            funFact = "The Maya city of Copán in western Honduras has a stairway carved with about 2,200 glyphs, the longest known Maya hieroglyphic text.",
+            spotIt = "Blue, white, blue horizontal bands with five blue stars in an X on the white."
         ),
         Country(
             code = "JM",
@@ -386,6 +407,7 @@ object AmericasCatalog {
             currency = "Jamaican Dollar (J\$)",
             landmarks = listOf("Dunn's River Falls", "Blue Mountains", "Bob Marley Museum (Kingston)"),
             funFact = "Jamaica is the third-largest island in the Caribbean and the birthplace of reggae music, which spread around the world through singers such as Bob Marley.",
+            spotIt = "A gold diagonal cross splits green top and bottom triangles from black side ones.",
             driveSide = "Left"
         ),
         Country(
@@ -403,7 +425,8 @@ object AmericasCatalog {
             languages = listOf("Spanish"),
             currency = "Mexican Peso ($)",
             landmarks = listOf("Chichén Itzá", "Teotihuacan Pyramids", "Zócalo Square"),
-            funFact = "Mexico City sits on the drained bed of Lake Texcoco, and pumping groundwater has made parts of it sink by several meters over the past century."
+            funFact = "Mexico City sits on the drained bed of Lake Texcoco, and pumping groundwater has made parts of it sink by several meters over the past century.",
+            spotIt = "Green, white, red vertical bands with an eagle on a cactus eating a snake on the white."
         ),
         Country(
             code = "NI",
@@ -420,7 +443,8 @@ object AmericasCatalog {
             languages = listOf("Spanish"),
             currency = "Nicaraguan Córdoba (C\$)",
             landmarks = listOf("Ometepe Island", "Masaya Volcano", "León Cathedral"),
-            funFact = "Lake Nicaragua is Central America's largest lake, and bull sharks swim into it from the Caribbean Sea along the San Juan River."
+            funFact = "Lake Nicaragua is Central America's largest lake, and bull sharks swim into it from the Caribbean Sea along the San Juan River.",
+            spotIt = "Blue, white, blue bands with a bare triangle, no wreath, in a ring of gold letters."
         ),
         Country(
             code = "PA",
@@ -437,7 +461,8 @@ object AmericasCatalog {
             languages = listOf("Spanish"),
             currency = "Panamanian Balboa (B/.) and US Dollar (US\$)",
             landmarks = listOf("Panama Canal", "Casco Viejo (Panama City)", "Coiba National Park"),
-            funFact = "Because the isthmus curves like an S, the Panama Canal's Pacific entrance lies east of its Atlantic entrance, so ships head southeast to reach the Pacific."
+            funFact = "Because the isthmus curves like an S, the Panama Canal's Pacific entrance lies east of its Atlantic entrance, so ships head southeast to reach the Pacific.",
+            spotIt = "Four quarters: white with a blue star at the top pole, red, blue, white with a red star."
         ),
         Country(
             code = "PY",
@@ -454,7 +479,8 @@ object AmericasCatalog {
             languages = listOf("Spanish", "Guaraní"),
             currency = "Paraguayan Guaraní (₲)",
             landmarks = listOf("Itaipu Dam", "Jesuit Mission of La Santísima Trinidad de Paraná", "Palacio de los López (Asunción)"),
-            funFact = "Most Paraguayans speak Guaraní, an Indigenous language that is official alongside Spanish and used in daily life by people of every background."
+            funFact = "Most Paraguayans speak Guaraní, an Indigenous language that is official alongside Spanish and used in daily life by people of every background.",
+            spotIt = "Red, white, blue horizontal bands with a small round seal in the centre of the white."
         ),
         Country(
             code = "PE",
@@ -471,7 +497,8 @@ object AmericasCatalog {
             languages = listOf("Spanish", "Quechua", "Aymara"),
             currency = "Peruvian Sol (S/)",
             landmarks = listOf("Machu Picchu", "Nazca Lines", "Colca Canyon"),
-            funFact = "The Inca built Machu Picchu high in the Andes around 1450; the Spanish never found it, and it became known to the world only after a 1911 expedition."
+            funFact = "The Inca built Machu Picchu high in the Andes around 1450; the Spanish never found it, and it became known to the world only after a 1911 expedition.",
+            spotIt = "Red, white, red vertical bands with nothing on the white middle, all three equal."
         ),
         Country(
             code = "KN",
@@ -489,6 +516,7 @@ object AmericasCatalog {
             currency = "East Caribbean Dollar (EC\$)",
             landmarks = listOf("Brimstone Hill Fortress", "Mount Liamuiga", "Nevis Peak"),
             funFact = "Saint Kitts and Nevis is the smallest sovereign country in the Western Hemisphere by both area and population, and the world's smallest federation.",
+            spotIt = "Green and red triangles split by a yellow-edged black diagonal with two white stars.",
             driveSide = "Left"
         ),
         Country(
@@ -507,6 +535,7 @@ object AmericasCatalog {
             currency = "East Caribbean Dollar (EC\$)",
             landmarks = listOf("The Pitons", "Sulphur Springs (Soufrière)", "Pigeon Island"),
             funFact = "Saint Lucia's two Nobel Prize winners, economist Arthur Lewis and poet Derek Walcott, were both born in Castries on 23 January, fifteen years apart.",
+            spotIt = "Light blue field with a tall white-edged black triangle over a shorter gold one.",
             driveSide = "Left"
         ),
         Country(
@@ -525,6 +554,7 @@ object AmericasCatalog {
             currency = "East Caribbean Dollar (EC\$)",
             landmarks = listOf("La Soufrière", "Tobago Cays", "Fort Charlotte (Kingstown)"),
             funFact = "Kingstown's botanical garden, founded in 1765, is one of the oldest in the Western Hemisphere; Captain Bligh brought it breadfruit plants in 1793.",
+            spotIt = "Blue, gold, green vertical bands with three green diamonds in a V on the wide gold.",
             driveSide = "Left"
         ),
         Country(
@@ -543,6 +573,7 @@ object AmericasCatalog {
             currency = "Surinamese Dollar (SRD)",
             landmarks = listOf("Central Suriname Nature Reserve", "Fort Zeelandia (Paramaribo)", "Brownsberg Nature Park"),
             funFact = "Suriname is the smallest country in South America and the only independent state outside Europe where Dutch is the official language.",
+            spotIt = "Green, white, red, white, green bands with a large yellow star on the wide red middle.",
             driveSide = "Left"
         ),
         Country(
@@ -561,6 +592,7 @@ object AmericasCatalog {
             currency = "Trinidad and Tobago Dollar (TT\$)",
             landmarks = listOf("Pitch Lake (La Brea)", "Maracas Bay", "Pigeon Point (Tobago)"),
             funFact = "Trinidad's Pitch Lake is the world's largest natural deposit of asphalt; its tar has paved streets in cities as far away as New York and Washington.",
+            spotIt = "Red field crossed from the top pole corner down to the fly by a white-edged black band.",
             driveSide = "Left"
         ),
         Country(
@@ -578,7 +610,8 @@ object AmericasCatalog {
             languages = listOf("English"),
             currency = "US Dollar (US$)",
             landmarks = listOf("Statue of Liberty", "Grand Canyon", "Golden Gate Bridge"),
-            funFact = "Alaska's Aleutian Islands cross the 180th meridian, so a small part of the United States lies in the Eastern Hemisphere."
+            funFact = "Alaska's Aleutian Islands cross the 180th meridian, so a small part of the United States lies in the Eastern Hemisphere.",
+            spotIt = "Thirteen red and white stripes with a blue canton of fifty white stars."
         ),
         Country(
             code = "UY",
@@ -595,7 +628,8 @@ object AmericasCatalog {
             languages = listOf("Spanish"),
             currency = "Uruguayan Peso (UYU)",
             landmarks = listOf("Colonia del Sacramento", "Palacio Salvo (Montevideo)", "Punta del Este"),
-            funFact = "Uruguay is the only South American country that lies entirely south of the Tropic of Capricorn, so none of it is in the tropics."
+            funFact = "Uruguay is the only South American country that lies entirely south of the Tropic of Capricorn, so none of it is in the tropics.",
+            spotIt = "Nine white and blue stripes with a gold sun with a face in the white top corner."
         ),
         Country(
             code = "VE",
@@ -612,7 +646,8 @@ object AmericasCatalog {
             languages = listOf("Spanish"),
             currency = "Venezuelan Bolívar (Bs.)",
             landmarks = listOf("Angel Falls", "Lake Maracaibo", "Mount Roraima"),
-            funFact = "Angel Falls in Venezuela is the world's tallest uninterrupted waterfall, dropping about 979 meters in total from the flat-topped mountain Auyán-tepui."
+            funFact = "Angel Falls in Venezuela is the world's tallest uninterrupted waterfall, dropping about 979 meters in total from the flat-topped mountain Auyán-tepui.",
+            spotIt = "Yellow, blue, red equal horizontal bands with an arc of eight white stars on the blue."
         )
     )
 }

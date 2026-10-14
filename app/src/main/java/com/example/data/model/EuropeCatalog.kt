@@ -21,7 +21,8 @@ object EuropeCatalog {
             languages = listOf("Albanian"),
             currency = "Albanian Lek (L)",
             landmarks = listOf("Butrint", "Berat Old Town", "Gjirokastër Castle"),
-            funFact = "Albania's communist government built well over 100,000 small concrete bunkers from the 1960s to the 1980s, and many of them still stand across the country."
+            funFact = "Albania's communist government built well over 100,000 small concrete bunkers from the 1960s to the 1980s, and many of them still stand across the country.",
+            spotIt = "Red with a black two-headed eagle in the centre."
         ),
         Country(
             code = "AD",
@@ -38,7 +39,8 @@ object EuropeCatalog {
             languages = listOf("Catalan"),
             currency = "Euro (€)",
             landmarks = listOf("Casa de la Vall (Andorra la Vella)", "Madriu-Perafita-Claror Valley", "Church of Sant Joan de Caselles"),
-            funFact = "Andorra's two co-princes are both foreign leaders: the Catholic Bishop of Urgell in Spain and the President of France, under a power-sharing deal from 1278."
+            funFact = "Andorra's two co-princes are both foreign leaders: the Catholic Bishop of Urgell in Spain and the President of France, under a power-sharing deal from 1278.",
+            spotIt = "Blue at the pole, then yellow, then red, with a small shield on the yellow band."
         ),
         Country(
             code = "AT",
@@ -55,7 +57,8 @@ object EuropeCatalog {
             languages = listOf("German"),
             currency = "Euro (€)",
             landmarks = listOf("Schönbrunn Palace (Vienna)", "Hallstatt", "Hohensalzburg Fortress (Salzburg)"),
-            funFact = "The Alps cover about 62% of Austria, so most of the country is mountainous, and the landlocked nation has no coastline at all."
+            funFact = "The Alps cover about 62% of Austria, so most of the country is mountainous, and the landlocked nation has no coastline at all.",
+            spotIt = "Red, white, red horizontal bands of equal width, with no emblem."
         ),
         Country(
             code = "BY",
@@ -72,7 +75,8 @@ object EuropeCatalog {
             languages = listOf("Belarusian", "Russian"),
             currency = "Belarusian Ruble (BYN)",
             landmarks = listOf("Mir Castle", "Nesvizh Castle", "Brest Fortress"),
-            funFact = "Białowieża Forest, on the Polish border, is one of the last large remnants of Europe's ancient lowland woodland and home to hundreds of European bison."
+            funFact = "Białowieża Forest, on the Polish border, is one of the last large remnants of Europe's ancient lowland woodland and home to hundreds of European bison.",
+            spotIt = "Red over a narrower green band, with a red and white woven pattern along the pole."
         ),
         Country(
             code = "BE",
@@ -89,7 +93,8 @@ object EuropeCatalog {
             languages = listOf("Dutch", "French", "German"),
             currency = "Euro (€)",
             landmarks = listOf("Grand-Place (Brussels)", "Atomium (Brussels)", "Belfry of Bruges"),
-            funFact = "The saxophone was invented in the 1840s by Adolphe Sax, who was born in the Belgian town of Dinant and patented the instrument in 1846."
+            funFact = "The saxophone was invented in the 1840s by Adolphe Sax, who was born in the Belgian town of Dinant and patented the instrument in 1846.",
+            spotIt = "Three vertical bands: black at the pole, then yellow, then red."
         ),
         Country(
             code = "BA",
@@ -106,7 +111,8 @@ object EuropeCatalog {
             languages = listOf("Bosnian", "Croatian", "Serbian"),
             currency = "Bosnia and Herzegovina Convertible Mark (KM)",
             landmarks = listOf("Stari Most (Mostar)", "Baščaršija (Sarajevo)", "Kravica Waterfalls"),
-            funFact = "Bosnia and Herzegovina reaches the Adriatic Sea along a coastline of only about 20 kilometers, and its capital Sarajevo hosted the 1984 Winter Olympics."
+            funFact = "Bosnia and Herzegovina reaches the Adriatic Sea along a coastline of only about 20 kilometers, and its capital Sarajevo hosted the 1984 Winter Olympics.",
+            spotIt = "Blue with a yellow right triangle and a row of white stars along its slanted side."
         ),
         Country(
             code = "BG",
@@ -123,7 +129,8 @@ object EuropeCatalog {
             languages = listOf("Bulgarian"),
             currency = "Euro (€)",
             landmarks = listOf("Rila Monastery", "Alexander Nevsky Cathedral (Sofia)", "Plovdiv Old Town"),
-            funFact = "The Cyrillic alphabet, used from Bulgaria to Russia and Mongolia, was created in the 9th century at the Preslav Literary School in the First Bulgarian Empire."
+            funFact = "The Cyrillic alphabet, used from Bulgaria to Russia and Mongolia, was created in the 9th century at the Preslav Literary School in the First Bulgarian Empire.",
+            spotIt = "Three horizontal bands: white on top, then green, then red."
         ),
         Country(
             code = "HR",
@@ -140,7 +147,8 @@ object EuropeCatalog {
             languages = listOf("Croatian"),
             currency = "Euro (€)",
             landmarks = listOf("Plitvice Lakes National Park", "Dubrovnik City Walls", "Diocletian's Palace (Split)"),
-            funFact = "The necktie traces back to the cravat, a scarf worn by Croatian soldiers in France in the 1600s that Parisians soon copied."
+            funFact = "The necktie traces back to the cravat, a scarf worn by Croatian soldiers in France in the 1600s that Parisians soon copied.",
+            spotIt = "Red, white, blue horizontal bands with a red and white chequered shield in the centre."
         ),
         Country(
             code = "CZ",
@@ -157,7 +165,8 @@ object EuropeCatalog {
             languages = listOf("Czech"),
             currency = "Czech Koruna (Kč)",
             landmarks = listOf("Prague Castle", "Charles Bridge (Prague)", "Český Krumlov Castle"),
-            funFact = "The word robot is Czech: Karel Čapek used it in his 1920 play R.U.R., from robota meaning forced labor, after his brother Josef suggested it."
+            funFact = "The word robot is Czech: Karel Čapek used it in his 1920 play R.U.R., from robota meaning forced labor, after his brother Josef suggested it.",
+            spotIt = "White over red with a blue triangle pointing in from the pole."
         ),
         Country(
             code = "DK",
@@ -174,7 +183,8 @@ object EuropeCatalog {
             languages = listOf("Danish"),
             currency = "Danish Krone (kr)",
             landmarks = listOf("Tivoli Gardens (Copenhagen)", "The Little Mermaid (Copenhagen)", "Kronborg Castle (Helsingør)"),
-            funFact = "Denmark proper is the Jutland peninsula plus over 400 named islands; the Kingdom also includes the Faroe Islands and Greenland in the North Atlantic."
+            funFact = "Denmark proper is the Jutland peninsula plus over 400 named islands; the Kingdom also includes the Faroe Islands and Greenland in the North Atlantic.",
+            spotIt = "Red with a white Nordic cross set towards the pole."
         ),
         Country(
             code = "EE",
@@ -191,7 +201,8 @@ object EuropeCatalog {
             languages = listOf("Estonian"),
             currency = "Euro (€)",
             landmarks = listOf("Tallinn Old Town", "Toompea Castle (Tallinn)", "Lahemaa National Park"),
-            funFact = "Estonia's territory includes the mainland, the large islands of Saaremaa and Hiiumaa and more than 2,000 smaller islands in the Baltic Sea."
+            funFact = "Estonia's territory includes the mainland, the large islands of Saaremaa and Hiiumaa and more than 2,000 smaller islands in the Baltic Sea.",
+            spotIt = "Three horizontal bands: blue on top, then black, then white."
         ),
         Country(
             code = "FI",
@@ -208,7 +219,8 @@ object EuropeCatalog {
             languages = listOf("Finnish", "Swedish"),
             currency = "Euro (€)",
             landmarks = listOf("Suomenlinna (Helsinki)", "Helsinki Cathedral", "Santa Claus Village (Rovaniemi)"),
-            funFact = "Finland is nicknamed the land of a thousand lakes, but it actually has more than 180,000 of them, set among vast northern forests."
+            funFact = "Finland is nicknamed the land of a thousand lakes, but it actually has more than 180,000 of them, set among vast northern forests.",
+            spotIt = "White with a blue Nordic cross set towards the pole."
         ),
         Country(
             code = "FR",
@@ -225,7 +237,8 @@ object EuropeCatalog {
             languages = listOf("French"),
             currency = "Euro (€)",
             landmarks = listOf("Eiffel Tower", "Louvre Museum", "Mont Saint-Michel"),
-            funFact = "The Eiffel Tower was built for the 1889 World's Fair and was due to be dismantled in 1909, but its use as a radio antenna saved it."
+            funFact = "The Eiffel Tower was built for the 1889 World's Fair and was due to be dismantled in 1909, but its use as a radio antenna saved it.",
+            spotIt = "Three vertical bands: blue at the pole, then white, then red."
         ),
         Country(
             code = "DE",
@@ -242,7 +255,8 @@ object EuropeCatalog {
             languages = listOf("German"),
             currency = "Euro (€)",
             landmarks = listOf("Brandenburg Gate", "Neuschwanstein Castle", "Cologne Cathedral"),
-            funFact = "Around 1450, Johannes Gutenberg of Mainz introduced movable-type printing to Europe, which made books far cheaper and helped spread ideas."
+            funFact = "Around 1450, Johannes Gutenberg of Mainz introduced movable-type printing to Europe, which made books far cheaper and helped spread ideas.",
+            spotIt = "Three horizontal bands: black on top, then red, then gold."
         ),
         Country(
             code = "GR",
@@ -259,7 +273,8 @@ object EuropeCatalog {
             languages = listOf("Greek"),
             currency = "Euro (€)",
             landmarks = listOf("Parthenon", "Santorini Caldera", "Meteora Monasteries"),
-            funFact = "Greece is widely considered the birthplace of Western civilization, democracy, Western philosophy, and the Olympic Games."
+            funFact = "Greece is widely considered the birthplace of Western civilization, democracy, Western philosophy, and the Olympic Games.",
+            spotIt = "Nine blue and white stripes with a white cross on a blue canton."
         ),
         Country(
             code = "HU",
@@ -276,7 +291,8 @@ object EuropeCatalog {
             languages = listOf("Hungarian"),
             currency = "Hungarian Forint (Ft)",
             landmarks = listOf("Hungarian Parliament Building (Budapest)", "Buda Castle (Budapest)", "Lake Balaton"),
-            funFact = "Budapest was formed in 1873 when Buda, Óbuda and Pest were joined into one city; it sits on more than 100 natural hot springs that feed its famous baths."
+            funFact = "Budapest was formed in 1873 when Buda, Óbuda and Pest were joined into one city; it sits on more than 100 natural hot springs that feed its famous baths.",
+            spotIt = "Three horizontal bands: red on top, then white, then green."
         ),
         Country(
             code = "IS",
@@ -293,7 +309,8 @@ object EuropeCatalog {
             languages = listOf("Icelandic"),
             currency = "Icelandic Króna (kr)",
             landmarks = listOf("Blue Lagoon", "Gullfoss", "Þingvellir National Park"),
-            funFact = "Iceland's parliament, the Althing, first met in 930 at Þingvellir, which makes it one of the oldest parliaments in the world."
+            funFact = "Iceland's parliament, the Althing, first met in 930 at Þingvellir, which makes it one of the oldest parliaments in the world.",
+            spotIt = "Blue with a red Nordic cross edged in white, set towards the pole."
         ),
         Country(
             code = "IE",
@@ -311,6 +328,7 @@ object EuropeCatalog {
             currency = "Euro (€)",
             landmarks = listOf("Cliffs of Moher", "Newgrange", "Trinity College (Dublin)"),
             funFact = "Newgrange, a stone tomb in County Meath built around 3100 BC, was aligned so that the rising sun at the winter solstice lights up its inner chamber.",
+            spotIt = "Three vertical bands: green at the pole, then white, then orange.",
             driveSide = "Left"
         ),
         Country(
@@ -328,7 +346,8 @@ object EuropeCatalog {
             languages = listOf("Italian"),
             currency = "Euro (€)",
             landmarks = listOf("Colosseum", "Leaning Tower of Pisa", "Grand Canal (Venice)"),
-            funFact = "Tiny Vatican City and San Marino are independent countries, yet each lies entirely inside Italy."
+            funFact = "Tiny Vatican City and San Marino are independent countries, yet each lies entirely inside Italy.",
+            spotIt = "Three vertical bands: green at the pole, then white, then red."
         ),
         Country(
             code = "XK",
@@ -345,7 +364,8 @@ object EuropeCatalog {
             languages = listOf("Albanian", "Serbian"),
             currency = "Euro (€)",
             landmarks = listOf("Visoki Dečani Monastery", "Newborn Monument (Pristina)", "Prizren Fortress"),
-            funFact = "Kosovo declared independence from Serbia in 2008; about half of the world's countries recognize it, and Serbia does not."
+            funFact = "Kosovo declared independence from Serbia in 2008; about half of the world's countries recognize it, and Serbia does not.",
+            spotIt = "Blue with a gold map of the country under an arc of six white stars."
         ),
         Country(
             code = "LV",
@@ -362,7 +382,8 @@ object EuropeCatalog {
             languages = listOf("Latvian"),
             currency = "Euro (€)",
             landmarks = listOf("Riga Old Town", "Gauja National Park", "Turaida Castle (Sigulda)"),
-            funFact = "Latvia's Song and Dance Festival, held about every five years since 1873, brings together tens of thousands of singers and is on UNESCO's heritage list."
+            funFact = "Latvia's Song and Dance Festival, held about every five years since 1873, brings together tens of thousands of singers and is on UNESCO's heritage list.",
+            spotIt = "Red, white, red; the white stripe is narrow and the red bands are dark and wide."
         ),
         Country(
             code = "LI",
@@ -379,7 +400,8 @@ object EuropeCatalog {
             languages = listOf("German"),
             currency = "Swiss Franc (CHF)",
             landmarks = listOf("Vaduz Castle", "Gutenberg Castle (Balzers)", "Kunstmuseum Liechtenstein (Vaduz)"),
-            funFact = "Liechtenstein is one of only two doubly landlocked countries on Earth: every country that borders it is landlocked too. The other is Uzbekistan."
+            funFact = "Liechtenstein is one of only two doubly landlocked countries on Earth: every country that borders it is landlocked too. The other is Uzbekistan.",
+            spotIt = "Blue over red with a gold crown in the upper corner by the pole."
         ),
         Country(
             code = "LT",
@@ -396,7 +418,8 @@ object EuropeCatalog {
             languages = listOf("Lithuanian"),
             currency = "Euro (€)",
             landmarks = listOf("Trakai Island Castle", "Hill of Crosses", "Curonian Spit"),
-            funFact = "France's national geographic institute calculated in 1989 that the geographic center of Europe lies in Lithuania, north of Vilnius."
+            funFact = "France's national geographic institute calculated in 1989 that the geographic center of Europe lies in Lithuania, north of Vilnius.",
+            spotIt = "Three horizontal bands: yellow on top, then green, then red."
         ),
         Country(
             code = "LU",
@@ -413,7 +436,8 @@ object EuropeCatalog {
             languages = listOf("Luxembourgish", "French", "German"),
             currency = "Euro (€)",
             landmarks = listOf("Bock Casemates (Luxembourg City)", "Vianden Castle", "Grand Ducal Palace (Luxembourg City)"),
-            funFact = "Luxembourg is the world's only sovereign grand duchy: its head of state holds the title of grand duke instead of king or president."
+            funFact = "Luxembourg is the world's only sovereign grand duchy: its head of state holds the title of grand duke instead of king or president.",
+            spotIt = "Red, white and light blue horizontal bands; the bottom band is noticeably pale."
         ),
         Country(
             code = "MT",
@@ -431,6 +455,7 @@ object EuropeCatalog {
             currency = "Euro (€)",
             landmarks = listOf("St John's Co-Cathedral (Valletta)", "Mdina", "Ġgantija Temples (Gozo)"),
             funFact = "The Ġgantija temples on Gozo were built around 3600 BC, making them older than Stonehenge and Egypt's pyramids.",
+            spotIt = "White at the pole and red at the fly, with a small cross in the top corner by the pole.",
             driveSide = "Left"
         ),
         Country(
@@ -448,7 +473,8 @@ object EuropeCatalog {
             languages = listOf("Romanian"),
             currency = "Moldovan Leu (MDL)",
             landmarks = listOf("Old Orhei", "Mileștii Mici Wine Cellars", "Soroca Fort"),
-            funFact = "Although landlocked, Moldova has a river port on the Danube at Giurgiulești thanks to a stretch of riverbank less than half a kilometer long."
+            funFact = "Although landlocked, Moldova has a river port on the Danube at Giurgiulești thanks to a stretch of riverbank less than half a kilometer long.",
+            spotIt = "Blue, yellow and red vertical bands with an eagle holding a shield on the yellow band."
         ),
         Country(
             code = "MC",
@@ -465,7 +491,8 @@ object EuropeCatalog {
             languages = listOf("French"),
             currency = "Euro (€)",
             landmarks = listOf("Monte Carlo Casino", "Prince's Palace of Monaco", "Oceanographic Museum of Monaco"),
-            funFact = "Monaco is the second-smallest country in the world after Vatican City, yet it is the most densely populated country on Earth."
+            funFact = "Monaco is the second-smallest country in the world after Vatican City, yet it is the most densely populated country on Earth.",
+            spotIt = "Red over white in two equal bands; indistinguishable here from Indonesia's flag."
         ),
         Country(
             code = "ME",
@@ -482,7 +509,8 @@ object EuropeCatalog {
             languages = listOf("Montenegrin"),
             currency = "Euro (€)",
             landmarks = listOf("Bay of Kotor", "Durmitor National Park", "Sveti Stefan"),
-            funFact = "The name Montenegro comes from Venetian for Black Mountain, a translation of Crna Gora, named for the dark evergreen forests of Mount Lovćen."
+            funFact = "The name Montenegro comes from Venetian for Black Mountain, a translation of Crna Gora, named for the dark evergreen forests of Mount Lovćen.",
+            spotIt = "Red with a gold border and a gold two-headed eagle in the centre."
         ),
         Country(
             code = "NL",
@@ -500,6 +528,7 @@ object EuropeCatalog {
             currency = "Euro (€)",
             landmarks = listOf("Keukenhof Gardens (Lisse)", "Kinderdijk Windmills", "Zaanse Schans"),
             funFact = "About a quarter of the Netherlands lies below sea level, kept dry by dikes, pumps and reclaimed land called polders.",
+            spotIt = "Red on top, then white, then a deep blue band; no emblem.",
             quizCapital = "Amsterdam"
         ),
         Country(
@@ -517,7 +546,8 @@ object EuropeCatalog {
             languages = listOf("Macedonian", "Albanian"),
             currency = "Macedonian Denar (MKD)",
             landmarks = listOf("Lake Ohrid", "Matka Canyon", "Stone Bridge (Skopje)"),
-            funFact = "Lake Ohrid, shared with Albania, is one of Europe's oldest and deepest lakes, up to 288 meters deep, and home to more than 200 species found nowhere else."
+            funFact = "Lake Ohrid, shared with Albania, is one of Europe's oldest and deepest lakes, up to 288 meters deep, and home to more than 200 species found nowhere else.",
+            spotIt = "Red with a yellow sun whose eight rays widen out to the edges."
         ),
         Country(
             code = "NO",
@@ -534,7 +564,8 @@ object EuropeCatalog {
             languages = listOf("Norwegian"),
             currency = "Norwegian Krone (kr)",
             landmarks = listOf("Geirangerfjord", "Preikestolen (Pulpit Rock)", "Bryggen (Bergen)"),
-            funFact = "In the 1980s a Norwegian campaign called Project Japan helped make salmon a sushi favorite in Japan, where it was rarely eaten raw before."
+            funFact = "In the 1980s a Norwegian campaign called Project Japan helped make salmon a sushi favorite in Japan, where it was rarely eaten raw before.",
+            spotIt = "Red with a blue Nordic cross edged in white, set towards the pole."
         ),
         Country(
             code = "PL",
@@ -551,7 +582,8 @@ object EuropeCatalog {
             languages = listOf("Polish"),
             currency = "Polish Złoty (zł)",
             landmarks = listOf("Wawel Castle (Kraków)", "Wieliczka Salt Mine", "Old Town (Warsaw)"),
-            funFact = "In 1791 Poland adopted the first modern written constitution in Europe, the Constitution of 3 May, and 3 May is still a national holiday."
+            funFact = "In 1791 Poland adopted the first modern written constitution in Europe, the Constitution of 3 May, and 3 May is still a national holiday.",
+            spotIt = "White over red in two equal horizontal bands, with no emblem."
         ),
         Country(
             code = "PT",
@@ -568,7 +600,8 @@ object EuropeCatalog {
             languages = listOf("Portuguese"),
             currency = "Euro (€)",
             landmarks = listOf("Belém Tower (Lisbon)", "Jerónimos Monastery (Lisbon)", "Pena Palace (Sintra)"),
-            funFact = "Portugal's border with Spain has barely changed since the Treaty of Alcañices in 1297, which makes it one of Europe's oldest fixed frontiers."
+            funFact = "Portugal's border with Spain has barely changed since the Treaty of Alcañices in 1297, which makes it one of Europe's oldest fixed frontiers.",
+            spotIt = "Green at the pole and a wider red fly, with a yellow armillary sphere on the join."
         ),
         Country(
             code = "RO",
@@ -585,7 +618,8 @@ object EuropeCatalog {
             languages = listOf("Romanian"),
             currency = "Romanian Leu (RON)",
             landmarks = listOf("Bran Castle", "Palace of the Parliament (Bucharest)", "Danube Delta"),
-            funFact = "Romanian descends from Latin, making it a relative of Italian and Spanish, even though most of Romania's neighbors speak Slavic languages or Hungarian."
+            funFact = "Romanian descends from Latin, making it a relative of Italian and Spanish, even though most of Romania's neighbors speak Slavic languages or Hungarian.",
+            spotIt = "Blue at the pole, then yellow and red, with no emblem; Chad's flag looks the same."
         ),
         Country(
             code = "RU",
@@ -602,7 +636,8 @@ object EuropeCatalog {
             languages = listOf("Russian"),
             currency = "Russian Ruble (₽)",
             landmarks = listOf("Red Square (Moscow)", "Hermitage Museum (Saint Petersburg)", "Lake Baikal"),
-            funFact = "Lake Baikal in Siberia is the world's deepest and oldest lake, holding more than one fifth of all the fresh surface water on Earth."
+            funFact = "Lake Baikal in Siberia is the world's deepest and oldest lake, holding more than one fifth of all the fresh surface water on Earth.",
+            spotIt = "Three horizontal bands: white on top, then blue, then red; no emblem."
         ),
         Country(
             code = "SM",
@@ -619,7 +654,8 @@ object EuropeCatalog {
             languages = listOf("Italian"),
             currency = "Euro (€)",
             landmarks = listOf("Guaita Tower (Monte Titano)", "Cesta Tower (Monte Titano)", "Palazzo Pubblico (City of San Marino)"),
-            funFact = "San Marino has two heads of state at once, the Captains Regent, who are elected together and serve for only six months at a time."
+            funFact = "San Marino has two heads of state at once, the Captains Regent, who are elected together and serve for only six months at a time.",
+            spotIt = "White over light blue with a crowned shield and branches in the centre."
         ),
         Country(
             code = "RS",
@@ -636,7 +672,8 @@ object EuropeCatalog {
             languages = listOf("Serbian"),
             currency = "Serbian Dinar (RSD)",
             landmarks = listOf("Belgrade Fortress (Kalemegdan)", "Church of Saint Sava (Belgrade)", "Studenica Monastery"),
-            funFact = "Serbian rulers used the two-headed eagle over 800 years ago; tradition says one head looks to the heavenly kingdom and the other to the earthly one."
+            funFact = "Serbian rulers used the two-headed eagle over 800 years ago; tradition says one head looks to the heavenly kingdom and the other to the earthly one.",
+            spotIt = "Red, blue, white horizontal bands with a crowned eagle shield set towards the pole."
         ),
         Country(
             code = "SK",
@@ -653,7 +690,8 @@ object EuropeCatalog {
             languages = listOf("Slovak"),
             currency = "Euro (€)",
             landmarks = listOf("Bratislava Castle", "Spiš Castle", "High Tatras"),
-            funFact = "Bratislava is the only national capital in the world that shares land borders with two other countries: Austria and Hungary."
+            funFact = "Bratislava is the only national capital in the world that shares land borders with two other countries: Austria and Hungary.",
+            spotIt = "White, blue, red horizontal bands with a double-cross shield set towards the pole."
         ),
         Country(
             code = "SI",
@@ -670,7 +708,8 @@ object EuropeCatalog {
             languages = listOf("Slovene"),
             currency = "Euro (€)",
             landmarks = listOf("Lake Bled", "Postojna Cave", "Ljubljana Castle"),
-            funFact = "Postojna Cave in Slovenia, 24 kilometers long, has carried visitors by train since 1872 and is home to the olm, the world's largest cave-dwelling amphibian."
+            funFact = "Postojna Cave in Slovenia, 24 kilometers long, has carried visitors by train since 1872 and is home to the olm, the world's largest cave-dwelling amphibian.",
+            spotIt = "White, blue, red bands with a small mountain shield in the upper corner by the pole."
         ),
         Country(
             code = "ES",
@@ -687,7 +726,8 @@ object EuropeCatalog {
             languages = listOf("Spanish"),
             currency = "Euro (€)",
             landmarks = listOf("Sagrada Família", "Alhambra", "Park Güell"),
-            funFact = "Spain is the world's biggest olive oil producer, often making a third or more of all the olive oil on Earth."
+            funFact = "Spain is the world's biggest olive oil producer, often making a third or more of all the olive oil on Earth.",
+            spotIt = "Red, yellow, red horizontal bands; the yellow is twice as deep and bears the coat of arms."
         ),
         Country(
             code = "SE",
@@ -704,7 +744,8 @@ object EuropeCatalog {
             languages = listOf("Swedish"),
             currency = "Swedish Krona (kr)",
             landmarks = listOf("Vasa Museum", "Icehotel (Jukkasjärvi)", "Gamla Stan"),
-            funFact = "Sweden's warship Vasa sank on its maiden voyage in 1628, was raised in 1961 and is now displayed in a Stockholm museum."
+            funFact = "Sweden's warship Vasa sank on its maiden voyage in 1628, was raised in 1961 and is now displayed in a Stockholm museum.",
+            spotIt = "Blue with a yellow Nordic cross set towards the pole."
         ),
         Country(
             code = "CH",
@@ -721,7 +762,8 @@ object EuropeCatalog {
             languages = listOf("German", "French", "Italian", "Romansh"),
             currency = "Swiss Franc (CHF)",
             landmarks = listOf("Matterhorn", "Chapel Bridge (Lucerne)", "Jungfraujoch"),
-            funFact = "The Red Cross emblem is the Swiss flag with its colors reversed; the 1906 Geneva Convention says this honors Switzerland, where the movement was founded."
+            funFact = "The Red Cross emblem is the Swiss flag with its colors reversed; the 1906 Geneva Convention says this honors Switzerland, where the movement was founded.",
+            spotIt = "Red with a bold white cross whose arms stop well short of the edges."
         ),
         Country(
             code = "UA",
@@ -738,7 +780,8 @@ object EuropeCatalog {
             languages = listOf("Ukrainian"),
             currency = "Ukrainian Hryvnia (₴)",
             landmarks = listOf("Kyiv Pechersk Lavra", "Saint Sophia Cathedral", "Tunnel of Love"),
-            funFact = "Kyiv's Arsenalna metro station lies 105.5 meters underground, making it one of the deepest metro stations in the world."
+            funFact = "Kyiv's Arsenalna metro station lies 105.5 meters underground, making it one of the deepest metro stations in the world.",
+            spotIt = "Two equal horizontal bands: blue on top, yellow below."
         ),
         Country(
             code = "GB",
@@ -756,6 +799,7 @@ object EuropeCatalog {
             currency = "Pound Sterling (£)",
             landmarks = listOf("Big Ben", "Stonehenge", "Tower Bridge"),
             funFact = "The BBC is the oldest national broadcasting organization in the world, founded in 1922.",
+            spotIt = "Blue with red and white crosses overlaid: an upright one and a diagonal one.",
             driveSide = "Left"
         ),
         Country(
@@ -773,7 +817,8 @@ object EuropeCatalog {
             languages = listOf("Italian"),
             currency = "Euro (€)",
             landmarks = listOf("St Peter's Basilica", "Sistine Chapel", "Vatican Museums"),
-            funFact = "Vatican City is the world's smallest independent state by both area and population, and it lies entirely inside the city of Rome."
+            funFact = "Vatican City is the world's smallest independent state by both area and population, and it lies entirely inside the city of Rome.",
+            spotIt = "Yellow at the pole, white at the fly, with crossed gold and silver keys under a tiara."
         )
     )
 }
