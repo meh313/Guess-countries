@@ -863,7 +863,8 @@ fun QuizScreen(
                                 correct = q.targetCountry,
                                 pickedCaption = if (capitals) stringResource(R.string.quiz_capital_and_country, pickedCountry.quizCapital, pickedCountry.name) else pickedCountry.name,
                                 correctCaption = if (capitals) stringResource(R.string.quiz_capital_and_country, q.targetCountry.quizCapital, q.targetCountry.name) else q.targetCountry.name,
-                                modifier = Modifier.padding(bottom = 10.dp)
+                                modifier = Modifier.padding(bottom = 10.dp),
+                                showMap = true
                             )
                         }
                         // A blitz moves on in under a second: no time for the capital and the fun fact.

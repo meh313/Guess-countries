@@ -31,3 +31,20 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+## Map data
+
+The country outlines, label points and capitals in `app/src/main/assets/world.json`, and the bounding boxes in
+`app/src/main/java/com/example/data/model/Geo.kt`, are simplified from
+[Natural Earth](https://www.naturalearthdata.com/) 5.2.0-pre (the 1:50m Admin 0 countries and the 1:10m populated
+places, as published in the GitHub mirror `nvkelso/natural-earth-vector`; `tools/gen-worldmap.py` reproduces them).
+Natural Earth is in the public domain: no permission is needed and crediting the authors is unnecessary, so this
+notice is a courtesy. Its terms of use (https://www.naturalearthdata.com/about/terms-of-use/) say:
+
+```
+All versions of Natural Earth raster + vector map data found on this website are in the public domain. You may use
+the maps in any manner, including modifying the content and design, electronic dissemination, and offset printing.
+The primary authors, Tom Patterson and Nathaniel Vaughn Kelso, and all other contributors renounce all financial
+claim to the maps and invites you to use them for personal, educational, and commercial purposes. No permission is
+needed to use Natural Earth. Crediting the authors is unnecessary.
+```

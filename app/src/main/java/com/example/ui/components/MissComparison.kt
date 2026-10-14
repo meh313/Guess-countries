@@ -1,10 +1,13 @@
 package com.example.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -13,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -27,7 +31,9 @@ import com.example.data.model.TellApart
  * right one, each under its label, so the two are seen side by side once. Under them, one line for next time: the
  * [tip] that tells the two flags apart, or failing that how to spot the right one. One description for TalkBack:
  * "You picked Austria, the answer is Latvia. Latvia's red is a deep maroon…". [pickedCaption] and [correctCaption]
- * name what each flag stands for (the country, or "Vienna, Austria" in the capital quiz).
+ * name what each flag stands for (the country, or "Vienna, Austria" in the capital quiz). With [showMap] a tiny map
+ * of the right country sits under its flag (the quiz modes with time to look at it); it adds nothing to the
+ * description, which already names the country.
  */
 @Composable
 fun MissComparison(
@@ -36,7 +42,8 @@ fun MissComparison(
     modifier: Modifier = Modifier,
     pickedCaption: String = picked.name,
     correctCaption: String = correct.name,
-    tip: String? = TellApart.tip(picked.code, correct.code)
+    tip: String? = TellApart.tip(picked.code, correct.code),
+    showMap: Boolean = false
 ) {
     val outcome = stringResource(R.string.miss_description, pickedCaption, correctCaption)
     val cue = tellApartLine(correct, tip)
@@ -54,6 +61,14 @@ fun MissComparison(
         ) {
             Side(label = stringResource(R.string.miss_you_picked), country = picked, caption = pickedCaption, tint = Color(0xFFC62828), modifier = Modifier.weight(1f))
             Side(label = stringResource(R.string.miss_correct), country = correct, caption = correctCaption, tint = Color(0xFF2E7D32), modifier = Modifier.weight(1f))
+        }
+        if (showMap) {
+            Row(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
+                Spacer(modifier = Modifier.weight(1f))
+                Box(modifier = Modifier.weight(1f).clearAndSetSemantics {}, contentAlignment = Alignment.Center) {
+                    WorldMap(country = correct, modifier = Modifier.width(72.dp), aspectRatio = 4f / 3f, testTag = "miss_map")
+                }
+            }
         }
         if (cue != null) {
             TellApartLine(text = cue, modifier = Modifier.padding(top = 8.dp).testTag("miss_tell_apart"))

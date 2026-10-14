@@ -90,6 +90,8 @@ import com.example.ui.components.rememberCompactNumberFormat
 import com.example.ui.labelRes
 import androidx.compose.ui.text.style.TextOverflow
 import com.example.ui.components.FlagView
+import com.example.ui.components.WorldMap
+import com.example.ui.components.rememberWorldMapData
 import com.example.ui.components.getContinentColor
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -374,6 +376,34 @@ fun CountryDetailSheet(
                         text = country.flagDescription,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+
+            // Where it is: the country on a map, with a world inset for a small one. Nothing (not even the
+            // heading) for a country the map data does not know; the plain sea box while the data loads.
+            val mapData = rememberWorldMapData()
+            if (mapData == null || mapData[country.code] != null) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = stringResource(R.string.sheet_where_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.semantics { heading() }
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    WorldMap(
+                        country = country,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp),
+                        aspectRatio = 16f / 10f,
+                        testTag = "sheet_map"
                     )
                 }
             }
