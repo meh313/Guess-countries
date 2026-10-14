@@ -27,8 +27,9 @@ drill them with flashcards, and test yourself with quizzes. Everything runs on t
   went through the research pass, and a *Your progress* row per skill; every country card carries two pips (flag,
   capital) and Explore has Unseen / Learning / Mastered chips, which a tap on a continent on the Progress screen sets.
 - **Stats** – a daily practice streak (a day counts when you finish one quiz or a study session of ten cards; days
-  follow the device's time zone), an optional daily reminder (a notification at a time you pick, only on days without
-  a finished quiz; it asks for the notification permission on Android 13 and newer), mastered flags and capitals,
+  follow the device's time zone), an optional daily reminder (an inexact alarm wakes the app at the time you pick and
+  posts a notification, only on days without a finished quiz; a reboot or a time-zone change plans it again; it asks
+  for the notification permission on Android 13 and newer), mastered flags and capitals,
   what is due today, mastery per continent and a log of recent quizzes and study sessions.
 
 ### How mastery works
@@ -106,7 +107,7 @@ are then kept as a workflow artifact for a week.
 | --- | --- |
 | `quiz/` | Pure quiz rules (`QuizEngine`, the weighted `QuestionPicker`), the immutable `QuizSession` and its `QuizSnapshot` for saved state; no Android types. |
 | `progress/` | Pure rules: the practice streak (`PracticeStreak`), computed from when quizzes finished, and per-skill mastery (`SkillMastery`: score, Leitner box, due date). |
-| `reminder/` | The daily reminder: pure schedule rules, the WorkManager scheduler and worker, the notification. |
+| `reminder/` | The daily reminder: pure schedule rules, the alarm scheduler, the receiver that turns the alarm (and a reboot or time-zone change) into a run, the worker, the notification. |
 | `data/settings/` | `UserSettings`: the few preferences kept in SharedPreferences (answers difficulty, reminder, theme, timer pace). |
 | `data/transfer/` | `ProgressTransfer`: the export file format (JSON, format 1) and its reader. |
 | `flashcards/` | Deck ordering for the flashcard screen and the immutable `StudySession` (queue, grades, Again re-insertion, undo). |

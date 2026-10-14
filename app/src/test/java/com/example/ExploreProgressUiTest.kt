@@ -18,6 +18,8 @@ import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -210,7 +212,7 @@ class ExploreProgressUiTest {
             rule.eventually("the export note") { rule.onNodeWithTag("settings_transfer_note").assert(hasText("Exported", substring = true)) }
             assertTrue(file.length() > 100)
             assertEquals(listOf("CreateDocument"), picker.launched)
-            assertTrue(file.readText().contains("\"themeMode\": \"DARK\""))
+            assertTrue(file.readText().contains("\"themeMode\":\"DARK\""))
 
             // Change things, then import the file: the old state comes back.
             runBlocking {
@@ -255,10 +257,10 @@ class ExploreProgressUiTest {
 
             rule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("settings_import_btn"))
             rule.onNodeWithTag("settings_import_btn").performClick()
-            rule.eventually("the import question") { rule.onNodeWithText("Import this file?").assertIsDisplayed() }
-            rule.onNodeWithTag("settings_import_confirm_btn").performClick()
 
+            // A stranger file is refused as soon as it is read: no question is asked about it.
             rule.eventually("the refusal") { rule.onNodeWithTag("settings_transfer_note").assert(hasText("This file is not a World Flags export.")) }
+            rule.onAllNodesWithText("Import this file?").assertCountEquals(0)
             assertEquals(1, runBlocking { db.userProgressDao().getAllSkills().first() }.size)
         } finally {
             file.delete()

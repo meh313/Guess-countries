@@ -50,6 +50,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
 
 /**
@@ -159,6 +160,11 @@ class CountryViewModel(
 
     private val progress = ProgressStateHolder(repository, viewModelScope, zone)
 
+    /** True after a database write failed, until [clearWriteError]; the activity shows it as a snackbar. */
+    val writeError: StateFlow<Boolean> get() = progress.writeError
+
+    fun clearWriteError() = progress.clearWriteError()
+
     val userProgressMap: StateFlow<Map<String, UserProgressEntity>> get() = progress.userProgressMap
     val quizHistory: StateFlow<List<QuizScoreEntity>> get() = progress.quizHistory
 
@@ -188,7 +194,7 @@ class CountryViewModel(
     /** A flashcard self-grade: light evidence about the flag, never enough on its own to master it. */
     fun gradeFlashcard(countryCode: String, grade: Grade) = progress.recordGrade(countryCode, grade)
 
-    /** The export file's text: the database and the settings. */
+    /** The export file's text: the database and the settings. Serialised off the main thread; a year of play is megabytes. */
     suspend fun exportJson(): String {
         val snapshot = repository.exportSnapshot()
         val settingsMap = mapOf(
@@ -199,25 +205,48 @@ class CountryViewModel(
             "dynamicColor" to settings.dynamicColor.toString(),
             "timerPace" to settings.timerPace.name
         )
-        return ProgressTransfer.toJson(snapshot.copy(settings = settingsMap))
+        return withContext(Dispatchers.Default) { ProgressTransfer.toJson(snapshot.copy(settings = settingsMap)) }
+    }
+
+    private val _pendingImport = MutableStateFlow<ProgressSnapshot?>(null)
+
+    /** A file read and checked, waiting for the player to confirm the import; null otherwise. Lives here so rotation keeps it. */
+    val pendingImport: StateFlow<ProgressSnapshot?> = _pendingImport
+
+    /**
+     * Reads an export file's text (off the main thread) and, when it is one of ours, holds it as [pendingImport] for
+     * the confirm step. Returns the snapshot, or the [com.example.data.transfer.ImportProblem] that refused it.
+     */
+    suspend fun prepareImport(json: String): Result<ProgressSnapshot> =
+        withContext(Dispatchers.Default) { ProgressTransfer.fromJson(json) }.onSuccess { _pendingImport.value = it }
+
+    fun cancelImport() {
+        _pendingImport.value = null
     }
 
     /**
-     * Reads an export file's text and, when it is one of ours, replaces everything with it: the database in one
-     * transaction, then the settings it carries. Returns what was imported, or why the text was refused.
+     * Replaces everything with [pendingImport]: the database in one transaction, then the settings the file carries.
+     * The quiz or study session in progress is dropped only once the database write has succeeded; a write that fails
+     * (a damaged file the checks let through) leaves everything as it was and comes back as the failure.
      */
-    suspend fun importJson(json: String): Result<ProgressSnapshot> =
-        ProgressTransfer.fromJson(json).onSuccess { snapshot ->
+    suspend fun applyImport(): Result<ProgressSnapshot> {
+        val snapshot = _pendingImport.value ?: return Result.failure(IllegalStateException("nothing to import"))
+        _pendingImport.value = null
+        return runCatching { repository.importSnapshot(snapshot) }.map {
             quiz.end()
             study.dismiss()
-            repository.importSnapshot(snapshot)
             snapshot.settings["quizDifficulty"]?.let { name -> QuizDifficulty.entries.firstOrNull { it.name == name } }?.let(::setQuizDifficulty)
             snapshot.settings["themeMode"]?.let { name -> ThemeMode.entries.firstOrNull { it.name == name } }?.let(::setThemeMode)
             snapshot.settings["dynamicColor"]?.toBooleanStrictOrNull()?.let(::setDynamicColor)
             snapshot.settings["timerPace"]?.let { name -> TimerPace.entries.firstOrNull { it.name == name } }?.let(::setTimerPace)
             snapshot.settings["reminderMinuteOfDay"]?.toIntOrNull()?.let { setReminderTime(it / 60, it % 60) }
             snapshot.settings["reminderEnabled"]?.toBooleanStrictOrNull()?.let(::setReminderEnabled)
+            snapshot
         }
+    }
+
+    /** [prepareImport] and [applyImport] in one step, for callers that need no confirmation. */
+    suspend fun importJson(json: String): Result<ProgressSnapshot> = prepareImport(json).mapCatching { applyImport().getOrThrow() }
 
     /** Forgets every bookmark, skill state and logged quiz, and drops any quiz or study session in progress. */
     fun resetProgress() {
@@ -268,7 +297,7 @@ class CountryViewModel(
 
     // --- Study ------------------------------------------------------------------------------------------------------
 
-    private val study = StudyStateHolder(repository, viewModelScope, zone, random)
+    private val study = StudyStateHolder(repository, viewModelScope, zone, random, progress.writeErrors, savedStateHandle)
 
     /** The flashcard study session in progress, or null outside one. */
     val studySession: StateFlow<StudySession?> get() = study.session

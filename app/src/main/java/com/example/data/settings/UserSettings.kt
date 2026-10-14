@@ -19,6 +19,9 @@ interface UserSettings {
     /** When the reminder comes, in minutes after local midnight; 19:00 until changed. */
     var reminderMinuteOfDay: Int
 
+    /** The moment (epoch millis) the next reminder alarm is set for, 0 when none is planned. Kept so the run can tell how late it is. */
+    var reminderDueAt: Long
+
     /** Light, dark, or whatever the system says. */
     var themeMode: ThemeMode
 
@@ -71,7 +74,8 @@ class InMemoryUserSettings(
     override var reminderMinuteOfDay: Int = ReminderSchedule.DEFAULT_MINUTE_OF_DAY,
     override var themeMode: ThemeMode = ThemeMode.SYSTEM,
     override var dynamicColor: Boolean = false,
-    override var timerPace: TimerPace = TimerPace.NORMAL
+    override var timerPace: TimerPace = TimerPace.NORMAL,
+    override var reminderDueAt: Long = 0L
 ) : UserSettings
 
 class PrefsUserSettings(context: Context) : UserSettings {
@@ -92,6 +96,10 @@ class PrefsUserSettings(context: Context) : UserSettings {
             .takeIf { it in 0 until ReminderSchedule.MINUTES_PER_DAY } ?: ReminderSchedule.DEFAULT_MINUTE_OF_DAY
         set(value) = prefs.edit { putInt(KEY_REMINDER_MINUTE, value.coerceIn(0, ReminderSchedule.MINUTES_PER_DAY - 1)) }
 
+    override var reminderDueAt: Long
+        get() = prefs.getLong(KEY_REMINDER_DUE_AT, 0L)
+        set(value) = prefs.edit { putLong(KEY_REMINDER_DUE_AT, value) }
+
     override var themeMode: ThemeMode
         get() = prefs.getString(KEY_THEME, null)?.let { stored -> ThemeMode.entries.firstOrNull { it.name == stored } } ?: ThemeMode.SYSTEM
         set(value) = prefs.edit { putString(KEY_THEME, value.name) }
@@ -109,6 +117,7 @@ class PrefsUserSettings(context: Context) : UserSettings {
         private const val KEY_DIFFICULTY = "quiz_difficulty"
         private const val KEY_REMINDER_ENABLED = "reminder_enabled"
         private const val KEY_REMINDER_MINUTE = "reminder_minute_of_day"
+        private const val KEY_REMINDER_DUE_AT = "reminder_due_at"
         private const val KEY_THEME = "theme_mode"
         private const val KEY_DYNAMIC_COLOR = "dynamic_color"
         private const val KEY_TIMER_PACE = "timer_pace"

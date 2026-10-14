@@ -18,10 +18,10 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextReplacement
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.core.app.ApplicationProvider
-import androidx.work.WorkInfo
-import androidx.work.WorkManager
-import com.example.reminder.WorkManagerReminderScheduler
+import android.app.AlarmManager
+import org.robolectric.shadows.ShadowAlarmManager
 import com.example.support.FreshDatabaseRule
+import com.example.reminder.ReminderReceiver
 import com.example.support.TestWorkManagerRule
 import com.example.support.eventually
 import com.example.support.openTab
@@ -61,9 +61,10 @@ class ReminderCardUiTest {
         rule.onNodeWithTag("reminder_switch").performScrollTo()
     }
 
-    private fun pendingReminders(): List<WorkInfo> =
-        WorkManager.getInstance(context).getWorkInfosForUniqueWork(WorkManagerReminderScheduler.WORK_NAME).get()
-            .filter { it.state == WorkInfo.State.ENQUEUED }
+    /** The reminder is an alarm now (one at a time); the WorkManager rule stays because planning still touches it. */
+    private fun pendingReminders(): List<ShadowAlarmManager.ScheduledAlarm> =
+        shadowOf(context.getSystemService(AlarmManager::class.java)).scheduledAlarms
+            .filter { shadowOf(it.operation).savedIntent?.action == ReminderReceiver.ACTION_FIRE }
 
     /** The time as the card writes it: the way the device writes times. */
     private fun clockText(hour: Int, minute: Int): String =

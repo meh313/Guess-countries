@@ -10,8 +10,9 @@ import com.example.progress.PracticeStreak
 import java.util.TimeZone
 
 /**
- * The daily reminder: sends the notification when nothing was practiced today, then plans the next one. When the
- * reminder was switched off while this work waited, it ends the chain by doing nothing.
+ * The daily reminder's run, started by [ReminderReceiver] when the alarm fires: sends the notification when nothing was
+ * practiced today, then sets the next alarm. When the reminder was switched off while this run waited, it ends the
+ * reminder by doing nothing.
  */
 class ReminderWorker(
     context: Context,
@@ -32,11 +33,11 @@ class ReminderWorker(
         try {
             if (!ReminderSchedule.isTooLate(dueAt, at)) notifyIfNothingPracticed(at)
         } catch (e: Exception) {
-            // Tonight's reminder is lost, tomorrow's must not be: the chain is only re-planned when the app is opened.
+            // Tonight's reminder is lost, tomorrow's must not be: without the next alarm nothing comes until the app is opened.
             Log.w(TAG, "The reminder could not be shown", e)
         } finally {
             // From the later of "now" and the planned moment, so a run a second early cannot plan today's time again.
-            WorkManagerReminderScheduler(applicationContext, now, zone).scheduleNext(id, settings.reminderMinuteOfDay, maxOf(at, dueAt))
+            WorkManagerReminderScheduler(applicationContext, now, zone).scheduleAfter(maxOf(at, dueAt), settings.reminderMinuteOfDay)
         }
         return Result.success()
     }

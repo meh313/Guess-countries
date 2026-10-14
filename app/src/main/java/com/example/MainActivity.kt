@@ -23,11 +23,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -156,7 +160,19 @@ fun MainAppScreen(
     val showAllLabels = LocalDensity.current.fontScale < 1.5f
     val useRail = windowWidthDp >= RAIL_MIN_WIDTH_DP.dp
 
+    // A database write that failed (see WriteErrors): told once, then cleared so the next failure is told again.
+    val snackbarHostState = remember { SnackbarHostState() }
+    val writeError by viewModel.writeError.collectAsStateWithLifecycle()
+    val writeErrorText = stringResource(R.string.write_error)
+    LaunchedEffect(writeError) {
+        if (writeError) {
+            snackbarHostState.showSnackbar(writeErrorText, withDismissAction = true, duration = SnackbarDuration.Long)
+            viewModel.clearWriteError()
+        }
+    }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState, modifier = Modifier.testTag("write_error_snackbar")) },
         bottomBar = {
             if (!useRail) {
                 NavigationBar(modifier = Modifier.testTag("bottom_navigation_bar")) {

@@ -90,6 +90,7 @@ fun FlagOptionGrid(
                                     FlagView(
                                         country = country,
                                         modifier = Modifier.fillMaxWidth(),
+                                        thumbnail = true,
                                         contentDescription =
                                             if (answered) stringResource(R.string.option_flag_of, index + 1, country.name)
                                             else stringResource(R.string.option_of, index + 1, optionCodes.size)

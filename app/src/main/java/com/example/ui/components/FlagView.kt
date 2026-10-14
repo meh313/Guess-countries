@@ -1,9 +1,11 @@
 package com.example.ui.components
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -47,7 +49,13 @@ fun FlagView(
      * Quiz and flashcard fronts pass a neutral text because the name is the answer. The emoji is never
      * read out.
      */
-    contentDescription: String? = null
+    contentDescription: String? = null,
+    /**
+     * Draws a small copy of the artwork decoded for the box's width and kept in memory ([FlagBitmaps]), instead of
+     * decoding the full 600×450 file on the main thread. For grid cells, answer options and score rows; the big
+     * quiz and detail flags keep the full artwork. The box shows a plain placeholder until the first decode is in.
+     */
+    thumbnail: Boolean = false
 ) {
     val art = flagArtFor(country.code)
     Box(
@@ -60,18 +68,37 @@ fun FlagView(
             .clearAndSetSemantics { contentDescription?.let { this.contentDescription = it } },
         contentAlignment = Alignment.Center
     ) {
-        if (art != null) {
-            Image(
+        when {
+            art == null -> Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceVariant))
+            thumbnail -> ThumbnailArt(art)
+            else -> Image(
                 painter = painterResource(art),
+                contentDescription = null,
+                contentScale = ContentScale.FillBounds,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+        if (art == null || showEmojiOverlay) {
+            Text(text = country.flagEmoji, fontSize = if (art == null) 48.sp else 32.sp)
+        }
+    }
+}
+
+/** The artwork at the box's own width, from the thumbnail cache; a neutral box of the same size while it decodes. */
+@Composable
+private fun ThumbnailArt(@DrawableRes art: Int) {
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        // An unbounded width is Constraints.Infinity, which FlagBitmaps serves from its full-size bucket.
+        val bitmap = rememberFlagBitmap(art, constraints.maxWidth)
+        if (bitmap != null) {
+            Image(
+                bitmap = bitmap,
                 contentDescription = null,
                 contentScale = ContentScale.FillBounds,
                 modifier = Modifier.fillMaxSize()
             )
         } else {
             Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceVariant))
-        }
-        if (art == null || showEmojiOverlay) {
-            Text(text = country.flagEmoji, fontSize = if (art == null) 48.sp else 32.sp)
         }
     }
 }
