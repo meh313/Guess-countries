@@ -80,7 +80,7 @@
         <item quantity="one">%d-day streak</item>
         <item quantity="other">%d-day streak</item>
     </plurals>
-    <string name="stats_streak_start">Meet today's goal to start one</string>
+    <string name="stats_streak_start">Meet today\'s goal to start one</string>
     <string name="stats_streak_detail">%1$s · %2$s</string>
     <plurals name="stats_streak_best">
         <item quantity="one">Best: %d day</item>
