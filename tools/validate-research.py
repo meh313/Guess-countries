@@ -1,9 +1,11 @@
 """Checks a continent's research JSON against every catalog rule before any Kotlin is generated.
 
-    python3 tools/validate-research.py content/research/europe.json [--seed content/seed/europe.json]
+    python3 tools/validate-research.py content/research/europe.json [--seed content/seed/europe.json] [--existing]
 
 Exit status 1 and one line per problem when anything fails; mentions of Israel are reported as warnings
-(the owner's rule is no entry, and neighbours' texts are written so they need not name it).
+(the owner's rule is no entry, and neighbours' texts are written so they need not name it). Without --existing a
+country already in the catalog is an error (the file is a batch about to be generated); with it the entries are
+re-checked against the rest of the catalog, which is how the notes of a shipped continent are validated.
 
 Research JSON shape (one object per country in "entries"):
   code, name, continent, subregion                           plain strings (echoed from the seed)
@@ -49,14 +51,15 @@ PS_RULES = {'capital': 'Al Quds (Jerusalem)', 'quizCapital': 'Al Quds'}
 ap = argparse.ArgumentParser()
 ap.add_argument('research')
 ap.add_argument('--seed')
+ap.add_argument('--existing', action='store_true', help='the entries are already in the catalog: re-check them')
 a = ap.parse_args()
 data = json.loads(Path(a.research).read_text())
 batch = data['entries']
 seed = {e['code']: e for e in json.loads(Path(a.seed).read_text())['entries']} if a.seed else None
 catalog = catalog_entries()
 cat_codes = {e['code'] for e in catalog}
-cat_names = {fold(e['name']) for e in catalog}
-cat_quiz_capitals = {e['quizCapital'] for e in catalog if e['isSovereign']}
+cat_name_of = {e['code']: fold(e['name']) for e in catalog}
+cat_quiz_of = {e['code']: e['quizCapital'] for e in catalog if e['isSovereign']}
 
 errors, warnings = [], []
 err = lambda code, msg: errors.append(f'{code}: {msg}')
@@ -72,8 +75,11 @@ for e in batch:
     code = e.get('code', '??')
     if not re.fullmatch(r'[A-Z]{2}', code):
         err(code, 'code must be two uppercase letters')
-    if code in cat_codes:
+    if code in cat_codes and not a.existing:
         err(code, 'already in the catalog')
+    # With --existing an entry is compared with every catalog country but itself.
+    cat_names = {n for c, n in cat_name_of.items() if c != code}
+    cat_quiz_capitals = {q for c, q in cat_quiz_of.items() if c != code}
     if seed is not None and code not in seed:
         err(code, 'not in the seed list')
     name = e.get('name', '')
@@ -98,10 +104,6 @@ for e in batch:
     pop = val(e, 'population')
     if not isinstance(pop, (int, float)) or pop <= 0:
         err(code, 'population must be a positive number')
-    else:
-        digits = str(int(pop)).rstrip('0')
-        if len(digits) == 3 and digits.endswith('5'):
-            err(code, f'population {int(pop)} sits on a compact-rounding tie')
     area = val(e, 'areaSqKm')
     if not isinstance(area, (int, float)) or area <= 0:
         err(code, 'areaSqKm must be a positive number')

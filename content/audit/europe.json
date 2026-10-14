@@ -306,6 +306,122 @@
    ],
    "confidence": "low",
    "from": "critic"
+  },
+  {
+   "code": "PL",
+   "field": "population",
+   "current": "38540000",
+   "value": "38500000",
+   "reason": "Population rule changed with the compact number format: the app now shows three significant figures rounded half up, so every figure is the UN WPP 2024 mid-2024 medium-variant estimate (38,539,201) rounded to three significant figures, 38,500,000. The extra digit kept to keep the figure off a rounding tie under the old two-figure, half-even display is dropped.",
+   "sources": [
+    "https://www.worldometers.info/world-population/poland-population/",
+    "https://en.wikipedia.org/wiki/List_of_countries_by_population_(United_Nations)"
+   ],
+   "confidence": "high",
+   "from": "content-review"
+  },
+  {
+   "code": "RU",
+   "field": "population",
+   "current": "144800000",
+   "value": "145000000",
+   "reason": "Population rule changed with the compact number format: the app now shows three significant figures rounded half up, so every figure is the UN WPP 2024 mid-2024 medium-variant estimate (144,820,423) rounded to three significant figures, 145,000,000. The extra digit kept to keep the figure off a rounding tie under the old two-figure, half-even display is dropped.",
+   "sources": [
+    "https://www.worldometers.info/world-population/russia-population/",
+    "https://en.wikipedia.org/wiki/List_of_countries_and_dependencies_by_population_(United_Nations)"
+   ],
+   "confidence": "high",
+   "from": "content-review"
+  },
+  {
+   "code": "GR",
+   "field": "population",
+   "current": "10050000",
+   "value": "10000000",
+   "reason": "Population rule changed with the compact number format: the app now shows three significant figures rounded half up, so every figure is the UN WPP 2024 mid-2024 medium-variant estimate (10,047,817) rounded to three significant figures, 10,000,000. The extra digit kept to keep the figure off a rounding tie under the old two-figure, half-even display is dropped. First-catalog entry with no research note: the UN figure was read from Worldometers' table of the WPP 2024 revision.",
+   "sources": [
+    "https://www.worldometers.info/world-population/greece-population/",
+    "https://population.un.org/wpp/assets/Excel%20Files/1_Indicator%20(Standard)/CSV_FILES/WPP2024_TotalPopulationBySex.csv.gz"
+   ],
+   "confidence": "high",
+   "from": "content-review"
+  },
+  {
+   "code": "CZ",
+   "field": "officialName",
+   "current": "Czech Republic (Czechia)",
+   "value": "Czech Republic",
+   "reason": "Content review: officialName is the formal name alone, as for every other entry; the short name Czechia is searchable through CountryAliases, so the bracketed form the seed rule asked for (written before aliases existed) is no longer needed. Reverses the earlier rejectedAfterReview entry for this field.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Czech_Republic"
+   ],
+   "confidence": "high",
+   "from": "content-review"
+  },
+  {
+   "code": "SI",
+   "field": "funFact",
+   "current": "Slovenes first raised their white, blue and red flag in Ljubljana in 1848, as an answer to a German flag flying over Ljubljana Castle.",
+   "value": "Postojna Cave in Slovenia, 24 kilometers long, has carried visitors by train since 1872 and is home to the olm, the world's largest cave-dwelling amphibian.",
+   "reason": "Old fact repeated the flag text's 1848 Ljubljana story. Wikipedia Postojna Cave: the system is 24.34 km long, Slovenia's second-longest; 'In 1872, cave rails were laid along with first cave train for tourists'; home to the olm, 'the largest troglodytic amphibian in the world'.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Postojna_Cave"
+   ],
+   "confidence": "high",
+   "from": "content-review"
+  },
+  {
+   "code": "AT",
+   "field": "funFact",
+   "current": "The Alps cover about 62 percent of Austria, so most of the country is mountainous, and the landlocked nation has no coastline at all.",
+   "value": "The Alps cover about 62% of Austria, so most of the country is mountainous, and the landlocked nation has no coastline at all.",
+   "reason": "House style: a percentage after a number is written with the % sign, as the other entries do. No fact changes.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Geography_of_Austria"
+   ],
+   "confidence": "high",
+   "from": "content-review"
+  },
+  {
+   "code": "MT",
+   "field": "landmarks",
+   "current": [
+    "St. John's Co-Cathedral (Valletta)",
+    "Mdina",
+    "Ġgantija Temples (Gozo)"
+   ],
+   "value": [
+    "St John's Co-Cathedral (Valletta)",
+    "Mdina",
+    "Ġgantija Temples (Gozo)"
+   ],
+   "reason": "House style: Saint is abbreviated St without a full stop. No fact changes.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Malta",
+    "https://en.wikipedia.org/wiki/%C4%A0gantija"
+   ],
+   "confidence": "high",
+   "from": "content-review"
+  },
+  {
+   "code": "VA",
+   "field": "landmarks",
+   "current": [
+    "St. Peter's Basilica",
+    "Sistine Chapel",
+    "Vatican Museums"
+   ],
+   "value": [
+    "St Peter's Basilica",
+    "Sistine Chapel",
+    "Vatican Museums"
+   ],
+   "reason": "House style: Saint is abbreviated St without a full stop. No fact changes.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Vatican_City"
+   ],
+   "confidence": "high",
+   "from": "content-review"
   }
  ],
  "ownerDecisions": [

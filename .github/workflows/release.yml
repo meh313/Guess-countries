@@ -3,12 +3,20 @@ name: Release
 # Builds the release APK from the checked-out commit, signs it with the upload key kept in the
 # repository secrets, verifies it and publishes it as a GitHub Release.
 #
+# Two jobs, so the signed files are made with a read-only token and only the last step holds a write one:
+#   build    permissions: contents: read. Lints, tests, builds, signs and verifies the APK and keeps it, its
+#            checksum, the R8 mapping and the release notes as the workflow artifact "release-files".
+#   publish  permissions: contents: write, in the GitHub environment "release". Downloads that artifact and
+#            creates the tag and the release. Skipped on a dry run. To have every publish wait for a person,
+#            add required reviewers to the "release" environment (Settings > Environments > release); the
+#            environment is created on the first run if it does not exist yet.
+#
 # Two ways to run it:
 #   - Actions > Release > Run workflow, on main (the usual way). The version is versionName in
 #     app/build.gradle.kts; the tag v<version> is created at that commit and the release published.
 #     Tick "dry run" to only build, sign and verify: the files are kept as a workflow artifact for a
 #     week and nothing is published. Use that once after adding the secrets.
-#   - Push a tag v<version>; it must match versionName.
+#   - Push a tag v<version>; it must match versionName, and the tagged commit must be on main.
 #
 # Secrets (Settings > Secrets and variables > Actions > Repository secrets):
 #   KEYSTORE_BASE64  the upload keystore (world-flags-upload.jks) encoded with base64
@@ -29,21 +37,28 @@ on:
         type: boolean
         default: false
 
-permissions:
-  contents: write
+permissions: {}
 
 concurrency:
   group: release
   cancel-in-progress: false
 
+env:
+  # SHA-256 of the upload certificate. A keystore that does not produce it fails the run.
+  EXPECTED_CERT: 151c68bfdc8dba3cfdba818ff827309344382e268dc45cd5bc3ac88460189d7a
+  DRY_RUN: ${{ inputs.dry_run == true }}
+
 jobs:
-  release:
+  build:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    env:
-      # SHA-256 of the upload certificate. A keystore that does not produce it fails the run.
-      EXPECTED_CERT: 151c68bfdc8dba3cfdba818ff827309344382e268dc45cd5bc3ac88460189d7a
-      DRY_RUN: ${{ inputs.dry_run == true }}
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+      code: ${{ steps.version.outputs.code }}
+      apk: ${{ steps.files.outputs.apk }}
     steps:
       # A release is main as CI tested it, or a version tag. Nothing else gets signed and published.
       - name: Refuse any ref but main or a version tag
@@ -54,6 +69,17 @@ jobs:
           fi
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      # A tag can be put on any commit; only one that main has been through (reviewed, tested by CI) is released.
+      - name: Check that a tagged commit is on main
+        if: github.ref_type == 'tag'
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::Tag $GITHUB_REF_NAME points at $GITHUB_SHA, which is not on main. Merge it first."
+            exit 1
+          fi
 
       - name: Check the signing secrets
         env:
@@ -73,6 +99,7 @@ jobs:
           printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/upload.jks"
           echo "KEYSTORE_PATH=$RUNNER_TEMP/upload.jks" >> "$GITHUB_ENV"
 
+      # Reading the existing releases needs no write access: the token here can only read the repository.
       - name: Work out the version
         id: version
         env:
@@ -188,21 +215,46 @@ jobs:
           fi
           ls -l dist
 
-      - name: Keep the files as a workflow artifact (dry run)
-        if: env.DRY_RUN == 'true'
+      # The files the publish job releases; on a dry run they are what the run leaves behind, for a week.
+      - name: Keep the files as a workflow artifact
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: release-${{ steps.version.outputs.tag }}-dry-run
+          name: release-files
           path: dist/
           retention-days: 7
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    if: inputs.dry_run != true
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    environment: release
+    steps:
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: release-files
+          path: dist
+
+      - name: Check the files are the ones the build verified
+        env:
+          APK: ${{ needs.build.outputs.apk }}
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          set -euo pipefail
+          ls -l dist
+          (cd dist && sha256sum -c "$APK.sha256")
+          [ -s "dist/mapping-$VERSION.txt.gz" ] && [ -s dist/notes.md ]
 
       - name: Publish the release
-        if: env.DRY_RUN != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ steps.version.outputs.tag }}
-          VERSION: ${{ steps.version.outputs.version }}
-          APK: ${{ steps.files.outputs.apk }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ needs.build.outputs.tag }}
+          VERSION: ${{ needs.build.outputs.version }}
+          APK: ${{ needs.build.outputs.apk }}
         run: |
           set -euo pipefail
           gh release create "$TAG" --target "$GITHUB_SHA" --title "World Flags $VERSION" \

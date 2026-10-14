@@ -161,20 +161,6 @@ class CountryRepository(
     /** Forgets every bookmark, skill state and logged quiz; the settings are not touched. */
     suspend fun clearProgress() = withContext(NonCancellable) { progressDao.clearAll() }
 
-    /** Saves a quiz row without answers (a test fixture) and returns the earlier finish times. */
-    suspend fun saveQuizScore(mode: String, score: Int, total: Int, continent: String): List<Long> =
-        withContext(NonCancellable) {
-            progressDao.insertQuizScoreAfterReading(
-                QuizScoreEntity(
-                    mode = mode,
-                    score = score,
-                    total = total,
-                    continentFilter = continent,
-                    timestamp = now()
-                )
-            )
-        }
-
     companion object {
         /** Alphabetical by name, ignoring accents and case. */
         val byName: Comparator<Country> = compareBy { it.nameSortKey }

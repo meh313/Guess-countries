@@ -1,7 +1,6 @@
 package com.example.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -60,10 +59,10 @@ fun CountryCard(
     val compactNumbers = rememberCompactNumberFormat()
     val continentColor = getContinentColor(country.continent)
 
+    // The card is the clickable, so the ripple is clipped to its shape.
     Card(
-        modifier = modifier
-            .testTag("country_card_${country.code.lowercase()}")
-            .clickable(onClick = onCardClick),
+        onClick = onCardClick,
+        modifier = modifier.testTag("country_card_${country.code.lowercase()}"),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
@@ -100,24 +99,30 @@ fun CountryCard(
                     )
                 }
 
-                // Bookmark Favorite Icon on top right
+                // Bookmark on the top right: a 48dp touch target around a 32dp dark disc, so it stays easy to hit
+                // without covering more of the flag.
                 IconToggleButton(
                     checked = isFavorite,
                     onCheckedChange = { onFavoriteClick() },
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .padding(2.dp)
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(Color.Black.copy(alpha = 0.35f))
+                        .size(48.dp)
                         .testTag("favorite_btn_${country.code.lowercase()}")
                 ) {
-                    Icon(
-                        imageVector = if (isFavorite) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                        contentDescription = stringResource(R.string.bookmark_country, country.name),
-                        tint = if (isFavorite) GoldAccent else Color.White,
-                        modifier = Modifier.size(20.dp)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(Color.Black.copy(alpha = 0.35f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = if (isFavorite) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                            contentDescription = stringResource(R.string.bookmark_country, country.name),
+                            tint = if (isFavorite) GoldAccent else Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
             }
 
@@ -175,7 +180,7 @@ fun CountryCard(
                     Text(
                         text = compactNumbers.format(country.population),
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.outline
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 

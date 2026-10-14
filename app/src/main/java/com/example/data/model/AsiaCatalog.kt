@@ -107,7 +107,7 @@ object AsiaCatalog {
             languages = listOf("Dzongkha"),
             currency = "Bhutanese Ngultrum (Nu.)",
             landmarks = listOf("Tiger's Nest Monastery (Paro)", "Punakha Dzong", "Buddha Dordenma (Thimphu)"),
-            funFact = "Bhutan's constitution says at least 60 percent of the land must stay under forest for all time, and the country is guided by Gross National Happiness.",
+            funFact = "Bhutan's constitution says at least 60% of the land must stay under forest for all time, and the country is guided by Gross National Happiness.",
             driveSide = "Left"
         ),
         Country(
@@ -191,7 +191,7 @@ object AsiaCatalog {
             areaSqKm = 69700.0,
             flagEmoji = "🇬🇪",
             flagColors = listOf("White", "Red"),
-            flagDescription = "Georgia adopted this flag in 2004 after the Rose Revolution, whose leaders had marched under it. The big red cross on white is the cross of St. George, the country's patron saint, a sign said to be used by early Georgian kings. The four small crosses are thought to copy the Jerusalem cross, a mark of the medieval kingdom's Christian faith; a map from 1367 shows this five-cross flag over Tbilisi. The law gives the crosses no meaning.",
+            flagDescription = "Georgia adopted this flag in 2004 after the Rose Revolution, whose leaders had marched under it. The big red cross on white is the cross of St George, the country's patron saint, a sign said to be used by early Georgian kings. The four small crosses are thought to copy the Jerusalem cross, a mark of the medieval kingdom's Christian faith; a map from 1367 shows this five-cross flag over Tbilisi. The law gives the crosses no meaning.",
             languages = listOf("Georgian"),
             currency = "Georgian Lari (₾)",
             landmarks = listOf("Gergeti Trinity Church", "Narikala Fortress (Tbilisi)", "Vardzia"),
@@ -204,7 +204,7 @@ object AsiaCatalog {
             capital = "New Delhi",
             continent = "Asia",
             subregion = "Southern Asia",
-            population = 1451000000L,
+            population = 1450000000L,
             areaSqKm = 3287263.0,
             flagEmoji = "🇮🇳",
             flagColors = listOf("Saffron", "White", "Green", "Navy"),
@@ -448,7 +448,7 @@ object AsiaCatalog {
             capital = "Naypyidaw",
             continent = "Asia",
             subregion = "South-Eastern Asia",
-            population = 54500100L,
+            population = 54500000L,
             areaSqKm = 676578.0,
             flagEmoji = "🇲🇲",
             flagColors = listOf("Yellow", "Green", "Red", "White"),
@@ -483,7 +483,7 @@ object AsiaCatalog {
             capital = "Pyongyang",
             continent = "Asia",
             subregion = "Eastern Asia",
-            population = 26499000L,
+            population = 26500000L,
             areaSqKm = 120538.0,
             flagEmoji = "🇰🇵",
             flagColors = listOf("Blue", "White", "Red"),
@@ -570,7 +570,7 @@ object AsiaCatalog {
             capital = "Doha",
             continent = "Asia",
             subregion = "Western Asia",
-            population = 3048000L,
+            population = 3050000L,
             areaSqKm = 11586.0,
             flagEmoji = "🇶🇦",
             flagColors = listOf("White", "Maroon"),
@@ -578,7 +578,7 @@ object AsiaCatalog {
             languages = listOf("Arabic"),
             currency = "Qatari Riyal (QAR)",
             landmarks = listOf("Museum of Islamic Art (Doha)", "Souq Waqif (Doha)", "Al Zubarah Fort"),
-            funFact = "Qatar's flag is the only national flag that is more than twice as wide as it is tall: its official proportions are 11 to 28."
+            funFact = "Qatar hosted the 2022 FIFA World Cup, the first held in the Middle East and the first played in November and December; Argentina beat France in the final."
         ),
         Country(
             code = "SA",
@@ -700,7 +700,7 @@ object AsiaCatalog {
             languages = listOf("Tajik"),
             currency = "Tajikistani Somoni (TJS)",
             landmarks = listOf("Pamir Highway", "Iskanderkul", "Hisor Fortress"),
-            funFact = "Mountains cover over 90 percent of Tajikistan; Ismoil Somoni Peak in the Pamirs, at 7,495 meters, was the highest point in the former Soviet Union."
+            funFact = "Mountains cover over 90% of Tajikistan; Ismoil Somoni Peak in the Pamirs, at 7,495 meters, was the highest point in the former Soviet Union."
         ),
         Country(
             code = "TH",
@@ -745,7 +745,7 @@ object AsiaCatalog {
             capital = "Ankara",
             continent = "Asia",
             subregion = "Western Asia",
-            population = 87470000L,
+            population = 87500000L,
             areaSqKm = 783562.0,
             flagEmoji = "🇹🇷",
             flagColors = listOf("Red", "White"),
@@ -770,7 +770,7 @@ object AsiaCatalog {
             languages = listOf("Turkmen"),
             currency = "Turkmenistani Manat (TMT)",
             landmarks = listOf("Darvaza Gas Crater", "Ancient Merv", "Kunya-Urgench"),
-            funFact = "The Karakum Desert covers most of Turkmenistan, and in 1995 the United Nations recognized the country as a permanently neutral state."
+            funFact = "Ashgabat, Turkmenistan's capital, entered Guinness World Records in 2013 for the world's highest density of white marble-clad buildings: 543 of them."
         ),
         Country(
             code = "AE",

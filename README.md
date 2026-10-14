@@ -102,12 +102,15 @@ which reads the upload keystore and its passwords from the repository secrets `K
 1. Bump `versionName` in `app/build.gradle.kts` (for example `"1.6"`) and merge it to `main`.
 2. Open Actions > Release > Run workflow on `main`. The run creates the tag `v1.6`, builds and signs the
    APK, checks the certificate, alignment and version, and publishes a release with the APK, its SHA-256
-   and the R8 mapping. Pushing a tag `v1.6` does the same.
+   and the R8 mapping. Pushing a tag `v1.6` does the same, provided the tagged commit is on `main`.
 
-`versionCode` is derived from the version (`major*10000 + minor*100 + patch`, so `1.6` is `10600`), which
+The workflow is two jobs: `build` (read-only token) lints, tests, builds, signs and verifies, and keeps the files as
+a workflow artifact; `publish` (write token, GitHub environment `release`) downloads them and creates the release.
+Adding required reviewers to the `release` environment (Settings > Environments) makes every publish wait for an
+approval. `versionCode` is derived from the version (`major*10000 + minor*100 + patch`, so `1.6` is `10600`), which
 keeps it increasing without a manual bump. A file `release-notes/<version>.md`, when there is one, is appended
-to the generated release notes. Tick "dry run" to build and verify without publishing; the files
-are then kept as a workflow artifact for a week.
+to the generated release notes. Tick "dry run" to build and verify without publishing; the `publish` job is then
+skipped and the files stay as a workflow artifact for a week.
 
 ## Project layout
 
@@ -123,7 +126,7 @@ are then kept as a workflow artifact for a week.
 | `data/model/` | The country catalog, one file per continent (`EuropeCatalog.kt`…, alphabetical), `CountryRepository`, and `CountrySources` (the per-country source pages, read from the asset `sources.json`). |
 | `data/local/` | Room database (version 2): bookmarks, skill states, quiz history with every answer. Schemas are exported to `app/schemas/`; `AppDatabase.MIGRATION_1_2` is tested against the committed version 1 schema. |
 | `ui/` | Compose screens, components, theme, `Labels.kt` (the words for the stored keys) and `CountryViewModel`, which hands progress, the quiz and the study session to the holders in `ui/viewmodel/`. |
-| `tools/` | Content pipeline: flag rendering (`render-flags.mjs`, `to-webp.py`, `contact-sheet.py`), catalog generation (`validate-research.py`, `gen-entries.py`, `apply-edits.py`, `gen-flag-art.py`, `flag-checksums.py`), audit input (`export-entries.py`), quiz data (`gen-lookalikes.py` writes `FlagLookAlikes.kt`), the sources asset (`export-sources.py` writes `app/src/main/assets/sources.json` from the research and audit files; `--check` verifies it). |
+| `tools/` | Content pipeline: flag rendering (`render-flags.mjs`, `to-webp.py`, `contact-sheet.py`), catalog generation (`validate-research.py`, `gen-entries.py`, `apply-edits.py`, `gen-flag-art.py`, `flag-checksums.py`), audit input (`export-entries.py`), quiz data (`gen-lookalikes.py` writes `FlagLookAlikes.kt`), the sources asset (`export-sources.py` writes `app/src/main/assets/sources.json` from the research and audit files; `--check` verifies it), the notices asset (`export-notices.py` writes `app/src/main/assets/NOTICES.txt` from `licenses/THIRD_PARTY_NOTICES.md`; `--check` verifies it). CI runs both checks. |
 | `content/` | Provenance for the catalog: `seed/` (country lists and owner rules), `research/` (first-pass entries with sources), `audit/` (second-pass fixes, doubts and owner decisions per continent). |
 
 `CountryViewModel` receives its repository, speech engine and clock through the constructor, which is how
@@ -135,8 +138,10 @@ Each flag is a lossless 600x450 WebP in `res/drawable-nodpi/flag_xx.webp`, rende
 MIT-licensed [flag-icons](https://github.com/lipis/flag-icons) SVGs (`tools/render-flags.mjs` and
 `tools/to-webp.py` reproduce them) and looked up by country code in `FlagArt.kt`. Flags are shown in a 4:3 box
 (`FlagAspectRatio`), the shape of the artwork. A country without artwork gets a placeholder with its flag emoji,
-and a test fails until it has art. The licence text is in `licenses/THIRD_PARTY_NOTICES.md`, which is also
-packaged into the APK's assets.
+and a test fails until it has art. The licence text is in `licenses/THIRD_PARTY_NOTICES.md`, the developers' file
+(where the images came from and how to reproduce them). The player's copy is `app/src/main/assets/NOTICES.txt`, one
+block per third-party work (name, use, licence, copyright, licence text), which the About screen shows;
+`tools/export-notices.py` writes it from the markdown file and CI checks it is current (`--check`).
 
 ## Dependencies
 

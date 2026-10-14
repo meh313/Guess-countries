@@ -198,6 +198,45 @@
    ],
    "confidence": "medium",
    "from": "critic"
+  },
+  {
+   "code": "KI",
+   "field": "population",
+   "current": "134500",
+   "value": "135000",
+   "reason": "Population rule changed with the compact number format: the app now shows three significant figures rounded half up, so every figure is the UN WPP 2024 mid-2024 medium-variant estimate (134,518) rounded to three significant figures, 135,000. The extra digit kept to keep the figure off a rounding tie under the old two-figure, half-even display is dropped.",
+   "sources": [
+    "https://www.worldometers.info/world-population/kiribati-population/",
+    "https://en.wikipedia.org/wiki/List_of_countries_by_population_(United_Nations)"
+   ],
+   "confidence": "high",
+   "from": "content-review"
+  },
+  {
+   "code": "MH",
+   "field": "population",
+   "current": "37550",
+   "value": "37500",
+   "reason": "Population rule changed with the compact number format: the app now shows three significant figures rounded half up, so every figure is the UN WPP 2024 mid-2024 medium-variant estimate (37,548) rounded to three significant figures, 37,500. The extra digit kept to keep the figure off a rounding tie under the old two-figure, half-even display is dropped.",
+   "sources": [
+    "https://www.worldometers.info/world-population/marshall-islands-population/",
+    "https://en.wikipedia.org/wiki/Marshall_Islands"
+   ],
+   "confidence": "high",
+   "from": "content-review"
+  },
+  {
+   "code": "TV",
+   "field": "population",
+   "current": "9646",
+   "value": "9650",
+   "reason": "Population rule changed with the compact number format: the app now shows three significant figures rounded half up, so every figure is the UN WPP 2024 mid-2024 medium-variant estimate (9,646) rounded to three significant figures, 9,650. The extra digit kept to keep the figure off a rounding tie under the old two-figure, half-even display is dropped.",
+   "sources": [
+    "https://www.worldometers.info/world-population/tuvalu-population/",
+    "https://en.wikipedia.org/wiki/Tuvalu"
+   ],
+   "confidence": "high",
+   "from": "content-review"
   }
  ],
  "ownerDecisions": [],

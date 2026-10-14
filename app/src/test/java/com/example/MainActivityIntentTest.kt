@@ -2,10 +2,15 @@ package com.example
 
 import android.content.Context
 import android.content.Intent
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.rules.ActivityScenarioRule
@@ -22,7 +27,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/** Which tab the app opens on: Explore on a plain launch, the Quiz when the reminder notification is tapped. */
+/** Which tab the app opens on (Explore on a plain launch, the Quiz when the reminder notification is tapped), and what a tap on the selected tab does. */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
 class MainActivityIntentTest {
@@ -54,6 +59,32 @@ class MainActivityIntentTest {
 
         assertSelectedTab("quiz")
         assertNotNull("the quiz in progress must survive the tap", viewModel.quizSession.value)
+    }
+
+    @Test
+    fun reselectingTheProgressTab_leavesSettingsAndAboutForProgress() {
+        composeRule.onNodeWithTag("nav_tab_stats").performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("stats_settings_btn").performClick()
+        composeRule.waitForIdle()
+        composeRule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("settings_about_btn"))
+        composeRule.onNodeWithTag("settings_about_btn").performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("about_screen").assertIsDisplayed()
+        assertSelectedTab("stats")
+
+        // The tab is already selected: a tap on it goes back to its root, two screens down.
+        composeRule.onNodeWithTag("nav_tab_stats").performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("about_screen").assertDoesNotExist()
+        composeRule.onNodeWithTag("stats_title").assertIsDisplayed()
+        assertSelectedTab("stats")
+
+        // At the root already, a tap changes nothing.
+        composeRule.onNodeWithTag("nav_tab_stats").performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("stats_title").assertIsDisplayed()
+        assertSelectedTab("stats")
     }
 
     /**

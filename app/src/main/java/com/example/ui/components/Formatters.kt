@@ -8,15 +8,29 @@ import androidx.compose.ui.platform.LocalResources
 import com.example.R
 import com.example.data.model.Country
 import com.example.data.model.CountryCatalog
+import java.math.BigDecimal
+import java.util.Locale
 
-/** Short numbers such as "1.4B" or "67M", in the user's locale ("Mio." in German). */
+/**
+ * Short numbers such as "1.45B", "68.3M" or "12.3K", in [locale] ("Mio." in German): three significant figures,
+ * rounded half up (1,235,000 is "1.24M", not the half-even "1.23M"), trailing zeros dropped, so 999,500 rounds up to
+ * "1M" rather than "1.00M". The catalog stores its figures at three significant figures, so they show as stored.
+ */
+fun compactNumberFormat(locale: Locale): android.icu.text.NumberFormat =
+    android.icu.text.CompactDecimalFormat.getInstance(locale, android.icu.text.CompactDecimalFormat.CompactStyle.SHORT).apply {
+        minimumSignificantDigits = 1
+        maximumSignificantDigits = 3
+        roundingMode = BigDecimal.ROUND_HALF_UP
+    }
+
+/** [compactNumberFormat] for the user's locale, kept across recompositions. */
 @Composable
 fun rememberCompactNumberFormat(): android.icu.text.NumberFormat {
     val locale = LocalLocale.current.platformLocale
-    return remember(locale) { android.icu.text.CompactDecimalFormat.getInstance(locale, android.icu.text.CompactDecimalFormat.CompactStyle.SHORT) }
+    return remember(locale) { compactNumberFormat(locale) }
 }
 
-/** "68M (2024 est.)": the catalog holds rounded estimates for one year, not exact counts. */
+/** "68.3M (2024 est.)": the catalog holds rounded estimates for one year, not exact counts. */
 fun formatPopulation(resources: Resources, compact: android.icu.text.NumberFormat, population: Long): String =
     resources.getString(R.string.population_estimate, compact.format(population), CountryCatalog.DATA_YEAR)
 

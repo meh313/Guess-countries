@@ -26,6 +26,7 @@
     <string name="action_clear_filters">Clear filters</string>
     <string name="action_read_aloud">Read country summary aloud</string>
     <string name="read_aloud_unavailable">Reading aloud is unavailable on this device</string>
+    <string name="read_aloud_loading">Preparing to read aloud</string>
     <string name="flag_to_identify">Flag to identify</string>
     <string name="flag_of">Flag of %1$s</string>
     <string name="bookmark_country">Bookmark %1$s</string>
@@ -44,7 +45,7 @@
     <string name="mode_continent_hint">Covers the whole world</string>
     <string name="mode_speed_round">Speed Round</string>
     <string name="mode_speed_round_hint">10 seconds per question</string>
-    <string name="mode_blitz">60-Second Blitz</string>
+    <string name="mode_blitz">60-second blitz</string>
     <string name="mode_blitz_hint">As many flags as you can in one minute</string>
     <string name="mode_flashcards">Flashcards</string>
 
@@ -95,7 +96,15 @@
     <string name="standing_chip_unseen">Unseen</string>
     <string name="standing_chip_weak">Learning</string>
     <string name="standing_chip_mastered">Mastered</string>
-    <string name="pips_description">Flag %1$s, capital %2$s</string>
+    <string name="standing_short_unseen">unseen</string>
+    <string name="standing_short_weak">learning</string>
+    <string name="standing_short_mastered">mastered</string>
+    <!-- The Unseen + Learning pair a Progress continent card sets (Explore's hint, the Flashcards deck notice) -->
+    <string name="standing_still_to_learn">Still to learn</string>
+    <string name="standing_phrase_still_to_learn">still to learn</string>
+    <string name="standing_either">%1$s or %2$s</string>
+    <!-- The two pips on a card: skill label, standing, skill label, standing ("Flag: learning, Capital: mastered") -->
+    <string name="pips_description">%1$s: %2$s, %3$s: %4$s</string>
 
     <!-- Skills -->
     <string name="skill_flag">Flag</string>
@@ -112,7 +121,7 @@
 
     <!-- The daily reminder (notification channel and the two messages) -->
     <string name="reminder_channel_name">Daily reminder</string>
-    <string name="reminder_channel_description">A nudge to finish a quiz when you have not practiced today</string>
+    <string name="reminder_channel_description">A nudge to finish a quiz when you have not practised today</string>
     <string name="reminder_keep_title">Keep your streak</string>
     <plurals name="reminder_keep_text">
         <item quantity="one">One quiz keeps your %d-day streak</item>

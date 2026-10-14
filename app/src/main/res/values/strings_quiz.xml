@@ -6,11 +6,11 @@
 <!-- Counts whose wording does not change with the number, or that are never 1, stay plain strings. -->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="PluralsCandidate">
     <!-- Setup: header -->
-    <string name="quiz_title">Geography &amp; Flag Quiz</string>
+    <string name="quiz_title">Geography &amp; flag quiz</string>
     <string name="quiz_subtitle">Test what you know and keep your streak going</string>
 
     <!-- Setup: mode -->
-    <string name="quiz_select_mode">Select Mode</string>
+    <string name="quiz_select_mode">Select mode</string>
     <plurals name="quiz_seconds_per_question">
         <item quantity="one">%d second per question</item>
         <item quantity="other">%d seconds per question</item>
@@ -18,7 +18,7 @@
     <string name="quiz_no_time_limit">No time limit (see Settings)</string>
 
     <!-- Setup: scope -->
-    <string name="quiz_select_scope">Select Scope</string>
+    <string name="quiz_select_scope">Select scope</string>
     <string name="quiz_scope_whole_world">The continent quiz always covers the whole world</string>
     <string name="quiz_scope_due_count">%1$s · %2$d</string>
     <string name="quiz_due_nothing">Nothing is due for review today</string>
@@ -40,15 +40,15 @@
     <string name="quiz_look_alikes_flags_only">Look-alike answers apply to flag questions</string>
 
     <!-- Setup: start button -->
-    <string name="quiz_start_blitz">Start %1$d-Second Blitz</string>
-    <string name="quiz_start_quiz">Start %1$d-Question Quiz</string>
+    <string name="quiz_start_blitz">Start %1$d-second blitz</string>
+    <string name="quiz_start_quiz">Start %1$d-question quiz</string>
     <string name="quiz_needs_countries">Needs at least %1$d countries</string>
 
     <!-- Play: status bar -->
     <string name="quiz_progress_blitz">Question %1$d · Correct %2$d</string>
     <string name="quiz_progress">Question %1$d of %2$d</string>
     <string name="quiz_score">Score: %1$d</string>
-    <string name="quiz_streak">Streak %1$d</string>
+    <string name="quiz_streak">In a row %1$d</string>
     <string name="quiz_quit">Quit quiz</string>
 
     <!-- Play: timers -->
@@ -72,19 +72,20 @@
     <string name="quiz_result_wrong">Not quite. The answer is %1$s</string>
     <string name="quiz_result_also_counted">Right: %1$s counts too, though the catalog lists it under %2$s</string>
     <string name="quiz_capital_and_country">%1$s, %2$s</string>
-    <string name="quiz_fact_capital">💡 %1$s: %2$s</string>
-    <string name="quiz_finish">Finish &amp; View Score</string>
-    <string name="quiz_next_question">Next Question</string>
+    <string name="quiz_fact_capital">%1$s: %2$s</string>
+    <string name="quiz_finish">Finish &amp; view score</string>
+    <string name="quiz_next_question">Next question</string>
 
     <!-- Play: quit dialog -->
     <string name="quiz_quit_title">Quit this quiz?</string>
-    <string name="quiz_quit_text">Your progress in this quiz will be lost.</string>
+    <!-- Every answer given so far was recorded as it was given; only the unfinished quiz's points, its log entry and its streak credit go. -->
+    <string name="quiz_quit_text">The points of this quiz will be lost and it will not count towards your streak. The answers you have already given stay in your progress.</string>
     <string name="quiz_quit_confirm">Quit</string>
     <string name="quiz_quit_cancel">Keep playing</string>
 
     <!-- Score screen: header and numbers -->
     <string name="result_times_up">Time\'s up!</string>
-    <string name="result_complete">Quiz Complete!</string>
+    <string name="result_complete">Quiz complete!</string>
     <string name="result_blitz_score">%1$d correct · %2$d points</string>
     <plurals name="result_blitz_flags">
         <item quantity="one">%1$d flag in %2$d seconds</item>

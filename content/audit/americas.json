@@ -193,6 +193,41 @@
    ],
    "confidence": "medium",
    "from": "critic"
+  },
+  {
+   "code": "US",
+   "field": "population",
+   "current": "345400000",
+   "value": "345000000",
+   "reason": "Population rule changed with the compact number format: the app now shows three significant figures rounded half up, so every figure is the UN WPP 2024 mid-2024 medium-variant estimate (345,426,571) rounded to three significant figures, 345,000,000. The extra digit kept to keep the figure off a rounding tie under the old two-figure, half-even display is dropped. First-catalog entry with no research note: the UN figure was read from Worldometers' table of the WPP 2024 revision.",
+   "sources": [
+    "https://www.worldometers.info/world-population/us-population/",
+    "https://population.un.org/wpp/assets/Excel%20Files/1_Indicator%20(Standard)/CSV_FILES/WPP2024_TotalPopulationBySex.csv.gz"
+   ],
+   "confidence": "high",
+   "from": "content-review"
+  },
+  {
+   "code": "GD",
+   "field": "funFact",
+   "current": "Grenada is nicknamed the Isle of Spice for its nutmeg and mace crops, and a nutmeg pod even appears on its national flag.",
+   "value": "The world's first underwater sculpture park opened in 2006 in Molinere Bay, off Grenada's west coast, with statues by British sculptor Jason deCaires Taylor.",
+   "reason": "Old fact repeated the flag text's nutmeg pod. Wikipedia Molinere Underwater Sculpture Park: 'located in the Caribbean sea off the west coast of Grenada', 'created by British sculptor Jason deCaires Taylor', 'In May 2006 the world's first underwater sculpture park was opened for public viewing'.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Molinere_Underwater_Sculpture_Park"
+   ],
+   "confidence": "high",
+   "from": "content-review"
+  },
+  {
+   "code": "BR",
+   "field": "flagDescription",
+   "current": "The green background and yellow diamond come from the empire's flag, kept in 1889. They are linked to the royal houses of Emperor Pedro I (green) and his wife (yellow), or read as forests and gold. The blue circle shows the sky over Rio de Janeiro on November 15, 1889, when the republic began. Its 27 stars stand for 26 states and the Federal District. The white band says Ordem e Progresso (Order and Progress), from a motto by Auguste Comte.",
+   "value": "The green background and yellow diamond come from the empire's flag, kept in 1889. They are linked to the royal houses of Emperor Pedro I (green) and his wife (yellow), or read as forests and gold. The blue circle shows the sky over Rio de Janeiro on 15 November 1889, when the republic began. Its 27 stars stand for 26 states and the Federal District. The white band says Ordem e Progresso (Order and Progress), from a motto by Auguste Comte.",
+   "reason": "House style: dates are written day month year. No fact changes.",
+   "sources": [],
+   "confidence": "high",
+   "from": "content-review"
   }
  ],
  "ownerDecisions": [

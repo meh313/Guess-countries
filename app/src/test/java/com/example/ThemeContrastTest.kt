@@ -13,6 +13,7 @@ import com.example.ui.theme.EuropeColor
 import com.example.ui.theme.MasteredColor
 import com.example.ui.theme.NeedsPracticeColor
 import com.example.ui.theme.OceaniaColor
+import com.example.ui.theme.OceanBluePrimary
 import com.example.ui.theme.StreakColor
 import com.example.ui.theme.Typography
 import com.example.ui.theme.WorldFlagsTheme
@@ -80,6 +81,53 @@ class ThemeContrastTest {
         assertReadable("white on Mastered", MasteredColor, Color.White)
     }
 
+    /**
+     * The grade buttons (Again, Good, Easy in FlashcardScreen) draw white text on NeedsPracticeColor, the theme's
+     * primary and MasteredColor. The two fixed colours and the light theme's primary carry white text.
+     */
+    @Test
+    fun whiteTextOnTheGradeButtonColours_isReadable() {
+        assertReadable("white on Again (NeedsPracticeColor)", NeedsPracticeColor, Color.White)
+        assertReadable("white on Good (light primary)", OceanBluePrimary, Color.White)
+        assertReadable("white on Good (light primary, from the scheme)", schemeFor(dark = false).primary, Color.White)
+        assertReadable("white on Easy (MasteredColor)", MasteredColor, Color.White)
+    }
+
+    @Test
+    fun whiteTextOnTheDarkPrimary_isNotReadable_soTheGoodButtonMustUseOnPrimaryThere() {
+        // Documents why a white label cannot sit on the dark theme's pale primary blue: onPrimary (navy) can, and the
+        // "primary" pair in containerPairs holds it to 4.5:1 in both themes.
+        val s = schemeFor(dark = true)
+        assertTrue("white on dark primary = ${contrastRatio(Color.White, s.primary)}", contrastRatio(Color.White, s.primary) < 4.5)
+        assertReadable("onPrimary on dark primary", s.primary, s.onPrimary)
+    }
+
+    /** The secondary text colour (captions, hints, notes) on the two surfaces it is drawn on. */
+    private fun secondaryTextPairs(s: ColorScheme) =
+        mapOf(
+            "onSurfaceVariant on background" to (s.background to s.onSurfaceVariant),
+            "onSurfaceVariant on surface" to (s.surface to s.onSurfaceVariant)
+        )
+
+    @Test
+    fun secondaryText_isReadableInTheLightTheme() {
+        secondaryTextPairs(schemeFor(dark = false)).forEach { (name, pair) -> assertReadable("light $name", pair.first, pair.second) }
+    }
+
+    @Test
+    fun secondaryText_isReadableInTheDarkTheme() {
+        secondaryTextPairs(schemeFor(dark = true)).forEach { (name, pair) -> assertReadable("dark $name", pair.first, pair.second) }
+    }
+
+    @Test
+    fun outlineOnTheLightBackground_isNotReadableAsText() {
+        // Documents why captions and hints moved from outline to onSurfaceVariant: outline is a border colour and
+        // falls short of 4.5:1 on the light background (it may be left on icons and borders, which need 3:1).
+        val s = schemeFor(dark = false)
+        val ratio = contrastRatio(s.outline, s.background)
+        assertTrue("outline on light background = %.2f:1, expected under 4.5:1".format(ratio), ratio < 4.5)
+    }
+
     private fun containerPairs(s: ColorScheme) =
         mapOf(
             "primaryContainer" to (s.primaryContainer to s.onPrimaryContainer),
@@ -92,7 +140,7 @@ class ThemeContrastTest {
             "surfaceContainerHighest" to (s.surfaceContainerHighest to s.onSurface),
             "primary" to (s.primary to s.onPrimary),
             "secondary" to (s.secondary to s.onSecondary),
-            // Text buttons, "Score:", "Flag Meaning" and the icons draw the primary colour as text.
+            // Text buttons, "Score:", "Flag meaning" and the icons draw the primary colour as text.
             "primary text on background" to (s.background to s.primary),
             "primary text on surface" to (s.surface to s.primary),
             "primary text on surfaceContainerHigh" to (s.surfaceContainerHigh to s.primary)

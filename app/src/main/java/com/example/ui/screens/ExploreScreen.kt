@@ -76,10 +76,13 @@ import com.example.ui.CountrySummary
 import com.example.ui.chipLabelRes
 import com.example.ui.components.ContinentChip
 import com.example.ui.components.CountryCard
+import com.example.ui.components.Pip
 import com.example.progress.Skill
 import com.example.ui.components.Standing
 import com.example.ui.components.standing
+import com.example.ui.continentLabel
 import com.example.ui.labelRes
+import com.example.ui.standingFilterPhrase
 import com.example.ui.viewmodel.CountryViewModel
 
 @Composable
@@ -99,6 +102,7 @@ fun ExploreScreen(
     // recomposition: the standings only move when the skills do, and the sheet gets a parameter that holds still.
     val now = remember(selectedCountry?.code, skills) { viewModel.repository.now() }
     val speechAvailable by viewModel.speechAvailable.collectAsStateWithLifecycle()
+    val speechState by viewModel.speechState.collectAsStateWithLifecycle()
 
     val continents = listOf("All", "Africa", "Americas", "Asia", "Europe", "Oceania", "Antarctica")
     var showSortMenu by remember { mutableStateOf(false) }
@@ -216,7 +220,9 @@ fun ExploreScreen(
                     }
                 }
 
-                // Standing chips: how the player stands on the flag (Progress opens Explore with one of these set).
+                // Standing chips: how the player stands on the flag. Each chip toggles its own standing in the filter;
+                // a Progress continent card opens Explore with Unseen and Learning set together. Each chip carries
+                // the pip the cards draw for that standing, so the row is also the legend.
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -225,11 +231,12 @@ fun ExploreScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Standing.entries.forEach { standing ->
-                        val selected = standingFilter == standing
                         FilterChip(
-                            selected = selected,
-                            onClick = { viewModel.onStandingSelect(if (selected) null else standing) },
+                            selected = standing in standingFilter,
+                            onClick = { viewModel.toggleStanding(standing) },
                             label = { Text(stringResource(standing.chipLabelRes), style = MaterialTheme.typography.labelMedium) },
+                            // The chip doubles as the legend: the same pip the cards draw for this standing.
+                            leadingIcon = { Pip(standing, modifier = Modifier.testTag("standing_pip_${standing.name.lowercase()}")) },
                             shape = RoundedCornerShape(16.dp),
                             modifier = Modifier.testTag("standing_chip_${standing.name.lowercase()}")
                         )
@@ -316,8 +323,20 @@ fun ExploreScreen(
 
         if (countries.isEmpty()) {
             item(key = "empty", span = { GridItemSpan(maxLineSpan) }) {
-                val noSavedYet = showOnlyBookmarks && searchQuery.isBlank() && selectedContinent == "All" && standingFilter == null
-                val anyFilter = showOnlyBookmarks || searchQuery.isNotBlank() || selectedContinent != "All" || standingFilter != null
+                val noSavedYet = showOnlyBookmarks && searchQuery.isBlank() && selectedContinent == "All" && standingFilter.isEmpty()
+                val anyFilter = showOnlyBookmarks || searchQuery.isNotBlank() || selectedContinent != "All" || standingFilter.isNotEmpty()
+                // The hint names what is filtered: "No countries still to learn in Europe. Clear the filters?"
+                val filters = listOfNotNull(
+                    standingFilterPhrase(standingFilter),
+                    if (selectedContinent != "All") stringResource(R.string.explore_empty_scope_continent, continentLabel(selectedContinent)) else null,
+                    if (searchQuery.isNotBlank()) stringResource(R.string.explore_empty_scope_search, searchQuery.trim()) else null,
+                    if (showOnlyBookmarks) stringResource(R.string.explore_empty_scope_saved) else null
+                ).joinToString(" ")
+                val hint = when {
+                    noSavedYet -> stringResource(R.string.explore_empty_saved_hint)
+                    filters.isNotEmpty() -> stringResource(R.string.explore_empty_hint_filtered, filters)
+                    else -> stringResource(R.string.explore_empty_hint)
+                }
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -337,13 +356,14 @@ fun ExploreScreen(
                             text = stringResource(if (noSavedYet) R.string.explore_empty_saved_title else R.string.explore_empty_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.outline
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = stringResource(if (noSavedYet) R.string.explore_empty_saved_hint else R.string.explore_empty_hint),
+                            text = hint,
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.outline,
-                            textAlign = TextAlign.Center
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.testTag("explore_empty_hint")
                         )
                         if (anyFilter) {
                             TextButton(
@@ -384,6 +404,8 @@ fun ExploreScreen(
             onDismiss = { viewModel.selectCountry(null) },
             onSpeak = { viewModel.speakCountryDetails(country, CountrySummary.spoken(resources, country)) },
             speechAvailable = speechAvailable,
+            speechState = speechState,
+            onInstallVoiceData = { viewModel.installVoiceData() },
             onToggleFavorite = { viewModel.toggleFavorite(country.code) }
         )
     }

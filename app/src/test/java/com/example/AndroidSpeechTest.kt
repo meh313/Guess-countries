@@ -1,9 +1,12 @@
 package com.example
 
+import android.app.Application
 import android.content.Context
+import android.content.Intent
 import android.speech.tts.TextToSpeech
 import androidx.test.core.app.ApplicationProvider
 import com.example.speech.AndroidSpeech
+import com.example.speech.Speech
 import java.util.Locale
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -56,22 +59,25 @@ class AndroidSpeechTest {
     @Test
     fun speechIsUnavailableUntilTheEngineReportsReady() {
         val speech = newSpeech()
+        assertEquals(Speech.State.IDLE, speech.state.value)
         speech.prepare()
 
         assertFalse(speech.isAvailable.value)
+        assertEquals("binding counts as loading", Speech.State.LOADING, speech.state.value)
         speech.speak("hello", "id")
 
         assertNull(engine().lastSpokenText)
     }
 
     @Test
-    fun speechStaysUnavailableWhenNoEnglishVoiceDataIsInstalled() {
+    fun speechStaysUnavailableWhenNoEnglishVoiceDataIsInstalled_andSaysSo() {
         val speech = newSpeech()
         speech.prepare()
 
         engine().onInitListener.onInit(TextToSpeech.SUCCESS)
 
         assertFalse(speech.isAvailable.value)
+        assertEquals(Speech.State.MISSING_DATA, speech.state.value)
     }
 
     @Test
@@ -83,6 +89,46 @@ class AndroidSpeechTest {
         engine().onInitListener.onInit(TextToSpeech.ERROR)
 
         assertFalse(speech.isAvailable.value)
+        assertEquals(Speech.State.UNAVAILABLE, speech.state.value)
+    }
+
+    @Test
+    fun installVoiceData_opensTheSystemInstaller_andLetsTheEngineGoSoTheNextPrepareLooksAgain() {
+        val speech = newSpeech()
+        speech.prepare()
+        val first = ShadowTextToSpeech.getLastTextToSpeechInstance()
+        engine().onInitListener.onInit(TextToSpeech.SUCCESS)
+        assertEquals(Speech.State.MISSING_DATA, speech.state.value)
+
+        assertTrue(speech.installVoiceData())
+
+        val started = shadowOf(ApplicationProvider.getApplicationContext<Application>()).nextStartedActivity
+        assertNotNull("the installer should have been opened", started)
+        assertEquals(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA, started.action)
+        assertTrue("an application context needs a task of its own", started.flags and Intent.FLAG_ACTIVITY_NEW_TASK != 0)
+        assertTrue(shadowOf(first).isShutdown)
+        assertEquals(Speech.State.IDLE, speech.state.value)
+
+        // Back from the installer, the data is there: a fresh engine finds it.
+        ShadowTextToSpeech.addLanguageAvailability(Locale.US)
+        speech.prepare()
+        assertTrue(first !== ShadowTextToSpeech.getLastTextToSpeechInstance())
+        engine().onInitListener.onInit(TextToSpeech.SUCCESS)
+        assertEquals(Speech.State.READY, speech.state.value)
+        assertTrue(speech.isAvailable.value)
+    }
+
+    @Test
+    fun installVoiceData_withNoInstallerOnTheDevice_saysSoAndKeepsTheEngine() {
+        shadowOf(ApplicationProvider.getApplicationContext<Application>()).checkActivities(true)
+        val speech = newSpeech()
+        speech.prepare()
+        engine().onInitListener.onInit(TextToSpeech.SUCCESS)
+
+        assertFalse(speech.installVoiceData())
+
+        assertEquals(Speech.State.MISSING_DATA, speech.state.value)
+        assertFalse(engine().isShutdown)
     }
 
     @Test
@@ -111,6 +157,7 @@ class AndroidSpeechTest {
         engine().onInitListener.onInit(TextToSpeech.SUCCESS)
 
         assertTrue(speech.isAvailable.value)
+        assertEquals(Speech.State.READY, speech.state.value)
         assertEquals(Locale.US, engine().currentLanguage)
     }
 
@@ -175,5 +222,6 @@ class AndroidSpeechTest {
 
         assertTrue(engine().isShutdown)
         assertFalse(speech.isAvailable.value)
+        assertEquals(Speech.State.IDLE, speech.state.value)
     }
 }

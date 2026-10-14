@@ -19,31 +19,38 @@
     <string name="explore_search_hint">Search country, capital, or official name…</string>
     <string name="explore_clear_search">Clear search</string>
     <string name="explore_saved_chip">Saved</string>
-    <string name="explore_sort_options">Sort Options</string>
+    <string name="explore_sort_options">Sort options</string>
 
     <!-- Explore: the empty state -->
     <string name="explore_empty_saved_title">No saved countries yet</string>
     <string name="explore_empty_saved_hint">Tap the bookmark on any country to save it here</string>
     <string name="explore_empty_title">No countries found</string>
     <string name="explore_empty_hint">Try adjusting your search query or continent filter</string>
+    <!-- With filters on, the hint names them: "No countries still to learn in Europe. Clear the filters?" -->
+    <string name="explore_empty_hint_filtered">No countries %1$s. Clear the filters?</string>
+    <string name="explore_empty_scope_continent">in %1$s</string>
+    <string name="explore_empty_scope_search">matching \"%1$s\"</string>
+    <string name="explore_empty_scope_saved">among your saved countries</string>
+
+    <!-- Explore: the legend under the chips for the two pips on each card -->
 
     <!-- Detail sheet: the facts grid -->
-    <string name="sheet_facts_title">Country Facts</string>
-    <string name="sheet_fact_capital">Capital City</string>
+    <string name="sheet_facts_title">Country facts</string>
+    <string name="sheet_fact_capital">Capital city</string>
     <string name="sheet_fact_population">Population</string>
-    <string name="sheet_fact_area">Total Area</string>
+    <string name="sheet_fact_area">Total area</string>
     <string name="sheet_fact_currency">Currency</string>
     <string name="sheet_fact_languages">Languages</string>
-    <string name="sheet_fact_driving_side">Driving Side</string>
+    <string name="sheet_fact_driving_side">Driving side</string>
     <string name="sheet_drive_side">%1$s side</string>
     <string name="sheet_no_public_roads">No public roads</string>
 
-    <!-- Detail sheet: the progress card ("Flag: Mastered · box 4 · next review in 12 days · last answer right") -->
+    <!-- Detail sheet: the progress card ("Flag: Mastered · step 4 of 5 · next review in 12 days · last answer right") -->
     <string name="sheet_progress_title">Your progress</string>
     <string name="sheet_skill_standing">%1$s: %2$s</string>
     <string name="sheet_standing_not_reviewed">Not reviewed yet</string>
     <string name="sheet_standing_line">%1$s · %2$s · %3$s · %4$s</string>
-    <string name="sheet_standing_box">box %1$d</string>
+    <string name="sheet_standing_step">step %1$d of %2$d</string>
     <string name="sheet_due_now">due now</string>
     <string name="sheet_next_review_tomorrow">next review tomorrow</string>
     <plurals name="sheet_next_review_days">
@@ -54,10 +61,10 @@
     <string name="sheet_last_answer_wrong">last answer wrong</string>
 
     <!-- Detail sheet: the flag, the landmarks and the fun fact -->
-    <string name="sheet_flag_title">Flag Symbolism &amp; History</string>
-    <string name="sheet_landmarks_title">Famous Landmarks</string>
+    <string name="sheet_flag_title">Flag symbolism &amp; history</string>
+    <string name="sheet_landmarks_title">Famous landmarks</string>
     <string name="sheet_landmark">📍 %1$s</string>
-    <string name="sheet_fun_fact_title">Did You Know?</string>
+    <string name="sheet_fun_fact_title">Did you know?</string>
 
     <!-- Detail sheet: the sources -->
     <string name="sheet_sources">Sources (%1$d)</string>

@@ -20,6 +20,7 @@ import org.junit.runner.RunWith
 import android.content.Context
 import android.content.res.Resources
 import androidx.test.core.app.ApplicationProvider
+import com.example.speech.Speech
 import com.example.ui.CountrySummary
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
@@ -64,6 +65,15 @@ class CountryViewModelSpeechTest {
         speech.setAvailable(true)
 
         assertTrue(vm.speechAvailable.value)
+    }
+
+    @Test
+    fun anEngineThatOnlyTracksAvailability_stillReportsAState() {
+        assertEquals(Speech.State.IDLE, speech.state.value)
+
+        speech.setAvailable(true)
+
+        assertEquals(Speech.State.READY, speech.state.value)
     }
 
     @Test

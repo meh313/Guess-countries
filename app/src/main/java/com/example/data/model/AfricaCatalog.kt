@@ -47,7 +47,7 @@ object AfricaCatalog {
             capital = "Porto-Novo (capital), Cotonou (seat of government)",
             continent = "Africa",
             subregion = "Western Africa",
-            population = 14460000L,
+            population = 14500000L,
             areaSqKm = 114763.0,
             flagEmoji = "🇧🇯",
             flagColors = listOf("Green", "Yellow", "Red"),
@@ -73,7 +73,7 @@ object AfricaCatalog {
             languages = listOf("English", "Tswana"),
             currency = "Botswana Pula (BWP)",
             landmarks = listOf("Okavango Delta", "Chobe National Park", "Tsodilo Hills"),
-            funFact = "Botswana's motto and its money share one name: pula, the Setswana word for rain, which is precious in a country that is mostly Kalahari Desert.",
+            funFact = "The Okavango Delta, one of the world's largest inland deltas, whose river never reaches the sea, became UNESCO's 1,000th World Heritage Site in 2014.",
             driveSide = "Left"
         ),
         Country(
@@ -83,7 +83,7 @@ object AfricaCatalog {
             capital = "Ouagadougou",
             continent = "Africa",
             subregion = "Western Africa",
-            population = 23550000L,
+            population = 23500000L,
             areaSqKm = 274200.0,
             flagEmoji = "🇧🇫",
             flagColors = listOf("Red", "Green", "Yellow"),
@@ -126,7 +126,7 @@ object AfricaCatalog {
             languages = listOf("French", "English"),
             currency = "Central African CFA Franc (FCFA)",
             landmarks = listOf("Mount Cameroon", "Waza National Park", "Dja Faunal Reserve"),
-            funFact = "Cameroon is nicknamed Africa in miniature because beaches, deserts, mountains, rainforests and savannas can all be found within its borders."
+            funFact = "Cameroon is often called Africa in miniature: beaches, desert, mountains, rainforest and savanna all lie within one country."
         ),
         Country(
             code = "CV",
@@ -135,7 +135,7 @@ object AfricaCatalog {
             capital = "Praia",
             continent = "Africa",
             subregion = "Western Africa",
-            population = 524900L,
+            population = 525000L,
             areaSqKm = 4033.0,
             flagEmoji = "🇨🇻",
             flagColors = listOf("Blue", "White", "Red", "Yellow"),
@@ -293,7 +293,7 @@ object AfricaCatalog {
             areaSqKm = 17363.0,
             flagEmoji = "🇸🇿",
             flagColors = listOf("Blue", "Yellow", "Red", "Black", "White"),
-            flagDescription = "The flag comes from a banner King Sobhuza II gave in 1941 to Swazi soldiers in the Second World War; first raised in 1967, it became the national flag in October 1968, just after independence. Officially red stands for past battles, blue for peace and yellow for resources. The black and white ox-hide shield shows black and white people living in peace, two spears mean protection, and the stick carries feather tassels that only the king may use.",
+            flagDescription = "The flag comes from a banner King Sobhuza II gave in 1941 to Swazi soldiers in the World War II; first raised in 1967, it became the national flag in October 1968, just after independence. Officially red stands for past battles, blue for peace and yellow for resources. The black and white ox-hide shield shows black and white people living in peace, two spears mean protection, and the stick carries feather tassels that only the king may use.",
             languages = listOf("Swati", "English"),
             currency = "Swazi Lilangeni (SZL)",
             landmarks = listOf("Hlane Royal National Park", "Mlilwane Wildlife Sanctuary", "Sibebe Rock"),
@@ -418,7 +418,7 @@ object AfricaCatalog {
             languages = listOf("French"),
             currency = "West African CFA Franc (CFA)",
             landmarks = listOf("Basilica of Our Lady of Peace (Yamoussoukro)", "Taï National Park", "Comoé National Park"),
-            funFact = "The Basilica of Our Lady of Peace in Yamoussoukro, modeled on St. Peter's in Rome, is listed by Guinness World Records as the largest church in the world.",
+            funFact = "The Basilica of Our Lady of Peace in Yamoussoukro, modeled on St Peter's in Rome, is listed by Guinness World Records as the largest church in the world.",
             quizCapital = "Yamoussoukro"
         ),
         Country(
@@ -506,7 +506,7 @@ object AfricaCatalog {
             languages = listOf("Malagasy", "French"),
             currency = "Malagasy Ariary (Ar)",
             landmarks = listOf("Avenue of the Baobabs (Morondava)", "Tsingy de Bemaraha National Park", "Royal Hill of Ambohimanga"),
-            funFact = "Madagascar broke away from India about 90 million years ago, and around 90 percent of its wildlife, including lemurs, lives nowhere else on Earth."
+            funFact = "Madagascar broke away from India about 90 million years ago, and around 90% of its wildlife, including lemurs, lives nowhere else on Earth."
         ),
         Country(
             code = "MW",
@@ -533,7 +533,7 @@ object AfricaCatalog {
             capital = "Bamako",
             continent = "Africa",
             subregion = "Western Africa",
-            population = 24480000L,
+            population = 24500000L,
             areaSqKm = 1240192.0,
             flagEmoji = "🇲🇱",
             flagColors = listOf("Green", "Gold", "Red"),
@@ -659,7 +659,7 @@ object AfricaCatalog {
             areaSqKm = 923768.0,
             flagEmoji = "🇳🇬",
             flagColors = listOf("Green", "White"),
-            flagDescription = "A student in London, Michael Taiwo Akinkunmi, designed Nigeria's flag and won a nationwide contest in 1959. Green stands for farming. White stands for unity and peace. His design also had a red sun on the white band, meant for divine protection and guidance, but the committee left it out. No reason is given for the three bands. It became official at independence, on October 1, 1960.",
+            flagDescription = "A student in London, Michael Taiwo Akinkunmi, designed Nigeria's flag and won a nationwide contest in 1959. Green stands for farming. White stands for unity and peace. His design also had a red sun on the white band, meant for divine protection and guidance, but the committee left it out. No reason is given for the three bands. It became official at independence, on 1 October 1960.",
             languages = listOf("English", "Hausa", "Yoruba", "Igbo"),
             currency = "Nigerian Naira (₦)",
             landmarks = listOf("Zuma Rock", "Lekki Conservation Centre", "Osun-Osogbo Sacred Grove"),
@@ -723,7 +723,7 @@ object AfricaCatalog {
             capital = "Dakar",
             continent = "Africa",
             subregion = "Western Africa",
-            population = 18502000L,
+            population = 18500000L,
             areaSqKm = 196712.0,
             flagEmoji = "🇸🇳",
             flagColors = listOf("Green", "Gold", "Red"),
@@ -853,7 +853,7 @@ object AfricaCatalog {
             languages = listOf("Swahili", "English"),
             currency = "Tanzanian Shilling (TSh)",
             landmarks = listOf("Mount Kilimanjaro", "Serengeti National Park", "Stone Town (Zanzibar)"),
-            funFact = "Tanzania contains Mount Kilimanjaro, Africa's highest mountain peak at 5,895 meters above sea level.",
+            funFact = "Mount Kilimanjaro, Africa's highest mountain at 5,895 meters above sea level, stands in northern Tanzania.",
             driveSide = "Left"
         ),
         Country(

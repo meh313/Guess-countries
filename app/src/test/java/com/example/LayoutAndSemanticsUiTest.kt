@@ -11,8 +11,10 @@ import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertIsToggleable
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasAnyChild
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasTestTag
@@ -37,6 +39,7 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.semantics.SemanticsActions
 import com.example.data.model.CountryRepository
 import com.example.quiz.byName
+import com.example.support.setupNode
 import com.example.support.FreshDatabaseRule
 import com.example.support.boundsOf
 import com.example.support.contrastRatio
@@ -192,7 +195,7 @@ class LayoutAndSemanticsUiTest {
     }
 
     private fun assertActionsAreTouchTargets() {
-        for (label in listOf("Shuffle Cards", "Reset Deck")) {
+        for (label in listOf("Shuffle cards", "Reset deck")) {
             // Layout bounds, not touch bounds: Material extends the touch area to 48dp even when the button
             // itself has been squeezed to nothing. A normal icon button is 40dp.
             val r = rule.onNodeWithContentDescription(label).fetchSemanticsNode().boundsInRoot
@@ -256,7 +259,7 @@ class LayoutAndSemanticsUiTest {
         rule.onNodeWithTag("country_card_fr").performClick()
         rule.waitForIdle()
 
-        rule.onNodeWithText("Total Area").performScrollTo().assertIsDisplayed()
+        rule.onNodeWithText("Total area").performScrollTo().assertIsDisplayed()
         rule.onNodeWithText("Languages").performScrollTo().assertIsDisplayed()
         rule.onAllNodesWithText("Land Area").assertCountEquals(0)
         rule.onAllNodesWithText("Official Languages").assertCountEquals(0)
@@ -308,7 +311,7 @@ class LayoutAndSemanticsUiTest {
 
         val flag = rule.boundsOf("sheet_flag")
         val header = rule.boundsOf("speak_country_btn")
-        val facts = rule.onNodeWithText("Country Facts").fetchSemanticsNode().boundsInRoot
+        val facts = rule.onNodeWithText("Country facts").fetchSemanticsNode().boundsInRoot
         val bookmark = rule.boundsOf("sheet_favorite_btn")
         assertEquals("the flag was stretched: $flag", FlagAspectRatio, flag.width / flag.height, 0.02f)
         assertTrue("flag $flag runs into the header $header", flag.top >= header.bottom)
@@ -350,7 +353,9 @@ class LayoutAndSemanticsUiTest {
         val longest = allCountries.maxByOrNull { it.flagDescription.length }!!
         val card = "country_card_${longest.code.lowercase()}"
         rule.onNodeWithTag("search_country_input").performTextInput(longest.name)
-        rule.eventually("the ${longest.name} card") { rule.onNodeWithTag(card).assertIsDisplayed() }
+        rule.eventually("the ${longest.name} card") { rule.onNodeWithTag(card).assertExists() }
+        rule.onNodeWithTag("explore_grid").performScrollToNode(hasTestTag(card))
+        rule.onNodeWithTag(card).assertIsDisplayed()
 
         // The flashcard deck follows the Explore filter; the search may match several countries ("Guinea",
         // "Sudan"), so step to this one's place in the deck before flipping.
@@ -552,7 +557,7 @@ class LayoutAndSemanticsUiTest {
         rule.waitForIdle()
 
         rule.onNodeWithTag("nav_tab_quiz").assertIsSelected()
-        rule.onNodeWithText("Geography & Flag Quiz").assertIsDisplayed()
+        rule.onNodeWithText("Geography & flag quiz").assertIsDisplayed()
         // The rail takes the start edge; the content starts to its right.
         val rail = rule.boundsOf("navigation_rail")
         val start = rule.boundsOf("start_quiz_btn")
@@ -588,7 +593,6 @@ class LayoutAndSemanticsUiTest {
     @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi", fontScale = 2f)
     fun hugeFonts_theStartButtonAndTheBannerGrowInsteadOfClipping() {
         rule.openTab("quiz")
-        rule.onNodeWithTag("start_quiz_btn").performScrollTo()
         val button = rule.onNodeWithTag("start_quiz_btn")
         val text = button.fetchSemanticsNode().config[SemanticsProperties.Text].joinToString()
         assertTrue("the button says what it starts: $text", text.startsWith("Start"))
@@ -625,7 +629,7 @@ class LayoutAndSemanticsUiTest {
         rule.onNodeWithText("World Explorer").assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
 
         rule.openTab("quiz")
-        for (title in listOf("Geography & Flag Quiz", "Select Mode", "Select Scope", "Answers")) {
+        for (title in listOf("Geography & flag quiz", "Select mode", "Select scope", "Answers")) {
             rule.onNodeWithText(title).performScrollTo().assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
         }
         // The mode cards form one radio group, as do the scope chips and the Answers chips.
@@ -635,20 +639,133 @@ class LayoutAndSemanticsUiTest {
 
         rule.openTab("stats")
         rule.onNodeWithTag("stats_title").assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
-        rule.onNode(hasScrollAction()).performScrollToNode(hasText("Continent Mastery Breakdown"))
-        rule.onNodeWithText("Continent Mastery Breakdown").assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
+        rule.onNode(hasScrollAction()).performScrollToNode(hasText("Mastery by continent"))
+        rule.onNodeWithText("Mastery by continent").assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
     }
 
     @Test
     @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
     fun textAnswerCards_areButtons_andTheQuestionIsAHeading() {
         rule.openTab("quiz")
-        rule.onNodeWithTag("start_quiz_btn").performScrollTo().performClick()
+        rule.onNodeWithTag("start_quiz_btn").performClick()
         rule.waitForIdle()
 
         rule.onNodeWithTag("quiz_option_0").assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, androidx.compose.ui.semantics.Role.Button))
         val question = ViewModelProvider(rule.activity)[CountryViewModel::class.java].quizSession.value!!.current.questionText
         rule.onNodeWithText(question).assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
+    }
+
+    // ---- The quiz in landscape -------------------------------------------------------------------
+
+    @Test
+    @Config(sdk = [36], qualifiers = "w800dp-h360dp-xxhdpi")
+    fun landscapePhone_quizShowsTheFlagBesideTheAnswers() {
+        rule.openTab("quiz")
+        rule.onNodeWithTag("start_quiz_btn").performClick()
+        rule.waitForIdle()
+
+        // Two panes: every answer sits to the right of the flag, not under it, and the first is in view at once.
+        val flag = rule.boundsOf("quiz_flag")
+        for (i in 0..3) {
+            val option = rule.boundsOf("quiz_option_$i")
+            assertTrue("option $i ($option) should be beside the flag ($flag)", option.left >= flag.right)
+        }
+        rule.onNodeWithTag("quiz_option_0").assertIsDisplayed()
+        rule.onNodeWithTag("quiz_option_3").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    @Config(sdk = [36], qualifiers = "w800dp-h360dp-xxhdpi")
+    fun landscapePhone_pickTheFlagKeepsItsTilesSmallEnoughForFourToFit() {
+        rule.openTab("quiz")
+        rule.setupNode("quiz_mode_pick_flag").performClick()
+        rule.onNodeWithTag("start_quiz_btn").performClick()
+        rule.waitForIdle()
+
+        for (i in 0..3) {
+            val tile = rule.boundsOf("quiz_option_$i")
+            assertTrue("tile $i is ${tile.width / density}dp wide", tile.width / density <= 160.5f)
+        }
+    }
+
+    @Test
+    @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
+    fun portraitPhone_quizStacksTheAnswersUnderTheQuestion_andPinsStart() {
+        rule.openTab("quiz")
+        // The Start button is in view without scrolling, however long the setup screen is.
+        rule.onNodeWithTag("start_quiz_btn").assertIsDisplayed()
+        rule.setupNode("quiz_difficulty_hard")
+        rule.onNodeWithTag("start_quiz_btn").assertIsDisplayed()
+        // The chips are touch targets.
+        for (tag in listOf("quiz_scope_global", "quiz_difficulty_normal")) {
+            val chip = rule.boundsOf(tag)
+            assertTrue("$tag is ${chip.height / density}dp tall", chip.height / density >= 48f)
+            assertTrue("$tag is ${chip.width / density}dp wide", chip.width / density >= 48f)
+        }
+
+        rule.onNodeWithTag("start_quiz_btn").performClick()
+        rule.waitForIdle()
+        val flag = rule.boundsOf("quiz_flag")
+        val option = rule.boundsOf("quiz_option_0")
+        assertTrue("option ($option) should be under the flag ($flag)", option.top >= flag.bottom)
+    }
+
+    @Test
+    @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
+    fun quizQuestionAndResult_areLiveRegions_andTheStreakReadsAsOneSentence() {
+        rule.openTab("quiz")
+        rule.onNodeWithTag("start_quiz_btn").performClick()
+        rule.waitForIdle()
+
+        val question = ViewModelProvider(rule.activity)[CountryViewModel::class.java].quizSession.value!!.current.questionText
+        rule.onNodeWithText(question).assert(SemanticsMatcher.expectValue(SemanticsProperties.LiveRegion, LiveRegionMode.Polite))
+        rule.onNodeWithContentDescription("In a row 0").assertIsDisplayed()
+
+        rule.onNodeWithTag("quiz_option_0").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithTag("quiz_result").assert(SemanticsMatcher.expectValue(SemanticsProperties.LiveRegion, LiveRegionMode.Polite))
+    }
+
+    @Test
+    @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
+    fun pips_nameEachSkillAndItsStanding_andTheLegendNamesTheShapes() {
+        rule.onNodeWithTag("search_country_input").performTextInput("France")
+        rule.eventually("the France card") { rule.onNodeWithTag("country_card_fr").assertIsDisplayed() }
+
+        rule.onNode(hasTestTag("progress_pips") and hasAnyAncestor(hasTestTag("country_card_fr")), useUnmergedTree = true)
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.ContentDescription, listOf("Flag: unseen, Capital: unseen")))
+        // The standing chips are the legend: each carries the pip the cards draw for it, next to its name.
+        for (standing in listOf("unseen", "weak", "mastered")) {
+            rule.onNode(hasTestTag("standing_pip_$standing") and hasAnyAncestor(hasTestTag("standing_chip_$standing")), useUnmergedTree = true).assertExists()
+        }
+    }
+
+    @Test
+    @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
+    fun detailSheetTitleIsAHeading_andTheChipsBookmarkAndSourceLinksAre48dpTargets() {
+        val chip = rule.boundsOf("continent_chip_all")
+        assertTrue("continent chip is ${chip.height / density}dp tall", chip.height / density >= 47.5f)
+
+        rule.onNodeWithTag("search_country_input").performTextInput("Andorra")
+        rule.eventually("the Andorra card") { rule.onNodeWithTag("country_card_ad").assertIsDisplayed() }
+        val bookmark = rule.boundsOf("favorite_btn_ad")
+        assertTrue("bookmark is ${bookmark.width / density}x${bookmark.height / density}dp", bookmark.width / density >= 47.5f && bookmark.height / density >= 47.5f)
+
+        rule.onNodeWithTag("country_card_ad").performClick()
+        rule.waitForIdle()
+        rule.onNode(hasText("Andorra") and SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading)).assertExists()
+
+        // The sources come from an asset read in the background; Andorra has some.
+        rule.eventually("the sources") { rule.onNodeWithTag("sheet_sources_btn", useUnmergedTree = true).assertExists() }
+        val sheet = rule.onNode(hasScrollAction() and hasTestTag("country_detail_sheet_ad"))
+        sheet.performScrollToNode(hasTestTag("sheet_sources_btn"))
+        val toggle = rule.boundsOf("sheet_sources_btn")
+        assertTrue("sources toggle is ${toggle.height / density}dp tall", toggle.height / density >= 47.5f)
+        rule.onNodeWithTag("sheet_sources_btn").performClick()
+        rule.waitForIdle()
+        sheet.performScrollToNode(hasTestTag("sheet_source_link_0"))
+        val link = rule.boundsOf("sheet_source_link_0")
+        assertTrue("source link is ${link.height / density}dp tall", link.height / density >= 47.5f)
     }
 
     @Test

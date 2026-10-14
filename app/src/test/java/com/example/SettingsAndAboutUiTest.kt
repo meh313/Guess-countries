@@ -1,5 +1,7 @@
 package com.example
 
+import android.app.UiModeManager
+import androidx.activity.compose.setContent
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
@@ -21,10 +23,13 @@ import com.example.data.settings.ThemeMode
 import com.example.data.settings.TimerPace
 import com.example.progress.Evidence
 import com.example.progress.Skill
+import com.example.speech.Speech
 import com.example.support.FreshDatabaseRule
 import com.example.support.eventually
 import com.example.support.openTab
+import com.example.ui.screens.SettingsScreen
 import com.example.ui.viewmodel.CountryViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -34,6 +39,7 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
 /** Settings and About, reached from the Progress screen, in the real activity. */
@@ -56,6 +62,10 @@ class SettingsAndAboutUiTest {
         rule.onNodeWithTag("stats_settings_btn").performClick()
         rule.waitForIdle()
     }
+
+    /** The night mode the app told the system about (Android 12 and newer), so the splash and system dialogs follow. */
+    private val applicationNightMode: Int
+        get() = shadowOf(ApplicationProvider.getApplicationContext<android.content.Context>().getSystemService(UiModeManager::class.java)).applicationNightMode
 
     @Test
     fun theGearOnProgress_opensSettings_andBackReturns() {
@@ -83,10 +93,58 @@ class SettingsAndAboutUiTest {
         rule.onNodeWithTag("settings_theme_dark").assertIsSelected()
         assertEquals(ThemeMode.DARK, viewModel.appearance.value.themeMode)
         assertEquals(ThemeMode.DARK, PrefsUserSettings(ApplicationProvider.getApplicationContext()).themeMode)
+        assertEquals(UiModeManager.MODE_NIGHT_YES, applicationNightMode)
 
         rule.onNodeWithTag("settings_theme_light").performClick()
         rule.waitForIdle()
         assertEquals(ThemeMode.LIGHT, PrefsUserSettings(ApplicationProvider.getApplicationContext()).themeMode)
+        assertEquals(UiModeManager.MODE_NIGHT_NO, applicationNightMode)
+
+        rule.onNodeWithTag("settings_theme_system").performClick()
+        rule.waitForIdle()
+        assertEquals("System clears the app's override", UiModeManager.MODE_NIGHT_AUTO, applicationNightMode)
+    }
+
+    @Test
+    fun theReadAloudRow_followsTheEngine_andOffersTheInstallerWhenVoiceDataIsMissing() {
+        val state = MutableStateFlow(Speech.State.LOADING)
+        var installCalls = 0
+        rule.activity.setContent {
+            SettingsScreen(
+                viewModel = viewModel,
+                onBack = {},
+                onAbout = {},
+                speechState = state,
+                // The first tap finds an installer, the second does not.
+                onInstallVoiceData = { installCalls++; installCalls == 1 }
+            )
+        }
+        rule.waitForIdle()
+
+        rule.onNodeWithText("Read aloud").assertExists()
+        rule.onNodeWithText("Starting the speech engine…").assertExists()
+        rule.onNodeWithTag("settings_install_voice_btn").assertDoesNotExist()
+
+        state.value = Speech.State.MISSING_DATA
+        rule.waitForIdle()
+        rule.onNodeWithText("The speech engine has no English voice data, so nothing can be read aloud yet.").assertExists()
+        rule.onNodeWithTag("settings_install_voice_btn").performScrollTo().assertIsDisplayed().performClick()
+        rule.waitForIdle()
+        assertEquals(1, installCalls)
+        rule.onNodeWithTag("settings_install_voice_btn").performClick()
+        rule.waitForIdle()
+        assertEquals(2, installCalls)
+        rule.eventually("the no-installer note") { rule.onNodeWithText("This device has no voice data installer.").assertIsDisplayed() }
+
+        state.value = Speech.State.READY
+        rule.waitForIdle()
+        rule.onNodeWithTag("settings_install_voice_btn").assertDoesNotExist()
+        rule.onNodeWithText("Ready. The speaker on a country's detail sheet and on the flashcards reads the country aloud.").assertExists()
+
+        state.value = Speech.State.UNAVAILABLE
+        rule.waitForIdle()
+        rule.onNodeWithText("This device has no speech engine, so nothing can be read aloud.").assertExists()
+        rule.onNodeWithTag("settings_install_voice_btn").assertDoesNotExist()
     }
 
     @Test
@@ -161,8 +219,16 @@ class SettingsAndAboutUiTest {
         rule.onNodeWithTag("about_version").assert(hasText("World Flags $version"))
         rule.onNodeWithText("Privacy").assertExists()
         rule.eventually("the notices") {
-            rule.onNodeWithTag("about_notices").assert(hasText("flag-icons", substring = true))
+            rule.onNodeWithTag("about_notices").assert(hasText("flag-icons 7.5.0", substring = true))
         }
+        // The player's notices: each work with its use, licence and copyright line, and no developer instructions.
+        rule.onNodeWithTag("about_notices")
+            .assert(hasText("Used for: the flag images", substring = true))
+            .assert(hasText("Licence: MIT License", substring = true))
+            .assert(hasText("Copyright (c) 2013 Panayiotis Lipiridis", substring = true))
+            .assert(hasText("Apache License 2.0", substring = true))
+            .assert(!hasText("render-flags", substring = true))
+            .assert(!hasText("```", substring = true))
         rule.onNodeWithTag("about_repository_btn").assertExists()
 
         rule.onNodeWithTag("about_back_btn").performClick()

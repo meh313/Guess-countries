@@ -39,8 +39,11 @@ import kotlinx.coroutines.withContext
 /** The app's GitHub repository, where the catalog's research and audit files live. */
 const val REPOSITORY_URL = "https://github.com/meh313/Guess-countries"
 
-/** The asset holding the third-party licence text (packaged from `licenses/`). */
-internal const val NOTICES_ASSET = "THIRD_PARTY_NOTICES.md"
+/**
+ * The asset with the player-facing third-party notices: one block per work (name, use, licence, copyright, licence
+ * text). `tools/export-notices.py` writes it from `licenses/THIRD_PARTY_NOTICES.md`, the developers' file; CI checks it.
+ */
+internal const val NOTICES_ASSET = "NOTICES.txt"
 
 /**
  * About: what the app is, where its facts come from and how they were checked, the rules the catalog follows, the

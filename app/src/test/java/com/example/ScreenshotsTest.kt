@@ -1,6 +1,7 @@
 package com.example
 
 import org.robolectric.Shadows.shadowOf
+import com.example.support.setupNode
 import com.example.support.TestWorkManagerRule
 import androidx.test.core.app.ApplicationProvider
 import android.app.Application
@@ -85,7 +86,8 @@ class ScreenshotsTest {
 
         rule.openTab("quiz")
         save("quiz_setup")
-        rule.onNodeWithTag("start_quiz_btn").performScrollTo()
+        // The choices scroll; the Start button is pinned under them.
+        rule.setupNode("quiz_difficulty_hard")
         save("quiz_setup_bottom")
 
         // A "pick the flag" question on Hard, then the same question after a wrong answer.
@@ -114,8 +116,7 @@ class ScreenshotsTest {
         listOf("FR", "DE", "ES", "JP", "BR", "IT").forEach { viewModel.gradeFlashcard(it, Grade.AGAIN) }
         rule.awaitWeakSpotsWhere(viewModel) { it >= 6 }
         rule.openTab("quiz")
-        rule.onNodeWithTag("start_quiz_btn").performScrollTo()
-        rule.onNodeWithTag("quiz_scope_weak_spots").performScrollTo().performClick()
+        rule.setupNode("quiz_scope_weak_spots").performClick()
         rule.waitForIdle()
         save("quiz_setup_weak_spots")
 
@@ -298,6 +299,20 @@ class ScreenshotsTest {
         rule.waitForIdle()
     }
 
+    /** A phone on its side: the flag on the start side, the four answers on the end side, each pane scrolling on its own. */
+    @Test
+    @Config(qualifiers = "w800dp-h360dp-xxhdpi")
+    fun quizInLandscape() {
+        rule.waitForIdle()
+        rule.openTab("quiz")
+        val viewModel = ViewModelProvider(rule.activity)[CountryViewModel::class.java]
+        viewModel.startQuiz(QuizMode.PICK_FLAG, "Europe", QuizDifficulty.HARD)
+        rule.waitForIdle()
+        save("quiz_play_landscape")
+        viewModel.endQuiz()
+        rule.waitForIdle()
+    }
+
     /** Fonts at twice their size: nothing clipped, buttons and the banner grow. */
     @Test
     @Config(qualifiers = "w360dp-h800dp-xxhdpi", fontScale = 2f)
@@ -305,7 +320,6 @@ class ScreenshotsTest {
         rule.waitForIdle()
         save("explore_huge_fonts")
         rule.openTab("quiz")
-        rule.onNodeWithTag("start_quiz_btn").performScrollTo()
         save("quiz_setup_huge_fonts")
         rule.openTab("stats")
         save("stats_huge_fonts")

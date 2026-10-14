@@ -200,17 +200,18 @@ class CountryDatasetTest {
     @Test
     fun regionLabelNeverRepeatsAWord() {
         assertEquals("Antarctica", allCountries.single { it.code == "AQ" }.regionLabel)
-        assertEquals("Africa • Southern Africa", allCountries.single { it.code == "ZA" }.regionLabel)
-        allCountries.forEach { assertTrue(it.regionLabel, it.regionLabel.split(" • ").distinct().size == it.regionLabel.split(" • ").size) }
+        assertEquals("Africa · Southern Africa", allCountries.single { it.code == "ZA" }.regionLabel)
+        allCountries.forEach { assertTrue(it.regionLabel, it.regionLabel.split(" · ").distinct().size == it.regionLabel.split(" · ").size) }
     }
 
     @Test
-    fun noPopulationSitsOnAnExactRoundingTie() {
-        // Shown compactly ("1.4B"), a value like 1,450,000,000 rounds half-even to 1.4B although the real
-        // figure (about 1,451M) is closer to 1.5B. Store figures that are not exactly halfway.
-        allCountries.forEach {
+    fun populationsAreStoredAtThreeSignificantFigures() {
+        // The compact format shows three significant figures rounded half up, so the catalog stores the UN
+        // estimates at exactly that precision and nothing is lost or re-rounded on screen. (An older rule kept
+        // a fourth digit off rounding ties for a half-even, two-figure display; that rule is gone.)
+        allCountries.filter { it.isSovereign }.forEach {
             val digits = it.population.toString().trimEnd('0')
-            assertTrue("${it.code}: ${it.population} is exactly on a rounding tie", !(digits.length == 3 && digits.endsWith("5")))
+            assertTrue("${it.code}: ${it.population} has more than three significant figures", digits.length <= 3)
         }
     }
 
