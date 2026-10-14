@@ -22,6 +22,7 @@ import com.example.support.closeWhenIdle
 import com.example.support.inMemoryDatabase
 import com.example.support.stateDescriptionIs
 import com.example.ui.screens.BLITZ_ADVANCE_MS
+import com.example.ui.screens.BLITZ_WRONG_HOLD_MS
 import com.example.ui.screens.QuizScreen
 import com.example.ui.theme.WorldFlagsTheme
 import com.example.ui.viewmodel.CountryViewModel
@@ -139,6 +140,35 @@ class BlitzTimerTest {
         assertEquals(1, session.currentIndex)
         assertTrue(session.current.targetCountry.code != first)
         rule.onNodeWithText("Question 2 · Correct 1").assertIsDisplayed()
+    }
+
+    /** Answers the open question wrong and gives the paused compose clock one frame to show the result. */
+    private fun answerWrong() {
+        val q = session.current
+        onUi { vm.answerQuiz((q.correctAnswerIndex + 1) % q.options.size) }
+        rule.mainClock.advanceTimeBy(16)
+    }
+
+    @Test
+    fun aWrongAnswerStaysOnScreenLonger_soTheRightAnswerCanBeSeen() {
+        show()
+        answerWrong()
+        assertEquals(0, session.currentIndex)
+
+        // The short hold of a right answer is not enough after a wrong one.
+        rule.mainClock.advanceTimeBy(BLITZ_ADVANCE_MS + 200)
+        assertEquals(0, session.currentIndex)
+        rule.mainClock.advanceTimeBy(BLITZ_WRONG_HOLD_MS - BLITZ_ADVANCE_MS)
+
+        assertEquals(1, session.currentIndex)
+        assertEquals(0, session.correct)
+        rule.onNodeWithText("Question 2 · Correct 0").assertIsDisplayed()
+    }
+
+    @Test
+    fun theHoldTimes_areShortForARightAnswer_andLongerForAWrongOne() {
+        assertEquals(800L, BLITZ_ADVANCE_MS)
+        assertEquals(2000L, BLITZ_WRONG_HOLD_MS)
     }
 
     @Test

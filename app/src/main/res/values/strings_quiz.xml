@@ -70,6 +70,7 @@
     <string name="quiz_result_timeout">Time\'s up! The answer is %1$s</string>
     <string name="quiz_result_correct">Correct! +%1$d points</string>
     <string name="quiz_result_wrong">Not quite. The answer is %1$s</string>
+    <string name="quiz_result_also_counted">Right: %1$s counts too, though the catalog lists it under %2$s</string>
     <string name="quiz_capital_and_country">%1$s, %2$s</string>
     <string name="quiz_fact_capital">💡 %1$s: %2$s</string>
     <string name="quiz_finish">Finish &amp; View Score</string>

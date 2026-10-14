@@ -109,6 +109,19 @@ class QuizAndFlashcardUiTest {
         rule.waitForIdle()
     }
 
+    /**
+     * Plays the quiz out with the first option every time. Some of those answers are wrong, and a fixed-length quiz
+     * asks up to two misses again at its end, so the number of rounds is not the number of questions it started with.
+     */
+    private fun playOutWithFirstOption() {
+        var rounds = 0
+        while (viewModel.quizSession.value?.isFinished == false) {
+            answerFirstOption()
+            goNext()
+            check(++rounds <= 20) { "the quiz never finished" }
+        }
+    }
+
     private fun rotate() {
         rule.activityRule.scenario.recreate()
         rule.waitForIdle()
@@ -119,10 +132,12 @@ class QuizAndFlashcardUiTest {
         startQuiz("Africa")
 
         for (n in 1..questionsFor("Africa")) {
-            rule.onNodeWithText("Question $n of ${questionsFor("Africa")}").assertIsDisplayed()
+            val total = viewModel.quizSession.value!!.questions.size
+            rule.onNodeWithText("Question $n of $total").assertIsDisplayed()
             answerFirstOption()
             goNext()
         }
+        playOutWithFirstOption()
 
         rule.onNodeWithText("Quiz Complete!").assertIsDisplayed()
         // The score screen scrolls (a list of misses can be long); Done sits at its end.
@@ -388,10 +403,7 @@ class QuizAndFlashcardUiTest {
     @Test
     fun finishedQuiz_backReturnsToSetup() {
         startQuiz("Africa")
-        repeat(questionsFor("Africa")) {
-            answerFirstOption()
-            goNext()
-        }
+        playOutWithFirstOption()
         rule.onNodeWithText("Quiz Complete!").assertIsDisplayed()
 
         rule.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
@@ -403,17 +415,24 @@ class QuizAndFlashcardUiTest {
 
     // --- The score screen ---------------------------------------------------------------------------------------------
 
-    /** Plays the Africa quiz through, answering every question wrong except those in [rightOnes] (0-based). */
+    /**
+     * Plays the Africa quiz through, answering every question wrong except those in [rightOnes] (0-based), and
+     * returns the misses of the first round (the quiz asks up to two of them again at the end; those rounds are
+     * answered by the same rule, numbered on from ten).
+     */
     private fun playAfricaMissing(rightOnes: Set<Int> = emptySet()): List<Pair<String, String>> {
         startQuiz("Africa")
+        val total = questionsFor("Africa")
         val missed = mutableListOf<Pair<String, String>>()
-        repeat(questionsFor("Africa")) { n ->
+        var n = 0
+        while (viewModel.quizSession.value?.isFinished == false) {
             val q = viewModel.quizSession.value!!.current
             val pick = if (n in rightOnes) q.correctAnswerIndex else (q.correctAnswerIndex + 1) % q.options.size
-            if (n !in rightOnes) missed += q.targetCountry.code to q.optionCodes[pick]!!
+            if (n !in rightOnes && n < total) missed += q.targetCountry.code to q.optionCodes[pick]!!
             rule.onNodeWithTag("quiz_option_$pick").performScrollTo().performClick()
             rule.waitForIdle()
             goNext()
+            check(++n <= total + 2) { "the quiz never finished" }
         }
         rule.onNodeWithText("Quiz Complete!").assertIsDisplayed()
         return missed
@@ -423,8 +442,10 @@ class QuizAndFlashcardUiTest {
     fun quizResult_countsTheRightAnswersAndListsEveryMissWithBothFlags() {
         val missed = playAfricaMissing(rightOnes = setOf(0, 2))
         val total = questionsFor("Africa")
+        // Two of the eight misses were asked again (and missed again): twelve answers, each country listed once.
+        assertEquals(total + 2, viewModel.quizSession.value!!.questions.size)
 
-        rule.onNodeWithTag("quiz_finish_correct").assert(hasText("2 / $total correct"))
+        rule.onNodeWithTag("quiz_finish_correct").assert(hasText("2 / ${total + 2} correct"))
         rule.onNodeWithTag("quiz_finish_misses").performScrollTo()
         rule.onNodeWithText("Mistakes (${total - 2})").assertIsDisplayed()
         missed.forEach { (target, picked) ->
@@ -480,7 +501,9 @@ class QuizAndFlashcardUiTest {
         rule.waitForIdle()
 
         val again = viewModel.quizSession.value!!
-        assertEquals(finished.questions, again.questions)
+        // The same ten countries, the misses asked again at the end left out, each with its options reshuffled.
+        assertEquals(finished.questions.take(questionsFor("Africa")).map { it.targetCountry.code }, again.questions.map { it.targetCountry.code })
+        assertTrue(again.questions.all { it.light })
         assertEquals(0, again.currentIndex)
         assertEquals(0, again.score)
         assertFalse(again.isFinished)
@@ -825,10 +848,7 @@ class QuizAndFlashcardUiTest {
 
         assertEquals(QuizDifficulty.HARD, viewModel.quizSession.value!!.difficulty)
 
-        repeat(10) {
-            answerFirstOption()
-            goNext()
-        }
+        playOutWithFirstOption()
         rule.onNodeWithText("Quiz Complete!").assertIsDisplayed()
         rule.onNodeWithTag("quiz_finish_difficulty").assert(hasText("Answers: Hard"))
     }
@@ -1106,10 +1126,7 @@ class QuizAndFlashcardUiTest {
 
     private fun finishAfricaQuiz() {
         startQuiz("Africa")
-        for (n in 1..questionsFor("Africa")) {
-            answerFirstOption()
-            goNext()
-        }
+        playOutWithFirstOption()
         rule.onNodeWithText("Quiz Complete!").assertIsDisplayed()
     }
 

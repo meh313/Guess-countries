@@ -2,6 +2,7 @@ package com.example.data.model
 
 import com.example.data.local.QuizAnswerEntity
 import com.example.data.local.QuizScoreEntity
+import com.example.data.local.RecentTarget
 import com.example.data.local.UserProgressDao
 import com.example.data.local.UserProgressEntity
 import com.example.data.transfer.ProgressSnapshot
@@ -90,8 +91,8 @@ class CountryRepository(
 
     val quizHistory: Flow<List<QuizScoreEntity>> = progressDao.getQuizHistory()
 
-    /** The targets of the last few quizzes, so the next one can look elsewhere first. */
-    val recentTargets: Flow<List<String>> = progressDao.recentTargets(RECENT_QUIZZES)
+    /** The targets of the quizzes saved at or after [since] (epoch millis), with their mode and time, so the next quiz can look elsewhere first. */
+    fun recentTargets(since: Long): Flow<List<RecentTarget>> = progressDao.recentTargets(since)
 
     // Writes finish even when the caller's scope is cancelled: a view model cleared right after the last answer
     // (the player left the screen) must not lose the review or the score it had just started saving.
@@ -175,9 +176,6 @@ class CountryRepository(
         }
 
     companion object {
-        /** How many of the last quizzes count as recent when the next one picks its countries. */
-        const val RECENT_QUIZZES = 3
-
         /** Alphabetical by name, ignoring accents and case. */
         val byName: Comparator<Country> = compareBy { it.nameSortKey }
 

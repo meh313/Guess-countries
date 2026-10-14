@@ -3,6 +3,7 @@ package com.example
 import com.example.data.local.AppDatabase
 import com.example.data.local.QuizAnswerEntity
 import com.example.data.local.QuizScoreEntity
+import com.example.data.local.RecentTarget
 import com.example.data.local.SkillProgressEntity
 import com.example.data.local.UserProgressEntity
 import com.example.data.model.CountryRepository
@@ -275,16 +276,20 @@ class UserProgressDaoTest {
     }
 
     @Test
-    fun recentTargets_listsTheTargetsOfTheLastFewQuizzesOnly() {
+    fun recentTargets_listsTheTargetsOfTheQuizzesSinceAMoment_withTheirModeAndTime() {
         runBlocking {
             dao.insertQuizWithAnswers(quiz(100L), listOf(answerRow(0, "FR", "FR", true)))
-            dao.insertQuizWithAnswers(quiz(200L), listOf(answerRow(0, "DE", "DE", true)))
+            dao.insertQuizWithAnswers(quiz(200L).copy(mode = "CAPITAL"), listOf(answerRow(0, "DE", "DE", true)))
             dao.insertQuizWithAnswers(quiz(300L), listOf(answerRow(0, "JP", "JP", true), answerRow(1, "BR", "AR", false)))
-            dao.insertQuizWithAnswers(QuizScoreEntity(mode = "FLASHCARDS", score = 0, total = 0, continentFilter = "Due today", timestamp = 400L), emptyList())
+            dao.insertQuizWithAnswers(QuizScoreEntity(mode = "FLASHCARDS", score = 0, total = 0, continentFilter = "Due today", timestamp = 400L), listOf(answerRow(0, "IT", null, false)))
         }
 
-        assertEquals(setOf("DE", "JP", "BR"), runBlocking { dao.recentTargets(2).first() }.toSet())
-        assertEquals(setOf("FR", "DE", "JP", "BR"), runBlocking { dao.recentTargets(5).first() }.toSet())
+        val since200 = runBlocking { dao.recentTargets(200L).first() }
+        assertEquals(setOf("DE", "JP", "BR"), since200.map { it.code }.toSet())
+        assertEquals(RecentTarget("DE", "CAPITAL", 200L), since200.single { it.code == "DE" })
+        assertEquals(RecentTarget("BR", "FLAG_NAME", 300L), since200.single { it.code == "BR" })
+        assertEquals("study sessions do not count", setOf("FR", "DE", "JP", "BR"), runBlocking { dao.recentTargets(0L).first() }.map { it.code }.toSet())
+        assertTrue(runBlocking { dao.recentTargets(301L).first() }.isEmpty())
     }
 
     @Test
@@ -312,7 +317,7 @@ class UserProgressDaoTest {
         assertTrue(dao.getAllProgress().first().isEmpty())
         assertTrue(dao.getAllSkills().first().isEmpty())
         assertTrue(dao.getQuizHistory().first().isEmpty())
-        assertTrue(dao.recentTargets(5).first().isEmpty())
+        assertTrue(dao.recentTargets(0L).first().isEmpty())
         // Life goes on afterwards.
         answer("FR", true, 30L)
         assertEquals(1, dao.getAllSkills().first().size)
@@ -345,7 +350,7 @@ class UserProgressDaoTest {
         // The quiz comes back with a new id (the file's ids only tie answers to quizzes), its answer re-pointed at it.
         val quizzes = dao.getQuizHistory().first()
         assertEquals(snapshot.quizzes.map { it.copy(id = 0) }, quizzes.map { it.copy(id = 0) })
-        assertEquals(listOf("FR"), dao.recentTargets(1).first())
+        assertEquals(listOf("FR"), dao.recentTargets(0L).first().map { it.code })
         assertEquals(1, dao.answersOf(quizzes.single().id).size)
     }
 }

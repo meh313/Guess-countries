@@ -5,7 +5,12 @@
   comparison). The continent chips, the standing chips, the sort menu and the skill labels use the shared enum
   labels in strings.xml.
 -->
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Numbers on cards and in the sheet. The number after the figure is the year of the estimate, not a count. -->
+    <string name="population_estimate" tools:ignore="PluralsCandidate">%1$s (%2$d est.)</string>
+    <string name="population_winter">%1$s wintering at the stations</string>
+    <string name="card_no_capital">No capital</string>
+
     <!-- Explore: the banner -->
     <string name="explore_title">World Explorer</string>
     <string name="explore_subtitle">Discover countries, flags &amp; continents across the globe</string>

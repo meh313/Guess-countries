@@ -34,13 +34,21 @@ drill them with flashcards, and test yourself with quizzes. Everything runs on t
 
 ### How mastery works
 
-Each country is tracked per skill (its flag, its capital) on a Leitner schedule: a confidence score from 0 to 100
-and a box from 1 to 5 whose review intervals are 1, 3, 7, 14 and 30 days. A right quiz answer raises the score and,
-when the review was due, moves the box up; an answer before the due date keeps its schedule, so nothing is mastered
-in one sitting. A wrong answer sends the country back to box 1. Continent questions and flashcard grades are light
-evidence: they move the score a little and never past 60. A flag counts as *mastered* at box 3 or higher with a score
-of 75 or more, and lapses out of that if it goes unreviewed for twice its interval. *Weak spots* are the countries
-reviewed but not (or no longer) mastered.
+Each country is tracked per skill (its flag, its capital, its continent) on a Leitner schedule: a confidence score
+from 0 to 100 and a box from 1 to 5 whose review intervals are 1, 3, 7, 21 and 60 days. A right quiz answer raises the
+score and, when the review was due, moves the box up; an answer before the due date keeps its schedule, so nothing is
+mastered in one sitting. A wrong answer drops the country two boxes (never below box 1); a miss under time pressure
+(Speed Round, Blitz) drops it one and costs half the score. The continent quiz has its own skill, so a right continent
+pick never counts as knowing the flag; its answers and the flashcard grades are light evidence: they move the score a
+little and never past 60. Studying a card, *Again* drops it two boxes, *Good* reschedules a due card at its current
+box (so it leaves the due list until its interval passes) and keeps the date of one not yet due, and *Easy* climbs to
+box 2 at most; the longer intervals come only from quiz answers. A flag counts as *mastered* at box 3 or higher with a
+score of 75 or more, and lapses out of that if it goes unreviewed for twice its interval. *Weak spots* are the
+countries reviewed but not (or no longer) mastered.
+
+A ten-question quiz is filled with due reviews first (up to seven), then weak countries, then at most three new
+countries, and the rest from whatever is left, so reviews are cleared before new flags pile on; a country asked about
+in the same skill in the last 45 minutes is nearly skipped, unless it is due.
 
 ## Languages
 

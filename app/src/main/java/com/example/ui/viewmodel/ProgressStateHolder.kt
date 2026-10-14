@@ -2,6 +2,7 @@ package com.example.ui.viewmodel
 
 import android.util.Log
 import com.example.data.local.QuizScoreEntity
+import com.example.data.local.RecentTarget
 import com.example.data.local.UserProgressEntity
 import com.example.data.model.Country
 import com.example.data.model.CountryRepository
@@ -12,14 +13,18 @@ import com.example.progress.PracticeStreak
 import com.example.progress.Skill
 import com.example.progress.SkillMastery
 import com.example.progress.SkillState
+import com.example.quiz.QuestionPicker
+import com.example.quiz.QuizMode
 import java.util.TimeZone
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -64,14 +69,20 @@ class ProgressStateHolder(
     fun refreshClock() = refresh.update { it + 1 }
 
     /**
-     * What the quiz setup needs: the skill states, which countries are weak or due in each skill and what the last
-     * quizzes asked about. One flow, so a screen that collects it keeps every input current.
+     * What the quiz setup needs: the skill states, which countries are weak or due in each skill and what the quizzes
+     * of the last [QuestionPicker.RECENT_WINDOW_MILLIS] asked about. One flow, so a screen that collects it keeps
+     * every input current; the recent window is read again on every [refreshClock], since its start moves with the time.
      */
-    val quizPlan: StateFlow<QuizPlan> = combine(skills, repository.recentTargets, refresh) { bySkill, recent, _ ->
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val quizPlan: StateFlow<QuizPlan> = combine(
+        skills,
+        refresh.flatMapLatest { repository.recentTargets(repository.now() - QuestionPicker.RECENT_WINDOW_MILLIS) },
+        refresh
+    ) { bySkill, recent, _ ->
         val now = repository.now()
         QuizPlan(
             skills = bySkill,
-            recentTargets = recent.toSet(),
+            recent = recent,
             weak = Skill.entries.associateWith { WeakSpots.select(bySkill[it].orEmpty(), repository.allCountries, now) },
             due = Skill.entries.associateWith { WeakSpots.due(bySkill[it].orEmpty(), repository.allCountries, now) }
         )
@@ -149,7 +160,8 @@ class WriteErrors {
 /** The inputs of a quiz's question selection; see [ProgressStateHolder.quizPlan]. */
 data class QuizPlan(
     val skills: Map<Skill, Map<String, SkillState>>,
-    val recentTargets: Set<String>,
+    /** The targets of the recent quizzes, with the mode and time of each; see [recent]. */
+    val recent: List<RecentTarget>,
     /** Per skill: reviewed and not mastered, weakest first. */
     val weak: Map<Skill, List<Country>>,
     /** Per skill: reviewed and past the due date, longest overdue first. */
@@ -158,7 +170,20 @@ data class QuizPlan(
     fun weak(skill: Skill): List<Country> = weak[skill].orEmpty()
     fun due(skill: Skill): List<Country> = due[skill].orEmpty()
 
+    /**
+     * The codes asked about in [skill] within [QuestionPicker.RECENT_WINDOW_MILLIS] before [now]: a flag asked in a
+     * capital quiz is not recent for a flag quiz. Quizzes in a mode this version does not know are left out.
+     */
+    fun recent(skill: Skill, now: Long): Set<String> {
+        val since = now - QuestionPicker.RECENT_WINDOW_MILLIS
+        return recent.asSequence()
+            .filter { it.at >= since }
+            .filter { target -> QuizMode.entries.firstOrNull { it.name == target.mode }?.let(SkillMastery::skillOf) == skill }
+            .map { it.code }
+            .toSet()
+    }
+
     companion object {
-        val EMPTY = QuizPlan(emptyMap(), emptySet(), emptyMap(), emptyMap())
+        val EMPTY = QuizPlan(emptyMap(), emptyList(), emptyMap(), emptyMap())
     }
 }

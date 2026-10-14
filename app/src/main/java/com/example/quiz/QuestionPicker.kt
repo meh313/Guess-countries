@@ -6,9 +6,11 @@ import com.example.progress.SkillState
 import kotlin.random.Random
 
 /**
- * Which countries a quiz asks about first. Pure: every country in the pool gets a weight from its standing in the
- * skill the quiz exercises, and the order is a weighted draw without replacement, so a ten-question quiz is mostly
- * unseen and due countries, rarely one mastered last week, and seldom one it asked about a quiz or two ago.
+ * Which countries a quiz asks about. Pure: every country in the pool gets a weight from its standing in the skill the
+ * quiz exercises, and [order] is a weighted draw without replacement; [select] fills a fixed-length quiz by group,
+ * due reviews first, so the reviews are cleared before new flags pile more on. Recency means "asked in the same skill
+ * in the last 45 minutes" ([RECENT_WINDOW_MILLIS]): a country just asked about is nearly skipped, but never a due
+ * one, since an item due today was by construction asked yesterday or earlier.
  */
 object QuestionPicker {
     /** Never reviewed in this skill. */
@@ -25,19 +27,31 @@ object QuestionPicker {
     /** Mastered and not due: a rare check that it still holds. */
     const val MASTERED = 0.5
 
-    /** Among the targets of the last few quizzes: the weight is multiplied by this. */
+    /** Asked about in this skill within [RECENT_WINDOW_MILLIS]: the weight is multiplied by this, unless the item is due. */
     const val RECENT_FACTOR = 0.1
+
+    /** How long a country counts as recently asked: the same sitting, not the same day, so yesterday's reviews come back. */
+    const val RECENT_WINDOW_MILLIS = 45 * 60 * 1000L
+
+    /** At most this many of a quiz's questions are due reviews, so a backlog still leaves room for new countries. */
+    const val DUE_SHARE = 7
+
+    /** At most this many never-seen countries per quiz, so new flags arrive at a pace the reviews can keep up with. */
+    const val NEW_PER_QUIZ = 3
 
     private const val WEEK_MILLIS = 7 * SkillMastery.DAY_MILLIS
 
-    /** The weight of a country whose state in the quiz's skill is [state] (null when never reviewed) at [now]. */
+    /**
+     * The weight of a country whose state in the quiz's skill is [state] (null when never reviewed) at [now]. A due
+     * item keeps its full weight whether or not it is [recent]: the review is the point.
+     */
     fun weight(state: SkillState?, now: Long, recent: Boolean): Double {
+        if (state != null && SkillMastery.isDue(state, now)) {
+            val weeksOverdue = ((now - state.dueAt) / WEEK_MILLIS).toDouble()
+            return DUE + minOf(OVERDUE_BONUS_CAP, weeksOverdue * OVERDUE_WEEK_BONUS)
+        }
         val base = when {
             state == null || state.isNew -> UNSEEN
-            SkillMastery.isDue(state, now) -> {
-                val weeksOverdue = ((now - state.dueAt) / WEEK_MILLIS).toDouble()
-                DUE + minOf(OVERDUE_BONUS_CAP, weeksOverdue * OVERDUE_WEEK_BONUS)
-            }
             SkillMastery.isMastered(state, now) -> MASTERED
             else -> WEAK
         }
@@ -47,7 +61,7 @@ object QuestionPicker {
     /**
      * Every country of [pool] once, the likeliest first: a weighted draw without replacement over the pool sorted by
      * code, so the same [random] always gives the same order whatever order the pool came in. [skill] holds the
-     * states of the skill the quiz exercises; [recent] the codes asked about in the last few quizzes.
+     * states of the skill the quiz exercises; [recent] the codes asked about in that skill within the recent window.
      */
     fun order(
         pool: List<Country>,
@@ -55,12 +69,58 @@ object QuestionPicker {
         recent: Set<String>,
         now: Long,
         random: Random
+    ): List<Country> = draw(pool, skill, recent, now, random, pool.size)
+
+    /**
+     * How a fixed-length quiz is filled: reviews first, then a few new countries, then the rest by weight.
+     *
+     * Returns [count] countries of [pool] (all of it when smaller), as groups in priority order: the due ones (by
+     * weighted draw among themselves) up to [DUE_SHARE]; the weak ones (reviewed, not due, not mastered); unseen ones,
+     * at most [newAllowance] and at most [NEW_PER_QUIZ]; then the reviewed ones left (mastered, more weak, more due) by
+     * weight; and only when nothing else is left, more unseen ones. The caller shuffles the final question order, so
+     * due reviews are not always the opening questions.
+     */
+    fun select(
+        pool: List<Country>,
+        skill: Map<String, SkillState>,
+        recent: Set<String>,
+        now: Long,
+        random: Random,
+        newAllowance: Int,
+        count: Int = QuizEngine.MAX_QUESTIONS
     ): List<Country> {
+        val due = pool.filter { SkillMastery.isDue(skill[it.code], now) }
+        val weak = pool.filter { SkillMastery.isWeak(skill[it.code], now) && !SkillMastery.isDue(skill[it.code], now) }
+        val unseen = pool.filter { skill[it.code]?.isNew != false }
+        val picked = ArrayList<Country>(count)
+        fun room() = count - picked.size
+
+        picked += draw(due, skill, recent, now, random, minOf(DUE_SHARE, room()))
+        picked += draw(weak, skill, recent, now, random, room())
+        picked += draw(unseen, skill, recent, now, random, minOf(newAllowance.coerceIn(0, NEW_PER_QUIZ), room()))
+
+        val taken = picked.mapTo(HashSet()) { it.code }
+        val reviewedLeft = pool.filter { it.code !in taken && skill[it.code]?.isNew == false }
+        picked += draw(reviewedLeft, skill, recent, now, random, room())
+        picked += draw(unseen.filter { it.code !in taken }, skill, recent, now, random, room())
+        return picked
+    }
+
+    /** The first [limit] of a weighted draw without replacement over [pool] sorted by code. */
+    private fun draw(
+        pool: List<Country>,
+        skill: Map<String, SkillState>,
+        recent: Set<String>,
+        now: Long,
+        random: Random,
+        limit: Int
+    ): List<Country> {
+        if (limit <= 0 || pool.isEmpty()) return emptyList()
         val remaining = pool.sortedBy { it.code }
             .map { it to weight(skill[it.code], now, it.code in recent) }
             .toMutableList()
-        val ordered = ArrayList<Country>(remaining.size)
-        while (remaining.isNotEmpty()) {
+        val drawn = ArrayList<Country>(minOf(limit, remaining.size))
+        while (remaining.isNotEmpty() && drawn.size < limit) {
             var pick = random.nextDouble() * remaining.sumOf { it.second }
             var index = remaining.lastIndex
             for (i in remaining.indices) {
@@ -70,8 +130,8 @@ object QuestionPicker {
                     break
                 }
             }
-            ordered += remaining.removeAt(index).first
+            drawn += remaining.removeAt(index).first
         }
-        return ordered
+        return drawn
     }
 }

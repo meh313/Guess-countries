@@ -24,7 +24,9 @@ data class QuizSession(
     /** When the clocks were stopped because the quiz left the screen, or null while it is being played. */
     val pausedAt: Long? = null,
     /** Every question answered or timed out so far, in order, for the score screen and the quiz log. */
-    val answers: List<AnswerRecord> = emptyList()
+    val answers: List<AnswerRecord> = emptyList(),
+    /** True once the misses were asked again at the end (see [reask]); a fixed-length quiz does that once. */
+    val reasked: Boolean = false
 ) {
     init {
         require(questions.isNotEmpty()) { "A quiz needs at least one question" }
@@ -33,7 +35,7 @@ data class QuizSession(
 
     /** One answered question: what was picked (null for a time-out) and how long it took. */
     data class AnswerRecord(val question: QuizQuestion, val pickedIndex: Int?, val timeMs: Long) {
-        val correct: Boolean get() = pickedIndex == question.correctAnswerIndex
+        val correct: Boolean get() = pickedIndex != null && pickedIndex in question.acceptedIndices
         val pickedCode: String? get() = pickedIndex?.let { question.optionCodes.getOrNull(it) }
         val pickedText: String? get() = pickedIndex?.let { question.options[it] }
     }
@@ -44,13 +46,16 @@ data class QuizSession(
     val isLastQuestion: Boolean get() = currentIndex == questions.lastIndex
     val maxScore: Int get() = QuizEngine.maxScore(questions.size)
 
-    /** The questions answered wrong or not at all. */
-    val misses: List<AnswerRecord> get() = answers.filter { !it.correct }
+    /**
+     * The questions answered wrong or not at all, each country once (its first miss): a miss asked again at the end
+     * is a separate answer, not a second entry on the score screen.
+     */
+    val misses: List<AnswerRecord> get() = answers.filter { !it.correct }.distinctBy { it.question.targetCountry.code }
 
     /** Records the player's choice at [now] (the ViewModel's clock). Ignored once this question is answered or the quiz is over. */
     fun answer(index: Int, now: Long = questionStartedAt): QuizSession {
         if (hasAnswered || isFinished || index !in current.options.indices) return this
-        val correct = index == current.correctAnswerIndex
+        val correct = index in current.acceptedIndices
         return copy(
             selectedAnswerIndex = index,
             score = if (correct) score + QuizEngine.pointsForCorrectAnswer(streak) else score,
@@ -96,6 +101,17 @@ data class QuizSession(
         !hasAnswered || isFinished -> this
         isLastQuestion -> copy(isFinished = true)
         else -> copy(currentIndex = currentIndex + 1, selectedAnswerIndex = null, questionStartedAt = now)
+    }
+
+    /**
+     * Appends [extra] (the misses asked again, see [QuizEngine.generate]) and moves on to the next question, which is
+     * the first of them when the last one was just answered; marks the quiz as having re-asked. Ignored until the
+     * question is answered, once the quiz is over, or when there is nothing to add. [now] is when the next question
+     * is shown, for timed modes.
+     */
+    fun reask(extra: List<QuizQuestion>, now: Long = 0L): QuizSession {
+        if (!hasAnswered || isFinished || extra.isEmpty()) return this
+        return copy(questions = questions + extra, reasked = true, currentIndex = currentIndex + 1, selectedAnswerIndex = null, questionStartedAt = now)
     }
 
     companion object {
