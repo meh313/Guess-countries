@@ -734,7 +734,8 @@ class QuizAndFlashcardUiTest {
         rule.onNodeWithTag("flashcard_clear_filters_btn").performClick()
         rule.waitForIdle()
 
-        rule.onNodeWithText("Card 1 of ${allCountries.size}").assertIsDisplayed()
+        // The deck refills from the filtered list, which the view model recomputes off the main thread.
+        rule.eventually("the full deck") { rule.onNodeWithText("Card 1 of ${allCountries.size}").assertIsDisplayed() }
         rule.onNodeWithText("Flag meaning").assertDoesNotExist()
     }
 
@@ -802,7 +803,7 @@ class QuizAndFlashcardUiTest {
 
         rule.onNodeWithTag("flashcard_clear_filters_btn").performClick()
         rule.waitForIdle()
-        rule.onNodeWithTag("flashcard_filter_notice").assertDoesNotExist()
+        rule.eventually("the notice to go") { rule.onNodeWithTag("flashcard_filter_notice").assertDoesNotExist() }
     }
 
     @Test
@@ -864,8 +865,8 @@ class QuizAndFlashcardUiTest {
         rule.onNodeWithTag("flashcard_clear_filters_btn").performClick()
         rule.waitForIdle()
 
+        rule.eventually("the full deck") { rule.onNodeWithText("Card 1 of ${allCountries.size}").assertIsDisplayed() }
         rule.onNodeWithTag("flashcard_filter_notice").assertDoesNotExist()
-        rule.onNodeWithText("Card 1 of ${allCountries.size}").assertIsDisplayed()
     }
 
     @Test
