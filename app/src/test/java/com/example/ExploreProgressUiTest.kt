@@ -37,18 +37,22 @@ import androidx.core.app.ActivityOptionsCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.core.app.ApplicationProvider
 import com.example.data.local.AppDatabase
+import com.example.data.local.QuizAnswerEntity
 import com.example.data.local.QuizScoreEntity
 import com.example.data.local.SkillProgressEntity
 import com.example.data.model.CountryRepository
+import com.example.data.model.TellApart
 import com.example.data.settings.InMemoryUserSettings
 import com.example.data.settings.PrefsUserSettings
 import com.example.data.settings.ThemeMode
 import com.example.flashcards.StudySession
+import com.example.progress.DueForecast
 import com.example.progress.Evidence
 import com.example.progress.Skill
 import com.example.progress.SkillState
 import com.example.quiz.allCountries
 import com.example.speech.Speech
+import com.example.support.boundsOf
 import com.example.support.FakeSpeech
 import com.example.support.FreshDatabaseRule
 import com.example.support.SettledTodayRule
@@ -61,9 +65,11 @@ import com.example.ui.screens.SettingsScreen
 import com.example.ui.theme.WorldFlagsTheme
 import com.example.ui.viewmodel.CountryViewModel
 import java.io.File
+import java.util.TimeZone
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -355,6 +361,160 @@ class ExploreProgressUiTest {
         rule.onNodeWithTag("stats_due").assert(describedAs("Due today: 0")).assert(!hasClickAction())
         // The other tiles read the same way: one item each.
         rule.onNodeWithTag("stats_quizzes").assert(describedAs("Quizzes finished: 0"))
+    }
+
+    // --- The Due and Learning tiles, the forecast line, the Most confused card and the quiz review -------------------
+
+    /** Seeds [code]'s [skill] as reviewed (not mastered) and due at [at]. */
+    private fun dueAt(code: String, skill: Skill, at: Long) = runBlocking {
+        dao.upsertSkill(SkillProgressEntity.of(code, skill, SkillState(score = 40, box = 2, dueAt = at, reviews = 2, correct = 1)))
+    }
+
+    private fun startOfDay(daysAhead: Int) = DueForecast.startOfDay(System.currentTimeMillis(), TimeZone.getDefault(), daysAhead)
+
+    private fun quizRow(at: Long, mode: String = "FLAG_NAME", scope: String = "Global") =
+        QuizScoreEntity(mode = mode, score = 150, total = 190, continentFilter = scope, timestamp = at, correct = 8, questionCount = 10, difficulty = "NORMAL")
+
+    private fun answerRow(position: Int, target: String, picked: String?, correct: Boolean) =
+        QuizAnswerEntity(quizId = 0, position = position, targetCode = target, pickedCode = picked, pickedText = picked, isCorrect = correct, timeMs = 1_200L)
+
+    @Test
+    fun theDueTile_namesTheCapitalsDueBesideTheFlags() {
+        due("FR", "DE")
+        dueAt("IT", Skill.CAPITAL, 0L)
+        rule.openTab("stats")
+        rule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("stats_due"))
+
+        rule.eventually("flags and capitals due") { rule.onNodeWithTag("stats_due").assert(describedAs("Due today: flags 2 · capitals 1")) }
+        rule.onNodeWithTag("stats_due").assert(hasClickAction())
+        // Everything due is due now: nothing is coming up, so the forecast line stays away.
+        rule.onAllNodesWithTag("stats_forecast").assertCountEquals(0)
+    }
+
+    @Test
+    fun theLearningTile_countsTheFlagsReviewedButNotMastered() {
+        learning("FR")
+        learning("DE")
+        mastered("IT")
+        // A capital still being learned is not a flag.
+        learning("JP", Skill.CAPITAL)
+        rule.eventually("the states") { assertEquals(3, viewModel.skills.value[Skill.FLAG]?.size) }
+        rule.openTab("stats")
+        rule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("stats_learning"))
+
+        rule.eventually("two learning") { rule.onNodeWithTag("stats_learning").assert(describedAs("Learning: 2")) }
+        rule.onNodeWithTag("stats_learning").assert(!hasClickAction())
+    }
+
+    @Test
+    fun theForecastLine_countsTheCountriesDueTomorrowAndThisWeek_eachOnce() {
+        val tomorrow = startOfDay(1) + 3_600_000L
+        val inFiveDays = startOfDay(5) + 3_600_000L
+        dueAt("FR", Skill.FLAG, tomorrow)
+        // The same country in its other skill: counted once.
+        dueAt("FR", Skill.CAPITAL, inFiveDays)
+        dueAt("DE", Skill.CAPITAL, tomorrow)
+        dueAt("IT", Skill.FLAG, inFiveDays)
+        // Beyond the week, and already due: neither is coming up.
+        dueAt("JP", Skill.FLAG, startOfDay(9))
+        dueAt("BR", Skill.FLAG, 0L)
+        rule.openTab("stats")
+
+        rule.eventually("the forecast") { assertEquals(DueForecast(tomorrow = 2, week = 3), viewModel.forecast.value) }
+        rule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("stats_forecast"))
+        rule.onNodeWithTag("stats_forecast").assert(hasText("Coming up: 2 due tomorrow · 3 this week"))
+    }
+
+    @Test
+    fun theMostConfusedCard_listsThePairsMixedUp_andOpensHowToTellThemApart() {
+        runBlocking {
+            dao.insertQuizWithAnswers(
+                quizRow(1_000L),
+                listOf(answerRow(0, "TD", "RO", false), answerRow(1, "RO", "TD", false), answerRow(2, "FR", "FR", true), answerRow(3, "BR", "JP", false), answerRow(4, "IT", null, false))
+            )
+            dao.insertQuizWithAnswers(quizRow(2_000L), listOf(answerRow(0, "RO", "TD", false)))
+        }
+        rule.openTab("stats")
+        rule.eventually("the pairs") { assertEquals(2, viewModel.confusions.value.size) }
+        rule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("stats_confused"))
+
+        rule.onNodeWithText("Most confused").assertIsDisplayed()
+        rule.onNodeWithTag("stats_confused_row_ro_td").assert(describedAs("Chad ↔ Romania, mixed up 3 times"))
+        rule.onNodeWithTag("stats_confused_row_br_jp").assert(describedAs("Brazil ↔ Japan, mixed up 1 time"))
+        // Most often first.
+        assertTrue(rule.boundsOf("stats_confused_row_ro_td").top < rule.boundsOf("stats_confused_row_br_jp").top)
+
+        // A pair with a tell-apart tip shows it under the two flags.
+        val tip = TellApart.tip("RO", "TD")!!
+        rule.onNodeWithTag("stats_confused_row_ro_td").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithTag("stats_confused_dialog").assertIsDisplayed()
+        rule.onNode(hasText("Chad ↔ Romania") and androidx.compose.ui.test.hasAnyAncestor(hasTestTag("stats_confused_dialog"))).assertIsDisplayed()
+        rule.onNodeWithTag("stats_confused_tip").assert(hasText(tip))
+        rule.onAllNodesWithTag("stats_confused_cue").assertCountEquals(0)
+        rule.onNodeWithTag("stats_confused_close_btn").performClick()
+        rule.waitForIdle()
+        rule.onAllNodesWithTag("stats_confused_dialog").assertCountEquals(0)
+
+        // A pair with none shows how to spot each of the two flags instead.
+        assertNull(TellApart.tip("BR", "JP"))
+        val brazil = allCountries.single { it.code == "BR" }
+        val japan = allCountries.single { it.code == "JP" }
+        rule.onNodeWithTag("stats_confused_row_br_jp").performClick()
+        rule.waitForIdle()
+        rule.onAllNodesWithTag("stats_confused_tip").assertCountEquals(0)
+        rule.onAllNodesWithTag("stats_confused_cue").assertCountEquals(2)
+        rule.onNodeWithText("Brazil: ${brazil.spotIt}").assertIsDisplayed()
+        rule.onNodeWithText("Japan: ${japan.spotIt}").assertIsDisplayed()
+    }
+
+    @Test
+    fun aQuizLogRow_opensItsResultAgain_andBackReturnsToProgress() {
+        runBlocking {
+            dao.insertQuizWithAnswers(
+                quizRow(1_000L, scope = "Europe"),
+                listOf(answerRow(0, "FR", "FR", true), answerRow(1, "DE", "AT", false), answerRow(2, "IT", null, false)) + (3..9).map { answerRow(it, "ES", "ES", true) }
+            )
+            // Saved before the answers were kept: nothing to open.
+            dao.insertQuizScore(QuizScoreEntity(mode = "CAPITAL", score = 40, total = 190, continentFilter = "Global", timestamp = 2_000L, correct = 2, questionCount = 10))
+        }
+        rule.openTab("stats")
+        rule.eventually("the log") { assertEquals(2, viewModel.quizHistory.value.size) }
+        val withAnswers = viewModel.quizHistory.value.single { it.mode == "FLAG_NAME" }
+        val without = viewModel.quizHistory.value.single { it.mode == "CAPITAL" }
+        rule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("stats_log_row_${withAnswers.id}"))
+        rule.eventually("the row is a button") { rule.onNodeWithTag("stats_log_row_${withAnswers.id}").assert(hasClickAction()) }
+        rule.onNodeWithTag("stats_log_row_${without.id}").assert(!hasClickAction())
+
+        rule.onNodeWithTag("stats_log_row_${withAnswers.id}").performClick()
+        rule.eventually("the review") { rule.onNodeWithTag("quiz_review").assertIsDisplayed() }
+
+        rule.onNodeWithTag("quiz_finish_title").assert(hasText("Quiz from ", substring = true))
+        rule.onNodeWithTag("quiz_review_subtitle").assert(hasText("Flag → Country · Europe"))
+        rule.onNodeWithTag("quiz_finish_correct").assert(hasText("8 / 10 correct"))
+        rule.onNodeWithTag("quiz_finish_score").assert(hasText("150 points"))
+        rule.onNodeWithTag("quiz_finish_difficulty").assert(hasText("Answers: Normal"))
+        rule.onNodeWithTag("quiz_finish_misses").performScrollTo()
+        rule.onNodeWithText("Mistakes (2)").assertIsDisplayed()
+        rule.onNodeWithTag("quiz_miss_de").assert(describedAs("Germany. You picked Austria"))
+        rule.onNodeWithTag("quiz_miss_it").assert(describedAs("Italy. No answer in time"))
+        // Read-only: no streak line, no Retry, no Practise mistakes; the Progress tab stays selected.
+        rule.onAllNodesWithTag("quiz_finish_streak").assertCountEquals(0)
+        rule.onAllNodesWithTag("quiz_retry_btn").assertCountEquals(0)
+        rule.onAllNodesWithTag("quiz_practise_mistakes_btn").assertCountEquals(0)
+        rule.onNodeWithTag("quiz_finish_done_btn").performScrollTo().assertIsDisplayed()
+        rule.onNodeWithTag("nav_tab_stats").assertIsSelected()
+
+        rule.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
+        rule.waitForIdle()
+
+        // Back on Progress, where the lazy list is still scrolled to the log: scroll up to the title; the review is gone.
+        rule.onAllNodesWithTag("quiz_review").assertCountEquals(0)
+        rule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("stats_title"))
+        rule.onNodeWithTag("stats_title").assertIsDisplayed()
+        rule.onNodeWithTag("nav_tab_stats").assertIsSelected()
+        rule.onAllNodesWithTag("quiz_review").assertCountEquals(0)
+        assertNull(viewModel.review.value)
     }
 
     // --- The Today card ------------------------------------------------------------------------------------------------

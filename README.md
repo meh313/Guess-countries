@@ -8,9 +8,10 @@ drill them with flashcards, and test yourself with quizzes. Everything runs on t
 - **Explore** – search, filter by continent or Saved, sort by name, population, area or continent, open a detail
   sheet and have it read aloud.
 - **Flashcards** – browse the deck (it follows the Explore filters) with Previous and Next, shuffle it, and
-  *study*: a session of up to 20 cards from the flags due today, the weak spots or this deck, each graded
-  Again / Good / Easy after the flip (Again brings the card back a few places later; the last grade can be undone).
-  A session of ten or more cards counts as practice for the streak.
+  *study*: a session of up to 20 cards from the flags due today, the capitals due today (flag and name on the
+  front, the capital on the back), the weak spots or this deck, each graded Again / Good / Easy after the flip
+  (Again brings the card back a few places later; the last grade can be undone). A session of five or more cards is
+  logged and counts towards the daily goal.
 - **Learn 5 new** – from the study chooser (or the Today card): the next five flags you have never seen, one card at
   a time with the flag, the name, the region, the cue to spot it and, where one exists, the flag it is most often
   confused with (and how to tell the two apart). The focus continent's flags come first. Seeing a card counts as
@@ -32,11 +33,13 @@ drill them with flashcards, and test yourself with quizzes. Everything runs on t
   terms. A country's detail sheet lists the pages its facts were checked against (`Sources`), for the countries that
   went through the research pass, and a *Your progress* row per skill; every country card carries two pips (flag,
   capital) and Explore has Unseen / Learning / Mastered chips, which a tap on a continent on the Progress screen sets.
-- **Stats** – a daily practice streak (a day counts when you finish one quiz or a study session of ten cards; days
-  follow the device's time zone), an optional daily reminder (an inexact alarm wakes the app at the time you pick and
-  posts a notification, only on days without a finished quiz; a reboot or a time-zone change plans it again; it asks
-  for the notification permission on Android 13 and newer), mastered flags and capitals,
-  what is due today, mastery per continent and a log of recent quizzes and study sessions.
+- **Progress** – the Today card (what is due, what you learnt today, the daily goal), a practice streak (a day
+  counts when its sessions reach the goal or one of them has ten items; days follow the device's time zone), an
+  optional daily reminder (an inexact alarm wakes the app at the time you pick and posts a notification, only on
+  days short of the goal; a reboot or a time-zone change plans it again; it asks for the notification permission on
+  Android 13 and newer), mastered flags and capitals, what is due today and in the coming week, how many countries
+  are still being learnt, the pairs you confuse most (with their tell-apart tips), mastery per continent and a log
+  of recent quizzes and study sessions; a quiz in the log opens its full result again.
 
 ### How mastery works
 
@@ -132,8 +135,9 @@ skipped and the files stay as a workflow artifact for a week.
 | `quiz/` | Pure quiz rules (`QuizEngine`, the weighted `QuestionPicker`), the immutable `QuizSession` and its `QuizSnapshot` for saved state; no Android types. |
 | `progress/` | Pure rules: the practice streak (`PracticeStreak`), computed from when quizzes finished, and per-skill mastery (`SkillMastery`: score, Leitner box, due date). |
 | `reminder/` | The daily reminder: pure schedule rules, the alarm scheduler, the receiver that turns the alarm (and a reboot or time-zone change) into a run, the worker, the notification. |
-| `data/settings/` | `UserSettings`: the few preferences kept in SharedPreferences (answers difficulty, reminder, theme, timer pace). |
+| `data/settings/` | `UserSettings`: the preferences kept in SharedPreferences (answers difficulty, reminder, theme, timer pace, daily goal, focus continent, the day's new-item count, the first-run and Today-card state). |
 | `data/transfer/` | `ProgressTransfer`: the export file format (JSON, format 1) and its reader. |
+| `learn/` | The pure `LearnSession`: five never-seen flags as cards with their closest look-alike, then the quiz over them. |
 | `flashcards/` | Deck ordering for the flashcard screen and the immutable `StudySession` (queue, grades, Again re-insertion, undo). |
 | `speech/` | Text-to-speech behind a small `Speech` interface. |
 | `data/model/` | The country catalog, one file per continent (`EuropeCatalog.kt`…, alphabetical), `CountryRepository`, and `CountrySources` (the per-country source pages, read from the asset `sources.json`). |

@@ -29,6 +29,11 @@
     <string name="flashcards_state_flag">Showing the flag</string>
     <string name="flashcards_state_details">Showing country details</string>
     <string name="flashcards_tap_to_reveal">Tap to reveal the country name &amp; capital</string>
+    <!-- A capital study card: the front names the country and asks; the back answers -->
+    <string name="flashcards_capital_prompt">What is the capital?</string>
+    <string name="flashcards_tap_to_reveal_capital">Tap to reveal the capital</string>
+    <string name="flashcards_reveal_capital">Reveal the capital</string>
+    <string name="flashcards_state_capital">Showing the capital</string>
     <string name="flashcards_population">Population</string>
     <string name="flashcards_flag_meaning">Flag meaning</string>
     <string name="flashcards_trivia">Trivia fact</string>
@@ -43,6 +48,12 @@
     <plurals name="study_due_detail">
         <item quantity="one">%1$d card due for review</item>
         <item quantity="other">%1$d cards due for review</item>
+    </plurals>
+    <!-- The capitals due for review: a study source, stored as StudySession.CAPITALS_DUE -->
+    <string name="study_source_capitals_due">Capitals due</string>
+    <plurals name="study_capitals_due_detail">
+        <item quantity="one">%1$d capital due for review</item>
+        <item quantity="other">%1$d capitals due for review</item>
     </plurals>
     <string name="study_weak_detail">%1$d reviewed, not mastered</string>
     <plurals name="study_deck_detail">
@@ -94,6 +105,9 @@
     <string name="stats_capitals_known">Capitals known</string>
     <string name="stats_ratio">%1$d / %2$d</string>
     <string name="stats_due_today">Due today</string>
+    <!-- The Due tile's value when capitals are due too: "flags 4 · capitals 2" -->
+    <string name="stats_due_both">flags %1$d · capitals %2$d</string>
+    <string name="stats_learning">Learning</string>
     <string name="stats_due_open">Start a study session of the cards due</string>
     <string name="stats_saved">Saved</string>
     <string name="stats_quizzes_finished">Quizzes finished</string>
@@ -104,11 +118,26 @@
     <string name="stat_badge_description">%1$s: %2$s</string>
     <string name="stat_badge_description_detail">%1$s: %2$s · %3$s</string>
 
+    <!-- Progress: the week ahead, under the tiles ("Coming up: 4 due tomorrow · 12 this week"); hidden when nothing is coming -->
+    <string name="stats_forecast">Coming up: %1$s · %2$s</string>
+    <string name="stats_forecast_tomorrow">%1$d due tomorrow</string>
+    <string name="stats_forecast_week">%1$d this week</string>
+
+    <!-- Progress: the pairs of countries mixed up most often, each row opening how to tell them apart -->
+    <string name="stats_confused_heading">Most confused</string>
+    <string name="stats_confused_pair">%1$s ↔ %2$s</string>
+    <string name="stats_confused_times">× %1$d</string>
+    <plurals name="stats_confused_description">
+        <item quantity="one">%1$s, mixed up %2$d time</item>
+        <item quantity="other">%1$s, mixed up %2$d times</item>
+    </plurals>
+    <string name="stats_confused_open">Show how to tell them apart</string>
+
     <!-- Progress: continent mastery -->
     <string name="stats_continent_heading">Mastery by continent</string>
     <string name="stats_continent_open">Show the %1$s countries still to learn</string>
     <string name="stats_mastered_of">%1$d of %2$d mastered</string>
-    <string name="stats_capitals_count">Capitals: %1$d</string>
+    <string name="stats_capitals_count">Capitals: %1$d of %2$d</string>
 
     <!-- Progress: the quiz log -->
     <string name="stats_log_heading">Recent quizzes</string>
@@ -117,10 +146,12 @@
     <string name="stats_log_result">%1$d/%2$d · %3$d pts</string>
     <string name="stats_log_blitz">%1$d correct · %2$d pts</string>
     <string name="stats_log_show_all">Show all</string>
+    <!-- A log row with stored answers is a button that opens its result screen again -->
+    <string name="stats_log_open">Open this quiz\'s result</string>
 
     <!-- The daily reminder card -->
     <string name="reminder_title">Daily reminder</string>
-    <string name="reminder_detail">A nudge at %1$s, only on days without a quiz or study session</string>
+    <string name="reminder_detail">A nudge at %1$s, only on days short of your goal</string>
     <string name="reminder_time">Remind me at %1$s</string>
     <string name="reminder_blocked">Allow notifications for %1$s in system settings to get the reminder.</string>
     <string name="reminder_open_settings">Open settings</string>

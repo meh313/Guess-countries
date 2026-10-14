@@ -43,6 +43,26 @@ abstract class UserProgressDao {
     @Query("SELECT * FROM quiz_answers WHERE quizId = :quizId ORDER BY position")
     abstract suspend fun answersOf(quizId: Long): List<QuizAnswerEntity>
 
+    /** One quiz log row, or null when [quizId] names none (it was cleared or imported away meanwhile). */
+    @Query("SELECT * FROM quiz_scores WHERE id = :quizId")
+    abstract suspend fun quiz(quizId: Long): QuizScoreEntity?
+
+    /** The ids of the quizzes that have answers stored: the log rows that can open a result screen again. */
+    @Query("SELECT DISTINCT quizId FROM quiz_answers")
+    abstract fun reviewableQuizIds(): Flow<List<Long>>
+
+    /**
+     * The pairs of countries mixed up with each other, most often first: every wrong answer that picked another
+     * country, counted under the unordered pair of the country asked about and the one picked (Chad for Romania and
+     * Romania for Chad are one pair). Ties stand in code order, so the list is the same on every read.
+     */
+    @Query(
+        "SELECT MIN(targetCode, pickedCode) AS a, MAX(targetCode, pickedCode) AS b, COUNT(*) AS count FROM quiz_answers " +
+            "WHERE pickedCode IS NOT NULL AND isCorrect = 0 AND pickedCode != targetCode " +
+            "GROUP BY a, b ORDER BY count DESC, a, b"
+    )
+    abstract fun confusions(): Flow<List<Confusion>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun insertQuizScore(score: QuizScoreEntity)
 
@@ -188,3 +208,6 @@ abstract class UserProgressDao {
 
 /** One target of a recent quiz: the country asked about, the quiz's mode (a [com.example.quiz.QuizMode] name) and when it was saved. */
 data class RecentTarget(val code: String, val mode: String, val at: Long)
+
+/** Two countries mixed up with each other [count] times, in either direction; [a] sorts before [b]. See [UserProgressDao.confusions]. */
+data class Confusion(val a: String, val b: String, val count: Int)

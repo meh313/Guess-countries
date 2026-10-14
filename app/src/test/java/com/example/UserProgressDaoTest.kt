@@ -1,6 +1,7 @@
 package com.example
 
 import com.example.data.local.AppDatabase
+import com.example.data.local.Confusion
 import com.example.data.local.QuizAnswerEntity
 import com.example.data.local.QuizScoreEntity
 import com.example.data.local.RecentTarget
@@ -321,6 +322,65 @@ class UserProgressDaoTest {
         assertEquals(RecentTarget("BR", "FLAG_NAME", 300L), since200.single { it.code == "BR" })
         assertEquals("study sessions do not count", setOf("FR", "DE", "JP", "BR"), runBlocking { dao.recentTargets(0L).first() }.map { it.code }.toSet())
         assertTrue(runBlocking { dao.recentTargets(301L).first() }.isEmpty())
+    }
+
+    @Test
+    fun confusions_countBothDirectionsAsOnePair_mostOftenFirst() {
+        runBlocking {
+            dao.insertQuizWithAnswers(
+                quiz(100L),
+                listOf(
+                    answerRow(0, "TD", "RO", false),
+                    answerRow(1, "RO", "TD", false),
+                    // Right answers and time-outs mix nothing up.
+                    answerRow(2, "FR", "FR", true),
+                    answerRow(3, "JP", null, false)
+                )
+            )
+            dao.insertQuizWithAnswers(
+                quiz(200L),
+                listOf(answerRow(0, "RO", "TD", false), answerRow(1, "ID", "MC", false), answerRow(2, "AU", "NZ", false), answerRow(3, "NZ", "AU", false), answerRow(4, "ID", "MC", false))
+            )
+        }
+
+        val pairs = runBlocking { dao.confusions().first() }
+
+        // Chad for Romania and Romania for Chad are one pair; ties stand in code order.
+        assertEquals(listOf(Confusion("RO", "TD", 3), Confusion("AU", "NZ", 2), Confusion("ID", "MC", 2)), pairs)
+    }
+
+    @Test
+    fun confusions_isEmptyWithoutAWrongPick() {
+        runBlocking { dao.insertQuizWithAnswers(quiz(100L), listOf(answerRow(0, "FR", "FR", true), answerRow(1, "DE", null, false))) }
+
+        assertTrue(runBlocking { dao.confusions().first() }.isEmpty())
+    }
+
+    @Test
+    fun reviewableQuizIds_andQuiz_findTheLogRowsThatHaveAnswers() {
+        runBlocking {
+            dao.insertQuizWithAnswers(quiz(100L), listOf(answerRow(0, "FR", "FR", true)))
+            dao.insertQuizScoreAfterReading(quiz(200L))
+        }
+
+        val quizzes = runBlocking { dao.getQuizHistory().first() }
+        val withAnswers = quizzes.single { it.timestamp == 100L }
+        assertEquals(listOf(withAnswers.id), runBlocking { dao.reviewableQuizIds().first() })
+        assertEquals(withAnswers, runBlocking { dao.quiz(withAnswers.id) })
+        assertNull(runBlocking { dao.quiz(999L) })
+    }
+
+    @Test
+    fun repository_review_pairsTheRowWithItsAnswers() {
+        val repository = CountryRepository(dao)
+        runBlocking { dao.insertQuizWithAnswers(quiz(100L), listOf(answerRow(0, "FR", "FR", true), answerRow(1, "DE", "AT", false))) }
+        val id = runBlocking { dao.getQuizHistory().first() }.single().id
+
+        val review = runBlocking { repository.review(id) }!!
+
+        assertEquals(id, review.entry.id)
+        assertEquals(listOf("FR", "DE"), review.answers.map { it.targetCode })
+        assertNull(runBlocking { repository.review(id + 1) })
     }
 
     @Test

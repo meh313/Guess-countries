@@ -629,7 +629,8 @@ class QuizAndFlashcardUiTest {
     fun aWrongCapital_comparesTheTwoCapitalsWithTheirCountries() {
         startQuizIn(QuizMode.CAPITAL)
         val q = viewModel.quizSession.value!!.current
-        val wrong = (q.correctAnswerIndex + 1) % q.options.size
+        // A capital question may carry a decoy city (no country behind it): pick a wrong option that is a country.
+        val wrong = q.options.indices.first { it != q.correctAnswerIndex && q.optionCodes[it] != null }
         val picked = allCountries.single { it.code == q.optionCodes[wrong] }
 
         rule.onNodeWithTag("quiz_option_$wrong").performScrollTo().performClick()
@@ -996,6 +997,12 @@ class QuizAndFlashcardUiTest {
         codes.forEach { dao.upsertSkill(SkillProgressEntity.of(it, Skill.FLAG, SkillState(score = 40, box = 2, dueAt = 0L, reviews = 2, correct = 1))) }
     }
 
+    /** Makes the capitals of [codes] due for review, the flags untouched. */
+    private fun capitalsDue(vararg codes: String) = runBlocking {
+        val dao = AppDatabase.getDatabase(ApplicationProvider.getApplicationContext()).userProgressDao()
+        codes.forEach { dao.upsertSkill(SkillProgressEntity.of(it, Skill.CAPITAL, SkillState(score = 40, box = 2, dueAt = 0L, reviews = 2, correct = 1))) }
+    }
+
     private fun openStudyChooser() {
         tab("flashcards")
         rule.onNodeWithTag("flashcard_study_btn").performClick()
@@ -1042,6 +1049,8 @@ class QuizAndFlashcardUiTest {
         rule.onNodeWithText("Up to 20 cards; grade each one after the flip. Ten or more count as practice.").assertIsDisplayed()
         rule.onNodeWithTag("study_due_btn").assertIsNotEnabled()
         rule.onNodeWithText("0 cards due for review").assertIsDisplayed()
+        rule.onNodeWithTag("study_capitals_due_btn").assertIsNotEnabled()
+        rule.onNodeWithText("0 capitals due for review").assertIsDisplayed()
         rule.onNodeWithTag("study_weak_btn").assertIsNotEnabled()
         rule.onNodeWithTag("study_deck_btn").assertIsEnabled()
         rule.onNodeWithText("the next 20 cards from here").assertIsDisplayed()
@@ -1117,6 +1126,54 @@ class QuizAndFlashcardUiTest {
         gradeCard("grade_good_btn") // the second card: the first card's Again is written now
         val first = viewModel.studySession.value!!.cards[0]
         rule.eventually("the first card's grade") { assertEquals(40 - 12, score(first)) }
+    }
+
+    @Test
+    fun studyCapitalsDue_asksForTheCapitalOfANamedCountry_andGradesTheCapitalSkill() {
+        capitalsDue("FR", "DE", "ES")
+        rule.awaitQuizPlan(viewModel) { it.due(Skill.CAPITAL).size == 3 }
+        tab("flashcards")
+        // No flag is due: the Study button stays plain, and the flags' own source is locked.
+        rule.onNodeWithTag("flashcard_study_btn").assert(hasText("Study"))
+        rule.onNodeWithTag("flashcard_study_btn").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithTag("study_due_btn").assertIsNotEnabled()
+        rule.onNodeWithText("3 capitals due for review").assertIsDisplayed()
+        rule.onNodeWithTag("study_capitals_due_btn").assertIsEnabled()
+        rule.onNodeWithTag("study_capitals_due_btn").performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithText("Study · Capitals due").assertIsDisplayed()
+        rule.onNodeWithText("Card 1 of 3").assertIsDisplayed()
+        val session = viewModel.studySession.value!!
+        assertEquals(Skill.CAPITAL, session.skill)
+        assertEquals(setOf("FR", "DE", "ES"), session.cards.toSet())
+        val first = allCountries.single { it.code == session.cards[0] }
+        // The front gives the country and asks for the capital; the capital waits on the back.
+        // The front is one clickable card, so its texts are read from the unmerged tree.
+        rule.onNodeWithTag("flashcard_front_name", useUnmergedTree = true).assert(hasText(first.name))
+        rule.onNodeWithText("What is the capital?").assertIsDisplayed()
+        rule.onNodeWithText("Tap to reveal the capital").assertIsDisplayed()
+        rule.onNodeWithTag("flashcard_capital_answer").assertDoesNotExist()
+        rule.onNodeWithTag("grade_good_btn").assertIsNotEnabled()
+
+        rule.onNodeWithTag("flashcard_flip_card").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithTag("flashcard_capital_answer", useUnmergedTree = true).assert(hasText(first.quizCapital))
+        rule.onNodeWithTag("grade_good_btn").assertIsEnabled()
+        rule.onNodeWithTag("grade_good_btn").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithText("Card 2 of 3").assertIsDisplayed()
+
+        gradeCard("grade_easy_btn") // the second card: the first card's Good is written now
+        val dao = AppDatabase.getDatabase(ApplicationProvider.getApplicationContext()).userProgressDao()
+        rule.eventually("the first card's grade lands on its capital skill") {
+            val rows = runBlocking { dao.getAllSkills().first() }.filter { it.countryCode == first.code }
+            assertEquals(listOf(Skill.CAPITAL.name), rows.map { it.skill })
+            assertEquals("the seeded row was updated", 40 + 8, rows.single().score)
+        }
+        // Nothing was written about any flag.
+        assertTrue(runBlocking { dao.getAllSkills().first() }.none { it.skill == Skill.FLAG.name })
     }
 
     @Test

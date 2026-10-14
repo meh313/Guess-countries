@@ -1,6 +1,7 @@
 package com.example.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,11 +24,14 @@ import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.LocationCity
 import androidx.compose.material.icons.filled.Public
+import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Today
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -51,19 +55,28 @@ import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.example.R
+import com.example.data.local.Confusion
+import com.example.data.local.QuizScoreEntity
+import com.example.data.model.Country
+import com.example.data.model.CountryRepository
+import com.example.data.model.TellApart
 import com.example.flashcards.StudySession
 import com.example.progress.PracticeStreak
 import com.example.progress.Skill
 import com.example.quiz.QuizMode
+import com.example.ui.components.FlagView
 import com.example.ui.components.StatBadge
+import com.example.ui.components.TellApartLine
 import com.example.ui.components.TodayCard
 import com.example.ui.components.readingWidth
 import com.example.ui.components.getContinentColor
@@ -84,7 +97,9 @@ fun StatsScreen(
     /** Opens the Flashcards tab, where the study session the Due tile starts is shown. */
     onOpenFlashcards: () -> Unit = {},
     /** Opens the Learn screen (five new countries), from the Today card. */
-    onLearn: () -> Unit = {}
+    onLearn: () -> Unit = {},
+    /** Opens the result screen of a logged quiz, once [CountryViewModel.openReview] has been asked for it. */
+    onOpenReview: (quizId: Long) -> Unit = {}
 ) {
     val progressMap by viewModel.userProgressMap.collectAsStateWithLifecycle()
     val todayCardVisible by viewModel.todayCardVisible.collectAsStateWithLifecycle()
@@ -92,6 +107,9 @@ fun StatsScreen(
     val masteredFlags = mastered[Skill.FLAG].orEmpty()
     val masteredCapitals = mastered[Skill.CAPITAL].orEmpty()
     val plan by viewModel.quizPlan.collectAsStateWithLifecycle()
+    val forecast by viewModel.forecast.collectAsStateWithLifecycle()
+    val confusions by viewModel.confusions.collectAsStateWithLifecycle()
+    val reviewableQuizIds by viewModel.reviewableQuizIds.collectAsStateWithLifecycle()
     val streak by viewModel.streak.collectAsStateWithLifecycle()
     // A day can end while this screen sits open in the background; work the streak out again on every return.
     LifecycleResumeEffect(viewModel) {
@@ -102,6 +120,7 @@ fun StatsScreen(
     // Antarctica cannot be quizzed, so it is not part of the mastery totals. The catalog never changes, and the
     // counts below only when their inputs do, so none of them is worked out again on an unrelated recomposition.
     val allCountries = remember(viewModel) { viewModel.repository.allCountries.filter { it.isSovereign } }
+    val countriesByCode = remember(viewModel) { viewModel.repository.allCountries.associateBy { it.code } }
     // Follows the user's locale (and updates if it changes) instead of a fixed US-style pattern.
     val locale = LocalLocale.current.platformLocale
     val dateFormat = remember(locale) { DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT, locale) }
@@ -111,12 +130,21 @@ fun StatsScreen(
     val masteredCount = remember(masteredFlags, sovereignCodes) { masteredFlags.count { it in sovereignCodes } }
     val capitalsCount = remember(masteredCapitals, sovereignCodes) { masteredCapitals.count { it in sovereignCodes } }
     val dueCount = remember(plan) { plan.due(Skill.FLAG).size }
+    val dueCapitals = remember(plan) { plan.due(Skill.CAPITAL).size }
+    // Reviewed and not (or no longer) mastered: the flags the player is still learning.
+    val learningCount = remember(plan) { plan.weak(Skill.FLAG).size }
     // Study sessions are logged for the streak, but they are not quizzes.
     val totalQuizzes = remember(quizHistory) { quizHistory.count { it.mode != StudySession.MODE } }
     // A blitz runs as long as the clock allows, so its points would swamp the 190-point maximum of the others.
     val maxScore = remember(quizHistory) { quizHistory.filter { it.mode != QuizMode.BLITZ.name }.maxOfOrNull { it.score } ?: 0 }
     // The blitz is measured in flags named, not points; rows saved before the count was recorded hold none.
     val blitzBest = remember(quizHistory) { quizHistory.filter { it.mode == QuizMode.BLITZ.name }.maxOfOrNull { it.correct ?: 0 } ?: 0 }
+    // The pairs mixed up most, as countries; a code the catalog does not know (an import from a newer version) is left out.
+    val confusedPairs = remember(confusions, countriesByCode) {
+        confusions.mapNotNull { c -> ConfusedPair.of(c, countriesByCode) }.take(MOST_CONFUSED)
+    }
+    // The pair whose dialog is open, as its stored key, so it survives rotation.
+    var openPairKey by rememberSaveable { mutableStateOf<String?>(null) }
     // The log opens on its latest rows; Show all brings the rest in.
     var showAllLog by rememberSaveable { mutableStateOf(false) }
     val shownLog = if (showAllLog) quizHistory else quizHistory.take(LOG_PREVIEW)
@@ -164,7 +192,8 @@ fun StatsScreen(
 
         item { ReminderCard(viewModel) }
 
-        // Top Metric Grid
+        // Top metric grid: the two mastery ratios, then the two country counts, the Due tile on a row of its own
+        // (its value is the longest, "flags 12 · capitals 4"), then the two quiz figures.
         item {
             TileRow { tile ->
                 StatBadge(
@@ -187,23 +216,12 @@ fun StatsScreen(
 
         item {
             TileRow { tile ->
-                // A tap starts a study session over the cards due; with none due the tile is plain.
-                val dueCodes = plan.due(Skill.FLAG)
                 StatBadge(
-                    title = stringResource(R.string.stats_due_today),
-                    value = "$dueCount",
-                    icon = Icons.Default.Today,
-                    iconColor = Color(0xFF16A085),
-                    modifier = tile.testTag("stats_due"),
-                    onClick = if (dueCount > 0) {
-                        {
-                            viewModel.startStudy(StudySession.DUE, dueCodes.map { it.code })
-                            onOpenFlashcards()
-                        }
-                    } else {
-                        null
-                    },
-                    onClickLabel = stringResource(R.string.stats_due_open)
+                    title = stringResource(R.string.stats_learning),
+                    value = "$learningCount",
+                    icon = Icons.Default.School,
+                    iconColor = Color(0xFF2980B9),
+                    modifier = tile.testTag("stats_learning")
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 StatBadge(
@@ -214,6 +232,30 @@ fun StatsScreen(
                     modifier = tile
                 )
             }
+        }
+
+        item {
+            // A tap starts a study session over the flags due; with none due the tile is plain. Capitals due are
+            // named beside the flags (the capital quiz's Due scope reviews them).
+            val dueCodes = plan.due(Skill.FLAG)
+            StatBadge(
+                title = stringResource(R.string.stats_due_today),
+                value = if (dueCapitals > 0) stringResource(R.string.stats_due_both, dueCount, dueCapitals) else "$dueCount",
+                icon = Icons.Default.Today,
+                iconColor = Color(0xFF16A085),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("stats_due"),
+                onClick = if (dueCount > 0) {
+                    {
+                        viewModel.startStudy(StudySession.DUE, dueCodes.map { it.code })
+                        onOpenFlashcards()
+                    }
+                } else {
+                    null
+                },
+                onClickLabel = stringResource(R.string.stats_due_open)
+            )
         }
 
         item {
@@ -233,6 +275,24 @@ fun StatsScreen(
                     iconColor = Color(0xFFE67E22),
                     modifier = tile.testTag("stats_highest"),
                     detail = if (blitzBest > 0) stringResource(R.string.stats_blitz_best, blitzBest) else null
+                )
+            }
+        }
+
+        // The week ahead: how many countries come up for review tomorrow and within seven days.
+        if (!forecast.isEmpty) {
+            item {
+                Text(
+                    text = stringResource(
+                        R.string.stats_forecast,
+                        stringResource(R.string.stats_forecast_tomorrow, forecast.tomorrow),
+                        stringResource(R.string.stats_forecast_week, forecast.week)
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("stats_forecast")
                 )
             }
         }
@@ -296,7 +356,7 @@ fun StatsScreen(
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                             )
                             Text(
-                                text = stringResource(R.string.stats_capitals_count, capitalsInContinent),
+                                text = stringResource(R.string.stats_capitals_count, capitalsInContinent, total),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -315,6 +375,13 @@ fun StatsScreen(
                         trackColor = MaterialTheme.colorScheme.surfaceVariant
                     )
                 }
+            }
+        }
+
+        // The pairs of countries mixed up most often, each row opening how to tell the two apart.
+        if (confusedPairs.isNotEmpty()) {
+            item {
+                MostConfusedCard(pairs = confusedPairs, onOpen = { openPairKey = it.key })
             }
         }
 
@@ -347,50 +414,30 @@ fun StatsScreen(
             }
         } else {
             items(shownLog, key = { it.id }) { entry ->
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(14.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                // A quiz whose answers were stored opens its result screen again; a study session, or a row from
+                // before the answers were kept, is plain.
+                val reviewable = entry.mode != StudySession.MODE && entry.id in reviewableQuizIds
+                val openLabel = stringResource(R.string.stats_log_open)
+                val rowModifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("stats_log_row_${entry.id}")
+                val shape = RoundedCornerShape(14.dp)
+                val colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                if (reviewable) {
+                    Card(
+                        onClick = {
+                            viewModel.openReview(entry.id)
+                            onOpenReview(entry.id)
+                        },
+                        modifier = rowModifier.semantics { onClick(label = openLabel, action = null) },
+                        shape = shape,
+                        colors = colors
                     ) {
-                        Column {
-                            Text(
-                                text = stringResource(R.string.stats_log_entry, modeTitle(entry.mode), scopeLabel(entry.continentFilter)),
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = dateFormat.format(Date(entry.timestamp)),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = MaterialTheme.colorScheme.primaryContainer
-                        ) {
-                            val correct = entry.correct
-                            val asked = entry.questionCount
-                            Text(
-                                text = when {
-                                    entry.mode == StudySession.MODE -> stringResource(R.string.study_summary_remembered, correct ?: 0, asked ?: 0)
-                                    entry.mode == QuizMode.BLITZ.name -> stringResource(R.string.stats_log_blitz, correct ?: entry.total, entry.score)
-                                    // "8/10 · 150 pts"; rows saved before the counts were recorded show the points alone.
-                                    correct != null && asked != null -> stringResource(R.string.stats_log_result, correct, asked, entry.score)
-                                    else -> stringResource(R.string.stats_points, entry.score)
-                                },
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-                            )
-                        }
+                        LogRow(entry, dateFormat)
+                    }
+                } else {
+                    Card(modifier = rowModifier, shape = shape, colors = colors) {
+                        LogRow(entry, dateFormat)
                     }
                 }
             }
@@ -409,10 +456,185 @@ fun StatsScreen(
         }
     }
     }
+
+    val openPair = openPairKey?.let { key -> confusedPairs.firstOrNull { it.key == key } }
+    if (openPair != null) {
+        TellApartDialog(pair = openPair, onDismiss = { openPairKey = null })
+    }
 }
 
 /** How many rows the quiz log shows before Show all. */
 private const val LOG_PREVIEW = 20
+
+/** How many pairs the Most confused card lists. */
+private const val MOST_CONFUSED = 5
+
+/** Two countries mixed up with each other, [first] before [second] by name, and how often. */
+private data class ConfusedPair(val first: Country, val second: Country, val count: Int) {
+    /** The stored key of the pair ("RO TD"), the same whichever is named first. */
+    val key: String get() = TellApart.key(first.code, second.code)
+
+    companion object {
+        fun of(confusion: Confusion, countriesByCode: Map<String, Country>): ConfusedPair? {
+            val a = countriesByCode[confusion.a] ?: return null
+            val b = countriesByCode[confusion.b] ?: return null
+            val (first, second) = if (CountryRepository.byName.compare(a, b) <= 0) a to b else b to a
+            return ConfusedPair(first, second, confusion.count)
+        }
+    }
+}
+
+/** One quiz log row: the mode and scope, when it was played, and its result in a chip. */
+@Composable
+private fun LogRow(entry: QuizScoreEntity, dateFormat: DateFormat) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(14.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column {
+            Text(
+                text = stringResource(R.string.stats_log_entry, modeTitle(entry.mode), scopeLabel(entry.continentFilter)),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = dateFormat.format(Date(entry.timestamp)),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        Surface(
+            shape = RoundedCornerShape(12.dp),
+            color = MaterialTheme.colorScheme.primaryContainer
+        ) {
+            val correct = entry.correct
+            val asked = entry.questionCount
+            Text(
+                text = when {
+                    entry.mode == StudySession.MODE -> stringResource(R.string.study_summary_remembered, correct ?: 0, asked ?: 0)
+                    entry.mode == QuizMode.BLITZ.name -> stringResource(R.string.stats_log_blitz, correct ?: entry.total, entry.score)
+                    // "8/10 · 150 pts"; rows saved before the counts were recorded show the points alone.
+                    correct != null && asked != null -> stringResource(R.string.stats_log_result, correct, asked, entry.score)
+                    else -> stringResource(R.string.stats_points, entry.score)
+                },
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+            )
+        }
+    }
+}
+
+/** The Most confused card: each pair as its two flags, the two names and how often, a tap opening [TellApartDialog]. */
+@Composable
+private fun MostConfusedCard(pairs: List<ConfusedPair>, onOpen: (ConfusedPair) -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("stats_confused"),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
+            Text(
+                text = stringResource(R.string.stats_confused_heading),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .padding(vertical = 4.dp)
+                    .semantics { heading() }
+            )
+            pairs.forEachIndexed { i, pair ->
+                if (i > 0) HorizontalDivider()
+                val names = stringResource(R.string.stats_confused_pair, pair.first.name, pair.second.name)
+                val description = pluralStringResource(R.plurals.stats_confused_description, pair.count, names, pair.count)
+                val openLabel = stringResource(R.string.stats_confused_open)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClickLabel = openLabel) { onOpen(pair) }
+                        .semantics(mergeDescendants = true) { contentDescription = description }
+                        .testTag("stats_confused_row_${pair.key.replace(' ', '_').lowercase()}")
+                        .padding(vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    FlagView(country = pair.first, modifier = Modifier.width(44.dp), contentDescription = null, thumbnail = true)
+                    Spacer(modifier = Modifier.width(6.dp))
+                    FlagView(country = pair.second, modifier = Modifier.width(44.dp), contentDescription = null, thumbnail = true)
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = names,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = stringResource(R.string.stats_confused_times, pair.count),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * The two flags of a confused pair side by side, larger, each under its name, and the line that tells them apart:
+ * the pair's tip, or without one how to spot each of the two flags.
+ */
+@Composable
+private fun TellApartDialog(pair: ConfusedPair, onDismiss: () -> Unit) {
+    val tip = remember(pair) { TellApart.tip(pair.first.code, pair.second.code) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        modifier = Modifier.testTag("stats_confused_dialog"),
+        title = { Text(stringResource(R.string.stats_confused_pair, pair.first.name, pair.second.name)) },
+        text = {
+            Column {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
+                    DialogSide(pair.first, modifier = Modifier.weight(1f))
+                    DialogSide(pair.second, modifier = Modifier.weight(1f))
+                }
+                if (tip != null) {
+                    TellApartLine(text = tip, modifier = Modifier.padding(top = 12.dp).testTag("stats_confused_tip"))
+                } else {
+                    listOf(pair.first, pair.second).filter { it.spotIt.isNotBlank() }.forEach { country ->
+                        TellApartLine(
+                            text = stringResource(R.string.spot_it_line, country.name, country.spotIt),
+                            modifier = Modifier.padding(top = 12.dp).testTag("stats_confused_cue")
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss, modifier = Modifier.testTag("stats_confused_close_btn")) {
+                Text(stringResource(R.string.action_close))
+            }
+        }
+    )
+}
+
+@Composable
+private fun DialogSide(country: Country, modifier: Modifier = Modifier) {
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        FlagView(country = country, modifier = Modifier.fillMaxWidth(), contentDescription = null, thumbnail = true)
+        Text(
+            text = country.name,
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = 4.dp)
+        )
+    }
+}
 
 /**
  * Two tiles side by side, or one under the other once the font is 1.5 times its size or more: a half-width tile

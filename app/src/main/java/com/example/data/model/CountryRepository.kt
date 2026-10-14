@@ -1,5 +1,6 @@
 package com.example.data.model
 
+import com.example.data.local.Confusion
 import com.example.data.local.QuizAnswerEntity
 import com.example.data.local.QuizScoreEntity
 import com.example.data.local.RecentTarget
@@ -12,6 +13,7 @@ import com.example.progress.Grade
 import com.example.progress.PracticeStreak
 import com.example.progress.Skill
 import com.example.progress.SkillState
+import com.example.quiz.QuizReview
 import com.example.quiz.QuizSession
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
@@ -94,6 +96,15 @@ class CountryRepository(
 
     /** The targets of the quizzes saved at or after [since] (epoch millis), with their mode and time, so the next quiz can look elsewhere first. */
     fun recentTargets(since: Long): Flow<List<RecentTarget>> = progressDao.recentTargets(since)
+
+    /** The pairs of countries mixed up with each other, most often first; see [UserProgressDao.confusions]. */
+    val confusions: Flow<List<Confusion>> = progressDao.confusions()
+
+    /** The ids of the logged quizzes whose answers were stored, so their result screen can be opened again. */
+    val reviewableQuizIds: Flow<Set<Long>> = progressDao.reviewableQuizIds().map { it.toSet() }
+
+    /** The logged quiz [quizId] with its answers, for the read-only result screen; null when the log has no such row. */
+    suspend fun review(quizId: Long): QuizReview? = progressDao.quiz(quizId)?.let { QuizReview(it, progressDao.answersOf(quizId)) }
 
     // Writes finish even when the caller's scope is cancelled: a view model cleared right after the last answer
     // (the player left the screen) must not lose the review or the score it had just started saving.

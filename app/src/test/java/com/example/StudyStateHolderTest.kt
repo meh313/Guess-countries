@@ -7,9 +7,11 @@ import com.example.data.local.AppDatabase
 import com.example.data.model.CountryRepository
 import com.example.flashcards.StudySession
 import com.example.progress.Grade
+import com.example.progress.Skill
 import com.example.quiz.sovereign
 import com.example.support.awaitPendingWrites
 import com.example.support.inMemoryDatabase
+import com.example.ui.viewmodel.StudySessionBundle
 import com.example.ui.viewmodel.StudyStateHolder
 import com.example.ui.viewmodel.WriteErrors
 import java.util.TimeZone
@@ -18,6 +20,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -62,6 +66,17 @@ class StudyStateHolderTest {
         val state = savedStateProvider().saveState()
         assertTrue("the session is saved under its key", state.containsKey(StudyStateHolder.SAVED_STUDY))
         return SavedStateHandle.createHandle(state, null)
+    }
+
+    /** The skill rows once [expected] of them have landed (the writes hop between the main thread and Room's executor). */
+    private fun skillRows(expected: Int): List<com.example.data.local.SkillProgressEntity> {
+        val deadline = System.currentTimeMillis() + 10_000
+        while (true) {
+            db.awaitPendingWrites()
+            val rows = runBlocking { db.userProgressDao().getAllSkills().first() }
+            if (rows.size >= expected || System.currentTimeMillis() > deadline) return rows
+            Thread.sleep(20)
+        }
     }
 
     private fun StudyStateHolder.flipAndGrade(grade: Grade) {
@@ -162,6 +177,62 @@ class StudyStateHolderTest {
             putBooleanArray("gradedFirstTime", booleanArrayOf())
         }
         assertNull(holder(repeatedCard).session.value)
+    }
+
+    @Test
+    fun theSkillOfASession_isSavedAndRestored_andAnOldBundleIsAFlagSession() {
+        val handle = SavedStateHandle()
+        val holder = holder(handle)
+        holder.start(StudySession.CAPITALS_DUE, twelve, Skill.CAPITAL)
+        holder.flipAndGrade(Grade.GOOD)
+        val before = holder.session.value!!
+        assertEquals(Skill.CAPITAL, before.skill)
+
+        val after = holder(handle.saved()).session.value!!
+
+        assertEquals(before, after)
+        assertEquals(Skill.CAPITAL, after.skill)
+
+        // A bundle written before sessions had a skill: a flag session.
+        val old = SavedStateHandle()
+        old[StudyStateHolder.SAVED_STUDY] = Bundle().apply {
+            putString("source", StudySession.DUE)
+            putStringArrayList("cards", arrayListOf("FR", "DE"))
+            putStringArrayList("queue", arrayListOf("FR", "DE"))
+            putStringArrayList("gradedCodes", arrayListOf())
+            putStringArrayList("gradedGrades", arrayListOf())
+            putBooleanArray("gradedFirstTime", booleanArrayOf())
+        }
+        val restored = holder(old).session.value
+        assertNotNull(restored)
+        assertEquals(Skill.FLAG, restored!!.skill)
+        assertEquals(listOf("FR", "DE"), restored.cards)
+
+        // A skill this version does not know is not restored.
+        val unknown = SavedStateHandle()
+        unknown[StudyStateHolder.SAVED_STUDY] = StudySessionBundle.write(before).apply { putString("skill", "HANDWRITING") }
+        assertNull(holder(unknown).session.value)
+    }
+
+    @Test
+    fun aCapitalSession_writesItsGradesToTheCapitalSkill() {
+        val three = twelve.take(3)
+        val holder = holder(SavedStateHandle())
+        holder.start(StudySession.CAPITALS_DUE, three, Skill.CAPITAL)
+        holder.flipAndGrade(Grade.GOOD)
+        holder.flipAndGrade(Grade.AGAIN)
+        holder.flipAndGrade(Grade.EASY)
+        assertEquals(StudySession.CAPITALS_DUE, holder.session.value!!.source)
+        // The Again card comes back: grade it so the session ends and every grade is written.
+        holder.flipAndGrade(Grade.GOOD)
+        assertTrue(holder.session.value!!.isOver)
+
+        val rows = skillRows(expected = 3)
+
+        assertEquals(three.toSet(), rows.map { it.countryCode }.toSet())
+        assertEquals(3, rows.size)
+        assertTrue("every row is a capital row: $rows", rows.all { it.skill == Skill.CAPITAL.name })
+        assertTrue(rows.none { it.skill == Skill.FLAG.name })
     }
 
     @Test

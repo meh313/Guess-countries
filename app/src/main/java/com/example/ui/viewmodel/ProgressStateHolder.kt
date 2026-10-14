@@ -1,12 +1,14 @@
 package com.example.ui.viewmodel
 
 import android.util.Log
+import com.example.data.local.Confusion
 import com.example.data.local.QuizScoreEntity
 import com.example.data.local.RecentTarget
 import com.example.data.local.UserProgressEntity
 import com.example.data.model.Country
 import com.example.data.model.CountryRepository
 import com.example.data.model.WeakSpots
+import com.example.progress.DueForecast
 import com.example.progress.Evidence
 import com.example.progress.Grade
 import com.example.progress.PracticeStreak
@@ -15,11 +17,13 @@ import com.example.progress.SkillMastery
 import com.example.progress.SkillState
 import com.example.quiz.QuestionPicker
 import com.example.quiz.QuizMode
+import com.example.quiz.QuizReview
 import java.util.TimeZone
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -131,13 +135,49 @@ class ProgressStateHolder(
         .flowOn(Dispatchers.Default)
         .stateIn(scope, SharingStarted.WhileSubscribed(5000), 0)
 
+    private val sovereignCodes: Set<String> = repository.allCountries.filter { it.isSovereign }.mapTo(HashSet()) { it.code }
+
+    /** How many countries come up for review tomorrow and within the week, for the "Coming up" line on Progress; see [DueForecast]. */
+    val forecast: StateFlow<DueForecast> = combine(skills, refresh) { bySkill, _ ->
+        DueForecast.of(bySkill, sovereignCodes, repository.now(), zone())
+    }
+        .flowOn(Dispatchers.Default)
+        .stateIn(scope, SharingStarted.WhileSubscribed(5000), DueForecast.NONE)
+
+    /** The pairs of countries mixed up with each other, most often first, for the Most confused card. */
+    val confusions: StateFlow<List<Confusion>> = repository.confusions
+        .stateIn(scope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    /** The ids of the logged quizzes whose answers were stored: the log rows that can open their result screen again. */
+    val reviewableQuizIds: StateFlow<Set<Long>> = repository.reviewableQuizIds
+        .stateIn(scope, SharingStarted.WhileSubscribed(5000), emptySet())
+
+    private val _review = MutableStateFlow<QuizReview?>(null)
+
+    /** The logged quiz being looked at again, with its answers; null outside the review screen and while it loads. */
+    val review: StateFlow<QuizReview?> = _review
+
+    private var reviewLoad: Job? = null
+
+    /** Loads the quiz [quizId] and its answers (Room reads them off the main thread) into [review]; a load still running is dropped. */
+    fun openReview(quizId: Long) {
+        reviewLoad?.cancel()
+        _review.value = null
+        reviewLoad = scope.launch { _review.value = repository.review(quizId) }
+    }
+
+    fun closeReview() {
+        reviewLoad?.cancel()
+        _review.value = null
+    }
+
     fun toggleFavorite(countryCode: String) {
         scope.launch(writeErrors.handler) { repository.toggleFavorite(countryCode) }
     }
 
-    /** A flashcard self-grade: light evidence about the flag, never enough on its own to master it. */
-    fun recordGrade(countryCode: String, grade: Grade) {
-        scope.launch(writeErrors.handler) { repository.recordGrade(countryCode, Skill.FLAG, grade) }
+    /** A flashcard self-grade in [skill] (the flag unless said otherwise): light evidence, never enough on its own to master it. */
+    fun recordGrade(countryCode: String, grade: Grade, skill: Skill = Skill.FLAG) {
+        scope.launch(writeErrors.handler) { repository.recordGrade(countryCode, skill, grade) }
     }
 
     /** A quiz answer about [countryCode] in [skill], with the [evidence] the mode gives. */

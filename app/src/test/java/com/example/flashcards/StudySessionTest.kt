@@ -1,6 +1,7 @@
 package com.example.flashcards
 
 import com.example.progress.Grade
+import com.example.progress.Skill
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -171,5 +172,20 @@ class StudySessionTest {
     @Test(expected = IllegalArgumentException::class)
     fun aSessionNeedsCards() {
         StudySession.start(StudySession.DUE, emptyList())
+    }
+
+    @Test
+    fun aSessionGradesTheFlag_unlessStartedOnTheCapitals() {
+        assertEquals(Skill.FLAG, session().skill)
+        assertEquals(Skill.FLAG, StudySession.start(StudySession.DECK, codes, 3L).skill)
+
+        val capitals = StudySession.start(StudySession.CAPITALS_DUE, codes, 3L, Skill.CAPITAL)
+
+        assertEquals(Skill.CAPITAL, capitals.skill)
+        assertEquals(StudySession.CAPITALS_DUE, capitals.source)
+        assertEquals(codes, capitals.cards)
+        // The skill travels with every step of the session.
+        assertEquals(Skill.CAPITAL, capitals.give(Grade.AGAIN).give(Grade.GOOD).undo().settle().skill)
+        assertEquals("Capitals due", StudySession.CAPITALS_DUE)
     }
 }

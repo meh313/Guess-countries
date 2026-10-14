@@ -109,4 +109,7 @@
     <!-- Score screen: the ways on -->
     <string name="result_practise_mistakes">Practise mistakes</string>
     <string name="result_retry">Retry</string>
+
+    <!-- Score screen of a logged quiz, opened from the Progress log: "Quiz from 12 Oct" -->
+    <string name="review_title">Quiz from %1$s</string>
 </resources>
