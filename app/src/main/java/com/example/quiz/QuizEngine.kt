@@ -1,6 +1,7 @@
 package com.example.quiz
 
 import com.example.data.model.Country
+import com.example.data.model.DecoyCities
 import com.example.data.model.FlagLookAlikes
 import kotlin.random.Random
 
@@ -48,7 +49,7 @@ data class QuizQuestion(
     val questionText: String,
     val options: List<String>,
     val correctAnswerIndex: Int,
-    /** The country behind each option, in the order of [options]; null where the option is not a country (a continent). */
+    /** The country behind each option, in the order of [options]; null where the option is not a country (a continent, a decoy city). */
     val optionCodes: List<String?> = List(options.size) { null },
     /**
      * Every option that counts as right: the catalog's answer, plus the other continent of a country that straddles
@@ -210,8 +211,13 @@ object QuizEngine {
                 countryChoice(target, text, wrongCountries(pool, target, random, lookAlikes) { it.name }, random) { it.name }
             QuizMode.PICK_FLAG ->
                 countryChoice(target, text, wrongCountries(pool, target, random, lookAlikes) { it.code }, random) { it.code }
-            QuizMode.CAPITAL ->
-                countryChoice(target, text, wrongCountries(pool, target, random, 0) { it.quizCapital }, random) { it.quizCapital }
+            QuizMode.CAPITAL -> {
+                // One famous non-capital of the target first, where it has one; the other wrong answers are the
+                // capitals of its neighbours (same subregion, then continent, then the world), never look-alikes.
+                val decoys = DecoyCities.of(target.code).shuffled(random).take(1)
+                val wrong = nearbyWrongCountries(pool, target, random, DISTRACTORS - decoys.size) { it.quizCapital }
+                countryChoice(target, text, wrong, random, decoys) { it.quizCapital }
+            }
             QuizMode.CONTINENT -> {
                 // A country on two continents always has its other continent among the options, in place of one
                 // random wrong continent, and either answer counts.
@@ -279,16 +285,43 @@ object QuizEngine {
         return (similar + rest).take(DISTRACTORS)
     }
 
-    /** A question whose options are countries, shown as [answerOf] them; the country behind each option is kept. */
+    /**
+     * Wrong answers for a question about [target] from the countries nearest to it: the rest of its subregion first,
+     * then the rest of its continent, then the world, each part in random order; [count] of them, with answer texts
+     * that differ from the target's and from each other.
+     */
+    private fun nearbyWrongCountries(
+        pool: List<Country>,
+        target: Country,
+        random: Random,
+        count: Int,
+        answerOf: (Country) -> String
+    ): List<Country> {
+        val answer = answerOf(target)
+        val candidates = pool.filter { it != target && answerOf(it) != answer }
+        val (sameSubregion, elsewhere) = candidates.partition { it.subregion.equals(target.subregion, ignoreCase = true) }
+        val (sameContinent, world) = elsewhere.partition { it.continent.equals(target.continent, ignoreCase = true) }
+        return (sameSubregion.shuffled(random) + sameContinent.shuffled(random) + world.shuffled(random))
+            .distinctBy(answerOf)
+            .take(count)
+    }
+
+    /**
+     * A question whose options are countries, shown as [answerOf] them, plus [decoys]: plain texts behind which there
+     * is no country (a city that is not a capital). The country behind each option is kept, null for a decoy.
+     */
     private fun countryChoice(
         target: Country,
         text: String,
         wrong: List<Country>,
         random: Random,
+        decoys: List<String> = emptyList(),
         answerOf: (Country) -> String
     ): QuizQuestion {
-        val countries = (wrong + target).shuffled(random)
-        val options = countries.map(answerOf)
-        return QuizQuestion(target, text, options, countries.indexOf(target), countries.map { it.code })
+        val entries = (wrong + target).map { answerOf(it) to it.code } + decoys.map { it to null }
+        val shuffled = entries.shuffled(random)
+        val options = shuffled.map { it.first }
+        val codes = shuffled.map { it.second }
+        return QuizQuestion(target, text, options, codes.indexOf(target.code), codes)
     }
 }

@@ -147,6 +147,7 @@ fun FlashcardScreen(
     val countriesByCode = remember(viewModel) { viewModel.repository.allCountries.associateBy { it.code } }
     val due = plan.due(Skill.FLAG)
     val weak = plan.weak(Skill.FLAG)
+    val capitalsDue = plan.due(Skill.CAPITAL)
 
     val session = study
     if (session != null) {
@@ -177,9 +178,10 @@ fun FlashcardScreen(
                 val codes = when (session.source) {
                     StudySession.DUE -> due.map { it.code }
                     StudySession.WEAK -> weak.map { it.code }
+                    StudySession.CAPITALS_DUE -> capitalsDue.map { it.code }
                     else -> session.cards
                 }
-                viewModel.startStudy(session.source, codes.ifEmpty { session.cards })
+                viewModel.startStudy(session.source, codes.ifEmpty { session.cards }, session.skill)
             },
             onDone = { viewModel.dismissStudy() },
             modifier = modifier
@@ -271,6 +273,7 @@ fun FlashcardScreen(
     if (showStudyChooser) {
         StudyChooser(
             dueCount = due.size,
+            capitalsDueCount = capitalsDue.size,
             weakCount = weak.size,
             deckCount = minOf(deck.count { it.isSovereign }, StudySession.DEFAULT_SIZE),
             unseenCount = unseenCount,
@@ -286,10 +289,12 @@ fun FlashcardScreen(
                 flippedCode = null
                 val codes = when (source) {
                     StudySession.DUE -> due.map { it.code }
+                    StudySession.CAPITALS_DUE -> capitalsDue.map { it.code }
                     StudySession.WEAK -> weak.map { it.code }
                     else -> deckFromHere()
                 }
-                viewModel.startStudy(source, codes)
+                val skill = if (source == StudySession.CAPITALS_DUE) Skill.CAPITAL else Skill.FLAG
+                viewModel.startStudy(source, codes, skill)
             },
             onDismiss = { showStudyChooser = false }
         )
@@ -485,11 +490,12 @@ private fun StepButtons(stacked: Boolean, onStep: (forward: Boolean) -> Unit) {
 
 /**
  * Where the study cards come from, and the way into Learn mode. A source with nothing in it is shown, counted and
- * inactive; so is Learn once every flag has been seen.
+ * inactive; so is Learn once every flag has been seen. The capitals due are a deck of their own, graded on the capital.
  */
 @Composable
 private fun StudyChooser(
     dueCount: Int,
+    capitalsDueCount: Int,
     weakCount: Int,
     deckCount: Int,
     unseenCount: Int,
@@ -514,6 +520,13 @@ private fun StudyChooser(
                     pluralStringResource(R.plurals.study_due_detail, dueCount, dueCount),
                     dueCount > 0,
                     "study_due_btn"
+                ) { onPick(it) }
+                StudyOption(
+                    StudySession.CAPITALS_DUE,
+                    scopeLabel(StudySession.CAPITALS_DUE),
+                    pluralStringResource(R.plurals.study_capitals_due_detail, capitalsDueCount, capitalsDueCount),
+                    capitalsDueCount > 0,
+                    "study_capitals_due_btn"
                 ) { onPick(it) }
                 StudyOption(
                     StudySession.WEAK,
@@ -652,7 +665,8 @@ private fun StudyView(
                 onInstallVoiceData = onInstallVoiceData,
                 onFlip = onFlip,
                 onSpeak = { onSpeak(code) },
-                modifier = cardModifier
+                modifier = cardModifier,
+                skill = session.skill
             )
         },
         bottom = { stacked -> GradeButtons(stacked = stacked, enabled = session.isFlipped, onGrade = onGrade) }
@@ -881,7 +895,10 @@ private fun DeckProgress(fraction: Float) {
 }
 
 
-/** Interactive 3D flip card: the flag and continent clue on the front, the details on the back. */
+/**
+ * Interactive 3D flip card: the flag and continent clue on the front, the details on the back. A [Skill.CAPITAL]
+ * card names the country on the front and asks for the capital, which the back then shows first.
+ */
 @Composable
 private fun FlipCard(
     country: Country,
@@ -893,13 +910,23 @@ private fun FlipCard(
     onInstallVoiceData: () -> Unit,
     onFlip: () -> Unit,
     onSpeak: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    skill: Skill = Skill.FLAG
 ) {
     val continentColor = getContinentColor(country.continent)
+    val asksCapital = skill == Skill.CAPITAL
     // Read lazily: the animation only invalidates the graphics layer, and this flips once at 90 degrees.
     val showBack by remember(rotation) { derivedStateOf { rotation.value > 90f } }
-    val flipLabel = if (isFlipped) stringResource(R.string.flashcards_show_flag_again) else stringResource(R.string.flashcards_reveal)
-    val faceDescription = if (isFlipped) stringResource(R.string.flashcards_state_details) else stringResource(R.string.flashcards_state_flag)
+    val flipLabel = when {
+        isFlipped -> stringResource(R.string.flashcards_show_flag_again)
+        asksCapital -> stringResource(R.string.flashcards_reveal_capital)
+        else -> stringResource(R.string.flashcards_reveal)
+    }
+    val faceDescription = when {
+        !isFlipped -> stringResource(R.string.flashcards_state_flag)
+        asksCapital -> stringResource(R.string.flashcards_state_capital)
+        else -> stringResource(R.string.flashcards_state_details)
+    }
 
     Card(
         modifier = modifier
@@ -924,9 +951,11 @@ private fun FlipCard(
                 BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
                     val padding = if (compact) 12.dp else 24.dp
                     val gap = if (compact) 8.dp else 12.dp
-                    // The chip, hint, gaps and padding take their share; the flag gets the rest, never
-                    // less than 72dp. If that does not fit (large fonts) the face scrolls.
-                    val flagHeight = (maxHeight - (32.dp + 44.dp + gap * 2 + padding * 2)).coerceIn(72.dp, 200.dp)
+                    // The chip, hint, gaps and padding take their share (and a capital card's name and question
+                    // theirs); the flag gets the rest, never less than 72dp. If that does not fit (large fonts) the
+                    // face scrolls.
+                    val askingHeight = if (asksCapital) 64.dp + gap else 0.dp
+                    val flagHeight = (maxHeight - (32.dp + 44.dp + gap * 2 + padding * 2 + askingHeight)).coerceIn(72.dp, 200.dp)
                     val flagWidth = minOf(flagHeight * FlagAspectRatio, maxWidth - padding * 2)
 
                     Column(
@@ -963,6 +992,25 @@ private fun FlipCard(
 
                         Spacer(modifier = Modifier.height(gap))
 
+                        if (asksCapital) {
+                            // The country is given; the capital is the question.
+                            Text(
+                                text = country.name,
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.testTag("flashcard_front_name")
+                            )
+                            Text(
+                                text = stringResource(R.string.flashcards_capital_prompt),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.testTag("flashcard_capital_prompt")
+                            )
+                            Spacer(modifier = Modifier.height(gap))
+                        }
+
                         Surface(
                             shape = RoundedCornerShape(20.dp),
                             color = MaterialTheme.colorScheme.primaryContainer,
@@ -980,7 +1028,7 @@ private fun FlipCard(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = stringResource(R.string.flashcards_tap_to_reveal),
+                                    text = if (asksCapital) stringResource(R.string.flashcards_tap_to_reveal_capital) else stringResource(R.string.flashcards_tap_to_reveal),
                                     style = MaterialTheme.typography.labelLarge,
                                     fontWeight = FontWeight.Medium,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -997,7 +1045,8 @@ private fun FlipCard(
                     speechAvailable = speechAvailable,
                     onInstallVoiceData = onInstallVoiceData,
                     onSpeak = onSpeak,
-                    modifier = Modifier.graphicsLayer { rotationY = 180f } // Fix mirror effect
+                    modifier = Modifier.graphicsLayer { rotationY = 180f }, // Fix mirror effect
+                    capitalFirst = asksCapital
                 )
             }
         }
@@ -1006,7 +1055,8 @@ private fun FlipCard(
 
 /**
  * The back of a flashcard: the name, the capital and population, how to spot the flag and what it means, then the
- * trivia. Its own composable so the back can be shown without the deck around it.
+ * trivia. Its own composable so the back can be shown without the deck around it. With [capitalFirst] (a capital
+ * study card) the capital comes first and large, the full wording under it where several cities share the role.
  */
 @Composable
 internal fun FlashcardBack(
@@ -1015,7 +1065,8 @@ internal fun FlashcardBack(
     speechAvailable: Boolean,
     onInstallVoiceData: () -> Unit,
     onSpeak: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    capitalFirst: Boolean = false
 ) {
     val compactNumbers = rememberCompactNumberFormat()
     Column(
@@ -1047,6 +1098,27 @@ internal fun FlashcardBack(
                     modifier = Modifier.testTag("flashcard_speak_btn")
                 )
             }
+        }
+
+        if (capitalFirst) {
+            Text(
+                text = country.quizCapital,
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.testTag("flashcard_capital_answer")
+            )
+            if (country.capital != country.quizCapital) {
+                Text(
+                    text = country.capital,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.testTag("flashcard_capital_full")
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
         }
 
         Text(

@@ -58,6 +58,7 @@ import com.example.ui.screens.SettingsScreen
 import com.example.ui.screens.FlashcardScreen
 import com.example.ui.screens.LearnScreen
 import com.example.ui.screens.QuizScreen
+import com.example.ui.screens.QuizReviewScreen
 import com.example.ui.screens.StatsScreen
 import com.example.ui.theme.WorldFlagsTheme
 import com.example.ui.viewmodel.CountryViewModel
@@ -75,6 +76,9 @@ sealed class Screen(val route: String, @StringRes val titleRes: Int, val icon: I
 
         /** "Learn 5 new", opened over whichever tab asked for it (the Flashcards study chooser, the Today card); Back returns there. */
         const val LEARN = "learn"
+
+        /** The result screen of a logged quiz, opened from the Progress log; Back returns there. */
+        const val REVIEW = "review"
     }
 }
 
@@ -147,7 +151,7 @@ fun MainAppScreen(
     }
 
     fun isSelected(screen: Screen) = currentRoute == screen.route ||
-        (screen == Screen.Stats && (currentRoute == Screen.SETTINGS || currentRoute == Screen.ABOUT)) ||
+        (screen == Screen.Stats && (currentRoute == Screen.SETTINGS || currentRoute == Screen.ABOUT || currentRoute == Screen.REVIEW)) ||
         // Learn sits over whichever tab opened it: that tab stays selected.
         (currentRoute == Screen.LEARN && navController.previousBackStackEntry?.destination?.route == screen.route)
     fun open(screen: Screen) {
@@ -242,7 +246,19 @@ fun MainAppScreen(
                             open(Screen.Explore)
                         },
                         onOpenFlashcards = { open(Screen.Flashcards) },
-                        onLearn = { openLearn() }
+                        onLearn = { openLearn() },
+                        onOpenReview = { navController.navigate(Screen.REVIEW) { launchSingleTop = true } }
+                    )
+                }
+                composable(Screen.REVIEW) {
+                    val review by viewModel.review.collectAsStateWithLifecycle()
+                    QuizReviewScreen(
+                        review = review,
+                        countries = viewModel.repository.allCountries,
+                        onDone = {
+                            viewModel.closeReview()
+                            navController.popBackStack()
+                        }
                     )
                 }
                 composable(Screen.SETTINGS) {

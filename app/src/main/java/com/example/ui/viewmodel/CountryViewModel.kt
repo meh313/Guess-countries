@@ -11,6 +11,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.ui.components.FOCUS_CHOICES
 import com.example.data.local.AppDatabase
+import com.example.data.local.Confusion
 import com.example.data.local.QuizScoreEntity
 import com.example.data.local.UserProgressEntity
 import com.example.data.model.Country
@@ -28,12 +29,14 @@ import com.example.data.transfer.ProgressSnapshot
 import com.example.data.transfer.ProgressTransfer
 import com.example.flashcards.StudySession
 import com.example.learn.LearnSession
+import com.example.progress.DueForecast
 import com.example.progress.Grade
 import com.example.progress.PracticeStreak
 import com.example.progress.Skill
 import com.example.progress.SkillState
 import com.example.quiz.QuizDifficulty
 import com.example.quiz.QuizMode
+import com.example.quiz.QuizReview
 import com.example.quiz.QuizSession
 import com.example.reminder.NoReminderScheduler
 import com.example.reminder.ReminderScheduler
@@ -247,6 +250,24 @@ class CountryViewModel(
     /** The items done today as the daily goal counts them, for the Today card. */
     val itemsToday: StateFlow<Int> get() = progress.itemsToday
 
+    /** How many countries come up for review tomorrow and within the week, for the "Coming up" line on Progress. */
+    val forecast: StateFlow<DueForecast> get() = progress.forecast
+
+    /** The pairs of countries mixed up with each other, most often first, for the Most confused card on Progress. */
+    val confusions: StateFlow<List<Confusion>> get() = progress.confusions
+
+    /** The ids of the logged quizzes whose result screen can be opened again (their answers were stored). */
+    val reviewableQuizIds: StateFlow<Set<Long>> get() = progress.reviewableQuizIds
+
+    /** The logged quiz being looked at again, with its answers; null outside the review screen and while it loads. */
+    val review: StateFlow<QuizReview?> get() = progress.review
+
+    /** Loads the logged quiz [quizId] and its answers, off the main thread, into [review]. */
+    fun openReview(quizId: Long) = progress.openReview(quizId)
+
+    /** Leaves the review screen: [review] is null again. */
+    fun closeReview() = progress.closeReview()
+
     /** Whether the Today card is shown: always until the first-run choice, then unless it was put away today. */
     val todayCardVisible: StateFlow<Boolean> = combine(_onboarded, _todayCardDismissedDay, progress.refreshes) { onboarded, dismissed, _ ->
         !onboarded || dismissed != todayStamp()
@@ -381,8 +402,8 @@ class CountryViewModel(
     /** What the finished study session did for the streak; null until known, or when it was too short to count. */
     val studyOutcome: StateFlow<PracticeStreak.Outcome?> get() = study.outcome
 
-    /** Starts a study session over [codes] from [source] (one of the [StudySession] sources). */
-    fun startStudy(source: String, codes: List<String>) = study.start(source, codes)
+    /** Starts a study session over [codes] from [source] (one of the [StudySession] sources), graded in [skill]. */
+    fun startStudy(source: String, codes: List<String>, skill: Skill = Skill.FLAG) = study.start(source, codes, skill)
 
     fun flipStudyCard() = study.flip()
 

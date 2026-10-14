@@ -1,6 +1,7 @@
 package com.example.flashcards
 
 import com.example.progress.Grade
+import com.example.progress.Skill
 import kotlin.random.Random
 
 /**
@@ -10,7 +11,7 @@ import kotlin.random.Random
  * [pending] until the next one (or the end) so it can be taken back.
  */
 data class StudySession(
-    /** Where the cards came from: [DUE], [WEAK] or [DECK]; also the label of the session in the quiz log. */
+    /** Where the cards came from: [DUE], [WEAK], [DECK] or [CAPITALS_DUE]; also the label of the session in the quiz log. */
     val source: String,
     /** The distinct cards of the session, in the order first shown. */
     val cards: List<String>,
@@ -22,7 +23,9 @@ data class StudySession(
     /** The latest grade, not yet written down: [undo] takes it back. */
     val pending: GradeRecord? = null,
     /** Seeds where an *Again* card comes back, so the same session replays the same way. */
-    val seed: Long = 0L
+    val seed: Long = 0L,
+    /** What the cards ask for and where the grades go: the flag (the front shows it) or the capital (the back shows it). */
+    val skill: Skill = Skill.FLAG
 ) {
     /** One grade: the card, the grade, and whether it was the card's first showing in this session. */
     data class GradeRecord(val code: String, val grade: Grade, val firstTime: Boolean)
@@ -97,6 +100,9 @@ data class StudySession(
         const val WEAK = "Weak spots"
         const val DECK = "This deck"
 
+        /** The capitals due for review: a session of [Skill.CAPITAL] cards. */
+        const val CAPITALS_DUE = "Capitals due"
+
         /** How many cards a session takes from a longer list. */
         const val DEFAULT_SIZE = 20
 
@@ -109,10 +115,10 @@ data class StudySession(
         const val AGAIN_MIN_GAP = 3
         const val AGAIN_MAX_GAP = 5
 
-        /** A session over the first [DEFAULT_SIZE] of [codes] (distinct, in order). */
-        fun start(source: String, codes: List<String>, seed: Long = 0L): StudySession {
+        /** A session over the first [DEFAULT_SIZE] of [codes] (distinct, in order), graded in [skill]. */
+        fun start(source: String, codes: List<String>, seed: Long = 0L, skill: Skill = Skill.FLAG): StudySession {
             val cards = codes.distinct().take(DEFAULT_SIZE)
-            return StudySession(source = source, cards = cards, queue = cards, seed = seed)
+            return StudySession(source = source, cards = cards, queue = cards, seed = seed, skill = skill)
         }
     }
 }

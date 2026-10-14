@@ -56,11 +56,11 @@ class StudyStateHolder(
         return session.takeIf { s -> s.cards.all { it in known } }
     }
 
-    /** Starts a session over [codes] (the first twenty) from [source]; nothing happens with no cards. */
-    fun start(source: String, codes: List<String>) {
+    /** Starts a session over [codes] (the first twenty) from [source], graded in [skill]; nothing happens with no cards. */
+    fun start(source: String, codes: List<String>, skill: Skill = Skill.FLAG) {
         if (codes.isEmpty()) return
         _outcome.value = null
-        _session.value = StudySession.start(source, codes, random.nextLong())
+        _session.value = StudySession.start(source, codes, random.nextLong(), skill)
     }
 
     fun flip() = update { it.flip() }
@@ -70,7 +70,7 @@ class StudyStateHolder(
         val session = _session.value ?: return
         val updated = session.grade(grade)
         if (updated === session) return
-        session.pending?.let { write(it) }
+        session.pending?.let { write(it, session.skill) }
         _session.value = updated
         if (updated.isOver) finish(updated)
     }
@@ -87,13 +87,13 @@ class StudyStateHolder(
     /** Leaves the summary (or an unfinished session, without logging it). */
     fun dismiss() {
         val session = _session.value
-        if (session != null && !session.isOver) session.pending?.let { write(it) }
+        if (session != null && !session.isOver) session.pending?.let { write(it, session.skill) }
         _session.value = null
         _outcome.value = null
     }
 
     private fun finish(session: StudySession) {
-        session.pending?.let { write(it) }
+        session.pending?.let { write(it, session.skill) }
         val settled = session.settle()
         _session.value = settled
         if (settled.gradedCards >= StudySession.MIN_FOR_STREAK) {
@@ -105,9 +105,10 @@ class StudyStateHolder(
         }
     }
 
-    private fun write(record: StudySession.GradeRecord) {
+    /** Writes a first-time grade down in the session's [skill]; a rehearsal grade is not written. */
+    private fun write(record: StudySession.GradeRecord, skill: Skill) {
         if (!record.firstTime) return
-        scope.launch(writeErrors.handler) { repository.recordGrade(record.code, Skill.FLAG, record.grade) }
+        scope.launch(writeErrors.handler) { repository.recordGrade(record.code, skill, record.grade) }
     }
 
     private inline fun update(change: (StudySession) -> StudySession) {
@@ -138,11 +139,13 @@ internal object StudySessionBundle {
             putBoolean("pendingFirstTime", pending.firstTime)
         }
         putLong("seed", session.seed)
+        putString("skill", session.skill.name)
     }
 
-    /** The session in [bundle], or null when it holds none or is not one this version wrote. */
+    /** The session in [bundle], or null when it holds none or is not one this version wrote. A bundle without a skill is a flag session. */
     fun read(bundle: Bundle): StudySession? {
         val source = bundle.getString("source") ?: return null
+        val skill = bundle.getString("skill")?.let { name -> Skill.entries.firstOrNull { it.name == name } ?: return null } ?: Skill.FLAG
         val cards = bundle.getStringArrayList("cards") ?: return null
         val queue = bundle.getStringArrayList("queue") ?: return null
         if (cards.isEmpty() || cards.distinct() != cards || queue.any { it !in cards }) return null
@@ -164,7 +167,8 @@ internal object StudySessionBundle {
             isFlipped = bundle.getBoolean("flipped"),
             graded = graded,
             pending = pending,
-            seed = bundle.getLong("seed")
+            seed = bundle.getLong("seed"),
+            skill = skill
         )
     }
 

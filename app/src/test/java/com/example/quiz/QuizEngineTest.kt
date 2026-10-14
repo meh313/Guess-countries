@@ -1,5 +1,6 @@
 package com.example.quiz
 
+import com.example.data.model.DecoyCities
 import com.example.data.model.FlagLookAlikes
 import kotlin.random.Random
 import org.junit.Assert.assertEquals
@@ -317,15 +318,97 @@ class QuizEngineTest {
     }
 
     @Test
-    fun everyCapitalQuestionOffersOnlyQuizCapitalsOfCountriesInThePool() {
+    fun everyCapitalQuestionOffersOnlyQuizCapitalsOfCountriesInThePool_orADecoyOfItsTarget() {
         val pool = QuizEngine.poolFor("Global", allCountries)
         val quizCapitals = pool.map { it.quizCapital }.toSet()
         val za = allCountries.single { it.code == "ZA" }
         repeat(40) {
             QuizEngine.generate(pool, QuizMode.CAPITAL).forEach { q ->
                 assertEquals(q.targetCountry.quizCapital, q.correctOption())
-                assertTrue("options ${q.options}", quizCapitals.containsAll(q.options))
+                val decoys = DecoyCities.of(q.targetCountry.code)
+                assertTrue("options ${q.options}", (quizCapitals + decoys).containsAll(q.options))
                 assertTrue("options ${q.options} contain South Africa's long capital", za.capital !in q.options)
+                // A capital stands for its country; a decoy stands for none.
+                q.options.forEachIndexed { i, option ->
+                    if (option in decoys) assertEquals("decoy $option", null, q.optionCodes[i])
+                    else assertEquals("option $option", option, pool.single { it.code == q.optionCodes[i] }.quizCapital)
+                }
+            }
+        }
+    }
+
+    // --- capital questions: neighbours first, then the famous non-capital ---
+
+    private fun capitalQuestionAbout(code: String, seed: Int, answerPool: List<com.example.data.model.Country> = sovereign): QuizQuestion =
+        questionAbout(code, QuizDifficulty.NORMAL, seed, QuizMode.CAPITAL, answerPool)
+
+    @Test
+    fun capitalQuestions_takeTheirWrongAnswersFromTheTargetsSubregionFirst() {
+        val france = country("FR")
+        val westernEurope = sovereign.filter { it.subregion == france.subregion && it.code != "FR" }.map { it.quizCapital }.toSet()
+        assertTrue("Western Europe needs at least three other capitals", westernEurope.size >= 3)
+        assertTrue(DecoyCities.of("FR").isEmpty())
+        for (seed in 1..40) {
+            val q = capitalQuestionAbout("FR", seed)
+            assertEquals("seed=$seed ${q.options}", 3, wrongNames(q).size)
+            assertTrue("seed=$seed ${q.options}", westernEurope.containsAll(wrongNames(q)))
+        }
+    }
+
+    @Test
+    fun capitalQuestions_fillFromTheContinentAndThenTheWorld_whenTheSubregionRunsOut() {
+        // One neighbour in the subregion, one elsewhere on the continent, the rest of the world: both neighbours
+        // come before any world capital, whatever the seed.
+        val pool = listOf(country("FR"), country("DE"), country("ES")) + sovereign.filter { it.continent != "Europe" }.take(12)
+        for (seed in 1..40) {
+            val q = QuizEngine.generate(listOf(country("FR")), QuizMode.CAPITAL, Random(seed), answerPool = pool).single()
+            val wrong = wrongNames(q)
+            assertTrue("seed=$seed $wrong", "Berlin" in wrong && "Madrid" in wrong)
+            assertEquals("seed=$seed $wrong", 3, wrong.size)
+        }
+    }
+
+    @Test
+    fun capitalQuestions_aboutAustralia_alwaysOfferOneOfItsDecoys_asAnOptionWithNoCountry() {
+        val decoys = DecoyCities.of("AU")
+        assertEquals(setOf("Sydney", "Melbourne"), decoys.toSet())
+        val oceania = sovereign.filter { it.continent == "Oceania" && it.code != "AU" }.map { it.quizCapital }.toSet()
+        val seen = HashSet<String>()
+        for (seed in 1..40) {
+            val q = capitalQuestionAbout("AU", seed)
+            val offered = q.options.filter { it in decoys }
+            assertEquals("seed=$seed ${q.options}", 1, offered.size)
+            seen += offered.single()
+            assertEquals("seed=$seed", null, q.optionCodes[q.options.indexOf(offered.single())])
+            assertEquals("seed=$seed ${q.options}", 4, q.options.distinct().size)
+            assertEquals("Canberra", q.correctOption())
+            // The other two wrong answers are still the nearest capitals.
+            assertTrue("seed=$seed ${q.options}", oceania.containsAll(wrongNames(q) - decoys.toSet()))
+        }
+        assertEquals("both decoys come up over 40 seeds", decoys.toSet(), seen)
+    }
+
+    @Test
+    fun capitalQuestions_aboutACountryWithoutDecoys_neverOfferAnyDecoy() {
+        val everyDecoy = DecoyCities.byCode.values.flatten().toSet()
+        for (code in listOf("FR", "DE", "JP", "EG", "BO")) {
+            assertTrue(code, DecoyCities.of(code).isEmpty())
+            for (seed in 1..20) {
+                val q = capitalQuestionAbout(code, seed)
+                assertTrue("$code seed=$seed ${q.options}", q.options.none { it in everyDecoy })
+                assertTrue("$code seed=$seed", q.optionCodes.none { it == null })
+            }
+        }
+    }
+
+    @Test
+    fun decoysNeverCollideWithACapital_soEveryCapitalQuestionOverTheCatalogStaysUnambiguous() {
+        val capitals = allCountries.flatMap { listOf(it.capital, it.quizCapital) }.toSet()
+        DecoyCities.byCode.values.flatten().forEach { decoy -> assertTrue("$decoy is a capital", decoy !in capitals) }
+        for (seed in 1..10) {
+            QuizEngine.generate(sovereign, QuizMode.CAPITAL, Random(seed), order = { it }).forEach { q ->
+                assertEquals(q.toString(), 4, q.options.distinct().size)
+                assertEquals(q.toString(), 1, q.options.count { it == q.targetCountry.quizCapital })
             }
         }
     }
@@ -428,7 +511,8 @@ class QuizEngineTest {
         val codes = targets.map { it.code }.toSet()
         QuizEngine.generate(targets, QuizMode.CAPITAL, Random(3), answerPool = world).forEach { q ->
             assertTrue(q.targetCountry.code in codes)
-            assertTrue(q.options.all { option -> world.any { it.quizCapital == option } })
+            val decoys = DecoyCities.of(q.targetCountry.code)
+            assertTrue(q.options.all { option -> option in decoys || world.any { it.quizCapital == option } })
         }
         // Some wrong answer must come from outside the five targets, or the answer pool did nothing.
         val outside = QuizEngine.generate(targets, QuizMode.CAPITAL, Random(3), answerPool = world)
