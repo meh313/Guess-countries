@@ -20,6 +20,7 @@ OUT = ROOT / "app" / "src" / "main" / "assets" / "NOTICES.txt"
 # What each work in the markdown file is used for, in the player's words; the section heading is the fallback.
 USED_FOR = {
     "flag-icons": "the flag images; every flag in the app is rendered from its SVG files.",
+    "Natural Earth": "the world map; the country outlines, label points and capitals in world.json are simplified from its data.",
 }
 
 # Works that are not in the markdown file because nothing of theirs is copied into the repository: the libraries the
@@ -37,7 +38,10 @@ LIBRARIES = [
 
 LINK = re.compile(r"\[([^\]]+)\]\((https?://[^)\s]+)\)")
 VERSION = re.compile(r"\b(\d+\.\d+(?:\.\d+)*)\b")
-LICENCE = re.compile(r"under the ([A-Z][^.:\n]*?(?:Licen[cs]e|License)(?: [0-9][0-9.]*)?(?: \([A-Z]+\))?)[:.]")
+LICENCE = re.compile(
+    r"under the ([A-Z][^.:\n]*?(?:Licen[cs]e|License)(?: [0-9][0-9.]*)?(?: \([A-Z]+\))?)[:.]"
+    r"|\b(?:is|are) in the (public domain)\b"
+)
 COPYRIGHT = re.compile(r"^Copyright\b.*$", re.MULTILINE)
 FENCE = re.compile(r"^```[^\n]*\n(.*?)^```", re.MULTILINE | re.DOTALL)
 
@@ -60,14 +64,17 @@ def parse(markdown: str) -> list[dict]:
         version = VERSION.search(after_link)
         licence = LICENCE.search(prose_flat)
         if not licence:
-            raise SystemExit(f"{SOURCE}: section '{heading}' does not say which licence applies ('... under the X License')")
+            raise SystemExit(
+                f"{SOURCE}: section '{heading}' does not say which licence applies "
+                "('... under the X License' or '... is in the public domain')"
+            )
         text = fence.group(1).strip("\n") if fence else None
         copyright_line = COPYRIGHT.search(text or "")
         works.append(
             {
                 "name": name + (f" {version.group(1)}" if version else ""),
                 "used_for": USED_FOR.get(name, heading[:1].lower() + heading[1:] + "."),
-                "licence": licence.group(1),
+                "licence": licence.group(1) or "Public domain",
                 "copyright": copyright_line.group(0) if copyright_line else None,
                 "url": url,
                 "text": text,

@@ -19,7 +19,10 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.onAllNodesWithTag
+import com.example.data.model.WorldMapData
 import com.example.support.FreshDatabaseRule
 import com.example.support.SettledTodayRule
 import com.example.support.awaitDelivered
@@ -73,11 +76,32 @@ class ScreenshotsTest {
         rule.onNodeWithTag("explore_grid").performScrollToNode(hasTestTag("country_card_za"))
         save("explore_scrolled")
 
+        // The detail sheet scrolled to its map. The map data is read off the main thread the first time a map
+        // composes; the section is there only once the data knows the country.
+        rule.onNodeWithTag("explore_grid").performScrollToNode(hasTestTag("country_card_fr"))
+        rule.onNodeWithTag("country_card_fr").performClick()
+        rule.waitForIdle()
+        rule.awaitDelivered { WorldMapData.peek() != null }
+        if (rule.onAllNodesWithTag("sheet_map").fetchSemanticsNodes().isNotEmpty()) {
+            rule.onNode(hasScrollAction() and hasTestTag("country_detail_sheet_fr")).performScrollToNode(hasTestTag("sheet_map"))
+            rule.waitForIdle()
+            saveBitmap("sheet_map", drawLatestDialog())
+        }
+        rule.onNodeWithContentDescription("Close").performClick()
+        rule.waitForIdle()
+
         rule.openTab("flashcards")
         save("flashcards_front")
         rule.onNodeWithTag("flashcard_flip_card").performClick()
         rule.waitForIdle()
         save("flashcards_back")
+        rule.awaitDelivered { WorldMapData.peek() != null }
+        // The back is one clickable card, so the map's tag lives in the unmerged tree.
+        if (rule.onAllNodesWithTag("flashcard_map", useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()) {
+            rule.onNodeWithTag("flashcard_map", useUnmergedTree = true).performScrollTo()
+            rule.waitForIdle()
+            save("flashcards_back_map")
+        }
         // Nothing practiced yet: the study chooser offers this deck and Learn only.
         rule.onNodeWithTag("flashcard_study_btn").performClick()
         rule.waitForIdle()

@@ -95,6 +95,7 @@ import com.example.progress.Skill
 import com.example.ui.CountrySummary
 import com.example.ui.components.FlagAspectRatio
 import com.example.ui.components.FlagView
+import com.example.ui.components.WorldMap
 import com.example.ui.components.formatPopulation
 import com.example.ui.components.getContinentColor
 import com.example.ui.components.readingWidth
@@ -1190,6 +1191,16 @@ internal fun FlashcardBack(
                 )
             }
         }
+
+        // Where it is, after how to spot it. The gap is part of the map so a country without one leaves none.
+        WorldMap(
+            country = country,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 10.dp),
+            aspectRatio = 16f / 9f,
+            testTag = "flashcard_map"
+        )
 
         Spacer(modifier = Modifier.height(10.dp))
 

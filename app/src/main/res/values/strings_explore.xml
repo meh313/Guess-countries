@@ -89,6 +89,9 @@
 
     <!-- Detail sheet: the flag, the landmarks and the fun fact -->
     <string name="sheet_flag_title">Flag symbolism &amp; history</string>
+    <!-- The map card, and what TalkBack hears for any map: "Map: France, in Europe · Western Europe" -->
+    <string name="sheet_where_title">Where it is</string>
+    <string name="map_description">Map: %1$s, in %2$s</string>
     <string name="sheet_landmarks_title">Famous landmarks</string>
     <string name="sheet_landmark">📍 %1$s</string>
     <string name="sheet_fun_fact_title">Did you know?</string>

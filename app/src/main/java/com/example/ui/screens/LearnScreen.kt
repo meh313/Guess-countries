@@ -47,6 +47,7 @@ import com.example.data.model.Country
 import com.example.data.model.TellApart
 import com.example.learn.LearnSession
 import com.example.ui.components.FlagView
+import com.example.ui.components.WorldMap
 import com.example.ui.components.getContinentColor
 import com.example.ui.components.readingWidth
 import com.example.ui.viewmodel.CountryViewModel
@@ -199,6 +200,15 @@ private fun LearnCardView(country: Country, lookAlike: Country?, modifier: Modif
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.testTag("learn_name")
+            )
+            // Where it is, under the name. The gap is part of the map so a country without one leaves none.
+            WorldMap(
+                country = country,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp),
+                aspectRatio = 16f / 9f,
+                testTag = "learn_map"
             )
             if (country.spotIt.isNotBlank()) {
                 Spacer(modifier = Modifier.height(12.dp))
