@@ -879,7 +879,8 @@ class QuizAndFlashcardUiTest {
         rule.onNodeWithText("No flashcards available for current filters.").assertIsDisplayed()
         rule.onNodeWithTag("flashcard_empty_clear_filters_btn").performClick()
         rule.waitForIdle()
-        rule.onNodeWithText("Card 1 of ${allCountries.size}").assertIsDisplayed()
+        // The deck refills from the filtered list, which the view model recomputes off the main thread.
+        rule.eventually("the full deck") { rule.onNodeWithText("Card 1 of ${allCountries.size}").assertIsDisplayed() }
     }
 
     @Test
