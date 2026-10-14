@@ -677,6 +677,24 @@ class LayoutAndSemanticsUiTest {
 
     @Test
     @Config(sdk = [36], qualifiers = "w800dp-h360dp-xxhdpi")
+    fun landscapePhone_locateQuizShowsTheMapBesideTheAnswers() {
+        rule.openTab("quiz")
+        rule.setupNode("quiz_mode_locate").performClick()
+        rule.onNodeWithTag("start_quiz_btn").performClick()
+        rule.waitForIdle()
+
+        // The map takes the flag's place in the start pane: every answer sits to its right, none under it.
+        rule.onNodeWithTag("quiz_flag").assertDoesNotExist()
+        val map = rule.boundsOf("quiz_map")
+        for (i in 0..3) {
+            val option = rule.boundsOf("quiz_option_$i")
+            assertTrue("option $i ($option) should be beside the map ($map)", option.left >= map.right)
+        }
+        rule.onNodeWithTag("quiz_option_0").assertIsDisplayed()
+    }
+
+    @Test
+    @Config(sdk = [36], qualifiers = "w800dp-h360dp-xxhdpi")
     fun landscapePhone_pickTheFlagKeepsItsTilesSmallEnoughForFourToFit() {
         rule.openTab("quiz")
         rule.setupNode("quiz_mode_pick_flag").performClick()

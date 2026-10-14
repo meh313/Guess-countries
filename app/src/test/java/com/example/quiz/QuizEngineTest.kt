@@ -2,6 +2,7 @@ package com.example.quiz
 
 import com.example.data.model.DecoyCities
 import com.example.data.model.FlagLookAlikes
+import com.example.data.model.Geo
 import kotlin.random.Random
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
@@ -88,6 +89,7 @@ class QuizEngineTest {
                             QuizMode.CONTINENT -> q.targetCountry.continent
                             QuizMode.PICK_FLAG -> q.targetCountry.code
                             QuizMode.FLAG_NAME,
+                            QuizMode.LOCATE,
                             QuizMode.BLITZ,
                             QuizMode.SPEED_MATCH -> q.targetCountry.name
                         }
@@ -413,6 +415,99 @@ class QuizEngineTest {
         }
     }
 
+    // --- map questions: the neighbours on the map ---
+
+    private fun locateQuestionAbout(code: String, seed: Int, answerPool: List<com.example.data.model.Country> = sovereign): QuizQuestion =
+        questionAbout(code, QuizDifficulty.NORMAL, seed, QuizMode.LOCATE, answerPool)
+
+    @Test
+    fun locateQuestions_showTheMapNotTheFlag_andAskForTheHighlightedCountry() {
+        val mode = QuizMode.LOCATE
+        assertTrue(mode.showsMap && !mode.showsFlag && !mode.answersAreFlags && !mode.usesLookAlikes && !mode.isEndless)
+        assertEquals(null, mode.timeLimitSeconds)
+        assertTrue(!mode.usesWholeWorld)
+        assertEquals(listOf(QuizMode.LOCATE), QuizMode.entries.filter { it.showsMap })
+        assertEquals("Which country is highlighted on the map?", QuizEngine.questionText(mode, country("PT")))
+        QuizEngine.generate(sovereign, mode, Random(11)).forEach { q ->
+            assertEquals("Which country is highlighted on the map?", q.questionText)
+            assertEquals(q.targetCountry.name, q.correctOption())
+        }
+    }
+
+    @Test
+    fun locateQuestions_offerFourNamedCountries_eachWithItsCode_andNeverAntarctica() {
+        val byCode = allCountries.associateBy { it.code }
+        for (seed in 1..10) {
+            val questions = QuizEngine.generate(sovereign, QuizMode.LOCATE, Random(seed), order = { it })
+            assertEquals(QuizEngine.MAX_QUESTIONS, questions.size)
+            questions.forEach { q ->
+                assertEquals(q.toString(), 4, q.options.distinct().size)
+                assertTrue(q.toString(), q.targetCountry.code != "AQ" && "AQ" !in q.optionCodes)
+                assertTrue(q.toString(), Geo.of(q.targetCountry.code) != null)
+                q.options.forEachIndexed { i, name ->
+                    val code = q.optionCodes[i]
+                    assertTrue("$name has no country", code != null)
+                    assertEquals(name, byCode.getValue(code!!).name)
+                    assertTrue(code, byCode.getValue(code).isSovereign)
+                }
+                assertEquals(q.targetCountry.code, q.optionCodes[q.correctAnswerIndex])
+            }
+        }
+        // Even a pool that carries Antarctica never offers it.
+        for (seed in 1..20) {
+            val q = QuizEngine.generate(listOf(country("CL")), QuizMode.LOCATE, Random(seed), answerPool = allCountries).single()
+            assertTrue(q.options.toString(), "Antarctica" !in q.options && "AQ" !in q.optionCodes)
+        }
+    }
+
+    @Test
+    fun locateQuestions_takeTheirWrongAnswersFromTheTargetsSubregionFirst() {
+        val france = country("FR")
+        val westernEurope = sovereign.filter { it.subregion == france.subregion && it.code != "FR" }.map { it.name }.toSet()
+        assertTrue("Western Europe needs at least three other countries", westernEurope.size >= 3)
+        for (seed in 1..40) {
+            val q = locateQuestionAbout("FR", seed)
+            assertEquals("seed=$seed ${q.options}", 3, wrongNames(q).size)
+            assertTrue("seed=$seed ${q.options}", westernEurope.containsAll(wrongNames(q)))
+        }
+    }
+
+    @Test
+    fun locateQuestions_fillWithTheNearestCountriesOnTheMap_whenTheSubregionRunsOut() {
+        // Portugal with one other Southern European country in the pool: Spain by subregion, then France and
+        // Morocco, the nearest frames on the map, before anything far away, whatever the seed.
+        val far = listOf("JP", "AU", "BR", "US", "IN", "CN", "ZA", "AR", "CA", "RU", "MX", "EG").map(::country)
+        val pool = listOf(country("PT"), country("ES"), country("FR"), country("MA")) + far
+        assertTrue(far.none { it.subregion == country("PT").subregion })
+        for (seed in 1..40) {
+            val q = QuizEngine.generate(listOf(country("PT")), QuizMode.LOCATE, Random(seed), answerPool = pool).single()
+            assertEquals("seed=$seed ${q.options}", setOf("Spain", "France", "Morocco"), wrongNames(q).toSet())
+        }
+        // Without Spain, Andorra is nearer than France: the pool decides, the rule stays.
+        val withAndorra = listOf(country("PT"), country("AD"), country("FR"), country("MA")) + far
+        for (seed in 1..10) {
+            val q = QuizEngine.generate(listOf(country("PT")), QuizMode.LOCATE, Random(seed), answerPool = withAndorra).single()
+            assertEquals("seed=$seed ${q.options}", setOf("Andorra", "France", "Morocco"), wrongNames(q).toSet())
+        }
+    }
+
+    @Test
+    fun frameDistance_isSymmetric_andWrapsTheLongitudeAtTheAntimeridian() {
+        val geo = { code: String -> Geo.of(code)!! }
+        assertEquals(QuizEngine.frameDistance(geo("PT"), geo("ES")), QuizEngine.frameDistance(geo("ES"), geo("PT")), 1e-9)
+        assertEquals(0.0, QuizEngine.frameDistance(geo("PT"), geo("PT")), 1e-9)
+        // Spain is Portugal's nearest neighbour; Fiji (east of 180) and Tonga (west of -170) are a few degrees apart,
+        // not 350, and both are nearer to Samoa than Australia is.
+        assertTrue(QuizEngine.frameDistance(geo("PT"), geo("ES")) < QuizEngine.frameDistance(geo("PT"), geo("FR")))
+        assertTrue(QuizEngine.frameDistance(geo("FJ"), geo("TO")) < 10.0)
+        assertTrue(QuizEngine.frameDistance(geo("WS"), geo("FJ")) < QuizEngine.frameDistance(geo("WS"), geo("AU")))
+        // Fiji's frame straddles the antimeridian; the wrong answers about it are its Pacific neighbours.
+        for (seed in 1..20) {
+            val q = locateQuestionAbout("FJ", seed)
+            assertTrue("seed=$seed ${q.options}", q.optionCodes.all { it in setOf("FJ", "TO", "WS", "TV", "VU", "KI", "NR", "SB", "NZ", "AU", "PG", "FM", "MH", "PW") })
+        }
+    }
+
     // --- look-alike flags, difficulty and the flag-picking mode ---
 
     private fun country(code: String) = allCountries.single { it.code == code }
@@ -486,8 +581,8 @@ class QuizEngineTest {
     }
 
     @Test
-    fun capitalAndContinentQuestions_ignoreTheDifficulty() {
-        for (mode in listOf(QuizMode.CAPITAL, QuizMode.CONTINENT)) {
+    fun capitalContinentAndMapQuestions_ignoreTheDifficulty() {
+        for (mode in listOf(QuizMode.CAPITAL, QuizMode.CONTINENT, QuizMode.LOCATE)) {
             assertTrue(!mode.usesLookAlikes)
             val normal = QuizEngine.generate(sovereign, mode, Random(5), QuizDifficulty.NORMAL)
             val hard = QuizEngine.generate(sovereign, mode, Random(5), QuizDifficulty.HARD)

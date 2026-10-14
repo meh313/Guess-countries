@@ -392,6 +392,51 @@ class ExploreProgressUiTest {
     }
 
     @Test
+    fun theDueTile_namesTheMapReviewsDueAsWell() {
+        due("FR", "DE")
+        dueAt("IT", Skill.CAPITAL, 0L)
+        dueAt("JP", Skill.LOCATION, 0L)
+        rule.openTab("stats")
+        rule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("stats_due"))
+
+        rule.eventually("flags, capitals and map due") { rule.onNodeWithTag("stats_due").assert(describedAs("Due today: flags 2 · capitals 1 · map 1")) }
+        rule.onNodeWithTag("stats_due").assert(hasClickAction())
+    }
+
+    @Test
+    fun theLocatedTile_countsTheCountriesPlacedOnTheMap() {
+        mastered("FR", Skill.LOCATION)
+        mastered("DE", Skill.LOCATION)
+        mastered("IT") // a mastered flag is not a located country
+        rule.openTab("stats")
+        rule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("stats_located"))
+
+        val sovereign = allCountries.count { it.isSovereign }
+        rule.eventually("two located") { rule.onNodeWithTag("stats_located").assert(describedAs("Located: 2 / $sovereign")) }
+        rule.onNodeWithTag("stats_located").assert(!hasClickAction())
+        rule.onNodeWithTag("stats_capitals").assert(describedAs("Capitals known: 0 / $sovereign"))
+    }
+
+    @Test
+    fun theDetailSheet_hasARowForTheLocationSkill() {
+        mastered("FR", Skill.LOCATION)
+
+        rule.onNodeWithTag("explore_grid").performScrollToNode(hasTestTag(card("FR")))
+        rule.onNodeWithTag(card("FR")).performClick()
+        rule.waitForIdle()
+
+        rule.onNode(hasScrollAction() and hasTestTag("country_detail_sheet_fr")).performScrollToNode(hasTestTag("sheet_progress"))
+        rule.eventually("the location row") {
+            rule.onNodeWithText("Location: Mastered · step 4 of 5 · next review in 12 days · last answer right").assertIsDisplayed()
+        }
+        rule.onNodeWithText("Flag: Not reviewed yet").assertIsDisplayed()
+        // The card keeps its two pips (flag and capital); the location skill is read in the sheet.
+        rule.onNodeWithContentDescription("Close").performClick()
+        rule.waitForIdle()
+        pipsOf("FR").assert(describedAs("Flag: unseen, Capital: unseen"))
+    }
+
+    @Test
     fun theLearningTile_countsTheFlagsReviewedButNotMastered() {
         learning("FR")
         learning("DE")

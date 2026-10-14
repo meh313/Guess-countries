@@ -52,6 +52,7 @@ import org.robolectric.shadows.ShadowTextToSpeech
 import com.example.support.setupNode
 import com.example.support.FreshDatabaseRule
 import com.example.support.SettledTodayRule
+import com.example.support.awaitPendingWrites
 import com.example.support.awaitQuizPlan
 import com.example.support.awaitWeakSpots
 import com.example.support.boundsOf
@@ -309,8 +310,8 @@ class QuizAndFlashcardUiTest {
     fun stats_countTheSovereignCountriesOnly() {
         tab("stats")
 
-        // Flags and capitals: two tiles out of the sovereign total.
-        rule.onAllNodesWithText("0 / ${sovereign.size}").assertCountEquals(2)
+        // Flags, capitals and locations: three tiles out of the sovereign total.
+        rule.onAllNodesWithText("0 / ${sovereign.size}").assertCountEquals(3)
         // Antarctica would be the row after Oceania; the list is scrolled to its end to prove it is not there.
         rule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("stats_continent_oceania"))
         rule.onNodeWithTag("stats_continent_oceania").assertIsDisplayed()
@@ -945,6 +946,66 @@ class QuizAndFlashcardUiTest {
         rule.waitForIdle()
 
         rule.onAllNodesWithTag("quiz_tell_apart").assertCountEquals(0)
+    }
+
+    // --- Map → Country --------------------------------------------------------------------------------------------------
+
+    @Test
+    fun locateQuiz_showsTheMapInsteadOfTheFlag_andFourCountryNames() {
+        startQuizIn(QuizMode.LOCATE)
+        val q = viewModel.quizSession.value!!.current
+
+        rule.onNodeWithText("Which country is highlighted on the map?").assertIsDisplayed()
+        rule.onNodeWithTag("quiz_map").assertIsDisplayed()
+        rule.onNodeWithContentDescription("Map with a country highlighted").assertIsDisplayed()
+        // No flag on the question: it would give the answer away. The right country's flag comes with the outcome.
+        rule.onNodeWithTag("quiz_flag").assertDoesNotExist()
+        rule.onAllNodesWithTag("quiz_result_flag").assertCountEquals(0)
+        for (i in 0..3) {
+            rule.onNodeWithTag("quiz_option_$i").performScrollTo().assert(hasText(q.options[i]))
+            rule.onNodeWithTag("quiz_option_$i").assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.StateDescription))
+        }
+        // Neither the map's description, a flag nor an emoji names the answer before it is given.
+        rule.onAllNodesWithContentDescription(q.targetCountry.name, substring = true).assertCountEquals(0)
+        rule.onAllNodesWithText(q.targetCountry.flagEmoji).assertCountEquals(0)
+    }
+
+    @Test
+    fun locateQuiz_aRightAnswerShowsTheFlagWithTheOutcome_andCountsForTheLocationSkillOnly() {
+        startQuizIn(QuizMode.LOCATE)
+        val q = viewModel.quizSession.value!!.current
+
+        rule.onNodeWithTag("quiz_option_${q.correctAnswerIndex}").performScrollTo().performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithTag("quiz_result").assert(hasText("Correct! +10 points"))
+        rule.onNodeWithTag("quiz_option_${q.correctAnswerIndex}").assert(stateDescriptionIs("Correct answer"))
+        // The flag, named, beside the outcome: the shape on the map is linked to the flag.
+        rule.onNodeWithTag("quiz_result_flag").performScrollTo().assertIsDisplayed()
+        rule.onNodeWithContentDescription(q.targetCountry.name).assertExists()
+        rule.onNodeWithTag("quiz_miss_comparison").assertDoesNotExist()
+
+        // Placing a country on the map says nothing about its flag: only the location skill is written.
+        val db = AppDatabase.getDatabase(ApplicationProvider.getApplicationContext())
+        db.awaitPendingWrites()
+        val rows = runBlocking { db.userProgressDao().getAllSkills().first() }
+        assertEquals(listOf(Skill.LOCATION.name), rows.map { it.skill })
+        assertEquals(q.targetCountry.code, rows.single().countryCode)
+    }
+
+    @Test
+    fun locateQuiz_aWrongAnswerShowsThePickedFlagBesideTheRightOne_withItsMap() {
+        startQuizIn(QuizMode.LOCATE)
+        val q = viewModel.quizSession.value!!.current
+        val wrong = (q.correctAnswerIndex + 1) % q.options.size
+
+        rule.onNodeWithTag("quiz_option_$wrong").performScrollTo().performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithTag("quiz_result").assert(hasText("Not quite. The answer is ${q.targetCountry.name}"))
+        rule.onNodeWithTag("quiz_result_flag").performScrollTo().assertIsDisplayed()
+        rule.onNodeWithTag("quiz_miss_comparison").performScrollTo().assertIsDisplayed()
+        rule.onNodeWithTag("miss_map", useUnmergedTree = true).assertExists()
     }
 
     @Test

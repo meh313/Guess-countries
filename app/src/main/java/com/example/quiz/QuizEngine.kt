@@ -3,6 +3,10 @@ package com.example.quiz
 import com.example.data.model.Country
 import com.example.data.model.DecoyCities
 import com.example.data.model.FlagLookAlikes
+import com.example.data.model.Geo
+import kotlin.math.abs
+import kotlin.math.cos
+import kotlin.math.sqrt
 import kotlin.random.Random
 
 /** The kinds of quiz. The names are stored in the quiz log; the titles and hints the player reads are string resources (`ui/Labels.kt`). */
@@ -16,20 +20,24 @@ enum class QuizMode(
     PICK_FLAG,
     CAPITAL,
     CONTINENT,
+    LOCATE,
     SPEED_MATCH(timeLimitSeconds = 10),
     BLITZ(totalTimeSeconds = 60);
 
     /** Runs until the clock does, not for a fixed number of questions. */
     val isEndless: Boolean get() = totalTimeSeconds != null
 
-    /** The question card shows the flag, except in the capital quiz and where the flags are the answers. */
-    val showsFlag: Boolean get() = this != CAPITAL && this != PICK_FLAG
+    /** The question card shows the flag, except in the capital quiz, the map quiz and where the flags are the answers. */
+    val showsFlag: Boolean get() = this != CAPITAL && this != PICK_FLAG && this != LOCATE
+
+    /** The question card shows the world map with the target highlighted instead of its flag (Map → Country). */
+    val showsMap: Boolean get() = this == LOCATE
 
     /** The four options are flags (their text is the country code) instead of words. */
     val answersAreFlags: Boolean get() = this == PICK_FLAG
 
-    /** Wrong answers can be flags that look like the right one; capitals and continents have no such thing. */
-    val usesLookAlikes: Boolean get() = this != CAPITAL && this != CONTINENT
+    /** Wrong answers can be flags that look like the right one; capitals, continents and places on the map have no such thing. */
+    val usesLookAlikes: Boolean get() = this != CAPITAL && this != CONTINENT && this != LOCATE
 
     /**
      * Continent questions always draw from every country. Under a single-continent scope every answer
@@ -171,11 +179,13 @@ object QuizEngine {
         answerPool: List<Country> = pool,
         order: (List<Country>) -> List<Country> = { it.shuffled(random) }
     ): List<QuizQuestion> {
-        if (pool.isEmpty() || answerPool.size < MIN_POOL) return emptyList()
+        // A map question needs a place to highlight; every catalog country has one, so this is a guard, not a rule.
+        val targetPool = if (mode.showsMap) pool.filter { Geo.of(it.code) != null } else pool
+        if (targetPool.isEmpty() || answerPool.size < MIN_POOL) return emptyList()
         val lookAlikes = if (mode.usesLookAlikes) difficulty.lookAlikes else 0
-        val first = order(pool)
-        require(first.size == pool.size && first.toSet() == pool.toSet()) { "order must return every country of the pool once" }
-        val targets = if (mode.isEndless) endlessOrder(pool, first, BLITZ_QUESTIONS, random) else first.take(MAX_QUESTIONS)
+        val first = order(targetPool)
+        require(first.size == targetPool.size && first.toSet() == targetPool.toSet()) { "order must return every country of the pool once" }
+        val targets = if (mode.isEndless) endlessOrder(targetPool, first, BLITZ_QUESTIONS, random) else first.take(MAX_QUESTIONS)
         return targets.map { target -> question(answerPool, target, mode, lookAlikes, random) }
     }
 
@@ -200,6 +210,7 @@ object QuizEngine {
         QuizMode.PICK_FLAG -> "Which of these is the flag of ${target.name}?"
         QuizMode.CAPITAL -> "What is the capital city of ${target.name}?"
         QuizMode.CONTINENT -> "Which continent does this flag belong to?"
+        QuizMode.LOCATE -> "Which country is highlighted on the map?"
         QuizMode.BLITZ -> "Which country is this?"
         QuizMode.SPEED_MATCH -> "Identify the country for this flag:"
     }
@@ -211,6 +222,9 @@ object QuizEngine {
                 countryChoice(target, text, wrongCountries(pool, target, random, lookAlikes) { it.name }, random) { it.name }
             QuizMode.PICK_FLAG ->
                 countryChoice(target, text, wrongCountries(pool, target, random, lookAlikes) { it.code }, random) { it.code }
+            QuizMode.LOCATE ->
+                // The names of the target's neighbours: the rest of its subregion, then the nearest on the map.
+                countryChoice(target, text, nearestWrongCountries(pool, target, random, DISTRACTORS), random) { it.name }
             QuizMode.CAPITAL -> {
                 // One famous non-capital of the target first, where it has one; the other wrong answers are the
                 // capitals of its neighbours (same subregion, then continent, then the world), never look-alikes.
@@ -305,6 +319,48 @@ object QuizEngine {
             .distinctBy(answerOf)
             .take(count)
     }
+
+    /**
+     * Wrong answers for a map question about [target], the countries a player is likeliest to mix it up with on the
+     * map: the rest of its subregion first (in random order), then every other country by [frameDistance] from the
+     * target, nearest first (so Portugal in a pool with one other Southern European country still gets France and
+     * Morocco, not Fiji); a country without a place on the map comes last. [count] of them, with names that differ
+     * from the target's and from each other; Antarctica, not being a country, never.
+     */
+    private fun nearestWrongCountries(pool: List<Country>, target: Country, random: Random, count: Int): List<Country> {
+        val candidates = pool.filter { it != target && it.isSovereign && it.code != ANTARCTICA && it.name != target.name }
+        val (sameSubregion, elsewhere) = candidates.partition { it.subregion.equals(target.subregion, ignoreCase = true) }
+        val here = Geo.of(target.code)
+        val (placed, unplaced) = elsewhere.partition { here != null && Geo.of(it.code) != null }
+        val byDistance = placed.sortedWith(compareBy<Country> { frameDistance(here!!, Geo.of(it.code)!!) }.thenBy { it.code })
+        return (sameSubregion.shuffled(random) + byDistance + unplaced.shuffled(random))
+            .distinctBy { it.name }
+            .take(count)
+    }
+
+    /**
+     * How far apart two countries sit on the map, in degrees between the centres of their frames (the box each is
+     * shown in, without far-off territories): the latitude difference and the longitude difference, the latter
+     * wrapped at 180 (Fiji and Tonga are neighbours across the antimeridian) and scaled by the cosine of the mean
+     * latitude, since a degree of longitude shrinks towards the poles. Only the order matters, never the number.
+     */
+    fun frameDistance(a: Geo.Place, b: Geo.Place): Double {
+        val lonA = wrapLongitude((a.frameWest + a.frameEast) / 2)
+        val lonB = wrapLongitude((b.frameWest + b.frameEast) / 2)
+        val latA = (a.frameSouth + a.frameNorth) / 2
+        val latB = (b.frameSouth + b.frameNorth) / 2
+        var dLon = abs(lonA - lonB)
+        if (dLon > 180) dLon = 360 - dLon
+        dLon *= cos(Math.toRadians((latA + latB) / 2))
+        val dLat = latA - latB
+        return sqrt(dLon * dLon + dLat * dLat)
+    }
+
+    /** A longitude into -180..180: a frame east of the antimeridian has its centre past 180 (see [Geo.Place]). */
+    private fun wrapLongitude(lon: Double): Double = if (lon > 180) lon - 360 else lon
+
+    /** Not a country: never asked about and never an answer, whatever the pool. */
+    private const val ANTARCTICA = "AQ"
 
     /**
      * A question whose options are countries, shown as [answerOf] them, plus [decoys]: plain texts behind which there

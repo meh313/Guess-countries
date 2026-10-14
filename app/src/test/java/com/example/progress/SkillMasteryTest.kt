@@ -22,10 +22,14 @@ class SkillMasteryTest {
     // --- which skill, which evidence --------------------------------------------------------------------------------
 
     @Test
-    fun theCapitalAndContinentQuizzesAreTheirOwnSkills_everyOtherModeIsTheFlag() {
+    fun theCapitalContinentAndMapQuizzesAreTheirOwnSkills_everyOtherModeIsTheFlag() {
+        assertEquals(listOf(Skill.FLAG, Skill.CAPITAL, Skill.CONTINENT, Skill.LOCATION), Skill.entries)
         assertEquals(Skill.CAPITAL, SkillMastery.skillOf(QuizMode.CAPITAL))
         assertEquals(Skill.CONTINENT, SkillMastery.skillOf(QuizMode.CONTINENT))
-        for (mode in QuizMode.entries - QuizMode.CAPITAL - QuizMode.CONTINENT) assertEquals(mode.name, Skill.FLAG, SkillMastery.skillOf(mode))
+        assertEquals(Skill.LOCATION, SkillMastery.skillOf(QuizMode.LOCATE))
+        for (mode in QuizMode.entries - QuizMode.CAPITAL - QuizMode.CONTINENT - QuizMode.LOCATE) assertEquals(mode.name, Skill.FLAG, SkillMastery.skillOf(mode))
+        // The map quiz is the only way into the location skill.
+        assertEquals(listOf(QuizMode.LOCATE), QuizMode.entries.filter { SkillMastery.skillOf(it) == Skill.LOCATION })
     }
 
     @Test
@@ -33,6 +37,7 @@ class SkillMasteryTest {
         assertEquals(Evidence.LIGHT, SkillMastery.evidenceOf(QuizMode.CONTINENT))
         assertEquals(Evidence.TIMED, SkillMastery.evidenceOf(QuizMode.SPEED_MATCH))
         assertEquals(Evidence.TIMED, SkillMastery.evidenceOf(QuizMode.BLITZ))
+        assertEquals(Evidence.FULL, SkillMastery.evidenceOf(QuizMode.LOCATE))
         for (mode in QuizMode.entries - QuizMode.CONTINENT - QuizMode.SPEED_MATCH - QuizMode.BLITZ) {
             assertEquals(mode.name, Evidence.FULL, SkillMastery.evidenceOf(mode))
         }

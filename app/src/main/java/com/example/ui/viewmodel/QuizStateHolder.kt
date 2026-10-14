@@ -303,8 +303,9 @@ class QuizStateHolder(
     }
 
     /**
-     * A quiz answer: the evidence the mode gives (full for a flag or a capital among four, timed for the modes on a
-     * clock, light for a continent pick), except a question asked again, whose answer was just shown and is light.
+     * A quiz answer: the evidence the mode gives (full for a flag, a capital or a place on the map among four, timed
+     * for the modes on a clock, light for a continent pick), except a question asked again, whose answer was just
+     * shown and is light. The skill is the mode's ([SkillMastery.skillOf]): a map quiz writes location rows only.
      */
     private fun record(session: QuizSession, correct: Boolean) {
         val mode = session.mode

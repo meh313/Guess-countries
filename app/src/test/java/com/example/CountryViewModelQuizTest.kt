@@ -681,6 +681,52 @@ class CountryViewModelQuizTest {
     }
 
     @Test
+    fun aMapQuiz_recordsLocationRows_andNothingOnTheFlag() {
+        val vm = newViewModel()
+        vm.startQuiz(QuizMode.LOCATE, "Global")
+        val session = vm.quizSession.value!!
+        assertEquals(QuizMode.LOCATE, session.mode)
+        assertEquals(QuizEngine.MAX_QUESTIONS, session.questions.size)
+        assertTrue(session.questions.all { q -> q.options.size == 4 && q.optionCodes.all { it != null } })
+        val target = session.current.targetCountry.code
+
+        vm.answerQuiz(session.current.correctAnswerIndex)
+
+        awaitCondition("the location review to be saved") { skillRow(target) != null }
+        val rows = runBlocking { db.userProgressDao().getAllSkills().first() }.filter { it.countryCode == target }
+        assertEquals(listOf(Skill.LOCATION.name), rows.map { it.skill })
+        assertEquals(20, rows.single().score)
+        assertEquals(1, rows.single().box)
+
+        vm.playToTheEnd()
+        val saved = awaitQuizHistory { it.isNotEmpty() }
+        assertEquals(QuizMode.LOCATE.name, saved.single().mode)
+        val skills = runBlocking { db.userProgressDao().getAllSkills().first() }
+        assertTrue(skills.none { it.skill == Skill.FLAG.name })
+        assertEquals(session.questions.map { it.targetCountry.code }.toSet(), skills.filter { it.skill == Skill.LOCATION.name }.map { it.countryCode }.toSet())
+    }
+
+    @Test
+    fun startQuiz_dueToday_inTheMapQuiz_usesTheLocationDueList() {
+        listOf("FR", "DE", "JP").forEach { reviewedRow(it, Skill.FLAG) }
+        listOf("PT", "MA").forEach { reviewedRow(it, Skill.LOCATION) }
+        reviewedRow("BR", Skill.LOCATION, dueAt = System.currentTimeMillis() + day) // weak but not due
+        val vm = newViewModel()
+        vm.awaitPlan("three flags and two locations due") { it.due(Skill.FLAG).size == 3 && it.due(Skill.LOCATION).size == 2 }
+
+        vm.startQuiz(QuizMode.LOCATE, QuizEngine.DUE)
+
+        val session = vm.quizSession.value!!
+        assertEquals(QuizEngine.DUE, session.scope)
+        assertEquals(setOf("PT", "MA"), session.targets().toSet())
+        assertTrue(session.questions.all { it.options.size == 4 })
+
+        // The weak-spots scope follows the same skill: three locations are too few, so it falls back to the world.
+        vm.startQuiz(QuizMode.LOCATE, QuizEngine.WEAK_SPOTS)
+        assertEquals(QuizEngine.GLOBAL, vm.quizSession.value!!.scope)
+    }
+
+    @Test
     fun startQuiz_dueToday_takesTheTenLongestDue() {
         twelveWeak.forEachIndexed { i, code -> reviewedRow(code, Skill.FLAG, dueAt = 1_000L + i * day) }
         val vm = newViewModel()

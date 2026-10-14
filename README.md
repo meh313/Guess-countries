@@ -19,7 +19,8 @@ drill them with flashcards, and test yourself with quizzes. Everything runs on t
   five (each asked twice, wrong answers from the whole world), logged under *Learn*; it does not count against the
   day's allowance of new countries.
 - **Quiz** – flag → country, country → flag (pick the right flag out of four), country → capital,
-  flag → continent (always the whole world), a 10-second-per-question speed round and a 60-second blitz
+  flag → continent (always the whole world), map → country (the country is highlighted on the map, pick its name;
+  the wrong answers are its neighbours), a 10-second-per-question speed round and a 60-second blitz
   (as many flags as you can). Ten questions or fewer, with a streak bonus; the questions favour countries you have
   not seen or that are due for review, and avoid the targets of the last few quizzes. *Answers: Normal* puts one
   look-alike flag among the wrong answers, *Hard* as many as exist (the choice is remembered). The *Due today* scope
@@ -43,13 +44,14 @@ drill them with flashcards, and test yourself with quizzes. Everything runs on t
 
 ### How mastery works
 
-Each country is tracked per skill (its flag, its capital, its continent) on a Leitner schedule: a confidence score
+Each country is tracked per skill (its flag, its capital, its continent, its location) on a Leitner schedule: a confidence score
 from 0 to 100 and a box from 1 to 5 whose review intervals are 1, 3, 7, 21 and 60 days. A right quiz answer raises the
 score and, when the review was due, moves the box up; an answer before the due date keeps its schedule, so nothing is
 mastered in one sitting. A wrong answer drops the country two boxes (never below box 1); a miss under time pressure
 (Speed Round, Blitz) drops it one and costs half the score. The continent quiz has its own skill, so a right continent
 pick never counts as knowing the flag; its answers and the flashcard grades are light evidence: they move the score a
-little and never past 60. Studying a card, *Again* drops it two boxes, *Good* reschedules a due card at its current
+little and never past 60. The map quiz feeds a fourth skill, *Location*, with its own due dates (the *Due today* and
+*Weak spots* scopes follow it in that mode); it is shown on a country's detail sheet and on Progress, not as a card pip. Studying a card, *Again* drops it two boxes, *Good* reschedules a due card at its current
 box (so it leaves the due list until its interval passes) and keeps the date of one not yet due, and *Easy* climbs to
 box 2 at most; the longer intervals come only from quiz answers. A flag counts as *mastered* at box 3 or higher with a
 score of 75 or more, and lapses out of that if it goes unreviewed for twice its interval. *Weak spots* are the

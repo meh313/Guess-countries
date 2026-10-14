@@ -53,7 +53,9 @@ enum class Standing {
 val PipSize: Dp = 10.dp
 
 /**
- * Two pips on a country card: the flag skill, then the capital skill. Each standing has a shape as well as a colour
+ * Two pips on a country card: the flag skill, then the capital skill, and those two only. The row takes the two
+ * standings by name rather than looping over [Skill.entries], so a skill added later (the location skill of the
+ * Map → Country quiz) does not widen every card; the detail sheet lists every skill. Each standing has a shape as well as a colour
  * (an outlined circle until reviewed, a half-filled one while learning, a filled one with a tick once mastered), so
  * the row reads without colour. One description for TalkBack: "Flag: mastered, Capital: learning".
  */
