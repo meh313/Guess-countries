@@ -4,9 +4,12 @@
 
     <!-- The optional daily reminder posts a notification (a runtime permission from Android 13). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- The reminder alarm does not survive a reboot; ReminderReceiver sets it again when the phone comes back up. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
-    <!-- WorkManager declares these for network constraints and expedited work; the reminder uses neither, and the
-         app has no network access to speak of, so keep them out of the permission list. -->
+    <!-- WorkManager declares these for network constraints and for expedited work below Android 12, which needs a
+         foreground service; the reminder has no constraints and is expedited only from Android 12 on, and the app has
+         no network access to speak of, so keep them out of the permission list. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" tools:node="remove" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" tools:node="remove" />
 
@@ -36,6 +39,19 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- The daily reminder: the alarm that fires it (FIRE, sent only by this app) and the system events after which
+             it has to be planned again. Not exported: the system's own broadcasts still reach it. -->
+        <receiver
+            android:name=".reminder.ReminderReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

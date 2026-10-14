@@ -55,6 +55,14 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
+import android.net.Uri
+import android.provider.OpenableColumns
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import com.example.data.transfer.ImportProblem
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -91,8 +99,10 @@ fun SettingsScreen(
     // What the last export or import did, shown under the buttons, and whether it went wrong (sets the colour).
     var transferNote by rememberSaveable { mutableStateOf<String?>(null) }
     var transferFailed by rememberSaveable { mutableStateOf(false) }
-    // An import replaces everything, so the file is read first and the player asked before it is applied.
-    var pendingImport by remember { mutableStateOf<String?>(null) }
+    // An import replaces everything, so the file is read and checked first and the player asked before it is applied.
+    // The checked file waits in the view model, so a rotation does not lose it.
+    val pendingImport by viewModel.pendingImport.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
@@ -104,7 +114,7 @@ fun SettingsScreen(
                         ?: error(resources.getString(R.string.settings_export_write_error))
                 }
                 transferFailed = false
-                resources.getString(R.string.settings_export_done, uri.lastPathSegment ?: resources.getString(R.string.settings_export_fallback_name))
+                resources.getString(R.string.settings_export_done, displayName(context, uri) ?: resources.getString(R.string.settings_export_fallback_name))
             } catch (e: Exception) {
                 transferFailed = true
                 resources.getString(R.string.settings_export_failed, e.message ?: e.javaClass.simpleName)
@@ -114,15 +124,20 @@ fun SettingsScreen(
     val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
         scope.launch {
-            try {
-                val text = withContext(Dispatchers.IO) {
-                    context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
-                        ?: error(resources.getString(R.string.settings_import_read_error))
+            val read = runCatching {
+                withContext(Dispatchers.IO) {
+                    // The size is checked before anything is read: a wrong pick (a video, a backup) must not fill the heap.
+                    val size = fileSize(context, uri)
+                    if (size != null && size > ProgressTransfer.MAX_CHARS) throw ImportProblem.TooLarge()
+                    context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { reader ->
+                        val text = reader.readText(ProgressTransfer.MAX_CHARS + 1)
+                        if (text.length > ProgressTransfer.MAX_CHARS) throw ImportProblem.TooLarge() else text
+                    } ?: throw ImportProblem.Unreadable()
                 }
-                pendingImport = text
-            } catch (e: Exception) {
+            }
+            read.mapCatching { text -> viewModel.prepareImport(text).getOrThrow() }.onFailure { e ->
                 transferFailed = true
-                transferNote = resources.getString(R.string.settings_import_failed, e.message ?: e.javaClass.simpleName)
+                transferNote = importProblemText(resources, e)
             }
         }
     }
@@ -236,6 +251,7 @@ fun SettingsScreen(
                     color = if (transferFailed) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
                     modifier = Modifier
                         .padding(top = 6.dp)
+                        .semantics { liveRegion = LiveRegionMode.Polite }
                         .testTag("settings_transfer_note")
                 )
             }
@@ -275,31 +291,34 @@ fun SettingsScreen(
             }
         }
     }
+    SnackbarHost(hostState = snackbarHostState, modifier = Modifier.align(Alignment.BottomCenter).testTag("settings_snackbar"))
     }
 
-    pendingImport?.let { text ->
+    pendingImport?.let { snapshot ->
+        val quizzes = pluralStringResource(R.plurals.settings_import_quizzes, snapshot.quizzes.size, snapshot.quizzes.size)
+        val skills = pluralStringResource(R.plurals.settings_import_skills, snapshot.skills.size, snapshot.skills.size)
+        val countries = pluralStringResource(R.plurals.settings_import_countries, snapshot.progress.size, snapshot.progress.size)
         AlertDialog(
-            onDismissRequest = { pendingImport = null },
+            onDismissRequest = { viewModel.cancelImport() },
             title = { Text(stringResource(R.string.settings_import_dialog_title)) },
-            text = { Text(stringResource(R.string.settings_import_dialog_text)) },
+            text = {
+                Text(
+                    if (snapshot.isEmpty) stringResource(R.string.settings_import_dialog_empty)
+                    else stringResource(R.string.settings_import_dialog_text, quizzes, skills, countries)
+                )
+            },
             confirmButton = {
                 Button(
                     onClick = {
-                        pendingImport = null
                         scope.launch {
-                            transferNote = viewModel.importJson(text).fold(
+                            transferNote = viewModel.applyImport().fold(
                                 onSuccess = {
                                     transferFailed = false
-                                    resources.getString(
-                                        R.string.settings_import_done,
-                                        resources.getQuantityString(R.plurals.settings_import_quizzes, it.quizzes.size, it.quizzes.size),
-                                        resources.getQuantityString(R.plurals.settings_import_skills, it.skills.size, it.skills.size),
-                                        resources.getQuantityString(R.plurals.settings_import_countries, it.progress.size, it.progress.size)
-                                    )
+                                    resources.getString(R.string.settings_import_done, quizzes, skills, countries)
                                 },
                                 onFailure = {
                                     transferFailed = true
-                                    it.message ?: resources.getString(R.string.settings_import_failed_plain)
+                                    resources.getString(R.string.settings_import_write_failed)
                                 }
                             )
                         }
@@ -310,7 +329,7 @@ fun SettingsScreen(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { pendingImport = null }, modifier = Modifier.testTag("settings_import_cancel_btn")) { Text(stringResource(R.string.settings_import_cancel)) }
+                TextButton(onClick = { viewModel.cancelImport() }, modifier = Modifier.testTag("settings_import_cancel_btn")) { Text(stringResource(R.string.settings_import_cancel)) }
             }
         )
     }
@@ -325,6 +344,7 @@ fun SettingsScreen(
                     onClick = {
                         confirmReset = false
                         viewModel.resetProgress()
+                        scope.launch { snackbarHostState.showSnackbar(resources.getString(R.string.settings_reset_done)) }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                     modifier = Modifier.testTag("settings_reset_confirm_btn")
@@ -415,3 +435,39 @@ internal fun appVersion(context: android.content.Context): String =
     } catch (_: PackageManager.NameNotFoundException) {
         "?"
     }
+
+/** The name the picker shows for [uri] (its DISPLAY_NAME), or null; `lastPathSegment` is an opaque id for most providers. */
+private fun displayName(context: android.content.Context, uri: Uri): String? = runCatching {
+    context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
+        if (cursor.moveToFirst()) cursor.getString(0) else null
+    } ?: uri.lastPathSegment
+}.getOrNull()
+
+/** The size of [uri] in bytes when the provider says, else null. */
+private fun fileSize(context: android.content.Context, uri: Uri): Long? = runCatching {
+    context.contentResolver.query(uri, arrayOf(OpenableColumns.SIZE), null, null, null)?.use { cursor ->
+        if (cursor.moveToFirst() && !cursor.isNull(0)) cursor.getLong(0) else null
+    }
+}.getOrNull()
+
+/** Reads at most [limit] characters, so a file far bigger than any export is never held whole. */
+private fun java.io.Reader.readText(limit: Int): String {
+    val out = StringBuilder()
+    val buffer = CharArray(8 * 1024)
+    while (out.length <= limit) {
+        val n = read(buffer)
+        if (n < 0) break
+        out.appendRange(buffer, 0, n)
+    }
+    return out.toString()
+}
+
+/** The words for a refused import. */
+internal fun importProblemText(resources: android.content.res.Resources, e: Throwable): String = when (e) {
+    is ImportProblem.NotOurs -> resources.getString(R.string.settings_import_not_ours)
+    is ImportProblem.NewerFormat -> resources.getString(R.string.settings_import_newer, e.format)
+    is ImportProblem.Damaged -> resources.getString(R.string.settings_import_damaged, e.detail)
+    is ImportProblem.TooLarge -> resources.getString(R.string.settings_import_too_large)
+    is ImportProblem.Unreadable -> resources.getString(R.string.settings_import_read_error)
+    else -> resources.getString(R.string.settings_import_failed, e.message ?: e.javaClass.simpleName)
+}

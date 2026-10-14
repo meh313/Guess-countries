@@ -1,5 +1,6 @@
 package com.example.ui.viewmodel
 
+import android.util.Log
 import com.example.data.local.QuizScoreEntity
 import com.example.data.local.UserProgressEntity
 import com.example.data.model.Country
@@ -12,11 +13,14 @@ import com.example.progress.Skill
 import com.example.progress.SkillMastery
 import com.example.progress.SkillState
 import java.util.TimeZone
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -31,8 +35,15 @@ class ProgressStateHolder(
     private val repository: CountryRepository,
     private val scope: CoroutineScope,
     /** The time zone whose midnights end a practice day. */
-    private val zone: () -> TimeZone
+    private val zone: () -> TimeZone,
+    /** Where a failed write is reported; shared with the quiz and study holders, which write too. */
+    val writeErrors: WriteErrors = WriteErrors()
 ) {
+    /** True after a database write failed, until [clearWriteError]; the activity tells the player. */
+    val writeError: StateFlow<Boolean> get() = writeErrors.failed
+
+    fun clearWriteError() = writeErrors.clear()
+
     val userProgressMap: StateFlow<Map<String, UserProgressEntity>> = repository.progress
         .map { list -> list.associateBy { it.countryCode } }
         .stateIn(scope, SharingStarted.WhileSubscribed(5000), emptyMap())
@@ -64,7 +75,10 @@ class ProgressStateHolder(
             weak = Skill.entries.associateWith { WeakSpots.select(bySkill[it].orEmpty(), repository.allCountries, now) },
             due = Skill.entries.associateWith { WeakSpots.due(bySkill[it].orEmpty(), repository.allCountries, now) }
         )
-    }.stateIn(scope, SharingStarted.WhileSubscribed(5000), QuizPlan.EMPTY)
+    }
+        // Two passes over every skill state, on every write: keep them off the main thread.
+        .flowOn(Dispatchers.Default)
+        .stateIn(scope, SharingStarted.WhileSubscribed(5000), QuizPlan.EMPTY)
 
     /** The countries whose flag was practiced but is not (or no longer) mastered, weakest first: the flashcard deck. */
     val weakSpots: StateFlow<List<Country>> = quizPlan
@@ -75,7 +89,9 @@ class ProgressStateHolder(
     val mastered: StateFlow<Map<Skill, Set<String>>> = combine(skills, refresh) { bySkill, _ ->
         val now = repository.now()
         Skill.entries.associateWith { skill -> bySkill[skill].orEmpty().filterValues { SkillMastery.isMastered(it, now) }.keys }
-    }.stateIn(scope, SharingStarted.WhileSubscribed(5000), emptyMap())
+    }
+        .flowOn(Dispatchers.Default)
+        .stateIn(scope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
     /** The codes of the countries whose flag counts as mastered right now. */
     val masteredFlags: StateFlow<Set<String>> = mastered
@@ -85,20 +101,48 @@ class ProgressStateHolder(
     /** The daily practice streak, worked out from when quizzes finished; see [refreshClock] for the day rolling over. */
     val streak: StateFlow<PracticeStreak.Summary> = combine(quizHistory, refresh) { history, _ ->
         PracticeStreak.summary(history.map { it.timestamp }, repository.now(), zone())
-    }.stateIn(scope, SharingStarted.WhileSubscribed(5000), PracticeStreak.NONE)
+    }
+        .flowOn(Dispatchers.Default)
+        .stateIn(scope, SharingStarted.WhileSubscribed(5000), PracticeStreak.NONE)
 
     fun toggleFavorite(countryCode: String) {
-        scope.launch { repository.toggleFavorite(countryCode) }
+        scope.launch(writeErrors.handler) { repository.toggleFavorite(countryCode) }
     }
 
     /** A flashcard self-grade: light evidence about the flag, never enough on its own to master it. */
     fun recordGrade(countryCode: String, grade: Grade) {
-        scope.launch { repository.recordGrade(countryCode, Skill.FLAG, grade) }
+        scope.launch(writeErrors.handler) { repository.recordGrade(countryCode, Skill.FLAG, grade) }
     }
 
     /** A quiz answer about [countryCode] in [skill], with the [evidence] the mode gives. */
     fun recordAnswer(countryCode: String, skill: Skill, correct: Boolean, evidence: Evidence) {
-        scope.launch { repository.recordAnswer(countryCode, skill, correct, evidence) }
+        scope.launch(writeErrors.handler) { repository.recordAnswer(countryCode, skill, correct, evidence) }
+    }
+}
+
+/**
+ * Where a failed database write ends up instead of taking the process down: a write launched with [handler] that
+ * throws (an SQLite constraint after a bad import, a full disk) is logged and raises [failed], which the activity
+ * shows as a snackbar until [clear]. One instance is shared by every holder that writes.
+ */
+class WriteErrors {
+    private val _failed = MutableStateFlow(false)
+
+    /** True after a write failed, until [clear]. */
+    val failed: StateFlow<Boolean> = _failed
+
+    /** Goes into every `launch` that writes to the database. */
+    val handler: CoroutineExceptionHandler = CoroutineExceptionHandler { _, error ->
+        Log.e(TAG, "A database write failed", error)
+        _failed.value = true
+    }
+
+    fun clear() {
+        _failed.value = false
+    }
+
+    private companion object {
+        const val TAG = "WriteErrors"
     }
 }
 

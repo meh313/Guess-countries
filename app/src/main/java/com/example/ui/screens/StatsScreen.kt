@@ -90,21 +90,22 @@ fun StatsScreen(
         onPauseOrDispose { }
     }
     val quizHistory by viewModel.quizHistory.collectAsStateWithLifecycle()
-    // Antarctica cannot be quizzed, so it is not part of the mastery totals.
-    val allCountries = viewModel.repository.allCountries.filter { it.isSovereign }
+    // Antarctica cannot be quizzed, so it is not part of the mastery totals. The catalog never changes, and the
+    // counts below only when their inputs do, so none of them is worked out again on an unrelated recomposition.
+    val allCountries = remember(viewModel) { viewModel.repository.allCountries.filter { it.isSovereign } }
     // Follows the user's locale (and updates if it changes) instead of a fixed US-style pattern.
     val locale = LocalLocale.current.platformLocale
     val dateFormat = remember(locale) { DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT, locale) }
 
-    val bookmarkedCount = progressMap.values.count { it.isFavorite }
-    val sovereignCodes = allCountries.map { it.code }.toSet()
-    val masteredCount = masteredFlags.count { it in sovereignCodes }
-    val capitalsCount = masteredCapitals.count { it in sovereignCodes }
-    val dueCount = plan.due(Skill.FLAG).size
+    val bookmarkedCount = remember(progressMap) { progressMap.values.count { it.isFavorite } }
+    val sovereignCodes = remember(allCountries) { allCountries.map { it.code }.toSet() }
+    val masteredCount = remember(masteredFlags, sovereignCodes) { masteredFlags.count { it in sovereignCodes } }
+    val capitalsCount = remember(masteredCapitals, sovereignCodes) { masteredCapitals.count { it in sovereignCodes } }
+    val dueCount = remember(plan) { plan.due(Skill.FLAG).size }
     // Study sessions are logged for the streak, but they are not quizzes.
-    val totalQuizzes = quizHistory.count { it.mode != StudySession.MODE }
+    val totalQuizzes = remember(quizHistory) { quizHistory.count { it.mode != StudySession.MODE } }
     // A blitz runs as long as the clock allows, so its points would swamp the 190-point maximum of the others.
-    val maxScore = quizHistory.filter { it.mode != QuizMode.BLITZ.name }.maxOfOrNull { it.score } ?: 0
+    val maxScore = remember(quizHistory) { quizHistory.filter { it.mode != QuizMode.BLITZ.name }.maxOfOrNull { it.score } ?: 0 }
 
     val continents = listOf("Africa", "Americas", "Asia", "Europe", "Oceania")
 
@@ -217,10 +218,10 @@ fun StatsScreen(
         }
 
         items(continents) { continent ->
-            val continentCountries = allCountries.filter { it.continent.equals(continent, ignoreCase = true) }
+            val continentCountries = remember(allCountries, continent) { allCountries.filter { it.continent.equals(continent, ignoreCase = true) } }
             val total = continentCountries.size
-            val masteredInContinent = continentCountries.count { it.code in masteredFlags }
-            val capitalsInContinent = continentCountries.count { it.code in masteredCapitals }
+            val masteredInContinent = remember(continentCountries, masteredFlags) { continentCountries.count { it.code in masteredFlags } }
+            val capitalsInContinent = remember(continentCountries, masteredCapitals) { continentCountries.count { it.code in masteredCapitals } }
             val progressRatio = if (total > 0) masteredInContinent.toFloat() / total else 0f
             val continentColor = getContinentColor(continent)
             val continentName = continentLabel(continent)

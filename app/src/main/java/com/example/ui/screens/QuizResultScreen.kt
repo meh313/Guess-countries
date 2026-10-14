@@ -247,7 +247,7 @@ private fun MissRow(miss: QuizSession.AnswerRecord, mode: QuizMode, countriesByC
             .testTag("quiz_miss_${target.code.lowercase()}"),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        FlagView(country = target, modifier = Modifier.width(64.dp), contentDescription = null)
+        FlagView(country = target, modifier = Modifier.width(64.dp), contentDescription = null, thumbnail = true)
         Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(text = answer, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
@@ -255,7 +255,7 @@ private fun MissRow(miss: QuizSession.AnswerRecord, mode: QuizMode, countriesByC
         }
         if (picked != null && picked.code != target.code) {
             Spacer(modifier = Modifier.width(12.dp))
-            FlagView(country = picked, modifier = Modifier.width(48.dp), contentDescription = null)
+            FlagView(country = picked, modifier = Modifier.width(48.dp), contentDescription = null, thumbnail = true)
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.example.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -134,6 +135,11 @@ fun FlashcardScreen(
 
     val session = study
     if (session != null) {
+        // Back on the summary means Done; mid-session it ends the session, writing the pending grade, as End does.
+        BackHandler {
+            viewModel.stopSpeaking()
+            if (session.isOver) viewModel.dismissStudy() else viewModel.endStudy()
+        }
         StudyView(
             session = session,
             outcome = viewModel.studyOutcome.collectAsStateWithLifecycle().value,

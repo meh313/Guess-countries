@@ -4,6 +4,7 @@ import com.example.data.local.QuizAnswerEntity
 import com.example.data.local.QuizScoreEntity
 import com.example.data.local.SkillProgressEntity
 import com.example.data.local.UserProgressEntity
+import com.example.data.transfer.ImportProblem
 import com.example.data.transfer.ProgressSnapshot
 import com.example.data.transfer.ProgressTransfer
 import org.json.JSONObject
@@ -96,6 +97,90 @@ class ProgressTransferTest {
 
         val missing = JSONObject(ProgressTransfer.toJson(snapshot)).apply { getJSONArray("skills").getJSONObject(0).remove("skill") }.toString()
         assertTrue(ProgressTransfer.fromJson(missing).exceptionOrNull()!!.message!!.contains("not a complete"))
+    }
+
+    private fun edited(change: JSONObject.() -> Unit): String = JSONObject(ProgressTransfer.toJson(snapshot)).apply(change).toString()
+
+    private fun problemOf(json: String): ImportProblem = ProgressTransfer.fromJson(json).exceptionOrNull() as ImportProblem
+
+    @Test
+    fun theRefusals_haveTheirKinds() {
+        assertTrue(problemOf("not json at all") is ImportProblem.NotOurs)
+        assertTrue(problemOf("""{"app":"Other","format":1}""") is ImportProblem.NotOurs)
+        assertEquals(99, (problemOf("""{"app":"World Flags","format":99}""") as ImportProblem.NewerFormat).format)
+        assertTrue(problemOf("""{"app":"World Flags","format":1}""") is ImportProblem.Damaged)
+    }
+
+    @Test
+    fun aMissingTable_isNotAnEmptyOne() {
+        val noQuizzes = edited { remove("quizzes") }
+
+        assertTrue((problemOf(noQuizzes) as ImportProblem.Damaged).detail.contains("quizzes"))
+    }
+
+    @Test
+    fun anUnknownSkill_isRefused() {
+        val json = edited { getJSONArray("skills").getJSONObject(0).put("skill", "SHAPE") }
+
+        assertTrue((problemOf(json) as ImportProblem.Damaged).detail.contains("SHAPE"))
+    }
+
+    @Test
+    fun repeatedRows_areRefused() {
+        val twoFrance = edited { getJSONArray("progress").put(JSONObject().put("code", "FR").put("favorite", false).put("lastReviewed", 1)) }
+        assertTrue((problemOf(twoFrance) as ImportProblem.Damaged).detail.contains("twice"))
+
+        val twoFlagRows = edited { getJSONArray("skills").put(getJSONArray("skills").getJSONObject(0)) }
+        assertTrue((problemOf(twoFlagRows) as ImportProblem.Damaged).detail.contains("twice"))
+
+        val twoQuizzes = edited { getJSONArray("quizzes").put(getJSONArray("quizzes").getJSONObject(0)) }
+        assertTrue((problemOf(twoQuizzes) as ImportProblem.Damaged).detail.contains("twice"))
+    }
+
+    @Test
+    fun aQuizWithoutAnId_isRefused() {
+        val idZero = edited { getJSONArray("quizzes").getJSONObject(1).put("id", 0) }
+
+        assertTrue((problemOf(idZero) as ImportProblem.Damaged).detail.contains("quiz id"))
+    }
+
+    @Test
+    fun numbersAreHeldToTheirRanges() {
+        val json = edited {
+            getJSONArray("skills").getJSONObject(0).put("box", 99).put("score", 1000).put("reviews", -5)
+            getJSONArray("quizzes").getJSONObject(0).put("timestamp", 123_456L + 10L * 86_400_000L)
+        }
+
+        val back = ProgressTransfer.fromJson(json).getOrThrow()
+
+        assertEquals(5, back.skills[0].box)
+        assertEquals(100, back.skills[0].score)
+        assertEquals(0, back.skills[0].reviews)
+        assertEquals(123_456L + 86_400_000L, back.quizzes[0].timestamp)
+    }
+
+    @Test
+    fun rowsAboutUnknownCountries_areDropped_notRefused() {
+        val json = edited {
+            getJSONArray("progress").put(JSONObject().put("code", "ZZ").put("favorite", true).put("lastReviewed", 1))
+            getJSONArray("skills").put(JSONObject().put("code", "ZZ").put("skill", "FLAG").put("score", 50).put("box", 2))
+            getJSONArray("answers").put(JSONObject().put("quizId", 7).put("position", 2).put("target", "ZZ").put("correct", true).put("timeMs", 1))
+            getJSONArray("answers").getJSONObject(0).put("pickedCode", "QQ")
+        }
+
+        val back = ProgressTransfer.fromJson(json).getOrThrow()
+
+        assertEquals(listOf("FR", "DE"), back.progress.map { it.countryCode })
+        assertEquals(2, back.skills.size)
+        assertEquals(2, back.answers.size)
+        assertEquals(null, back.answers[0].pickedCode)
+    }
+
+    @Test
+    fun aHugeFile_isRefusedBeforeItIsParsed() {
+        val huge = ProgressTransfer.toJson(snapshot) + " ".repeat(ProgressTransfer.MAX_CHARS)
+
+        assertTrue(problemOf(huge) is ImportProblem.TooLarge)
     }
 
     @Test

@@ -11,8 +11,10 @@ import com.example.progress.Grade
 import com.example.progress.Skill
 import com.example.progress.SkillState
 import com.example.quiz.QuizSession
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
@@ -76,10 +78,15 @@ class CountryRepository(
 
     val progress: Flow<List<UserProgressEntity>> = progressDao.getAllProgress()
 
-    /** Every skill row, grouped by skill and then by country code. */
+    /**
+     * Every skill row, grouped by skill and then by country code. A row naming a skill this version does not know is
+     * left out rather than thrown over: a flow that throws would take the whole screen down on every start.
+     */
     val skills: Flow<Map<Skill, Map<String, SkillState>>> = progressDao.getAllSkills().map { rows ->
-        rows.groupBy({ Skill.valueOf(it.skill) }, { it.countryCode to it.toState() }).mapValues { (_, pairs) -> pairs.toMap() }
-    }
+        rows.mapNotNull { row -> Skill.entries.firstOrNull { it.name == row.skill }?.let { skill -> Triple(skill, row.countryCode, row.toState()) } }
+            .groupBy({ it.first }, { it.second to it.third })
+            .mapValues { (_, pairs) -> pairs.toMap() }
+    }.flowOn(Dispatchers.Default)
 
     val quizHistory: Flow<List<QuizScoreEntity>> = progressDao.getQuizHistory()
 

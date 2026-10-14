@@ -1,5 +1,6 @@
 package com.example
 
+import android.os.Looper
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -16,15 +17,21 @@ import com.example.support.colourName
 import com.example.support.crop
 import com.example.support.dominantColour
 import com.example.support.drawWindow
+import com.example.support.eventually
 import com.example.ui.components.FlagAspectRatio
+import com.example.ui.components.FlagBitmaps
 import com.example.ui.components.FlagView
+import com.example.ui.components.flagArtFor
 import com.example.ui.theme.WorldFlagsTheme
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
@@ -115,5 +122,88 @@ class FlagViewTest {
         // None of the Thai stripes is drawn.
         val bands = listOf(0.08f, 0.5f, 0.92f).map { flagPixels().dominantColour(0.3f, it - 0.02f, 0.7f, it + 0.02f).first }
         assertEquals(1, bands.toSet().size)
+    }
+
+    /**
+     * A thumbnail is decoded on another thread and arrives on a later frame; polls (with real sleeps, so that thread
+     * gets its turn on a loaded machine), draining the main queue and the composition each time, until it is drawn.
+     */
+    private fun awaitThumbnail(colour: String, left: Float = 0.4f, top: Float = 0.4f, right: Float = 0.6f, bottom: Float = 0.6f) {
+        rule.eventually("the $colour thumbnail to be drawn") {
+            assertEquals(colour, flagPixels().dominantColour(left, top, right, bottom).first)
+        }
+    }
+
+    @Test
+    fun aThumbnailDrawsTheSameArtworkOnceItIsDecoded() {
+        // 80dp at xxhdpi is 240px: the 256px bucket, decoded at half size (300×225).
+        rule.setContent {
+            WorldFlagsTheme {
+                Box(Modifier.size(300.dp, 300.dp)) {
+                    FlagView(country("TH"), Modifier.width(80.dp).testTag("flag"), thumbnail = true)
+                }
+            }
+        }
+        rule.waitForIdle()
+
+        awaitThumbnail("blue")
+
+        val flag = flagPixels()
+        val bands = listOf(0.08f, 0.25f, 0.5f, 0.75f, 0.92f).map { flag.dominantColour(0.3f, it - 0.02f, 0.7f, it + 0.02f).first }
+        assertEquals(listOf("red", "white", "blue", "white", "red"), bands)
+        val box = rule.onNodeWithTag("flag", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        assertEquals(FlagAspectRatio, box.width / box.height, 0.01f)
+    }
+
+    @Test
+    fun aThumbnailOfAnotherCountryDrawsThatCountrysFlag() {
+        rule.setContent {
+            WorldFlagsTheme {
+                Box(Modifier.size(300.dp, 300.dp)) {
+                    FlagView(country("MX"), Modifier.width(150.dp).testTag("flag"), thumbnail = true)
+                }
+            }
+        }
+        rule.waitForIdle()
+
+        // The middle of the Mexican flag is the coat of arms, so the bands are what to wait for and check.
+        awaitThumbnail("green", 0.05f, 0.2f, 0.25f, 0.8f)
+
+        val flag = flagPixels()
+        assertEquals("red", flag.dominantColour(0.75f, 0.2f, 0.95f, 0.8f).first)
+        assertEquals("white", flag.dominantColour(0.4f, 0.04f, 0.6f, 0.12f).first)
+    }
+
+    @Test
+    fun theSampleSizeHalvesTheArtworkAsOftenAsTheTargetAllows() {
+        assertEquals(1, FlagBitmaps.sampleSizeFor(sourceWidth = 600, targetWidth = 600))
+        assertEquals(2, FlagBitmaps.sampleSizeFor(sourceWidth = 600, targetWidth = 300))
+        assertEquals(4, FlagBitmaps.sampleSizeFor(sourceWidth = 600, targetWidth = 150))
+        assertEquals(8, FlagBitmaps.sampleSizeFor(sourceWidth = 600, targetWidth = 75))
+        // A target between two halvings keeps the larger copy: the bitmap is never narrower than the box.
+        assertEquals(2, FlagBitmaps.sampleSizeFor(sourceWidth = 600, targetWidth = 200))
+        // Unknown or full width: the artwork as it is.
+        assertEquals(1, FlagBitmaps.sampleSizeFor(sourceWidth = 600, targetWidth = FlagBitmaps.FULL_WIDTH))
+        assertEquals(1, FlagBitmaps.sampleSizeFor(sourceWidth = 600, targetWidth = 0))
+    }
+
+    @Test
+    fun theCacheHandsOutTheSameBitmapForTheSameFlagAndWidth() {
+        val resources = rule.activity.resources
+        val art = flagArtFor("TH")!!
+
+        val first = FlagBitmaps.load(resources, art, 120)
+        val second = FlagBitmaps.load(resources, art, 128)
+
+        assertNotNull(first)
+        assertSame("120px and 128px share the 128px bucket", first, second)
+        assertSame(first, FlagBitmaps.peek(art, 100))
+        // 128px out of a 600px-wide file: four times smaller, 150px wide.
+        assertEquals(150, first!!.width)
+        // Another bucket is another decode.
+        val larger = FlagBitmaps.load(resources, art, 500)
+        assertNotNull(larger)
+        assertTrue("a 512px bucket keeps the full 600px artwork", larger!!.width == 600)
+        assertTrue(larger !== first)
     }
 }

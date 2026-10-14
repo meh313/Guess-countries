@@ -78,7 +78,8 @@ fun CountryCard(
             ) {
                 FlagView(
                     country = country,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    thumbnail = true
                 )
 
                 // Continent badge on top left

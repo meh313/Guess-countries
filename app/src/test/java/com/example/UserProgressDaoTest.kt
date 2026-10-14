@@ -342,8 +342,10 @@ class UserProgressDaoTest {
 
         assertEquals(snapshot.progress.toSet(), dao.getAllProgress().first().toSet())
         assertEquals(snapshot.skills.toSet(), dao.getAllSkills().first().toSet())
-        assertEquals(snapshot.quizzes, dao.getQuizHistory().first())
+        // The quiz comes back with a new id (the file's ids only tie answers to quizzes), its answer re-pointed at it.
+        val quizzes = dao.getQuizHistory().first()
+        assertEquals(snapshot.quizzes.map { it.copy(id = 0) }, quizzes.map { it.copy(id = 0) })
         assertEquals(listOf("FR"), dao.recentTargets(1).first())
-        assertEquals(1, dao.answersOf(snapshot.quizzes.single().id).size)
+        assertEquals(1, dao.answersOf(quizzes.single().id).size)
     }
 }

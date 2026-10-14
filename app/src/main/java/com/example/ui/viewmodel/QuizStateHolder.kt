@@ -75,8 +75,18 @@ class QuizStateHolder(
         val questions = when (effectiveScope) {
             QuizEngine.WEAK_SPOTS, QuizEngine.DUE -> {
                 val picked = if (effectiveScope == QuizEngine.DUE) due else weak
-                val targets = if (mode.isEndless) picked else picked.take(QuizEngine.MAX_QUESTIONS)
-                QuizEngine.generate(targets, mode, random, difficulty, world, order)
+                if (mode.isEndless && picked.size < QuizEngine.MIN_POOL) {
+                    // A blitz over one or two hand-picked countries would show the same flags for a minute: they
+                    // come first, then the rest of the world in the picker's order. A fixed-length quiz over one
+                    // due country is one question, by design.
+                    val pickedCodes = picked.map { it.code }.toSet()
+                    val ordered = order(world)
+                    val padded = ordered.filter { it.code in pickedCodes } + ordered.filter { it.code !in pickedCodes }
+                    QuizEngine.generate(padded, mode, random, difficulty, world, order = { it })
+                } else {
+                    val targets = if (mode.isEndless) picked else picked.take(QuizEngine.MAX_QUESTIONS)
+                    QuizEngine.generate(targets, mode, random, difficulty, world, order)
+                }
             }
             else -> QuizEngine.generate(QuizEngine.poolFor(effectiveScope, repository.allCountries), mode, random, difficulty, order = order)
         }
@@ -194,7 +204,7 @@ class QuizStateHolder(
 
     private fun onFinished(session: QuizSession) {
         // The save hands back the finish times before this one, so "already counted today" means an earlier quiz.
-        scope.launch {
+        scope.launch(progress.writeErrors.handler) {
             val earlier = repository.saveQuiz(session)
             _finishOutcome.value = PracticeStreak.outcome(earlier, repository.now(), zone())
         }

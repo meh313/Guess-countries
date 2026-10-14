@@ -6,7 +6,9 @@ import com.example.data.local.AppDatabase
 import com.example.data.local.QuizScoreEntity
 import com.example.data.local.SkillProgressEntity
 import com.example.data.model.CountryRepository
+import com.example.flashcards.StudySession
 import com.example.progress.Evidence
+import com.example.progress.Grade
 import com.example.progress.Skill
 import com.example.progress.SkillState
 import com.example.quiz.sovereign
@@ -697,6 +699,47 @@ class CountryViewModelQuizTest {
         assertEquals(twelveWeak.toSet(), s.targets().toSet())
     }
 
+    /**
+     * A blitz over fewer than [QuizEngine.MIN_POOL] due countries is padded with the rest of the world, the due ones
+     * first, so it never shows the same one or two flags for a minute.
+     */
+    private fun aBlitzOverFewDueCountries_isPaddedWithTheWorld(dueCount: Int) {
+        val dueCodes = twelveWeak.take(dueCount)
+        dueCodes.forEach { reviewedRow(it, Skill.FLAG) }
+        val vm = newViewModel()
+        vm.awaitPlan("$dueCount due") { it.due(Skill.FLAG).size == dueCount }
+
+        vm.startQuiz(QuizMode.BLITZ, QuizEngine.DUE)
+
+        val s = vm.quizSession.value!!
+        assertEquals(QuizEngine.DUE, s.scope)
+        assertEquals(QuizEngine.BLITZ_QUESTIONS, s.questions.size)
+        val first = s.targets().take(10)
+        assertTrue("the first ten ask about at least ${QuizEngine.MIN_POOL} countries: $first", first.distinct().size >= QuizEngine.MIN_POOL)
+        assertEquals("the due countries come first", dueCodes.toSet(), first.take(dueCount).toSet())
+        assertTrue("no country twice in a row: ${s.targets()}", s.targets().zipWithNext().none { (a, b) -> a == b })
+    }
+
+    @Test
+    fun startQuiz_dueToday_inTheBlitzOverOneDueCountry_goesOnWithTheWorld() = aBlitzOverFewDueCountries_isPaddedWithTheWorld(1)
+
+    @Test
+    fun startQuiz_dueToday_inTheBlitzOverTwoDueCountries_goesOnWithTheWorld() = aBlitzOverFewDueCountries_isPaddedWithTheWorld(2)
+
+    @Test
+    fun startQuiz_dueToday_inTheBlitzOverThreeDueCountries_goesOnWithTheWorld() = aBlitzOverFewDueCountries_isPaddedWithTheWorld(3)
+
+    @Test
+    fun startQuiz_dueToday_overOneDueCountry_isOneQuestionInAFixedLengthQuiz() {
+        reviewedRow("FR", Skill.FLAG)
+        val vm = newViewModel()
+        vm.awaitPlan("one due") { it.due(Skill.FLAG).size == 1 }
+
+        vm.startQuiz(QuizMode.FLAG_NAME, QuizEngine.DUE)
+
+        assertEquals(listOf("FR"), vm.quizSession.value!!.targets())
+    }
+
     @Test
     fun startQuiz_dueToday_withNothingDueFallsBackToGlobal() {
         reviewedRow("FR", Skill.FLAG, dueAt = System.currentTimeMillis() + day)
@@ -988,6 +1031,24 @@ class CountryViewModelQuizTest {
     }
 
     @Test
+    fun theStudySessionInProgress_survivesTheProcessThroughTheSavedState() {
+        val handle = SavedStateHandle()
+        val vm = newViewModel(savedState = handle)
+        vm.startStudy(StudySession.DUE, twelveWeak)
+        vm.flipStudyCard()
+        vm.gradeStudyCard(Grade.GOOD)
+        vm.flipStudyCard()
+        vm.gradeStudyCard(Grade.AGAIN)
+        vm.flipStudyCard()
+        val before = vm.studySession.value!!
+
+        val revived = newViewModel(savedState = handle.saved())
+
+        assertEquals(before, revived.studySession.value)
+        assertNull("no quiz was running", revived.quizSession.value)
+    }
+
+    @Test
     fun aSavedQuizAboutACountryNoLongerInTheCatalog_isDropped() {
         val handle = SavedStateHandle()
         newViewModel(sixAfrican + fourEuropean, savedState = handle).startQuiz(QuizMode.FLAG_NAME, "Africa")
@@ -1012,5 +1073,24 @@ class CountryViewModelQuizTest {
 
         first.setQuizDifficulty(QuizDifficulty.NORMAL)
         assertEquals(QuizDifficulty.NORMAL, viewModel().quizDifficulty.value)
+    }
+
+    // --- Write errors -------------------------------------------------------------------------------------------------
+
+    @Test
+    fun aWriteThatFails_isReportedAsWriteError_insteadOfCrashing() {
+        val vm = newViewModel()
+        assertFalse(vm.writeError.value)
+        // Every new progress row is refused from here on, as a constraint broken by a bad import would refuse it.
+        db.openHelper.writableDatabase.execSQL(
+            "CREATE TRIGGER refuse_writes BEFORE INSERT ON user_country_progress BEGIN SELECT RAISE(ABORT, 'refused by the test'); END"
+        )
+
+        vm.toggleFavorite("FR")
+
+        awaitCondition("the failed write to be reported") { vm.writeError.value }
+        assertNull("nothing was written", progressRow("FR"))
+        vm.clearWriteError()
+        assertFalse(vm.writeError.value)
     }
 }

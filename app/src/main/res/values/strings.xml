@@ -120,6 +120,9 @@
     <string name="reminder_start_title">Time for a quick quiz</string>
     <string name="reminder_start_text">A quick quiz starts a new streak</string>
 
+    <!-- Shown once when a database write failed (see WriteErrors) -->
+    <string name="write_error">Your last change could not be saved. Export your progress from Settings and try again later.</string>
+
     <!-- The spoken country summary -->
     <string name="speech_name">%1$s.</string>
     <string name="speech_capital_and_continent">Capital is %1$s, located in %2$s.</string>

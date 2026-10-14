@@ -55,6 +55,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
@@ -82,6 +83,7 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
@@ -633,34 +635,17 @@ fun QuizScreen(
             Spacer(modifier = Modifier.height(10.dp))
 
             if (totalMs != null) {
-                // One quiet description for TalkBack; a ticking bar would be announced constantly.
-                val secondsLeft = ((totalRemainingMs + 999) / 1000).toInt()
+                // The ticking state is handed over as a lambda: only TimerBar reads it, so the screen is not
+                // recomposed ten times a second.
                 val totalSeconds = (totalMs / 1000).toInt()
-                val totalDescription = pluralStringResource(R.plurals.quiz_seconds_in_total, totalSeconds, totalSeconds)
-                val leftDescription = pluralStringResource(R.plurals.quiz_seconds_left, secondsLeft, secondsLeft)
-                Column(
-                    modifier = Modifier
-                        .testTag("quiz_timer")
-                        .clearAndSetSemantics {
-                            contentDescription = totalDescription
-                            stateDescription = leftDescription
-                        }
-                ) {
-                    val urgent = totalRemainingMs <= 10_000L
-                    LinearProgressIndicator(
-                        progress = { totalRemainingMs / totalMs.toFloat() },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(8.dp)
-                            .clip(RoundedCornerShape(4.dp)),
-                        color = if (urgent) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary
-                    )
-                    Text(
-                        text = stringResource(R.string.quiz_seconds_left_short, secondsLeft),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = if (urgent) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                TimerBar(
+                    remainingMs = { totalRemainingMs },
+                    limitMs = totalMs,
+                    urgentBelowMs = 10_000L,
+                    height = 8.dp,
+                    testTag = "quiz_timer",
+                    descriptionTotal = pluralStringResource(R.plurals.quiz_seconds_in_total, totalSeconds, totalSeconds)
+                )
             } else {
                 LinearProgressIndicator(
                     progress = { (active.currentIndex + 1).toFloat() / questionCount },
@@ -673,35 +658,16 @@ fun QuizScreen(
             }
 
             if (limitMs != null && !active.hasAnswered) {
-                // One quiet description for TalkBack; a ticking bar would be announced constantly.
-                val secondsLeft = ((remainingMs + 999) / 1000).toInt()
                 val limitSeconds = (limitMs / 1000).toInt()
-                val limitDescription = pluralStringResource(R.plurals.quiz_seconds_per_question, limitSeconds, limitSeconds)
-                val leftDescription = pluralStringResource(R.plurals.quiz_seconds_left, secondsLeft, secondsLeft)
-                Column(
-                    modifier = Modifier
-                        .padding(top = 8.dp)
-                        .testTag("quiz_timer")
-                        .clearAndSetSemantics {
-                            contentDescription = limitDescription
-                            stateDescription = leftDescription
-                        }
-                ) {
-                    val urgent = remainingMs <= 3_000L
-                    LinearProgressIndicator(
-                        progress = { remainingMs / limitMs.toFloat() },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(6.dp)
-                            .clip(RoundedCornerShape(3.dp)),
-                        color = if (urgent) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary
-                    )
-                    Text(
-                        text = stringResource(R.string.quiz_seconds_left_short, secondsLeft),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = if (urgent) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                TimerBar(
+                    remainingMs = { remainingMs },
+                    limitMs = limitMs,
+                    urgentBelowMs = 3_000L,
+                    height = 6.dp,
+                    testTag = "quiz_timer",
+                    descriptionTotal = pluralStringResource(R.plurals.quiz_seconds_per_question, limitSeconds, limitSeconds),
+                    modifier = Modifier.padding(top = 8.dp)
+                )
             }
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -922,4 +888,49 @@ private fun View.performAnswerHaptic(correct: Boolean) {
         else -> HapticFeedbackConstants.VIRTUAL_KEY
     }
     performHapticFeedback(effect)
+}
+
+/**
+ * The countdown of a timed question or of the blitz: a bar and a "Ns left" text, with one quiet description for
+ * TalkBack (a ticking bar would be announced constantly).
+ *
+ * [remainingMs] is a lambda so the ticking state is read only here: the bar reads it while drawing, and the text
+ * and the colour come from values derived from it that change once a second (or once, when it turns urgent). The
+ * 100 ms ticks therefore redraw the bar without recomposing the quiz screen around it.
+ */
+@Composable
+private fun TimerBar(
+    remainingMs: () -> Long,
+    limitMs: Long,
+    urgentBelowMs: Long,
+    height: Dp,
+    testTag: String,
+    descriptionTotal: String,
+    modifier: Modifier = Modifier
+) {
+    val secondsLeft by remember(remainingMs) { derivedStateOf { ((remainingMs() + 999) / 1000).toInt() } }
+    val urgent by remember(remainingMs, urgentBelowMs) { derivedStateOf { remainingMs() <= urgentBelowMs } }
+    val leftDescription = pluralStringResource(R.plurals.quiz_seconds_left, secondsLeft, secondsLeft)
+    Column(
+        modifier = modifier
+            .testTag(testTag)
+            .clearAndSetSemantics {
+                contentDescription = descriptionTotal
+                stateDescription = leftDescription
+            }
+    ) {
+        LinearProgressIndicator(
+            progress = { remainingMs() / limitMs.toFloat() },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(height)
+                .clip(RoundedCornerShape(height / 2)),
+            color = if (urgent) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary
+        )
+        Text(
+            text = stringResource(R.string.quiz_seconds_left_short, secondsLeft),
+            style = MaterialTheme.typography.bodySmall,
+            color = if (urgent) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
 }

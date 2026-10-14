@@ -59,7 +59,7 @@ private fun Side(label: String, country: Country, caption: String, tint: Color, 
             color = tint,
             modifier = Modifier.padding(bottom = 4.dp)
         )
-        FlagView(country = country, modifier = Modifier.fillMaxWidth(), contentDescription = null)
+        FlagView(country = country, modifier = Modifier.fillMaxWidth(), contentDescription = null, thumbnail = true)
         Text(
             text = caption,
             style = MaterialTheme.typography.bodySmall,

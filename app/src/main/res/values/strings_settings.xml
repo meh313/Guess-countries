@@ -27,7 +27,12 @@
     <string name="settings_export_failed">Export failed: %1$s</string>
     <string name="settings_import_read_error">The file could not be opened.</string>
     <string name="settings_import_failed">Import failed: %1$s</string>
-    <string name="settings_import_failed_plain">Import failed.</string>
+    <string name="settings_import_not_ours">This file is not a World Flags export.</string>
+    <string name="settings_import_newer">This file was made by a newer version of World Flags (format %1$d). Update the app and try again.</string>
+    <string name="settings_import_damaged">This file is not a complete World Flags export (%1$s).</string>
+    <string name="settings_import_too_large">This file is too large to be a World Flags export.</string>
+    <string name="settings_import_write_failed">The file could not be stored. Nothing was changed.</string>
+    <string name="settings_reset_done">Progress reset.</string>
     <string name="settings_import_done">Imported %1$s, %2$s and %3$s.</string>
     <plurals name="settings_import_quizzes">
         <item quantity="one">%d quiz</item>
@@ -50,7 +55,8 @@
 
     <!-- Settings: the import dialog -->
     <string name="settings_import_dialog_title">Import this file?</string>
-    <string name="settings_import_dialog_text">Everything here is replaced by the file: bookmarks, every country\'s standing, the quiz log and the settings. This cannot be undone.</string>
+    <string name="settings_import_dialog_text">The file holds %1$s, %2$s and %3$s. Everything here is replaced by it: bookmarks, every country\'s standing, the quiz log and the settings. This cannot be undone.</string>
+    <string name="settings_import_dialog_empty">The file holds no progress at all. Importing it empties everything here: bookmarks, every country\'s standing and the quiz log. This cannot be undone.</string>
     <string name="settings_import_confirm">Replace</string>
     <string name="settings_import_cancel">Keep mine</string>
 

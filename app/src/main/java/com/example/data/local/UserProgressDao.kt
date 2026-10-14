@@ -73,15 +73,22 @@ abstract class UserProgressDao {
     open suspend fun snapshot(exportedAt: Long): ProgressSnapshot =
         ProgressSnapshot(allProgressOnce(), allSkillsOnce(), allQuizzesOnce(), allAnswersOnce(), emptyMap(), exportedAt)
 
-    /** Replaces everything with [snapshot] (an import), in one transaction: what was there before is gone. */
+    /**
+     * Replaces everything with [snapshot] (an import), in one transaction: what was there before is gone. Quizzes get
+     * new ids from the database (a file's ids only tie its answers to its quizzes), so no imported id can ever collide
+     * with, or exhaust, the sequence later saves draw from.
+     */
     @Transaction
     open suspend fun replaceAll(snapshot: ProgressSnapshot) {
         clearAll()
         if (snapshot.progress.isNotEmpty()) insertProgressRows(snapshot.progress)
         if (snapshot.skills.isNotEmpty()) insertSkillRows(snapshot.skills)
-        // Quizzes keep their ids, so their answers still point at them.
-        if (snapshot.quizzes.isNotEmpty()) insertQuizRows(snapshot.quizzes)
-        if (snapshot.answers.isNotEmpty()) insertAnswers(snapshot.answers.map { it.copy(id = 0) })
+        val answersByQuiz = snapshot.answers.groupBy { it.quizId }
+        snapshot.quizzes.sortedBy { it.id }.forEach { quiz ->
+            val newId = insertQuizScoreForId(quiz.copy(id = 0))
+            val answers = answersByQuiz[quiz.id].orEmpty()
+            if (answers.isNotEmpty()) insertAnswers(answers.map { it.copy(id = 0, quizId = newId) })
+        }
     }
 
     @Query("SELECT * FROM user_country_progress")
@@ -101,9 +108,6 @@ abstract class UserProgressDao {
 
     @Insert
     protected abstract suspend fun insertSkillRows(rows: List<SkillProgressEntity>)
-
-    @Insert
-    protected abstract suspend fun insertQuizRows(rows: List<QuizScoreEntity>)
 
     /** Forgets everything the player did: bookmarks, skill states and the whole quiz log, in one transaction. */
     @Transaction

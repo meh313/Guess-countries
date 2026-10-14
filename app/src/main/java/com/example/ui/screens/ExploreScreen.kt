@@ -94,8 +94,10 @@ fun ExploreScreen(
     val userProgressMap by viewModel.userProgressMap.collectAsStateWithLifecycle()
     val skills by viewModel.skills.collectAsStateWithLifecycle()
     val standingFilter by viewModel.standingFilter.collectAsStateWithLifecycle()
-    val now = viewModel.repository.now()
     val selectedCountry by viewModel.selectedCountry.collectAsStateWithLifecycle()
+    // The clock is read once per sheet opening and per change of the skills (a finished quiz), not on every
+    // recomposition: the standings only move when the skills do, and the sheet gets a parameter that holds still.
+    val now = remember(selectedCountry?.code, skills) { viewModel.repository.now() }
     val speechAvailable by viewModel.speechAvailable.collectAsStateWithLifecycle()
 
     val continents = listOf("All", "Africa", "Americas", "Asia", "Europe", "Oceania", "Antarctica")
