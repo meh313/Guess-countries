@@ -17,6 +17,7 @@ import com.example.support.colourName
 import com.example.support.crop
 import com.example.support.dominantColour
 import com.example.support.drawWindow
+import com.example.support.eventually
 import com.example.ui.components.FlagAspectRatio
 import com.example.ui.components.FlagBitmaps
 import com.example.ui.components.FlagView
@@ -123,14 +124,14 @@ class FlagViewTest {
         assertEquals(1, bands.toSet().size)
     }
 
-    /** A thumbnail is decoded off the main thread and arrives on a later frame; waits until it has been drawn. */
-    private fun awaitThumbnail(centreColour: String) {
-        rule.waitUntil(timeoutMillis = 10_000) {
-            // The decoded bitmap reaches the state through the main thread's queue, which waitUntil alone does not run.
-            shadowOf(Looper.getMainLooper()).idle()
-            flagPixels().dominantColour(0.4f, 0.4f, 0.6f, 0.6f).first == centreColour
+    /**
+     * A thumbnail is decoded on another thread and arrives on a later frame; polls (with real sleeps, so that thread
+     * gets its turn on a loaded machine), draining the main queue and the composition each time, until it is drawn.
+     */
+    private fun awaitThumbnail(colour: String, left: Float = 0.4f, top: Float = 0.4f, right: Float = 0.6f, bottom: Float = 0.6f) {
+        rule.eventually("the $colour thumbnail to be drawn") {
+            assertEquals(colour, flagPixels().dominantColour(left, top, right, bottom).first)
         }
-        rule.waitForIdle()
     }
 
     @Test
@@ -145,7 +146,7 @@ class FlagViewTest {
         }
         rule.waitForIdle()
 
-        awaitThumbnail(centreColour = "blue")
+        awaitThumbnail("blue")
 
         val flag = flagPixels()
         val bands = listOf(0.08f, 0.25f, 0.5f, 0.75f, 0.92f).map { flag.dominantColour(0.3f, it - 0.02f, 0.7f, it + 0.02f).first }
@@ -165,11 +166,12 @@ class FlagViewTest {
         }
         rule.waitForIdle()
 
-        awaitThumbnail(centreColour = "white")
+        // The middle of the Mexican flag is the coat of arms, so the bands are what to wait for and check.
+        awaitThumbnail("green", 0.05f, 0.2f, 0.25f, 0.8f)
 
         val flag = flagPixels()
-        assertEquals("green", flag.dominantColour(0.05f, 0.2f, 0.25f, 0.8f).first)
         assertEquals("red", flag.dominantColour(0.75f, 0.2f, 0.95f, 0.8f).first)
+        assertEquals("white", flag.dominantColour(0.4f, 0.04f, 0.6f, 0.12f).first)
     }
 
     @Test
