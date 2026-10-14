@@ -10,8 +10,8 @@ import com.example.progress.PracticeStreak
 import java.util.TimeZone
 
 /**
- * The daily reminder's run, started by [ReminderReceiver] when the alarm fires: sends the notification when nothing was
- * practiced today, then sets the next alarm. When the reminder was switched off while this run waited, it ends the
+ * The daily reminder's run, started by [ReminderReceiver] when the alarm fires: sends the notification when today's
+ * goal is not met yet, then sets the next alarm. When the reminder was switched off while this run waited, it ends the
  * reminder by doing nothing.
  */
 class ReminderWorker(
@@ -42,11 +42,13 @@ class ReminderWorker(
         return Result.success()
     }
 
+    /** The sessions in the log and the goal from the settings decide whether today still needs a nudge. */
     private suspend fun notifyIfNothingPracticed(at: Long) {
-        val timestamps = AppDatabase.getDatabase(applicationContext).userProgressDao().quizTimestamps()
+        val sessions = AppDatabase.getDatabase(applicationContext).userProgressDao().practiceSessions().map { it.toPracticeSession() }
+        val goal = PrefsUserSettings(applicationContext).dailyGoal
         val allowed = ReminderNotifier.areNotificationsAllowed(applicationContext)
-        if (ReminderSchedule.shouldNotify(enabled = true, allowed, timestamps, at, zone())) {
-            ReminderNotifier.show(applicationContext, ReminderSchedule.message(PracticeStreak.summary(timestamps, at, zone())))
+        if (ReminderSchedule.shouldNotify(enabled = true, allowed, sessions, goal, at, zone())) {
+            ReminderNotifier.show(applicationContext, ReminderSchedule.message(PracticeStreak.summary(sessions, goal, at, zone())))
         }
     }
 

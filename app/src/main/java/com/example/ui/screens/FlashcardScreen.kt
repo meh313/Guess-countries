@@ -120,7 +120,9 @@ private val SIDE_PANE_WIDTH = 240.dp
 @Composable
 fun FlashcardScreen(
     viewModel: CountryViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    /** The study chooser's "Learn 5 new" was picked and the session started: show the Learn screen. */
+    onLearn: () -> Unit = {}
 ) {
     val exploreCountries by viewModel.filteredCountries.collectAsStateWithLifecycle()
     val plan by viewModel.quizPlan.collectAsStateWithLifecycle()
@@ -260,11 +262,24 @@ fun FlashcardScreen(
     // Antarctica stays in the deck to browse but never in a study session: there is no flag skill to grade it on.
     val deckFromHere = { (deck.drop(index) + deck.take(index)).filter { it.isSovereign }.map { it.code } }
 
+    // What Learn mode has left to introduce: the sovereign countries with no flag review yet.
+    val unseenCount = remember(plan.skills, countriesByCode) {
+        val flags = plan.skills[Skill.FLAG].orEmpty()
+        countriesByCode.values.count { it.isSovereign && flags[it.code]?.isNew != false }
+    }
+
     if (showStudyChooser) {
         StudyChooser(
             dueCount = due.size,
             weakCount = weak.size,
             deckCount = minOf(deck.count { it.isSovereign }, StudySession.DEFAULT_SIZE),
+            unseenCount = unseenCount,
+            onLearn = {
+                showStudyChooser = false
+                viewModel.stopSpeaking()
+                viewModel.startLearn()
+                onLearn()
+            },
             onPick = { source ->
                 showStudyChooser = false
                 viewModel.stopSpeaking()
@@ -468,9 +483,20 @@ private fun StepButtons(stacked: Boolean, onStep: (forward: Boolean) -> Unit) {
     }
 }
 
-/** Where the study cards come from. A source with nothing in it is shown, counted and inactive. */
+/**
+ * Where the study cards come from, and the way into Learn mode. A source with nothing in it is shown, counted and
+ * inactive; so is Learn once every flag has been seen.
+ */
 @Composable
-private fun StudyChooser(dueCount: Int, weakCount: Int, deckCount: Int, onPick: (String) -> Unit, onDismiss: () -> Unit) {
+private fun StudyChooser(
+    dueCount: Int,
+    weakCount: Int,
+    deckCount: Int,
+    unseenCount: Int,
+    onLearn: () -> Unit,
+    onPick: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.study_title)) },
@@ -503,6 +529,13 @@ private fun StudyChooser(dueCount: Int, weakCount: Int, deckCount: Int, onPick: 
                     deckCount > 0,
                     "study_deck_btn"
                 ) { onPick(it) }
+                StudyOption(
+                    LEARN_OPTION,
+                    stringResource(R.string.learn_title),
+                    pluralStringResource(R.plurals.learn_option_detail, unseenCount, unseenCount),
+                    unseenCount > 0,
+                    "study_learn_btn"
+                ) { onLearn() }
             }
         },
         confirmButton = {},
@@ -511,6 +544,9 @@ private fun StudyChooser(dueCount: Int, weakCount: Int, deckCount: Int, onPick: 
         }
     )
 }
+
+/** The chooser's Learn entry is not a study source; its option calls back without one. */
+private const val LEARN_OPTION = "learn"
 
 @Composable
 private fun StudyOption(source: String, title: String, detail: String, enabled: Boolean, tag: String, onPick: (String) -> Unit) {
@@ -731,7 +767,9 @@ private fun StudySummary(
         val streakLine = when (outcome?.kind) {
             PracticeStreak.Kind.STARTED -> stringResource(R.string.streak_started)
             PracticeStreak.Kind.KEPT -> pluralStringResource(R.plurals.streak_kept, outcome.days, outcome.days)
-            PracticeStreak.Kind.ALREADY_COUNTED -> stringResource(R.string.study_streak_already_counted, outcome.days)
+            // 0 days: the session was too small to meet the day's goal, and the day is not counted yet.
+            PracticeStreak.Kind.ALREADY_COUNTED ->
+                if (outcome.days == 0) stringResource(R.string.streak_goal_short) else stringResource(R.string.study_streak_already_counted, outcome.days)
             null ->
                 if (session.gradedCards < StudySession.MIN_FOR_STREAK) {
                     stringResource(R.string.study_streak_short, StudySession.MIN_FOR_STREAK, session.gradedCards)

@@ -57,7 +57,10 @@ object ProgressTransfer {
     const val CLOCK_SLACK_MILLIS = SkillMastery.DAY_MILLIS
 
     /** The settings carried in a file, by name. */
-    val SETTINGS = listOf("quizDifficulty", "reminderEnabled", "reminderMinuteOfDay", "themeMode", "dynamicColor", "timerPace")
+    val SETTINGS = listOf(
+        "quizDifficulty", "reminderEnabled", "reminderMinuteOfDay", "themeMode", "dynamicColor", "timerPace",
+        "dailyGoal", "focusContinent", "onboarded"
+    )
 
     private val catalogCodes: Set<String> by lazy { CountryCatalog.all.map { it.code }.toSet() }
 

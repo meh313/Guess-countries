@@ -52,17 +52,28 @@ abstract class UserProgressDao {
     @Insert
     protected abstract suspend fun insertAnswers(answers: List<QuizAnswerEntity>)
 
-    /** When each finished quiz was saved; the practice streak is worked out from these. */
+    /** When each finished quiz was saved. */
     @Query("SELECT timestamp FROM quiz_scores")
     abstract suspend fun quizTimestamps(): List<Long>
 
+    /** When each finished quiz or study session was saved and how big it was; the practice streak is worked out from these. */
+    @Query("SELECT timestamp, total, questionCount FROM quiz_scores")
+    abstract suspend fun practiceSessions(): List<PracticeRow>
+
     /**
-     * Saves a finished quiz with its answers and returns when the quizzes before it were saved. All of it happens in
-     * one transaction, so no other save can slip in between and the list is exactly what came before this quiz.
+     * Saves a finished quiz with its answers and returns when the quizzes before it were saved; see
+     * [insertQuizAfterSessions], which also hands back how big each of them was.
+     */
+    suspend fun insertQuizWithAnswers(score: QuizScoreEntity, answers: List<QuizAnswerEntity>): List<Long> =
+        insertQuizAfterSessions(score, answers).map { it.timestamp }
+
+    /**
+     * Saves a finished quiz with its answers and returns the sessions saved before it (when and how big). All of it
+     * happens in one transaction, so no other save can slip in between and the list is exactly what came before.
      */
     @Transaction
-    open suspend fun insertQuizWithAnswers(score: QuizScoreEntity, answers: List<QuizAnswerEntity>): List<Long> {
-        val earlier = quizTimestamps()
+    open suspend fun insertQuizAfterSessions(score: QuizScoreEntity, answers: List<QuizAnswerEntity>): List<PracticeRow> {
+        val earlier = practiceSessions()
         val id = insertQuizScoreForId(score)
         if (answers.isNotEmpty()) insertAnswers(answers.map { it.copy(quizId = id) })
         return earlier

@@ -147,7 +147,9 @@ fun QuizResultScreen(
         val streakLine = when (outcome?.kind) {
             PracticeStreak.Kind.STARTED -> stringResource(R.string.streak_started)
             PracticeStreak.Kind.KEPT -> pluralStringResource(R.plurals.streak_kept, outcome.days, outcome.days)
-            PracticeStreak.Kind.ALREADY_COUNTED -> stringResource(R.string.result_streak_already_counted, outcome.days)
+            // 0 days: the session was too small to meet the day's goal, and the day is not counted yet.
+            PracticeStreak.Kind.ALREADY_COUNTED ->
+                if (outcome.days == 0) stringResource(R.string.streak_goal_short) else stringResource(R.string.result_streak_already_counted, outcome.days)
             null -> if (streakDays > 0) stringResource(R.string.result_streak_days, streakDays) else null
         }
         if (streakLine != null) {

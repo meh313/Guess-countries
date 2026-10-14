@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Learn mode ("Learn 5 new"): five flags never seen before, one card at a time, then a short quiz over them. The
+  quiz itself uses the quiz strings; its scope label is here.
+-->
+<!-- "Card 1 of 5" never changes its wording with the number: a plain string, like the flashcards' one. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="PluralsCandidate">
+    <!-- The entry on the Flashcards study chooser (the screen's title shares it) -->
+    <string name="learn_title">Learn 5 new</string>
+    <plurals name="learn_option_detail">
+        <item quantity="one">%1$d flag you have not seen yet</item>
+        <item quantity="other">%1$d flags you have not seen yet</item>
+    </plurals>
+
+    <!-- The cards -->
+    <string name="learn_intro">Five flags you have not seen yet, then a short quiz.</string>
+    <string name="learn_card_position">Card %1$d of %2$d</string>
+    <string name="learn_not_to_confuse">Not to be confused with</string>
+    <string name="learn_previous">Previous</string>
+    <string name="learn_next">Next</string>
+    <string name="learn_quiz_me">Quiz me</string>
+
+    <!-- Nothing left to introduce -->
+    <string name="learn_nothing_new">You have seen every flag. The quizzes keep reviewing them.</string>
+
+    <!-- The scope of the quiz after the cards, in the quiz log -->
+    <string name="scope_learn">Learn</string>
+</resources>

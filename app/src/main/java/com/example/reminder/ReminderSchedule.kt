@@ -45,17 +45,21 @@ object ReminderSchedule {
         return calendar.timeInMillis
     }
 
-    /** The reminder goes out only when it is switched on, notifications are allowed and no quiz was finished today. */
+    /**
+     * The reminder goes out only when it is switched on, notifications are allowed and today's [sessions] have not
+     * yet met the daily [goal] (see [PracticeStreak]).
+     */
     fun shouldNotify(
         enabled: Boolean,
         notificationsAllowed: Boolean,
-        quizTimestamps: Collection<Long>,
+        sessions: Collection<PracticeStreak.Session>,
+        goal: Int,
         now: Long,
         zone: TimeZone
-    ): Boolean = enabled && notificationsAllowed && !PracticeStreak.summary(quizTimestamps, now, zone).practicedToday
+    ): Boolean = enabled && notificationsAllowed && !PracticeStreak.summary(sessions, goal, now, zone).practicedToday
 
     fun isTooLate(dueAt: Long, now: Long): Boolean = now - dueAt > MAX_LATENESS_MILLIS
 
-    /** The reminder sent while today has no quiz yet: keep the [streak] that ends yesterday, or start one. */
+    /** The reminder sent while today's goal is not met: keep the [streak] that ends yesterday, or start one. */
     fun message(streak: PracticeStreak.Summary): Message = Message(streakDays = maxOf(streak.current, 0))
 }

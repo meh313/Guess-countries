@@ -66,7 +66,7 @@
     <string name="study_summary_remembered">%1$d of %2$d remembered</string>
     <string name="study_summary_grades">Again %1$d · Good %2$d · Easy %3$d</string>
     <string name="study_streak_already_counted">%1$d-day streak, already counted today</string>
-    <string name="study_streak_short">Grade at least %1$d cards for streak credit (you graded %2$d)</string>
+    <string name="study_streak_short">Grade at least %1$d cards for it to count towards your goal (you graded %2$d)</string>
     <string name="study_again">Study again</string>
 
     <!-- Progress: the header -->
@@ -80,7 +80,7 @@
         <item quantity="one">%d-day streak</item>
         <item quantity="other">%d-day streak</item>
     </plurals>
-    <string name="stats_streak_start">Finish a quiz or a study session today to start one</string>
+    <string name="stats_streak_start">Meet today's goal to start one</string>
     <string name="stats_streak_detail">%1$s · %2$s</string>
     <plurals name="stats_streak_best">
         <item quantity="one">Best: %d day</item>

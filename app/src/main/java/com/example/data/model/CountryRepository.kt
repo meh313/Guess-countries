@@ -9,6 +9,7 @@ import com.example.data.transfer.ProgressSnapshot
 import com.example.flashcards.StudySession
 import com.example.progress.Evidence
 import com.example.progress.Grade
+import com.example.progress.PracticeStreak
 import com.example.progress.Skill
 import com.example.progress.SkillState
 import com.example.quiz.QuizSession
@@ -105,11 +106,12 @@ class CountryRepository(
         withContext(NonCancellable) { progressDao.recordGrade(code, skill, grade, now()) }
 
     /**
-     * Saves a finished quiz with every answer and returns when the quizzes saved before it finished. A fixed-length
-     * quiz keeps its best possible score in `total`; an endless one (the blitz) keeps 0 there and its right answers
-     * in `correct`.
+     * Saves a finished quiz with every answer and returns the sessions saved before it (when each finished and how
+     * many items it had), which the streak reads. A fixed-length quiz keeps its best possible score in `total`; an
+     * endless one (the blitz) keeps 0 there and its right answers in `correct`; both keep the questions answered in
+     * `questionCount`.
      */
-    suspend fun saveQuiz(session: QuizSession): List<Long> = withContext(NonCancellable) {
+    suspend fun saveQuiz(session: QuizSession): List<PracticeStreak.Session> = withContext(NonCancellable) {
         val score = QuizScoreEntity(
             mode = session.mode.name,
             score = session.score,
@@ -131,15 +133,15 @@ class CountryRepository(
                 timeMs = record.timeMs
             )
         }
-        progressDao.insertQuizWithAnswers(score, answers)
+        progressDao.insertQuizAfterSessions(score, answers).map { it.toPracticeSession() }
     }
 
     /**
-     * Logs a finished study session like a quiz (mode [StudySession.MODE], no points, [remembered] of [cards] right)
-     * and returns the earlier finish times, so the streak and the reminder count it.
+     * Logs a finished study session like a quiz (mode [StudySession.MODE], no points, [remembered] of [cards] right,
+     * the [cards] in `questionCount`) and returns the earlier sessions, so the streak and the reminder count it.
      */
-    suspend fun saveStudySession(source: String, remembered: Int, cards: Int): List<Long> = withContext(NonCancellable) {
-        progressDao.insertQuizScoreAfterReading(
+    suspend fun saveStudySession(source: String, remembered: Int, cards: Int): List<PracticeStreak.Session> = withContext(NonCancellable) {
+        progressDao.insertQuizAfterSessions(
             QuizScoreEntity(
                 mode = StudySession.MODE,
                 score = 0,
@@ -148,8 +150,9 @@ class CountryRepository(
                 timestamp = now(),
                 correct = remembered,
                 questionCount = cards
-            )
-        )
+            ),
+            emptyList()
+        ).map { it.toPracticeSession() }
     }
 
     /** Everything in the database, for an export file. */

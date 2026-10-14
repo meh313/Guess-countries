@@ -41,6 +41,8 @@ class ProgressStateHolder(
     private val scope: CoroutineScope,
     /** The time zone whose midnights end a practice day. */
     private val zone: () -> TimeZone,
+    /** How many items make a day count for the streak; the streak is worked out again when it changes. */
+    private val dailyGoal: StateFlow<Int>,
     /** Where a failed write is reported; shared with the quiz and study holders, which write too. */
     val writeErrors: WriteErrors = WriteErrors()
 ) {
@@ -61,6 +63,9 @@ class ProgressStateHolder(
         .stateIn(scope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
     private val refresh = MutableStateFlow(0)
+
+    /** Ticks on every [refreshClock], for views outside this holder that depend on the current day. */
+    val refreshes: StateFlow<Int> get() = refresh
 
     /**
      * Works the time-dependent views out again against the current time: a day can end, or a review come due, while
@@ -109,12 +114,22 @@ class ProgressStateHolder(
         .map { it[Skill.FLAG].orEmpty() }
         .stateIn(scope, SharingStarted.WhileSubscribed(5000), emptySet())
 
-    /** The daily practice streak, worked out from when quizzes finished; see [refreshClock] for the day rolling over. */
-    val streak: StateFlow<PracticeStreak.Summary> = combine(quizHistory, refresh) { history, _ ->
-        PracticeStreak.summary(history.map { it.timestamp }, repository.now(), zone())
+    /**
+     * The daily practice streak, worked out from when each quiz or study session finished and how big it was,
+     * against the daily goal; see [refreshClock] for the day rolling over.
+     */
+    val streak: StateFlow<PracticeStreak.Summary> = combine(quizHistory, dailyGoal, refresh) { history, goal, _ ->
+        PracticeStreak.summary(history.map { it.toPracticeSession() }, goal, repository.now(), zone())
     }
         .flowOn(Dispatchers.Default)
         .stateIn(scope, SharingStarted.WhileSubscribed(5000), PracticeStreak.NONE)
+
+    /** The items done today as the goal counts them (the sessions of at least [PracticeStreak.MIN_SESSION] items), for the Today card. */
+    val itemsToday: StateFlow<Int> = combine(quizHistory, refresh) { history, _ ->
+        PracticeStreak.itemsToday(history.map { it.toPracticeSession() }, repository.now(), zone())
+    }
+        .flowOn(Dispatchers.Default)
+        .stateIn(scope, SharingStarted.WhileSubscribed(5000), 0)
 
     fun toggleFavorite(countryCode: String) {
         scope.launch(writeErrors.handler) { repository.toggleFavorite(countryCode) }

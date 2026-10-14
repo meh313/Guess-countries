@@ -132,11 +132,14 @@ class ReminderScheduleTest {
     // --- shouldNotify -----------------------------------------------------------------------------------------------
 
     private val now = at(2026, 10, 5, 19)
-    private val practicedToday = listOf(at(2026, 10, 5, 9))
-    private val practicedYesterday = listOf(at(2026, 10, 4, 9))
+    private val practicedToday = listOf(quiz(at(2026, 10, 5, 9)))
+    private val practicedYesterday = listOf(quiz(at(2026, 10, 4, 9)))
 
-    private fun should(enabled: Boolean, allowed: Boolean, timestamps: List<Long>) =
-        ReminderSchedule.shouldNotify(enabled, allowed, timestamps, now, berlin)
+    /** A full ten-question quiz at [at], or one of [items] questions. */
+    private fun quiz(at: Long, items: Int = 10) = PracticeStreak.Session(at, items)
+
+    private fun should(enabled: Boolean, allowed: Boolean, sessions: List<PracticeStreak.Session>, goal: Int = PracticeStreak.DEFAULT_GOAL) =
+        ReminderSchedule.shouldNotify(enabled, allowed, sessions, goal, now, berlin)
 
     @Test
     fun theReminderIsSentOnlyWhenOnAllowedAndNothingWasPracticedToday() {
@@ -152,10 +155,22 @@ class ReminderScheduleTest {
 
     @Test
     fun aQuizFinishedJustAfterMidnight_countsForTheNewDay() {
-        val justAfterMidnight = listOf(at(2026, 10, 5, 0, 0, 1))
+        val justAfterMidnight = listOf(quiz(at(2026, 10, 5, 0, 0, 1)))
 
-        assertFalse(should(enabled = true, allowed = true, timestamps = justAfterMidnight))
-        assertTrue(ReminderSchedule.shouldNotify(true, true, justAfterMidnight, at(2026, 10, 6, 19), berlin))
+        assertFalse(should(enabled = true, allowed = true, sessions = justAfterMidnight))
+        assertTrue(ReminderSchedule.shouldNotify(true, true, justAfterMidnight, PracticeStreak.DEFAULT_GOAL, at(2026, 10, 6, 19), berlin))
+    }
+
+    @Test
+    fun theReminderStillComes_whileTodaysSessionsAreShortOfTheGoal() {
+        // Four-question quizzes never count; five items are half of a goal of ten; two of them meet it.
+        assertTrue(should(enabled = true, allowed = true, sessions = listOf(quiz(at(2026, 10, 5, 9), 4), quiz(at(2026, 10, 5, 10), 4))))
+        assertTrue(should(enabled = true, allowed = true, sessions = listOf(quiz(at(2026, 10, 5, 9), 5))))
+        assertFalse(should(enabled = true, allowed = true, sessions = listOf(quiz(at(2026, 10, 5, 9), 5), quiz(at(2026, 10, 5, 12), 5))))
+        // Against a goal of five, the one session of five is enough; against twenty, only a full session on its own is.
+        assertFalse(should(enabled = true, allowed = true, sessions = listOf(quiz(at(2026, 10, 5, 9), 5)), goal = 5))
+        assertTrue(should(enabled = true, allowed = true, sessions = listOf(quiz(at(2026, 10, 5, 9), 9)), goal = 20))
+        assertFalse(should(enabled = true, allowed = true, sessions = listOf(quiz(at(2026, 10, 5, 9), 10)), goal = 20))
     }
 
     // --- message and lateness ---------------------------------------------------------------------------------------

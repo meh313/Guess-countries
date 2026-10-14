@@ -9,6 +9,7 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.ui.components.FOCUS_CHOICES
 import com.example.data.local.AppDatabase
 import com.example.data.local.QuizScoreEntity
 import com.example.data.local.UserProgressEntity
@@ -26,6 +27,7 @@ import com.example.data.settings.UserSettings
 import com.example.data.transfer.ProgressSnapshot
 import com.example.data.transfer.ProgressTransfer
 import com.example.flashcards.StudySession
+import com.example.learn.LearnSession
 import com.example.progress.Grade
 import com.example.progress.PracticeStreak
 import com.example.progress.Skill
@@ -130,6 +132,59 @@ class CountryViewModel(
         _timerPace.value = pace
     }
 
+    private val _dailyGoal = MutableStateFlow(settings.dailyGoal)
+
+    /** How many items make a day count for the streak (one of [PracticeStreak.GOALS]), remembered across restarts. */
+    val dailyGoal: StateFlow<Int> = _dailyGoal
+
+    fun setDailyGoal(goal: Int) {
+        if (goal !in PracticeStreak.GOALS) return
+        settings.dailyGoal = goal
+        _dailyGoal.value = goal
+    }
+
+    private val _focusContinent = MutableStateFlow(settings.focusContinent)
+
+    /** The continent whose never-seen flags the quizzes introduce first ("All" for none), remembered across restarts. */
+    val focusContinent: StateFlow<String> = _focusContinent
+
+    fun setFocusContinent(continent: String) {
+        settings.focusContinent = continent
+        _focusContinent.value = continent
+    }
+
+    private val _onboarded = MutableStateFlow(settings.onboarded)
+
+    /** True once the first-run choice was made; the Today card asks for a focus continent until then. */
+    val onboarded: StateFlow<Boolean> = _onboarded
+
+    fun setOnboarded(value: Boolean) {
+        settings.onboarded = value
+        _onboarded.value = value
+    }
+
+    /** The first-run choice: [continent] (or "All") becomes the focus and the Today card moves to its normal state. */
+    fun chooseFocus(continent: String) {
+        setFocusContinent(continent)
+        setOnboarded(true)
+    }
+
+    private val _todayCardDismissedDay = MutableStateFlow(settings.todayCardDismissedDay)
+
+    /** The local day (`yyyy-MM-dd`) the Today card was put away on; empty when it never was. */
+    val todayCardDismissedDay: StateFlow<String> = _todayCardDismissedDay
+
+    fun setTodayCardDismissedDay(day: String) {
+        settings.todayCardDismissedDay = day
+        _todayCardDismissedDay.value = day
+    }
+
+    /** Puts the Today card away until tomorrow. */
+    fun dismissTodayCard() = setTodayCardDismissedDay(todayStamp())
+
+    /** The current local day as `yyyy-MM-dd`, the stamp the day-bound settings keep. */
+    fun todayStamp(): String = QuizStateHolder.dayStamp(repository.now(), zone())
+
     private val _reminder = MutableStateFlow(ReminderPrefs(settings.reminderEnabled, settings.reminderMinuteOfDay))
 
     /** Whether the daily reminder is on and when it comes. */
@@ -158,7 +213,7 @@ class CountryViewModel(
 
     // --- Progress ---------------------------------------------------------------------------------------------------
 
-    private val progress = ProgressStateHolder(repository, viewModelScope, zone)
+    private val progress = ProgressStateHolder(repository, viewModelScope, zone, dailyGoal)
 
     /** True after a database write failed, until [clearWriteError]; the activity shows it as a snackbar. */
     val writeError: StateFlow<Boolean> get() = progress.writeError
@@ -189,6 +244,14 @@ class CountryViewModel(
     /** Works the streak, the mastery counts and the due countries out again against the current time. */
     fun refreshStreak() = progress.refreshClock()
 
+    /** The items done today as the daily goal counts them, for the Today card. */
+    val itemsToday: StateFlow<Int> get() = progress.itemsToday
+
+    /** Whether the Today card is shown: always until the first-run choice, then unless it was put away today. */
+    val todayCardVisible: StateFlow<Boolean> = combine(_onboarded, _todayCardDismissedDay, progress.refreshes) { onboarded, dismissed, _ ->
+        !onboarded || dismissed != todayStamp()
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), !settings.onboarded || settings.todayCardDismissedDay != todayStamp())
+
     fun toggleFavorite(countryCode: String) = progress.toggleFavorite(countryCode)
 
     /** A flashcard self-grade: light evidence about the flag, never enough on its own to master it. */
@@ -203,7 +266,10 @@ class CountryViewModel(
             "reminderMinuteOfDay" to settings.reminderMinuteOfDay.toString(),
             "themeMode" to settings.themeMode.name,
             "dynamicColor" to settings.dynamicColor.toString(),
-            "timerPace" to settings.timerPace.name
+            "timerPace" to settings.timerPace.name,
+            "dailyGoal" to settings.dailyGoal.toString(),
+            "focusContinent" to settings.focusContinent,
+            "onboarded" to settings.onboarded.toString()
         )
         return withContext(Dispatchers.Default) { ProgressTransfer.toJson(snapshot.copy(settings = settingsMap)) }
     }
@@ -235,12 +301,16 @@ class CountryViewModel(
         return runCatching { repository.importSnapshot(snapshot) }.map {
             quiz.end()
             study.dismiss()
+            learn.dismiss()
             snapshot.settings["quizDifficulty"]?.let { name -> QuizDifficulty.entries.firstOrNull { it.name == name } }?.let(::setQuizDifficulty)
             snapshot.settings["themeMode"]?.let { name -> ThemeMode.entries.firstOrNull { it.name == name } }?.let(::setThemeMode)
             snapshot.settings["dynamicColor"]?.toBooleanStrictOrNull()?.let(::setDynamicColor)
             snapshot.settings["timerPace"]?.let { name -> TimerPace.entries.firstOrNull { it.name == name } }?.let(::setTimerPace)
             snapshot.settings["reminderMinuteOfDay"]?.toIntOrNull()?.let { setReminderTime(it / 60, it % 60) }
             snapshot.settings["reminderEnabled"]?.toBooleanStrictOrNull()?.let(::setReminderEnabled)
+            snapshot.settings["dailyGoal"]?.toIntOrNull()?.let(::setDailyGoal)
+            snapshot.settings["focusContinent"]?.takeIf { it in FOCUS_CHOICES }?.let(::setFocusContinent)
+            snapshot.settings["onboarded"]?.toBooleanStrictOrNull()?.let(::setOnboarded)
             snapshot
         }
     }
@@ -252,6 +322,7 @@ class CountryViewModel(
     fun resetProgress() {
         quiz.end()
         study.dismiss()
+        learn.dismiss()
         viewModelScope.launch { repository.clearProgress() }
     }
 
@@ -264,6 +335,11 @@ class CountryViewModel(
 
     /** What the quiz that just finished did to the streak, for its score screen; null until it is known. */
     val finishOutcome: StateFlow<PracticeStreak.Outcome?> get() = quiz.finishOutcome
+
+    /** How many never-seen countries today's quizzes have introduced so far; 0 once a new day begins. */
+    val newItemsToday: StateFlow<Int> = combine(quiz.newItemsToday, progress.refreshes) { count, _ ->
+        if (settings.newItemsDay == todayStamp()) count else 0
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), if (settings.newItemsDay == todayStamp()) settings.newItemsToday else 0)
 
     /** Starts a quiz; does nothing if [scope] has nothing to ask about. See [QuizStateHolder.start]. */
     fun startQuiz(mode: QuizMode, scope: String, difficulty: QuizDifficulty = QuizDifficulty.NORMAL) = quiz.start(mode, scope, difficulty)
@@ -297,7 +373,7 @@ class CountryViewModel(
 
     // --- Study ------------------------------------------------------------------------------------------------------
 
-    private val study = StudyStateHolder(repository, viewModelScope, zone, random, progress.writeErrors, savedStateHandle)
+    private val study = StudyStateHolder(repository, viewModelScope, zone, random, progress.writeErrors, savedStateHandle, dailyGoal = { settings.dailyGoal })
 
     /** The flashcard study session in progress, or null outside one. */
     val studySession: StateFlow<StudySession?> get() = study.session
@@ -320,6 +396,26 @@ class CountryViewModel(
 
     /** Leaves the study summary, or an unfinished session. */
     fun dismissStudy() = study.dismiss()
+
+    // --- Learn ------------------------------------------------------------------------------------------------------
+
+    private val learn = LearnStateHolder(repository, progress, quiz, viewModelScope, { settings.focusContinent }, savedStateHandle)
+
+    /** The Learn session in progress (five new flags, then a quiz over them), or null outside one. */
+    val learnSession: StateFlow<LearnSession?> get() = learn.session
+
+    /** Starts a Learn session over the next five never-seen flags, the focus continent's first; see [LearnStateHolder.start]. */
+    fun startLearn() = learn.start()
+
+    fun nextLearnCard() = learn.next()
+
+    fun previousLearnCard() = learn.previous()
+
+    /** The cards are read: a ten-question flag quiz over them on the Quiz tab; see [LearnStateHolder.startQuiz]. */
+    fun startLearnQuiz() = learn.startQuiz()
+
+    /** Leaves the Learn session where it stands. */
+    fun dismissLearn() = learn.dismiss()
 
     // --- Explore ----------------------------------------------------------------------------------------------------
 

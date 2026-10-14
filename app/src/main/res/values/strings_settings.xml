@@ -14,6 +14,15 @@
     <string name="settings_timer_hint_normal">Speed Round: 10 seconds per question. Blitz: a new flag a moment after each answer.</string>
     <string name="settings_timer_hint_relaxed">Speed Round: 20 seconds per question. Blitz: a new flag a moment after each answer.</string>
     <string name="settings_timer_hint_off">Speed Round: no time limit. Blitz: the minute still runs, but the next flag waits for Next.</string>
+    <!-- The daily goal: "Daily goal: 5 · 10 · 20 items" as a label and a segmented row -->
+    <string name="settings_goal_label">Daily goal</string>
+    <plurals name="settings_goal_option">
+        <item quantity="one">%d item</item>
+        <item quantity="other">%d items</item>
+    </plurals>
+    <string name="settings_goal_hint">Due reviews and new countries count towards it; a day with the goal met keeps your streak</string>
+    <string name="settings_focus_label">Focus continent</string>
+    <string name="settings_focus_hint">Quizzes introduce the never-seen flags of this continent first</string>
 
     <!-- Settings: Read aloud (the speech engine's state; the detail sheet's speaker reuses the install action) -->
     <string name="settings_section_speech">Read aloud</string>

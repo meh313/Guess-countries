@@ -28,12 +28,16 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -59,6 +63,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.selected
 import android.net.Uri
 import android.provider.OpenableColumns
 import androidx.compose.material3.SnackbarHost
@@ -77,7 +82,10 @@ import com.example.R
 import com.example.data.settings.ThemeMode
 import com.example.data.settings.TimerPace
 import com.example.data.transfer.ProgressTransfer
+import com.example.progress.PracticeStreak
 import com.example.speech.Speech
+import com.example.ui.components.FOCUS_CHOICES
+import com.example.ui.continentLabel
 import com.example.ui.titleRes
 import com.example.ui.viewmodel.CountryViewModel
 import com.example.ui.components.readingWidth
@@ -105,6 +113,9 @@ fun SettingsScreen(
 ) {
     val appearance by viewModel.appearance.collectAsStateWithLifecycle()
     val pace by viewModel.timerPace.collectAsStateWithLifecycle()
+    val goal by viewModel.dailyGoal.collectAsStateWithLifecycle()
+    val focus by viewModel.focusContinent.collectAsStateWithLifecycle()
+    var showFocusMenu by remember { mutableStateOf(false) }
     var confirmReset by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
     val resources = LocalResources.current
@@ -225,6 +236,76 @@ fun SettingsScreen(
                     .padding(top = 8.dp)
                     .testTag("settings_timer_hint")
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
+            SettingLabel(stringResource(R.string.settings_goal_label))
+            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth().testTag("settings_goal")) {
+                PracticeStreak.GOALS.forEachIndexed { index, option ->
+                    SegmentedButton(
+                        selected = goal == option,
+                        onClick = { viewModel.setDailyGoal(option) },
+                        shape = SegmentedButtonDefaults.itemShape(index = index, count = PracticeStreak.GOALS.size),
+                        modifier = Modifier.testTag("settings_goal_$option")
+                    ) {
+                        Text(pluralStringResource(R.plurals.settings_goal_option, option, option))
+                    }
+                }
+            }
+            Text(
+                text = stringResource(R.string.settings_goal_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .padding(top = 8.dp)
+                    .testTag("settings_goal_hint")
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+            // The focus continent: a row that opens a menu of the continents, All first.
+            Box {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(role = Role.DropdownList, onClick = { showFocusMenu = true })
+                        .padding(vertical = 4.dp)
+                        .testTag("settings_focus"),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(text = stringResource(R.string.settings_focus_label), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                        Text(
+                            text = stringResource(R.string.settings_focus_hint),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = continentLabel(focus),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.testTag("settings_focus_value")
+                    )
+                    Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = null)
+                }
+                DropdownMenu(expanded = showFocusMenu, onDismissRequest = { showFocusMenu = false }) {
+                    FOCUS_CHOICES.forEach { continent ->
+                        val current = focus == continent
+                        DropdownMenuItem(
+                            text = { Text(continentLabel(continent)) },
+                            trailingIcon = { if (current) Icon(imageVector = Icons.Default.Check, contentDescription = null) },
+                            onClick = {
+                                viewModel.setFocusContinent(continent)
+                                showFocusMenu = false
+                            },
+                            modifier = Modifier
+                                .semantics { selected = current }
+                                .testTag("settings_focus_${continent.lowercase()}")
+                        )
+                    }
+                }
+            }
         }
 
         speechState?.let { flow ->

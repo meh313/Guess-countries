@@ -11,6 +11,12 @@ drill them with flashcards, and test yourself with quizzes. Everything runs on t
   *study*: a session of up to 20 cards from the flags due today, the weak spots or this deck, each graded
   Again / Good / Easy after the flip (Again brings the card back a few places later; the last grade can be undone).
   A session of ten or more cards counts as practice for the streak.
+- **Learn 5 new** – from the study chooser (or the Today card): the next five flags you have never seen, one card at
+  a time with the flag, the name, the region, the cue to spot it and, where one exists, the flag it is most often
+  confused with (and how to tell the two apart). The focus continent's flags come first. Seeing a card counts as
+  light evidence, so the next session moves on to five others; *Quiz me* then runs a ten-question flag quiz over the
+  five (each asked twice, wrong answers from the whole world), logged under *Learn*; it does not count against the
+  day's allowance of new countries.
 - **Quiz** – flag → country, country → flag (pick the right flag out of four), country → capital,
   flag → continent (always the whole world), a 10-second-per-question speed round and a 60-second blitz
   (as many flags as you can). Ten questions or fewer, with a streak bonus; the questions favour countries you have
@@ -49,6 +55,13 @@ countries reviewed but not (or no longer) mastered.
 A ten-question quiz is filled with due reviews first (up to seven), then weak countries, then at most three new
 countries, and the rest from whatever is left, so reviews are cleared before new flags pile on; a country asked about
 in the same skill in the last 45 minutes is nearly skipped, unless it is due.
+
+The streak runs on a daily goal of 5, 10 or 20 items (Settings › Quiz; 10 to begin with). An item is a question
+answered or a card graded, so due reviews and new countries both count. A day is practised when its sessions of at
+least five items add up to the goal, or when any single session has ten items or more; a quiz of four questions or a
+blitz with no answer counts for nothing. The Today card on Explore and Progress shows the day's items against the
+goal and offers the one next thing to do: the due reviews, or five new countries. On the first run it asks for a focus
+continent, whose never-seen flags the quizzes then introduce before the rest of the world's.
 
 ## Languages
 

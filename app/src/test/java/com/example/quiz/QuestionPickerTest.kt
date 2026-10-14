@@ -192,6 +192,21 @@ class QuestionPickerTest {
     }
 
     @Test
+    fun select_drawsThePreferredUnseenCountriesBeforeTheRest() {
+        val europe = everyone.filter { it.continent == "Europe" }.mapTo(HashSet()) { it.code }
+        for (seed in 1..20) {
+            val picked = QuestionPicker.select(everyone, emptyMap(), emptySet(), now, Random(seed), 3, 10, preferred = europe)
+            assertEquals(10, picked.size)
+            assertTrue("all from Europe with seed $seed: ${picked.map { it.code }}", picked.all { it.code in europe })
+        }
+        // Once the preferred ones run out, the rest of the world fills the quiz.
+        val twoEuropean = everyone.filter { it.continent == "Europe" }.take(2).mapTo(HashSet()) { it.code }
+        val picked = QuestionPicker.select(everyone, emptyMap(), emptySet(), now, Random(1), 3, 10, preferred = twoEuropean)
+        assertEquals(10, picked.size)
+        assertEquals(twoEuropean, picked.take(2).mapTo(HashSet()) { it.code })
+    }
+
+    @Test
     fun select_honoursTheCount() {
         val standings = standings(dueCount = 15, weakCount = 30)
         assertEquals(List(5) { "due" }, groups(select(standings, allowance = 3, count = 5), standings))

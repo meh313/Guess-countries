@@ -64,6 +64,7 @@ import com.example.progress.PracticeStreak
 import com.example.progress.Skill
 import com.example.quiz.QuizMode
 import com.example.ui.components.StatBadge
+import com.example.ui.components.TodayCard
 import com.example.ui.components.readingWidth
 import com.example.ui.components.getContinentColor
 import com.example.ui.continentLabel
@@ -81,9 +82,12 @@ fun StatsScreen(
     /** Opens Explore with the continent (and the countries still to learn) filtered in. */
     onOpenExplore: (continent: String) -> Unit = {},
     /** Opens the Flashcards tab, where the study session the Due tile starts is shown. */
-    onOpenFlashcards: () -> Unit = {}
+    onOpenFlashcards: () -> Unit = {},
+    /** Opens the Learn screen (five new countries), from the Today card. */
+    onLearn: () -> Unit = {}
 ) {
     val progressMap by viewModel.userProgressMap.collectAsStateWithLifecycle()
+    val todayCardVisible by viewModel.todayCardVisible.collectAsStateWithLifecycle()
     val mastered by viewModel.mastered.collectAsStateWithLifecycle()
     val masteredFlags = mastered[Skill.FLAG].orEmpty()
     val masteredCapitals = mastered[Skill.CAPITAL].orEmpty()
@@ -150,6 +154,10 @@ fun StatsScreen(
                     Icon(imageVector = Icons.Default.Settings, contentDescription = stringResource(R.string.stats_settings))
                 }
             }
+        }
+
+        if (todayCardVisible) {
+            item { TodayCard(viewModel = viewModel, onOpenFlashcards = onOpenFlashcards, onLearn = onLearn) }
         }
 
         item { StreakCard(streak) }

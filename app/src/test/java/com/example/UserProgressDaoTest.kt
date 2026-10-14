@@ -9,6 +9,7 @@ import com.example.data.local.UserProgressEntity
 import com.example.data.model.CountryRepository
 import com.example.progress.Evidence
 import com.example.progress.Grade
+import com.example.progress.PracticeStreak
 import com.example.progress.Skill
 import com.example.progress.SkillState
 import com.example.support.inMemoryDatabase
@@ -251,6 +252,23 @@ class UserProgressDaoTest {
         }
 
         assertEquals(listOf(100L, 200L, 300L), runBlocking { dao.quizTimestamps() }.sorted())
+    }
+
+    @Test
+    fun practiceSessions_carryTheSizeOfEachQuizOrStudySession() {
+        runBlocking {
+            dao.insertQuizScore(QuizScoreEntity(mode = "FLAG_NAME", score = 10, total = 190, continentFilter = "Global", timestamp = 100L, questionCount = 10))
+            dao.insertQuizScore(QuizScoreEntity(mode = "BLITZ", score = 0, total = 0, continentFilter = "Global", timestamp = 200L, correct = 0, questionCount = 0))
+            dao.insertQuizScore(QuizScoreEntity(mode = "FLASHCARDS", score = 0, total = 0, continentFilter = "Due today", timestamp = 300L, correct = 8, questionCount = 12))
+            // A row from before the count was recorded falls back to its best possible score.
+            dao.insertQuizScore(QuizScoreEntity(mode = "CAPITAL", score = 0, total = 190, continentFilter = "Asia", timestamp = 400L))
+        }
+
+        val sessions = runBlocking { dao.practiceSessions() }.map { it.toPracticeSession() }.sortedBy { it.at }
+        assertEquals(
+            listOf(PracticeStreak.Session(100L, 10), PracticeStreak.Session(200L, 0), PracticeStreak.Session(300L, 12), PracticeStreak.Session(400L, 190)),
+            sessions
+        )
     }
 
     @Test

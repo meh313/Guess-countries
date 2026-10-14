@@ -5,6 +5,9 @@ import androidx.activity.compose.setContent
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -169,6 +172,46 @@ class SettingsAndAboutUiTest {
         rule.waitForIdle()
         rule.openTab("quiz")
         rule.onNodeWithText("No time limit (see Settings)").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun theDailyGoal_isASegmentedRowWithAnExplanation_andIsRemembered() {
+        openSettings()
+
+        rule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("settings_goal_hint"))
+        rule.onNodeWithText("Daily goal").assertIsDisplayed()
+        rule.onNodeWithTag("settings_goal_10").assertIsSelected()
+        rule.onNodeWithTag("settings_goal_5").assert(hasText("5 items"))
+        rule.onNodeWithTag("settings_goal_20").assert(hasText("20 items"))
+        rule.onNodeWithTag("settings_goal_hint")
+            .assert(hasText("Due reviews and new countries count towards it; a day with the goal met keeps your streak"))
+
+        rule.onNodeWithTag("settings_goal_20").performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithTag("settings_goal_20").assertIsSelected()
+        rule.onNodeWithTag("settings_goal_10").assertIsNotSelected()
+        assertEquals(20, PrefsUserSettings(ApplicationProvider.getApplicationContext()).dailyGoal)
+        assertEquals(20, viewModel.dailyGoal.value)
+    }
+
+    @Test
+    fun theFocusContinent_isPickedFromAMenu_andIsRemembered() {
+        openSettings()
+
+        rule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("settings_focus"))
+        rule.onNodeWithTag("settings_focus_value", useUnmergedTree = true).assert(hasText("All"))
+        rule.onNodeWithTag("settings_focus").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithTag("settings_focus_all").assertIsSelected()
+
+        rule.onNodeWithTag("settings_focus_europe").performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithTag("settings_focus_value", useUnmergedTree = true).assert(hasText("Europe"))
+        rule.onAllNodesWithTag("settings_focus_europe").assertCountEquals(0)
+        assertEquals("Europe", PrefsUserSettings(ApplicationProvider.getApplicationContext()).focusContinent)
+        assertEquals("Europe", viewModel.focusContinent.value)
     }
 
     @Test

@@ -29,7 +29,9 @@ class StudyStateHolder(
     /** Where a failed write is reported instead of crashing; shared with the other holders. */
     private val writeErrors: WriteErrors = WriteErrors(),
     /** Null when nothing keeps the session across process death (tests). */
-    private val savedState: SavedStateHandle? = null
+    private val savedState: SavedStateHandle? = null,
+    /** How many items make a day count for the streak, read when a session is logged. */
+    private val dailyGoal: () -> Int = { PracticeStreak.DEFAULT_GOAL }
 ) {
     private val _session = MutableStateFlow(restored())
 
@@ -97,7 +99,8 @@ class StudyStateHolder(
         if (settled.gradedCards >= StudySession.MIN_FOR_STREAK) {
             scope.launch(writeErrors.handler) {
                 val earlier = repository.saveStudySession(settled.source, settled.remembered, settled.gradedCards)
-                _outcome.value = PracticeStreak.outcome(earlier, repository.now(), zone())
+                val now = repository.now()
+                _outcome.value = PracticeStreak.outcome(earlier, PracticeStreak.Session(now, settled.gradedCards), dailyGoal(), now, zone())
             }
         }
     }

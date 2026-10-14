@@ -79,6 +79,7 @@ import com.example.ui.components.CountryCard
 import com.example.ui.components.Pip
 import com.example.progress.Skill
 import com.example.ui.components.Standing
+import com.example.ui.components.TodayCard
 import com.example.ui.components.standing
 import com.example.ui.continentLabel
 import com.example.ui.labelRes
@@ -88,9 +89,14 @@ import com.example.ui.viewmodel.CountryViewModel
 @Composable
 fun ExploreScreen(
     viewModel: CountryViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    /** Opens the Flashcards tab, where the study session the Today card starts is shown. */
+    onOpenFlashcards: () -> Unit = {},
+    /** Opens the Learn screen (five new countries), from the Today card. */
+    onLearn: () -> Unit = {}
 ) {
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
+    val todayCardVisible by viewModel.todayCardVisible.collectAsStateWithLifecycle()
     val selectedContinent by viewModel.selectedContinent.collectAsStateWithLifecycle()
     val showOnlyBookmarks by viewModel.showOnlyBookmarks.collectAsStateWithLifecycle()
     val countries by viewModel.filteredCountries.collectAsStateWithLifecycle()
@@ -164,6 +170,13 @@ fun ExploreScreen(
                         )
                     }
                 }
+            }
+        }
+
+        // Today: the goal and the one next thing to do; left out once put away for the day.
+        if (todayCardVisible) {
+            item(key = "today", span = { GridItemSpan(maxLineSpan) }) {
+                TodayCard(viewModel = viewModel, onOpenFlashcards = onOpenFlashcards, onLearn = onLearn)
             }
         }
 

@@ -6,6 +6,7 @@ import com.example.data.settings.InMemoryUserSettings
 import com.example.data.settings.PrefsUserSettings
 import com.example.data.settings.ThemeMode
 import com.example.data.settings.TimerPace
+import com.example.progress.PracticeStreak
 import com.example.quiz.QuizDifficulty
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -134,6 +135,57 @@ class UserSettingsTest {
         // A negative count makes no sense and is held at zero.
         next.newItemsToday = -3
         assertEquals(0, PrefsUserSettings(context).newItemsToday)
+    }
+
+    @Test
+    fun theGoalTheFocusTheTodayCardAndOnboarding_startAtTheirDefaults() {
+        val settings = PrefsUserSettings(context)
+
+        assertEquals(10, settings.dailyGoal)
+        assertEquals("All", settings.focusContinent)
+        assertEquals("", settings.todayCardDismissedDay)
+        assertEquals(false, settings.onboarded)
+        assertEquals(10, InMemoryUserSettings().dailyGoal)
+        assertEquals("All", InMemoryUserSettings().focusContinent)
+        assertEquals("", InMemoryUserSettings().todayCardDismissedDay)
+        assertEquals(false, InMemoryUserSettings().onboarded)
+    }
+
+    @Test
+    fun theGoalTheFocusTheTodayCardAndOnboarding_areKeptForTheNextInstance_underTheirKeys() {
+        PrefsUserSettings(context).apply {
+            dailyGoal = 20
+            focusContinent = "Europe"
+            todayCardDismissedDay = "2026-10-14"
+            onboarded = true
+        }
+
+        val next = PrefsUserSettings(context)
+        assertEquals(20, next.dailyGoal)
+        assertEquals("Europe", next.focusContinent)
+        assertEquals("2026-10-14", next.todayCardDismissedDay)
+        assertEquals(true, next.onboarded)
+        val prefs = context.getSharedPreferences(PrefsUserSettings.FILE, Context.MODE_PRIVATE)
+        assertEquals(20, prefs.getInt("daily_goal", -1))
+        assertEquals("Europe", prefs.getString("focus_continent", null))
+        assertEquals("2026-10-14", prefs.getString("today_card_dismissed_day", null))
+        assertEquals(true, prefs.getBoolean("onboarded", false))
+    }
+
+    @Test
+    fun aGoalThatIsNotOffered_andAStoredBlankFocus_fallBackToTheDefaults() {
+        val settings = PrefsUserSettings(context)
+        settings.dailyGoal = 7
+        assertEquals(10, settings.dailyGoal)
+        for (goal in PracticeStreak.GOALS) {
+            settings.dailyGoal = goal
+            assertEquals(goal, PrefsUserSettings(context).dailyGoal)
+        }
+
+        context.getSharedPreferences(PrefsUserSettings.FILE, Context.MODE_PRIVATE)
+            .edit().putInt("daily_goal", 12).putString("focus_continent", " ").commit()
+        assertEquals(10, PrefsUserSettings(context).dailyGoal)
+        assertEquals("All", PrefsUserSettings(context).focusContinent)
     }
 
     @Test
