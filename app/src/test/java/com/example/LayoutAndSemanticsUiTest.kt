@@ -41,6 +41,7 @@ import com.example.data.model.CountryRepository
 import com.example.quiz.byName
 import com.example.support.setupNode
 import com.example.support.FreshDatabaseRule
+import com.example.support.SettledTodayRule
 import com.example.support.boundsOf
 import com.example.support.contrastRatio
 import com.example.support.crop
@@ -71,7 +72,7 @@ class LayoutAndSemanticsUiTest {
     private val composeRule = createAndroidComposeRule<MainActivity>()
 
     // The app database is a singleton, so reset it before the activity starts to keep tests independent.
-    @get:Rule val chain: RuleChain = RuleChain.outerRule(FreshDatabaseRule()).around(composeRule)
+    @get:Rule val chain: RuleChain = RuleChain.outerRule(FreshDatabaseRule()).around(SettledTodayRule()).around(composeRule)
 
     private val rule get() = composeRule
 

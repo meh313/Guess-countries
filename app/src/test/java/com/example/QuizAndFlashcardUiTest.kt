@@ -51,6 +51,7 @@ import org.robolectric.Shadows.shadowOf
 import org.robolectric.shadows.ShadowTextToSpeech
 import com.example.support.setupNode
 import com.example.support.FreshDatabaseRule
+import com.example.support.SettledTodayRule
 import com.example.support.awaitQuizPlan
 import com.example.support.awaitWeakSpots
 import com.example.support.boundsOf
@@ -82,7 +83,7 @@ class QuizAndFlashcardUiTest {
     private val composeRule = createAndroidComposeRule<MainActivity>()
 
     // The app database is a singleton, so reset it before the activity starts to keep tests independent.
-    @get:Rule val chain: RuleChain = RuleChain.outerRule(FreshDatabaseRule()).around(composeRule)
+    @get:Rule val chain: RuleChain = RuleChain.outerRule(FreshDatabaseRule()).around(SettledTodayRule()).around(composeRule)
 
     private val rule get() = composeRule
 
@@ -1147,7 +1148,7 @@ class QuizAndFlashcardUiTest {
         rule.onNodeWithText("Session complete").assertIsDisplayed()
         rule.onNodeWithText("1 of 1 remembered").assertIsDisplayed()
         rule.onNodeWithText("Again 0 · Good 1 · Easy 0").assertIsDisplayed()
-        rule.onNodeWithText("Grade at least 10 cards for streak credit (you graded 1)").assertIsDisplayed()
+        rule.onNodeWithText("Grade at least 5 cards for it to count towards your goal (you graded 1)").assertIsDisplayed()
 
         rule.onNodeWithTag("flashcard_summary_done_btn").performClick()
         rule.waitForIdle()
@@ -1250,7 +1251,7 @@ class QuizAndFlashcardUiTest {
 
         rule.onNodeWithTag("stats_streak").assertIsDisplayed()
         rule.onNodeWithText("No streak yet").assertIsDisplayed()
-        rule.onNodeWithText("Finish a quiz or a study session today to start one").assertIsDisplayed()
+        rule.onNodeWithText("Meet today's goal to start one").assertIsDisplayed()
     }
 
     @Test
@@ -1301,5 +1302,63 @@ class QuizAndFlashcardUiTest {
         finishAfricaQuiz()
 
         rule.eventually("the streak line") { rule.onNodeWithText("Streak kept: 2 days").assertIsDisplayed() }
+    }
+
+    @Test
+    fun learnFiveNew_stepsThroughFiveCards_andQuizMeAsksTheFiveTwiceEach() {
+        tab("flashcards")
+        rule.onNodeWithTag("flashcard_study_btn").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithTag("study_learn_btn").performClick()
+        rule.waitForIdle()
+
+        val codes = viewModel.learnSession.value!!.cards.map { it.code }
+        assertEquals(5, codes.size)
+        rule.onNodeWithTag("learn_back_btn").assertIsDisplayed()
+        rule.onNodeWithTag("nav_tab_flashcards").assertIsSelected()
+        for (n in 1..5) {
+            val country = allCountries.single { it.code == codes[n - 1] }
+            rule.onNodeWithTag("learn_progress").assert(hasText("Card $n of 5"))
+            rule.onNodeWithTag("learn_name", useUnmergedTree = true).assert(hasText(country.name))
+            rule.onNodeWithTag("learn_card").assertIsDisplayed()
+            val lookAlike = viewModel.learnSession.value!!.cards[n - 1].lookAlike
+            if (lookAlike != null) {
+                rule.onNodeWithTag("learn_look_alike").performScrollTo().assertIsDisplayed()
+                rule.onNodeWithText(allCountries.single { it.code == lookAlike }.name).assertIsDisplayed()
+                rule.onNodeWithText("Not to be confused with").assertIsDisplayed()
+            } else {
+                rule.onAllNodesWithTag("learn_look_alike").assertCountEquals(0)
+            }
+            if (n == 1) rule.onNodeWithTag("learn_prev_btn").assertIsNotEnabled() else rule.onNodeWithTag("learn_prev_btn").assertIsEnabled()
+            if (n < 5) {
+                rule.onNodeWithTag("learn_next_btn").assert(hasText("Next")).performClick()
+                rule.waitForIdle()
+            }
+        }
+        // Back a card and on again: the count follows.
+        rule.onNodeWithTag("learn_prev_btn").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithTag("learn_progress").assert(hasText("Card 4 of 5"))
+        rule.onNodeWithTag("learn_next_btn").performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithTag("learn_next_btn").assert(hasText("Quiz me")).performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithText("Question 1 of 10").assertIsDisplayed()
+        rule.onNodeWithTag("nav_tab_quiz").assertIsSelected()
+        val quiz = viewModel.quizSession.value!!
+        assertEquals(QuizMode.FLAG_NAME, quiz.mode)
+        assertEquals(QuizEngine.LEARN, quiz.scope)
+        assertEquals(codes.associateWith { 2 }, quiz.questions.groupingBy { it.targetCountry.code }.eachCount())
+        // Each card was light evidence once; the quiz has not been answered yet.
+        rule.eventually("the five cards seen once") {
+            val flags = viewModel.skills.value[Skill.FLAG].orEmpty()
+            assertEquals(List(5) { 1 }, codes.map { flags[it]?.reviews })
+        }
+        // Flashcards comes back plain: Learn was left behind when the quiz began.
+        tab("flashcards")
+        rule.onNodeWithTag("flashcard_study_btn").assertIsDisplayed()
+        rule.onAllNodesWithTag("learn_card").assertCountEquals(0)
     }
 }

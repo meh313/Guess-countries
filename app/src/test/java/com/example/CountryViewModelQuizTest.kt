@@ -836,6 +836,35 @@ class CountryViewModelQuizTest {
     }
 
     @Test
+    fun startQuiz_global_introducesTheFocusContinentsCountriesFirst() {
+        // A fresh database: every country is new, so a Global quiz is ten never-seen countries, all from the focus.
+        val settings = InMemoryUserSettings(focusContinent = "Europe")
+        val vm = newViewModel(settings = settings, random = Random(3))
+
+        vm.startQuiz(QuizMode.FLAG_NAME, "Global")
+
+        val targets = vm.quizSession.value!!.questions.map { it.targetCountry }
+        assertEquals(10, targets.size)
+        assertEquals("all from Europe: ${targets.map { it.code }}", emptyList<String>(), targets.filter { it.continent != "Europe" }.map { it.code })
+
+        // Without a focus the same seed draws from the whole world.
+        val plain = newViewModel(settings = InMemoryUserSettings(), random = Random(3))
+        plain.startQuiz(QuizMode.FLAG_NAME, "Global")
+        val plainTargets = plain.quizSession.value!!.questions.map { it.targetCountry }
+        assertTrue("some other continent: ${plainTargets.map { it.code }}", plainTargets.any { it.continent != "Europe" })
+    }
+
+    @Test
+    fun startQuiz_continentScope_ignoresAFocusOnAnotherContinent() {
+        val vm = newViewModel(settings = InMemoryUserSettings(focusContinent = "Europe"))
+
+        vm.startQuiz(QuizMode.FLAG_NAME, "Africa")
+
+        assertEquals(10, vm.quizSession.value!!.questions.size)
+        assertTrue(vm.quizSession.value!!.questions.all { it.targetCountry.continent == "Africa" })
+    }
+
+    @Test
     fun theWeakSpotsAndDueScopes_doNotCountAgainstTheNewAllowance() {
         reviewWrong(twelveWeak)
         val settings = InMemoryUserSettings()

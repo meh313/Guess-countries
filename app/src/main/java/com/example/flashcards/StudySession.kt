@@ -100,8 +100,8 @@ data class StudySession(
         /** How many cards a session takes from a longer list. */
         const val DEFAULT_SIZE = 20
 
-        /** A session with at least this many cards graded counts as practice for the streak and the reminder. */
-        const val MIN_FOR_STREAK = 10
+        /** A session with at least this many cards graded is logged, so it counts towards the daily goal (`PracticeStreak`). */
+        const val MIN_FOR_STREAK = 5
 
         /** The `mode` of a study session's row in the quiz log; its title is a string resource (`ui/Labels.kt`). */
         const val MODE = "FLASHCARDS"

@@ -41,6 +41,7 @@ import com.example.data.local.QuizScoreEntity
 import com.example.data.local.SkillProgressEntity
 import com.example.data.model.CountryRepository
 import com.example.data.settings.InMemoryUserSettings
+import com.example.data.settings.PrefsUserSettings
 import com.example.data.settings.ThemeMode
 import com.example.flashcards.StudySession
 import com.example.progress.Evidence
@@ -50,6 +51,7 @@ import com.example.quiz.allCountries
 import com.example.speech.Speech
 import com.example.support.FakeSpeech
 import com.example.support.FreshDatabaseRule
+import com.example.support.SettledTodayRule
 import com.example.support.closeWhenIdle
 import com.example.support.eventually
 import com.example.support.inMemoryDatabase
@@ -77,7 +79,7 @@ class ExploreProgressUiTest {
 
     private val composeRule = createAndroidComposeRule<MainActivity>()
 
-    @get:Rule val chain: RuleChain = RuleChain.outerRule(FreshDatabaseRule()).around(composeRule)
+    @get:Rule val chain: RuleChain = RuleChain.outerRule(FreshDatabaseRule()).around(SettledTodayRule()).around(composeRule)
 
     private val rule get() = composeRule
 
@@ -332,6 +334,8 @@ class ExploreProgressUiTest {
     fun theDueTile_readsAsOneItem_andStartsAStudySessionOfTheCardsDue() {
         due("FR", "DE")
         rule.openTab("stats")
+        // The Today card sits above the tiles, which pushes this one below the fold of the small window.
+        rule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("stats_due"))
         rule.eventually("two due") { rule.onNodeWithTag("stats_due").assert(describedAs("Due today: 2")) }
         rule.onNodeWithTag("stats_due").assert(hasClickAction())
 
@@ -347,9 +351,121 @@ class ExploreProgressUiTest {
     @Test
     fun theDueTileWithNothingDue_isNotAButton() {
         rule.openTab("stats")
+        rule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("stats_quizzes"))
         rule.onNodeWithTag("stats_due").assert(describedAs("Due today: 0")).assert(!hasClickAction())
         // The other tiles read the same way: one item each.
         rule.onNodeWithTag("stats_quizzes").assert(describedAs("Quizzes finished: 0"))
+    }
+
+    // --- The Today card ------------------------------------------------------------------------------------------------
+
+    private val prefs get() = PrefsUserSettings(ApplicationProvider.getApplicationContext())
+
+    @Test
+    fun theFirstRun_asksForAFocusContinent_andPickingOneShowsTheNormalCard() {
+        rule.runOnUiThread {
+            viewModel.setOnboarded(false)
+            viewModel.setTodayCardDismissedDay("")
+        }
+        rule.waitForIdle()
+        rule.onNodeWithTag("today_card").assertIsDisplayed()
+        rule.onNodeWithText("Start here").assertIsDisplayed()
+        rule.onNodeWithText("Pick a continent to begin with; quizzes introduce its flags first.").assertIsDisplayed()
+        for (name in listOf("all", "africa", "americas", "asia", "europe", "oceania")) rule.onNodeWithTag("today_focus_$name").assertExists()
+        rule.onAllNodesWithTag("today_dismiss_btn").assertCountEquals(0)
+
+        rule.onNodeWithTag("today_focus_europe").performClick()
+        rule.waitForIdle()
+
+        assertEquals("Europe", prefs.focusContinent)
+        assertEquals(true, prefs.onboarded)
+        assertEquals("Europe", viewModel.focusContinent.value)
+        rule.onNodeWithText("Today").assertIsDisplayed()
+        rule.onNodeWithTag("today_card").assert(hasText("0 due · 0 new today · goal 10"))
+        rule.onNodeWithTag("today_card").assert(describedAs("Today: 0 of 10 items done, 0 due, 0 new today."))
+        rule.onNodeWithTag("today_action_btn").assert(hasText("Learn 5 new"))
+        rule.onNodeWithTag("today_progress", useUnmergedTree = true).assertExists()
+        rule.onAllNodesWithTag("today_focus_europe").assertCountEquals(0)
+    }
+
+    @Test
+    fun theNormalCard_namesTheDueCountAndTheGoal_andItsButtonStartsADueStudySession() {
+        rule.runOnUiThread { viewModel.setTodayCardDismissedDay("") }
+        rule.waitForIdle()
+        due("FR", "DE")
+        rule.runOnUiThread { viewModel.chooseFocus("All") }
+        rule.eventually("the due count") { rule.onNodeWithTag("today_card").assert(hasText("2 due · 0 new today · goal 10")) }
+        rule.onNodeWithTag("today_card").assert(describedAs("Today: 0 of 10 items done, 2 due, 0 new today."))
+        rule.onNodeWithTag("today_action_btn").assert(hasText("Review 2 due"))
+
+        rule.onNodeWithTag("today_action_btn").performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithTag("nav_tab_flashcards").assertIsSelected()
+        rule.onNodeWithText("Study · Due today").assertIsDisplayed()
+        assertEquals(StudySession.DUE, viewModel.studySession.value?.source)
+        assertEquals(setOf("FR", "DE"), viewModel.studySession.value?.cards?.toSet())
+    }
+
+    @Test
+    fun theCard_followsTheGoalAndTodaysItems_andSaysWhenTheGoalIsMet() {
+        rule.runOnUiThread {
+            viewModel.setTodayCardDismissedDay("")
+            viewModel.chooseFocus("All")
+            viewModel.setDailyGoal(5)
+        }
+        runBlocking {
+            dao.insertQuizScore(QuizScoreEntity(mode = "FLAG_NAME", score = 50, total = 190, continentFilter = "Global", timestamp = System.currentTimeMillis(), correct = 5, questionCount = 5))
+        }
+
+        rule.eventually("the goal met") { rule.onNodeWithText("Goal met").assertIsDisplayed() }
+        rule.onNodeWithTag("today_card").assert(hasText("0 due · 0 new today · goal 5"))
+        rule.onNodeWithTag("today_card").assert(describedAs("Today: 5 of 5 items done, 0 due, 0 new today."))
+        rule.onNodeWithTag("today_action_btn").assert(hasText("Learn 5 more"))
+    }
+
+    @Test
+    fun dismissingTheCard_hidesItForTheDay() {
+        rule.runOnUiThread { viewModel.setTodayCardDismissedDay("") }
+        rule.waitForIdle()
+        rule.runOnUiThread { viewModel.chooseFocus("All") }
+        rule.waitForIdle()
+        rule.onNodeWithText("Today").assertIsDisplayed()
+
+        rule.onNodeWithTag("today_dismiss_btn").performClick()
+        rule.waitForIdle()
+
+        rule.onAllNodesWithTag("today_card").assertCountEquals(0)
+        assertEquals(viewModel.todayStamp(), prefs.todayCardDismissedDay)
+        assertTrue(prefs.todayCardDismissedDay.matches(Regex("\\d{4}-\\d{2}-\\d{2}")))
+        // Progress leaves it out too.
+        rule.openTab("stats")
+        rule.onAllNodesWithTag("today_card").assertCountEquals(0)
+        rule.onNodeWithTag("stats_streak").assertIsDisplayed()
+    }
+
+    @Test
+    fun theProgressCopy_mirrorsExplore() {
+        rule.runOnUiThread {
+            viewModel.setOnboarded(false)
+            viewModel.setTodayCardDismissedDay("")
+        }
+        rule.waitForIdle()
+        due("FR")
+        rule.openTab("stats")
+        rule.onNodeWithText("Start here").assertIsDisplayed()
+
+        rule.onNodeWithTag("today_focus_asia").performClick()
+        rule.waitForIdle()
+
+        assertEquals("Asia", prefs.focusContinent)
+        rule.eventually("one due on Progress") { rule.onNodeWithTag("today_card").assert(hasText("1 due · 0 new today · goal 10")) }
+        rule.onNodeWithTag("today_action_btn").assert(hasText("Review 1 due"))
+        rule.onNodeWithTag("stats_streak").assertIsDisplayed()
+
+        rule.openTab("explore")
+        rule.eventually("the same card on Explore") { rule.onNodeWithTag("today_card").assert(hasText("1 due · 0 new today · goal 10")) }
+        rule.onNodeWithTag("today_action_btn").assert(hasText("Review 1 due"))
     }
 
     // --- Export and import through the Settings screen, with a stand-in for the system file picker --------------------

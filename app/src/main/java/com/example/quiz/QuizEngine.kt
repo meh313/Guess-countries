@@ -86,8 +86,14 @@ object QuizEngine {
     /** A scope that is not a place: the countries the quiz just finished got wrong. */
     const val MISTAKES = "Mistakes"
 
-    /** Scopes whose targets are hand-picked and whose wrong answers come from the whole world; they run over one country if need be. */
-    val HAND_PICKED_SCOPES = setOf(DUE, MISTAKES)
+    /** A scope that is not a place: the five flags a Learn session just introduced, each asked twice. */
+    const val LEARN = "Learn"
+
+    /**
+     * Scopes whose targets are hand-picked and whose wrong answers come from the whole world; they run over one
+     * country if need be, and never count against the day's allowance of new countries.
+     */
+    val HAND_PICKED_SCOPES = setOf(DUE, MISTAKES, LEARN)
 
     private const val DISTRACTORS = 3
     private val ANSWER_CONTINENTS = listOf("Africa", "Americas", "Asia", "Europe", "Oceania")

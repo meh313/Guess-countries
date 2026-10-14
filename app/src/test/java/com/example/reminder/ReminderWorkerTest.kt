@@ -129,9 +129,10 @@ class ReminderWorkerTest {
         }
     }
 
-    private fun finishQuizAt(timestamp: Long) = runBlocking {
+    /** A finished quiz of [questions] questions at [timestamp]; a row from before the count was recorded when null. */
+    private fun finishQuizAt(timestamp: Long, questions: Int? = null) = runBlocking {
         AppDatabase.getDatabase(context).userProgressDao().insertQuizScore(
-            QuizScoreEntity(mode = "FLAG_NAME", score = 10, total = 190, continentFilter = "Global", timestamp = timestamp)
+            QuizScoreEntity(mode = "FLAG_NAME", score = 10, total = 190, continentFilter = "Global", timestamp = timestamp, questionCount = questions)
         )
     }
 
@@ -275,6 +276,28 @@ class ReminderWorkerTest {
 
         assertEquals(0, notifications().size)
         assertEquals(at(2026, 10, 6, 19), nextAlarm().triggerAtMs)
+    }
+
+    @Test
+    fun aQuizTooShortForTheGoal_doesNotKeepTheReminderQuiet() {
+        finishQuizAt(at(2026, 10, 5, 10), questions = 4)
+        finishQuizAt(at(2026, 10, 5, 11), questions = 5)
+        val alarm = plan()
+
+        fire(alarm, now = at(2026, 10, 5, 19))
+
+        assertEquals(1, notifications().size)
+    }
+
+    @Test
+    fun theGoalFromTheSettings_decidesWhetherTodayCounts() {
+        PrefsUserSettings(context).dailyGoal = 5
+        finishQuizAt(at(2026, 10, 5, 11), questions = 5)
+        val alarm = plan()
+
+        fire(alarm, now = at(2026, 10, 5, 19))
+
+        assertEquals(0, notifications().size)
     }
 
     @Test

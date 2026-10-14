@@ -168,13 +168,14 @@ fun continentLabelRes(name: String): Int? = when (name.lowercase()) {
     else -> null
 }
 
-/** The resource for a quiz scope or study source key (a continent, Global, Weak spots, Due today, Mistakes, This deck). */
+/** The resource for a quiz scope or study source key (a continent, Global, Weak spots, Due today, Mistakes, Learn, This deck). */
 @StringRes
 fun scopeLabelRes(scope: String): Int? = when (scope) {
     QuizEngine.GLOBAL -> R.string.scope_global
     QuizEngine.WEAK_SPOTS -> R.string.scope_weak_spots
     QuizEngine.DUE -> R.string.scope_due_today
     QuizEngine.MISTAKES -> R.string.scope_mistakes
+    QuizEngine.LEARN -> R.string.scope_learn
     StudySession.DECK -> R.string.study_source_deck
     else -> continentLabelRes(scope)
 }

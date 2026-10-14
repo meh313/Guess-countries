@@ -56,6 +56,7 @@ import com.example.ui.components.Standing
 import com.example.ui.screens.ExploreScreen
 import com.example.ui.screens.SettingsScreen
 import com.example.ui.screens.FlashcardScreen
+import com.example.ui.screens.LearnScreen
 import com.example.ui.screens.QuizScreen
 import com.example.ui.screens.StatsScreen
 import com.example.ui.theme.WorldFlagsTheme
@@ -71,6 +72,9 @@ sealed class Screen(val route: String, @StringRes val titleRes: Int, val icon: I
         /** Reached from Progress, not from the bar; Back returns there. */
         const val SETTINGS = "settings"
         const val ABOUT = "about"
+
+        /** "Learn 5 new", opened over whichever tab asked for it (the Flashcards study chooser, the Today card); Back returns there. */
+        const val LEARN = "learn"
     }
 }
 
@@ -143,7 +147,9 @@ fun MainAppScreen(
     }
 
     fun isSelected(screen: Screen) = currentRoute == screen.route ||
-        (screen == Screen.Stats && (currentRoute == Screen.SETTINGS || currentRoute == Screen.ABOUT))
+        (screen == Screen.Stats && (currentRoute == Screen.SETTINGS || currentRoute == Screen.ABOUT)) ||
+        // Learn sits over whichever tab opened it: that tab stays selected.
+        (currentRoute == Screen.LEARN && navController.previousBackStackEntry?.destination?.route == screen.route)
     fun open(screen: Screen) {
         when {
             currentRoute == screen.route -> Unit
@@ -155,6 +161,10 @@ fun MainAppScreen(
                 restoreState = true
             }
         }
+    }
+    /** Opens "Learn 5 new" over the current tab, like Settings over Progress; Back returns to the tab. */
+    fun openLearn() {
+        if (currentRoute != Screen.LEARN) navController.navigate(Screen.LEARN) { launchSingleTop = true }
     }
     // A bar along the bottom on phones; on a window 600dp or wider (tablets, landscape phones with room) a rail
     // along the start edge, which leaves the height to the content.
@@ -215,10 +225,10 @@ fun MainAppScreen(
                 startDestination = Screen.Explore.route
             ) {
                 composable(Screen.Explore.route) {
-                    ExploreScreen(viewModel = viewModel)
+                    ExploreScreen(viewModel = viewModel, onOpenFlashcards = { open(Screen.Flashcards) }, onLearn = { openLearn() })
                 }
                 composable(Screen.Flashcards.route) {
-                    FlashcardScreen(viewModel = viewModel)
+                    FlashcardScreen(viewModel = viewModel, onLearn = { openLearn() })
                 }
                 composable(Screen.Quiz.route) {
                     QuizScreen(viewModel = viewModel)
@@ -231,7 +241,8 @@ fun MainAppScreen(
                             viewModel.showInExplore(continent, Standing.STILL_TO_LEARN)
                             open(Screen.Explore)
                         },
-                        onOpenFlashcards = { open(Screen.Flashcards) }
+                        onOpenFlashcards = { open(Screen.Flashcards) },
+                        onLearn = { openLearn() }
                     )
                 }
                 composable(Screen.SETTINGS) {
@@ -245,6 +256,17 @@ fun MainAppScreen(
                 }
                 composable(Screen.ABOUT) {
                     AboutScreen(onBack = { navController.popBackStack() })
+                }
+                composable(Screen.LEARN) {
+                    LearnScreen(
+                        viewModel = viewModel,
+                        onBack = { navController.popBackStack() },
+                        onQuiz = {
+                            // The cards are done: leave Learn, so the tab under it comes back plain, and play the quiz.
+                            navController.popBackStack()
+                            open(Screen.Quiz)
+                        }
+                    )
                 }
             }
             // After the NavHost, whose own effects give the controller its graph: effects run in composition order.

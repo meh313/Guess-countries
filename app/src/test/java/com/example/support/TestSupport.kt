@@ -9,6 +9,8 @@ import androidx.room.withTransaction
 import androidx.test.core.app.ApplicationProvider
 import androidx.work.testing.WorkManagerTestInitHelper
 import com.example.data.local.AppDatabase
+import com.example.data.settings.PrefsUserSettings
+import com.example.ui.viewmodel.QuizStateHolder
 import com.example.speech.Speech
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -54,6 +56,22 @@ fun releaseViewModels(vararg viewModels: ViewModel) {
  * Gives tests that launch the real activity a clean database. The app's database is a process-wide
  * singleton, so without this rows written by one test leak into the next.
  */
+/**
+ * Starts the app as a player who has made the first-run choice and hidden today's Today card, so the Explore and
+ * Progress layouts are the settled ones the layout tests were written against. A test about the card itself
+ * puts it back with `viewModel.setOnboarded(false)` / `viewModel.setTodayCardDismissedDay("")`.
+ */
+class SettledTodayRule : TestWatcher() {
+    override fun starting(description: Description) {
+        ApplicationProvider.getApplicationContext<Context>()
+            .getSharedPreferences(PrefsUserSettings.FILE, Context.MODE_PRIVATE)
+            .edit()
+            .putBoolean("onboarded", true)
+            .putString("today_card_dismissed_day", QuizStateHolder.dayStamp(System.currentTimeMillis(), java.util.TimeZone.getDefault()))
+            .commit()
+    }
+}
+
 class FreshDatabaseRule : TestWatcher() {
     override fun starting(description: Description) {
         AppDatabase.closeAndReset()

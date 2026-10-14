@@ -15,6 +15,33 @@
     <string name="explore_title">World Explorer</string>
     <string name="explore_subtitle">Discover countries, flags &amp; continents across the globe</string>
 
+    <!-- The Today card (also at the top of Progress): today's items against the daily goal and the one next thing to do -->
+    <string name="today_title">Today</string>
+    <string name="today_goal_met">Goal met</string>
+    <!-- "3 / 10": items done today of the daily goal -->
+    <string name="today_progress">%1$d / %2$d</string>
+    <!-- "2 due · 4 new today · goal 10" -->
+    <string name="today_line">%1$s · %2$s · %3$s</string>
+    <plurals name="today_due">
+        <item quantity="one">%d due</item>
+        <item quantity="other">%d due</item>
+    </plurals>
+    <plurals name="today_new">
+        <item quantity="one">%d new today</item>
+        <item quantity="other">%d new today</item>
+    </plurals>
+    <string name="today_goal">goal %1$d</string>
+    <!-- The card as one sentence for a screen reader: "Today: 3 of 10 items done, 2 due, 4 new today." -->
+    <!-- "items" and "due" are not nouns the number inflects here: "1 of 10 items done", "Review 1 due". -->
+    <string name="today_description" tools:ignore="PluralsCandidate">Today: %1$d of %2$d items done, %3$s, %4$s.</string>
+    <string name="today_review_due" tools:ignore="PluralsCandidate">Review %1$d due</string>
+    <string name="today_learn_new">Learn 5 new</string>
+    <string name="today_learn_more">Learn 5 more</string>
+    <string name="today_dismiss">Hide for today</string>
+    <!-- The first run: the card asks for a focus continent before anything else -->
+    <string name="today_start_title">Start here</string>
+    <string name="today_start_text">Pick a continent to begin with; quizzes introduce its flags first.</string>
+
     <!-- Explore: search, the Saved chip and the sort button -->
     <string name="explore_search_hint">Search country, capital, or official name…</string>
     <string name="explore_clear_search">Clear search</string>

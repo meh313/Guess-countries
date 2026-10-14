@@ -79,6 +79,9 @@ object QuestionPicker {
      * at most [newAllowance] and at most [NEW_PER_QUIZ]; then the reviewed ones left (mastered, more weak, more due) by
      * weight; and only when nothing else is left, more unseen ones. The caller shuffles the final question order, so
      * due reviews are not always the opening questions.
+     *
+     * [preferred] holds the codes of the countries to introduce first (the focus continent's): among the unseen, those
+     * are drawn before the rest, each part in its own weighted draw.
      */
     fun select(
         pool: List<Country>,
@@ -87,7 +90,8 @@ object QuestionPicker {
         now: Long,
         random: Random,
         newAllowance: Int,
-        count: Int = QuizEngine.MAX_QUESTIONS
+        count: Int = QuizEngine.MAX_QUESTIONS,
+        preferred: Set<String> = emptySet()
     ): List<Country> {
         val due = pool.filter { SkillMastery.isDue(skill[it.code], now) }
         val weak = pool.filter { SkillMastery.isWeak(skill[it.code], now) && !SkillMastery.isDue(skill[it.code], now) }
@@ -95,14 +99,21 @@ object QuestionPicker {
         val picked = ArrayList<Country>(count)
         fun room() = count - picked.size
 
+        /** A draw of [limit] unseen countries from [from], the preferred ones first. */
+        fun drawUnseen(from: List<Country>, limit: Int): List<Country> {
+            if (preferred.isEmpty()) return draw(from, skill, recent, now, random, limit)
+            val first = draw(from.filter { it.code in preferred }, skill, recent, now, random, limit)
+            return first + draw(from.filter { it.code !in preferred }, skill, recent, now, random, limit - first.size)
+        }
+
         picked += draw(due, skill, recent, now, random, minOf(DUE_SHARE, room()))
         picked += draw(weak, skill, recent, now, random, room())
-        picked += draw(unseen, skill, recent, now, random, minOf(newAllowance.coerceIn(0, NEW_PER_QUIZ), room()))
+        picked += drawUnseen(unseen, minOf(newAllowance.coerceIn(0, NEW_PER_QUIZ), room()))
 
         val taken = picked.mapTo(HashSet()) { it.code }
         val reviewedLeft = pool.filter { it.code !in taken && skill[it.code]?.isNew == false }
         picked += draw(reviewedLeft, skill, recent, now, random, room())
-        picked += draw(unseen.filter { it.code !in taken }, skill, recent, now, random, room())
+        picked += drawUnseen(unseen.filter { it.code !in taken }, room())
         return picked
     }
 

@@ -21,6 +21,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.hasTestTag
 import com.example.support.FreshDatabaseRule
+import com.example.support.SettledTodayRule
 import com.example.support.awaitDelivered
 import com.example.support.awaitWeakSpotsWhere
 import com.example.support.drawWindow
@@ -54,7 +55,7 @@ class ScreenshotsTest {
     private val composeRule = createAndroidComposeRule<MainActivity>()
 
     @get:Rule val chain: RuleChain =
-        RuleChain.outerRule(FreshDatabaseRule()).around(TestWorkManagerRule()).around(composeRule)
+        RuleChain.outerRule(FreshDatabaseRule()).around(SettledTodayRule()).around(TestWorkManagerRule()).around(composeRule)
 
     private val rule get() = composeRule
 
@@ -77,11 +78,21 @@ class ScreenshotsTest {
         rule.onNodeWithTag("flashcard_flip_card").performClick()
         rule.waitForIdle()
         save("flashcards_back")
-        // Nothing practiced yet: the study chooser offers this deck only.
+        // Nothing practiced yet: the study chooser offers this deck and Learn only.
         rule.onNodeWithTag("flashcard_study_btn").performClick()
         rule.waitForIdle()
         saveBitmap("flashcards_study_chooser", drawLatestDialog())
         rule.onNodeWithTag("study_cancel_btn").performClick()
+        rule.waitForIdle()
+
+        // Learn mode: the first of five new flags, with the flag it is confused with. (That first card now counts as seen.)
+        rule.onNodeWithTag("flashcard_study_btn").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithTag("study_learn_btn").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithTag("learn_card").assertIsDisplayed()
+        save("learn_card")
+        rule.onNodeWithTag("learn_back_btn").performClick()
         rule.waitForIdle()
 
         rule.openTab("quiz")
@@ -311,6 +322,26 @@ class ScreenshotsTest {
         save("quiz_play_landscape")
         viewModel.endQuiz()
         rule.waitForIdle()
+    }
+
+    /** The Today card: the first-run choice of a continent, then the normal card with a due review to do. */
+    @Test
+    @Config(qualifiers = "w360dp-h800dp-xxhdpi")
+    fun theTodayCard() {
+        rule.waitForIdle()
+        val viewModel = ViewModelProvider(rule.activity)[CountryViewModel::class.java]
+        rule.runOnUiThread {
+            viewModel.setOnboarded(false)
+            viewModel.setTodayCardDismissedDay("")
+        }
+        rule.waitForIdle()
+        save("explore_first_run")
+
+        rule.onNodeWithTag("today_focus_europe").performClick()
+        rule.waitForIdle()
+        rule.openTab("stats")
+        rule.waitForIdle()
+        save("stats_today")
     }
 
     /** Fonts at twice their size: nothing clipped, buttons and the banner grow. */

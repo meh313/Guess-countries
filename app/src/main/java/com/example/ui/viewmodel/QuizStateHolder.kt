@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.lifecycle.SavedStateHandle
 import com.example.data.model.Country
 import com.example.data.model.CountryRepository
+import com.example.data.settings.ALL_CONTINENTS
 import com.example.data.settings.UserSettings
 import com.example.progress.Evidence
 import com.example.progress.PracticeStreak
@@ -33,7 +34,7 @@ import kotlinx.coroutines.launch
 class QuizStateHolder(
     private val repository: CountryRepository,
     private val progress: ProgressStateHolder,
-    /** Keeps the day's count of new countries, so the quizzes introduce at most [NEW_PER_DAY] of them a day. */
+    /** Keeps the day's count of new countries (at most [NEW_PER_DAY] a day), the focus continent and the daily goal. */
     private val settings: UserSettings,
     private val scope: CoroutineScope,
     /** Monotonic milliseconds, used to time questions. */
@@ -53,6 +54,14 @@ class QuizStateHolder(
 
     /** What the quiz that just finished did to the streak, for its score screen; null until it is known. */
     val finishOutcome: StateFlow<PracticeStreak.Outcome?> = _finishOutcome
+
+    private val _newItemsToday = MutableStateFlow(settings.newItemsToday)
+
+    /**
+     * How many never-seen countries the quizzes have introduced on [UserSettings.newItemsDay], as of the last quiz
+     * started; the Today card shows it. Compare the day with the current one before reading it as today's.
+     */
+    val newItemsToday: StateFlow<Int> = _newItemsToday
 
     init {
         // Written when the activity saves its state, not on every answer: the elapsed times are read then.
@@ -106,7 +115,10 @@ class QuizStateHolder(
                     QuizEngine.generate(pool, mode, random, difficulty, order = order)
                 } else {
                     introduces = true
-                    val targets = QuestionPicker.select(pool, states, recent, now, random, newAllowance(now))
+                    // The focus continent's never-seen flags come before the rest of the world's; see UserSettings.focusContinent.
+                    val focus = settings.focusContinent
+                    val preferred = if (focus == ALL_CONTINENTS) emptySet() else pool.filter { it.continent == focus }.mapTo(HashSet()) { it.code }
+                    val targets = QuestionPicker.select(pool, states, recent, now, random, newAllowance(now), preferred = preferred)
                     QuizEngine.generate(targets, mode, random, difficulty, answerPool = pool, order = { it.shuffled(random) })
                 }
             }
@@ -115,6 +127,7 @@ class QuizStateHolder(
         if (introduces) {
             settings.newItemsToday += questions.count { states[it.targetCountry.code].let { state -> state == null || state.isNew } }
         }
+        _newItemsToday.value = settings.newItemsToday
         _finishOutcome.value = null
         _session.value = QuizSession(
             mode = mode,
@@ -258,6 +271,38 @@ class QuizStateHolder(
     }
 
     /**
+     * A quiz over [codes] in [mode], each asked [repeats] times (at most [QuizEngine.MAX_QUESTIONS] questions in all),
+     * with the wrong answers from the whole world, under the [QuizEngine.LEARN] scope: what a Learn session runs once
+     * its cards are read. Each pass is a shuffle of the codes, so no flag comes up twice before every other has, and
+     * the same flag never opens a pass that the one before closed. The answers are full evidence (the cards were
+     * only light); the scope is hand-picked, so nothing here counts against the day's allowance of new countries.
+     * Nothing happens with no known codes or no repeats.
+     */
+    fun startOver(codes: List<String>, mode: QuizMode, repeats: Int) {
+        val byCode = repository.allCountries.associateBy { it.code }
+        val targets = codes.distinct().mapNotNull { byCode[it] }.filter { it.isSovereign }
+        if (targets.isEmpty() || repeats <= 0) return
+        val world = QuizEngine.poolFor(QuizEngine.GLOBAL, repository.allCountries)
+        val difficulty = settings.quizDifficulty
+        val questions = ArrayList<QuizQuestion>(targets.size * repeats)
+        repeat(repeats) {
+            val round = targets.shuffled(random).toMutableList()
+            if (round.size > 1 && questions.isNotEmpty() && round[0] == questions.last().targetCountry) java.util.Collections.swap(round, 0, 1)
+            questions += QuizEngine.generate(round, mode, random, difficulty, world, order = { it })
+        }
+        if (questions.isEmpty()) return
+        _finishOutcome.value = null
+        _session.value = QuizSession(
+            mode = mode,
+            scope = QuizEngine.LEARN,
+            questions = questions.take(QuizEngine.MAX_QUESTIONS),
+            difficulty = difficulty,
+            questionStartedAt = clock(),
+            startedAt = clock()
+        )
+    }
+
+    /**
      * A quiz answer: the evidence the mode gives (full for a flag or a capital among four, timed for the modes on a
      * clock, light for a continent pick), except a question asked again, whose answer was just shown and is light.
      */
@@ -269,10 +314,12 @@ class QuizStateHolder(
     }
 
     private fun onFinished(session: QuizSession) {
-        // The save hands back the finish times before this one, so "already counted today" means an earlier quiz.
+        // The save hands back the sessions before this one, so "already counted today" means earlier sessions.
         scope.launch(progress.writeErrors.handler) {
             val earlier = repository.saveQuiz(session)
-            _finishOutcome.value = PracticeStreak.outcome(earlier, repository.now(), zone())
+            val now = repository.now()
+            val finished = PracticeStreak.Session(now, session.answers.size)
+            _finishOutcome.value = PracticeStreak.outcome(earlier, finished, settings.dailyGoal, now, zone())
         }
     }
 

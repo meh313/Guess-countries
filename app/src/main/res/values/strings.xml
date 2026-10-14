@@ -31,6 +31,8 @@
     <string name="flag_of">Flag of %1$s</string>
     <string name="bookmark_country">Bookmark %1$s</string>
     <string name="streak_started">Streak started: day 1</string>
+    <!-- The finished session was too small for the daily goal (see Settings); the day counts once the goal is met. -->
+    <string name="streak_goal_short">Not enough for today\'s goal yet</string>
     <plurals name="streak_kept">
         <item quantity="one">Streak kept: %d day</item>
         <item quantity="other">Streak kept: %d days</item>

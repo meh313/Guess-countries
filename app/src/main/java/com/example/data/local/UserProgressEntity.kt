@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.example.progress.PracticeStreak
 import com.example.progress.Skill
 import com.example.progress.SkillState
 
@@ -62,7 +63,21 @@ data class QuizScoreEntity(
     val questionCount: Int? = null,
     /** The answers difficulty's name; null on rows saved before it was recorded. */
     val difficulty: String? = null
-)
+) {
+    /**
+     * The items of this session as the daily goal counts them: the questions answered of a quiz, the cards graded of
+     * a study session (both kept in [questionCount]). A quiz row from before the count was recorded falls back to
+     * [total], its best possible score, so it still counts as a full day's practice.
+     */
+    val practiceItems: Int get() = questionCount ?: total
+
+    fun toPracticeSession(): PracticeStreak.Session = PracticeStreak.Session(timestamp, practiceItems)
+}
+
+/** The columns of a `quiz_scores` row the streak reads: when it was saved and how big it was; see [QuizScoreEntity.practiceItems]. */
+data class PracticeRow(val timestamp: Long, val total: Int, val questionCount: Int?) {
+    fun toPracticeSession(): PracticeStreak.Session = PracticeStreak.Session(timestamp, questionCount ?: total)
+}
 
 /** One answer of a saved quiz, for the score screen's list of misses and for not asking the same flags again at once. */
 @Entity(

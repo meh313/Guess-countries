@@ -5,6 +5,7 @@ import com.example.data.local.AppDatabase
 import com.example.data.local.QuizScoreEntity
 import com.example.data.model.CountryCatalog
 import com.example.data.model.CountryRepository
+import com.example.data.settings.InMemoryUserSettings
 import com.example.flashcards.StudySession
 import com.example.progress.Grade
 import com.example.progress.PracticeStreak
@@ -60,11 +61,12 @@ class CountryViewModelStreakTest {
 
     private val created = mutableListOf<CountryViewModel>()
 
-    private fun newViewModel() = CountryViewModel(
+    private fun newViewModel(settings: InMemoryUserSettings = InMemoryUserSettings()) = CountryViewModel(
         CountryRepository(db.userProgressDao(), CountryCatalog.all, now = { wall }),
         FakeSpeech(),
         clock = { 0L },
-        zone = { berlin }
+        zone = { berlin },
+        settings = settings
     ).also { created += it }
 
     private fun seedQuiz(timestamp: Long) =
@@ -146,6 +148,17 @@ class CountryViewModelStreakTest {
         vm.finishAQuiz()
 
         assertEquals(Outcome(Kind.STARTED, 1), vm.finishOutcome.value)
+    }
+
+    @Test
+    fun aTenQuestionQuiz_meetsAGoalOfTwentyOnItsOwn_andTheStreakFollowsTheGoal() {
+        val settings = InMemoryUserSettings(dailyGoal = 20)
+        val vm = newViewModel(settings)
+
+        vm.finishAQuiz()
+
+        assertEquals(Outcome(Kind.STARTED, 1), vm.finishOutcome.value)
+        vm.awaitStreak(PracticeStreak.Summary(current = 1, best = 1, practicedToday = true))
     }
 
     @Test
@@ -245,14 +258,26 @@ class CountryViewModelStreakTest {
     }
 
     @Test
-    fun aStudySessionOfNineCards_writesItsGradesButCountsForNothing() {
+    fun aStudySessionOfNineCards_isLogged_butAloneFallsShortOfTheGoalOfTen() {
         val vm = newViewModel()
 
-        vm.studyCards(9, expectLogged = false)
+        vm.studyCards(9, expectLogged = true)
+
+        // Logged (five or more cards count towards the goal), but nine is short of ten: no streak credit yet.
+        assertEquals(Outcome(Kind.ALREADY_COUNTED, 0), vm.studyOutcome.value)
+        assertEquals(1, savedQuizzes())
+        assertEquals(9, runBlocking { db.userProgressDao().getAllSkills().first() }.size)
+    }
+
+    @Test
+    fun aStudySessionOfFourCards_writesItsGradesButIsNotLogged() {
+        val vm = newViewModel()
+
+        vm.studyCards(4, expectLogged = false)
 
         assertNull(vm.studyOutcome.value)
         assertEquals(0, savedQuizzes())
-        assertEquals(9, runBlocking { db.userProgressDao().getAllSkills().first() }.size)
+        assertEquals(4, runBlocking { db.userProgressDao().getAllSkills().first() }.size)
     }
 
     @Test

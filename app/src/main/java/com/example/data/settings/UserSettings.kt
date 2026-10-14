@@ -2,8 +2,12 @@ package com.example.data.settings
 
 import android.content.Context
 import androidx.core.content.edit
+import com.example.progress.PracticeStreak
 import com.example.quiz.QuizDifficulty
 import com.example.reminder.ReminderSchedule
+
+/** The value of [UserSettings.focusContinent] that means no preference: the quizzes introduce the whole world's flags in their usual order. */
+const val ALL_CONTINENTS = "All"
 
 /**
  * The few settings that must survive a restart and be read at once, without waiting for a database: plain values.
@@ -36,6 +40,18 @@ interface UserSettings {
 
     /** The local day (`yyyy-MM-dd`) [newItemsToday] counts; a new day starts the count again. Empty until the first quiz. */
     var newItemsDay: String
+
+    /** How many items (questions answered, cards graded) make a day count for the streak: one of `PracticeStreak.GOALS`, 10 until changed. */
+    var dailyGoal: Int
+
+    /** The continent whose never-seen flags the quizzes introduce first, as the catalog spells it; "All" for no preference. */
+    var focusContinent: String
+
+    /** The local day (`yyyy-MM-dd`) on which the Today card was put away; empty when it never was. It comes back the next day. */
+    var todayCardDismissedDay: String
+
+    /** True once the first-run choice (a focus continent, or All) was made; the Today card asks for it until then. */
+    var onboarded: Boolean
 }
 
 /** Which colour scheme the app uses. */
@@ -83,7 +99,11 @@ class InMemoryUserSettings(
     override var timerPace: TimerPace = TimerPace.NORMAL,
     override var reminderDueAt: Long = 0L,
     override var newItemsToday: Int = 0,
-    override var newItemsDay: String = ""
+    override var newItemsDay: String = "",
+    override var dailyGoal: Int = PracticeStreak.DEFAULT_GOAL,
+    override var focusContinent: String = ALL_CONTINENTS,
+    override var todayCardDismissedDay: String = "",
+    override var onboarded: Boolean = false
 ) : UserSettings
 
 class PrefsUserSettings(context: Context) : UserSettings {
@@ -128,6 +148,22 @@ class PrefsUserSettings(context: Context) : UserSettings {
         get() = prefs.getString(KEY_NEW_ITEMS_DAY, null) ?: ""
         set(value) = prefs.edit { putString(KEY_NEW_ITEMS_DAY, value) }
 
+    override var dailyGoal: Int
+        get() = prefs.getInt(KEY_DAILY_GOAL, PracticeStreak.DEFAULT_GOAL).takeIf { it in PracticeStreak.GOALS } ?: PracticeStreak.DEFAULT_GOAL
+        set(value) = prefs.edit { putInt(KEY_DAILY_GOAL, if (value in PracticeStreak.GOALS) value else PracticeStreak.DEFAULT_GOAL) }
+
+    override var focusContinent: String
+        get() = prefs.getString(KEY_FOCUS_CONTINENT, null)?.takeIf { it.isNotBlank() } ?: ALL_CONTINENTS
+        set(value) = prefs.edit { putString(KEY_FOCUS_CONTINENT, value.ifBlank { ALL_CONTINENTS }) }
+
+    override var todayCardDismissedDay: String
+        get() = prefs.getString(KEY_TODAY_CARD_DISMISSED_DAY, null) ?: ""
+        set(value) = prefs.edit { putString(KEY_TODAY_CARD_DISMISSED_DAY, value) }
+
+    override var onboarded: Boolean
+        get() = prefs.getBoolean(KEY_ONBOARDED, false)
+        set(value) = prefs.edit { putBoolean(KEY_ONBOARDED, value) }
+
     companion object {
         const val FILE = "settings"
         private const val KEY_DIFFICULTY = "quiz_difficulty"
@@ -139,5 +175,9 @@ class PrefsUserSettings(context: Context) : UserSettings {
         private const val KEY_TIMER_PACE = "timer_pace"
         private const val KEY_NEW_ITEMS_TODAY = "new_items_today"
         private const val KEY_NEW_ITEMS_DAY = "new_items_day"
+        private const val KEY_DAILY_GOAL = "daily_goal"
+        private const val KEY_FOCUS_CONTINENT = "focus_continent"
+        private const val KEY_TODAY_CARD_DISMISSED_DAY = "today_card_dismissed_day"
+        private const val KEY_ONBOARDED = "onboarded"
     }
 }
