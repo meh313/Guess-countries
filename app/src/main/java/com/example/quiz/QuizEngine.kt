@@ -331,8 +331,11 @@ object QuizEngine {
         val candidates = pool.filter { it != target && it.isSovereign && it.code != ANTARCTICA && it.name != target.name }
         val (sameSubregion, elsewhere) = candidates.partition { it.subregion.equals(target.subregion, ignoreCase = true) }
         val here = Geo.of(target.code)
-        val (placed, unplaced) = elsewhere.partition { here != null && Geo.of(it.code) != null }
-        val byDistance = placed.sortedWith(compareBy<Country> { frameDistance(here!!, Geo.of(it.code)!!) }.thenBy { it.code })
+        // Each candidate with its distance from the target; one without a place (or every one, for a target without) is unplaced.
+        val placed = if (here == null) emptyList() else elsewhere.mapNotNull { country -> Geo.of(country.code)?.let { country to frameDistance(here, it) } }
+        val placedCodes = placed.mapTo(HashSet()) { it.first.code }
+        val byDistance = placed.sortedWith(compareBy<Pair<Country, Double>> { it.second }.thenBy { it.first.code }).map { it.first }
+        val unplaced = elsewhere.filter { it.code !in placedCodes }
         return (sameSubregion.shuffled(random) + byDistance + unplaced.shuffled(random))
             .distinctBy { it.name }
             .take(count)

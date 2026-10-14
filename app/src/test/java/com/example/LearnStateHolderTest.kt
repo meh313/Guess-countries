@@ -115,11 +115,27 @@ class LearnStateHolderTest {
 
     private fun idle() = shadowOf(Looper.getMainLooper()).idle()
 
+    /** Waits for a [LearnStateHolder.start] that had to read the skill states first (a holder over states not yet loaded). */
+    private fun LearnStateHolder.settle() {
+        val deadline = System.currentTimeMillis() + 10_000
+        while (planning.value) {
+            check(System.currentTimeMillis() < deadline) { "the Learn start never finished planning" }
+            idle()
+            Thread.sleep(5)
+        }
+    }
+
+    /** [LearnStateHolder.start], settled: at once when the states are loaded, after their read otherwise. */
+    private fun LearnStateHolder.startNow() {
+        start()
+        settle()
+    }
+
     @Test
     fun start_showsTheFirstFiveUnseenCountriesInCatalogOrder_withTheirLookAlikes() {
         val holder = World().learn()
 
-        holder.start()
+        holder.startNow()
 
         val session = holder.session.value!!
         assertEquals(firstFive, session.codes)
@@ -131,7 +147,7 @@ class LearnStateHolderTest {
     @Test
     fun aCardShown_isLightEvidenceOfItsFlag_onceHoweverOftenItIsRevisited() {
         val holder = World().learn()
-        holder.start()
+        holder.startNow()
 
         val first = flagRow(firstFive[0])!!.toState()
         assertEquals(1, first.reviews)
@@ -162,21 +178,39 @@ class LearnStateHolderTest {
         world.awaitSkills("the two reviewed rows") { it.containsKey(europe[0].code) && it.containsKey(europe[2].code) }
 
         val holder = world.learn(focus = "Europe")
-        holder.start()
+        holder.startNow()
 
         val expected = (europe - europe[0] - europe[2]).take(5).map { it.code }
         assertEquals(expected, holder.session.value!!.codes)
+    }
+
+    /** Learn opened first thing after the process came back: the states are a placeholder until the database answers. */
+    @Test
+    fun start_beforeTheSkillStatesArrived_readsThemFirst_andNeverPicksASeenCountry() {
+        firstFive.forEach { runBlocking { db.userProgressDao().recordAnswer(it, Skill.FLAG, true, Evidence.FULL, now) } }
+        val world = World()
+        val holder = world.learn()
+        assertFalse("the states are still the placeholder", world.progress.skillsLoaded.value)
+
+        holder.start()
+
+        assertTrue("the holder reads the states before it plans", holder.planning.value)
+        assertNull("nothing is planned until the states are in", holder.session.value)
+        holder.settle()
+        val codes = holder.session.value!!.codes
+        assertEquals(sovereign.drop(5).take(5).map { it.code }, codes)
+        assertTrue(codes.none { it in firstFive })
     }
 
     @Test
     fun start_afterASessionWasSeen_movesOnToTheNextFive() {
         val world = World()
         val holder = world.learn()
-        holder.start()
+        holder.startNow()
         repeat(4) { holder.next() }
         world.awaitSkills("the five cards seen") { states -> firstFive.all { states[it]?.isNew == false } }
 
-        holder.start()
+        holder.startNow()
 
         assertEquals(sovereign.drop(5).take(5).map { it.code }, holder.session.value!!.codes)
     }
@@ -188,7 +222,7 @@ class LearnStateHolderTest {
         world.awaitSkills("three reviewed rows") { states -> sovereign.take(3).all { states.containsKey(it.code) } }
 
         val holder = world.learn()
-        holder.start()
+        holder.startNow()
 
         assertNull(holder.session.value)
         holder.next()
@@ -201,7 +235,7 @@ class LearnStateHolderTest {
         val world = World()
         val handle = SavedStateHandle()
         val holder = world.learn(handle)
-        holder.start()
+        holder.startNow()
         holder.next()
         holder.next()
         holder.previous()
@@ -226,7 +260,7 @@ class LearnStateHolderTest {
         val holder = world.learn(handle)
         assertNull(world.learn(handle.saved()).session.value)
 
-        holder.start()
+        holder.startNow()
         holder.dismiss()
 
         assertNull(world.learn(handle.saved()).session.value)
@@ -240,7 +274,7 @@ class LearnStateHolderTest {
         assertNull(world.learn(missingFields).session.value)
 
         val handle = SavedStateHandle()
-        world.learn(handle).start()
+        world.learn(handle).startNow()
         val smallerWorld = World(sovereign.drop(5))
         assertNull(smallerWorld.learn(handle.saved()).session.value)
     }
@@ -249,7 +283,7 @@ class LearnStateHolderTest {
     fun startQuiz_runsATenQuestionFlagQuizOverTheFiveCodesTwiceEach_underLearn_withoutSpendingTheDailyAllowance() {
         val world = World()
         val holder = world.learn()
-        holder.start()
+        holder.startNow()
         repeat(4) { holder.next() }
 
         holder.startQuiz()
@@ -272,7 +306,7 @@ class LearnStateHolderTest {
     fun theSessionIsDoneWhenItsQuizIs_andGoneWhenTheQuizIsLeft() {
         val world = World()
         val holder = world.learn()
-        holder.start()
+        holder.startNow()
         repeat(4) { holder.next() }
         holder.startQuiz()
 
@@ -300,7 +334,7 @@ class LearnStateHolderTest {
     fun quittingTheQuizMidway_endsTheSession_butAnotherQuizLeavesACardSessionAlone() {
         val world = World()
         val holder = world.learn()
-        holder.start()
+        holder.startNow()
         repeat(4) { holder.next() }
         holder.startQuiz()
         assertNotNull(holder.session.value)
@@ -309,12 +343,33 @@ class LearnStateHolderTest {
         idle()
         assertNull(holder.session.value)
 
-        holder.start()
+        holder.startNow()
         world.quiz.start(QuizMode.CAPITAL, QuizEngine.GLOBAL, com.example.quiz.QuizDifficulty.NORMAL)
         idle()
         world.quiz.end()
         idle()
         assertEquals(LearnSession.Stage.CARDS, holder.session.value!!.stage)
+    }
+
+    /** The process came back with the Learn session at its quiz, but the quiz holder restored (or started) another quiz. */
+    @Test
+    fun aRestoredSessionAtItsQuizStage_whoseQuizIsNotTheLearnOne_isDropped() {
+        val world = World()
+        val handle = SavedStateHandle()
+        val holder = world.learn(handle)
+        holder.startNow()
+        repeat(4) { holder.next() }
+        holder.startQuiz()
+        assertEquals(LearnSession.Stage.QUIZ, holder.session.value!!.stage)
+        val saved = handle.saved()
+        world.quiz.end()
+        world.quiz.start(QuizMode.CAPITAL, QuizEngine.GLOBAL, com.example.quiz.QuizDifficulty.NORMAL)
+        assertNotNull(world.quiz.session.value)
+
+        val revived = world.learn(saved)
+        idle()
+
+        assertNull(revived.session.value)
     }
 
     @Test
@@ -324,7 +379,7 @@ class LearnStateHolderTest {
         holder.startQuiz()
         assertNull(world.quiz.session.value)
 
-        holder.start()
+        holder.startNow()
         repeat(4) { holder.next() }
         holder.startQuiz()
         val first = world.quiz.session.value

@@ -25,20 +25,18 @@ import com.example.quiz.QuizMode
 import com.example.quiz.sovereign
 import com.example.support.setupNode
 import com.example.support.FakeSpeech
+import com.example.support.OwnDatabaseRule
 import com.example.support.awaitQuizPlan
 import com.example.support.awaitWeakSpots
-import com.example.support.closeWhenIdle
-import com.example.support.inMemoryDatabase
 import com.example.ui.screens.QuizScreen
 import com.example.ui.theme.WorldFlagsTheme
 import com.example.ui.viewmodel.CountryViewModel
 import kotlinx.coroutines.runBlocking
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.RuleChain
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
@@ -51,19 +49,16 @@ import org.robolectric.annotation.Config
 @Config(sdk = [36], qualifiers = "w360dp-h640dp-xxhdpi")
 class QuizSetupScreenTest {
 
-    @get:Rule val rule = createAndroidComposeRule<ComponentActivity>()
+    private val composeRule = createAndroidComposeRule<ComponentActivity>()
 
-    private lateinit var db: AppDatabase
+    /** Closed once the activity is gone, not from @After under it, where the close once hit a write still in flight. */
+    private val database = OwnDatabaseRule { created }
 
-    @Before
-    fun setUp() {
-        db = inMemoryDatabase()
-    }
+    @get:Rule val chain: RuleChain = RuleChain.outerRule(database).around(composeRule)
 
-    @After
-    fun tearDown() {
-        db.closeWhenIdle(*created.toTypedArray())
-    }
+    private val rule get() = composeRule
+
+    private val db: AppDatabase get() = database.db
 
     /** Three Oceania countries (too few) and six African ones (fewer than ten). */
     private val smallWorld =

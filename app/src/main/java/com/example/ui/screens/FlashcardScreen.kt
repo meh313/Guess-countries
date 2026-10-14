@@ -75,7 +75,9 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
@@ -417,7 +419,9 @@ private fun DeckHeader(
                 Text(
                     text = stringResource(R.string.flashcards_card_position, index + 1, total),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                    // Next swaps the card in place: the new position is announced, so a screen reader hears it moved on.
+                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
                 )
             }
 

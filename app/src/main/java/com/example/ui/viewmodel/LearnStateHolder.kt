@@ -8,12 +8,16 @@ import com.example.learn.LearnCard
 import com.example.learn.LearnSession
 import com.example.progress.Evidence
 import com.example.progress.Skill
+import com.example.progress.SkillState
 import com.example.quiz.QuizEngine
 import com.example.quiz.QuizMode
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * The Learn session in progress ("Learn 5 new") and the actions on it. The cards are the next five sovereign
@@ -42,18 +46,30 @@ class LearnStateHolder(
     /** The session in progress, or null outside one. */
     val session: StateFlow<LearnSession?> = _session
 
+    private val _planning = MutableStateFlow(false)
+
+    /**
+     * True while [start] waits for the skill states before it can choose the cards; [session] says nothing final
+     * until it is false again, so a screen shows no "nothing new" verdict meanwhile.
+     */
+    val planning: StateFlow<Boolean> = _planning
+
+    /** The [start] still waiting for the skill states; the next start, or [dismiss], drops it. */
+    private var pendingStart: Job? = null
+
     init {
         savedState?.setSavedStateProvider(SAVED_LEARN) {
             _session.value?.let { LearnSessionBundle.write(it, shown) } ?: Bundle()
         }
-        // The quiz after the cards ends the session; a quiz quit or dismissed on its score screen clears it.
+        // The quiz after the cards ends the session; a quiz quit or dismissed on its score screen clears it, and so
+        // does another quiz in its place (a restored session whose Learn quiz was not the one that came back).
         scope.launch {
             quiz.session.collect { running ->
                 val current = _session.value ?: return@collect
                 when (current.stage) {
                     LearnSession.Stage.QUIZ -> when {
-                        running == null -> _session.value = null
-                        running.scope == QuizEngine.LEARN && running.isFinished -> _session.value = current.finish()
+                        running == null || running.scope != QuizEngine.LEARN -> _session.value = null
+                        running.isFinished -> _session.value = current.finish()
                     }
                     LearnSession.Stage.DONE -> if (running == null) _session.value = null
                     LearnSession.Stage.CARDS -> Unit
@@ -75,9 +91,30 @@ class LearnStateHolder(
      * Starts a session over the next [LearnSession.CARDS_PER_SESSION] never-seen sovereign countries (no flag skill
      * row yet, or one with no review), in catalog order with the focus continent's first, and shows the first card.
      * Replaces any session in progress. With every flag seen the session is null, which the screen says.
+     *
+     * The states come from [ProgressStateHolder.skills] when they have arrived (a screen was collecting them), at
+     * once; otherwise (the process just came back, and Learn is the first screen) they are read from the database
+     * first, with [planning] true meanwhile: the placeholder they start with would plan the first five of the
+     * catalog whatever the player has seen.
      */
     fun start() {
-        val states = progress.skills.value[Skill.FLAG].orEmpty()
+        pendingStart?.cancel()
+        if (progress.skillsLoaded.value) {
+            plan(progress.skills.value[Skill.FLAG].orEmpty())
+            return
+        }
+        _planning.value = true
+        pendingStart = scope.launch {
+            try {
+                val states = withTimeoutOrNull(STATES_WAIT_MILLIS) { repository.skills.first() } ?: progress.skills.value
+                plan(states[Skill.FLAG].orEmpty())
+            } finally {
+                _planning.value = false
+            }
+        }
+    }
+
+    private fun plan(states: Map<String, SkillState>) {
         val unseen = repository.allCountries.filter { it.isSovereign && states[it.code]?.isNew != false }
         val focus = focusContinent()
         val ordered = if (focus.isBlank() || focus.equals(NO_FOCUS, ignoreCase = true)) {
@@ -120,6 +157,8 @@ class LearnStateHolder(
 
     /** Leaves the session where it stands; the cards already shown keep their light evidence. */
     fun dismiss() {
+        pendingStart?.cancel()
+        _planning.value = false
         _session.value = null
         shown.clear()
     }
@@ -139,6 +178,9 @@ class LearnStateHolder(
 
         /** The focus continent value that means none. */
         const val NO_FOCUS = "All"
+
+        /** How long [start] waits for the skill states before it goes with what it has. */
+        const val STATES_WAIT_MILLIS = 2_000L
     }
 }
 

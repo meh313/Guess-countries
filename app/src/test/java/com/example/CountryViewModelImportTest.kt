@@ -73,7 +73,7 @@ class CountryViewModelImportTest {
     /** A file as the app writes it: one quiz with two answers, a bookmark, a flag row, dark theme and the reminder at 19:00. */
     private fun file(): String = JSONObject(
         """
-        {"app":"World Flags","format":1,"exportedAt":1000,
+        {"app":"World Flags","format":2,"exportedAt":1000,
          "progress":[{"code":"FR","favorite":true,"lastReviewed":10},{"code":"DE","favorite":false,"lastReviewed":20}],
          "skills":[{"code":"FR","skill":"FLAG","score":80,"box":3,"dueAt":500,"reviews":4,"correct":3,"lastResult":1,"lastReviewed":10}],
          "quizzes":[{"id":9223372036854775807,"mode":"FLAG_NAME","score":120,"total":190,"scope":"Europe","timestamp":30,"correct":8,"questionCount":10,"difficulty":"HARD"}],
@@ -123,7 +123,7 @@ class CountryViewModelImportTest {
         vm.startQuiz(QuizMode.FLAG_NAME, "Europe", QuizDifficulty.NORMAL)
         assertNotNull(vm.quizSession.value)
 
-        val result = vm.importJson("""{"app":"World Flags","format":1,"progress":[],"skills":[{"code":"FR","skill":"SHAPE"}],"quizzes":[],"answers":[]}""")
+        val result = vm.importJson("""{"app":"World Flags","format":2,"progress":[{"code":"france","favorite":false,"lastReviewed":0}],"skills":[],"quizzes":[],"answers":[]}""")
 
         assertTrue(result.exceptionOrNull() is ImportProblem.Damaged)
         assertNotNull("the quiz must not be dropped by a refused import", vm.quizSession.value)
@@ -160,6 +160,29 @@ class CountryViewModelImportTest {
         assertNotNull("the quiz is dropped only after the database took the file", vm.quizSession.value)
         assertEquals(ThemeMode.SYSTEM, settings.themeMode)
         idle()
+    }
+
+    @Test
+    fun aResetWhoseWriteFails_isReportedAsWriteError_insteadOfCrashing() {
+        val own = inMemoryDatabase()
+        val vm = viewModel(own)
+        assertFalse(vm.writeError.value)
+        own.close()
+
+        vm.resetProgress()
+
+        awaitCondition("the failed clear to be reported") { vm.writeError.value }
+        vm.clearWriteError()
+        assertFalse(vm.writeError.value)
+    }
+
+    private fun awaitCondition(what: String, condition: () -> Boolean) {
+        val deadline = System.currentTimeMillis() + 10_000
+        while (!condition()) {
+            check(System.currentTimeMillis() < deadline) { "never happened: $what" }
+            idle()
+            Thread.sleep(25)
+        }
     }
 
     @Test

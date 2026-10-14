@@ -910,7 +910,7 @@ fun QuizScreen(
                                     modifier = Modifier.size(18.dp).padding(end = 4.dp)
                                 )
                                 Text(
-                                    text = stringResource(R.string.quiz_fact_capital, q.targetCountry.name, q.targetCountry.capital),
+                                    text = stringResource(R.string.quiz_fact_capital, q.targetCountry.capital),
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
                                 )

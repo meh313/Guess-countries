@@ -68,13 +68,15 @@ class WorldMapTest {
     private var shownCountry by mutableStateOf<Country?>(null)
     private var shownZoom by mutableStateOf(true)
     private var shownData by mutableStateOf(WorldMapFixture.data)
+    private var shownCapital by mutableStateOf(true)
     private var contentSet = false
 
-    private fun show(country: Country, zoom: Boolean = true, data: WorldMapData = WorldMapFixture.data) {
+    private fun show(country: Country, zoom: Boolean = true, data: WorldMapData = WorldMapFixture.data, showCapital: Boolean = true) {
         rule.runOnUiThread {
             shownCountry = country
             shownZoom = zoom
             shownData = data
+            shownCapital = showCapital
         }
         if (!contentSet) {
             contentSet = true
@@ -84,7 +86,7 @@ class WorldMapTest {
                     sea = MaterialTheme.colorScheme.surfaceContainerLow.toArgb()
                     CompositionLocalProvider(LocalWorldMapData provides shownData) {
                         Box(Modifier.size(340.dp, 420.dp)) {
-                            shownCountry?.let { WorldMap(it, Modifier.width(300.dp), aspectRatio = aspect, zoom = shownZoom) }
+                            shownCountry?.let { WorldMap(it, Modifier.width(300.dp), aspectRatio = aspect, zoom = shownZoom, showCapital = shownCapital) }
                         }
                     }
                 }
@@ -108,6 +110,10 @@ class WorldMapTest {
         }
         return if (total == 0) 0f else hits.toFloat() / total
     }
+
+    /** The share of the pixels in a box given in pixels that are [argb], give or take antialiasing. */
+    private fun Bitmap.sharePx(argb: Int, left: Int, top: Int, right: Int, bottom: Int): Float =
+        share(argb, left.toFloat() / width, top.toFloat() / height, right.toFloat() / width, bottom.toFloat() / height)
 
     private fun close(a: Int, b: Int): Boolean =
         abs(((a shr 16) and 0xFF) - ((b shr 16) and 0xFF)) <= 12 &&
@@ -166,6 +172,27 @@ class WorldMapTest {
         // West of the capital dot at (10, 5): the band sampled is country fill only.
         val equator = map.share(primary, 0.43f, viewport.fy(8f), 0.49f, viewport.fy(-8f))
         assertTrue("the equator: $equator primary between ${viewport.fy(8f)} and ${viewport.fy(-8f)}", equator > 0.95f)
+    }
+
+    @Test
+    fun aPointMicrostate_getsAMarkerInThePrimaryColour_evenWithTheCapitalHidden() {
+        // The quiz hides the capital on the Map question; the Vatican-sized PP would be a speck without a marker.
+        show(mapped("PP"), showCapital = false)
+
+        val map = mapPixels()
+        val density = rule.activity.resources.displayMetrics.density
+        val cx = map.width / 2
+        val cy = map.height / 2
+        // PP's outline is 0.1° of the 6° viewport: 2.5dp each side of the centre. The marker is 5dp: pixels between
+        // 3.5dp and 4.5dp from the centre are primary because of the marker alone.
+        val near = (3.5f * density).toInt()
+        val far = (4.5f * density).toInt()
+        val half = density.toInt()
+        assertTrue("east of the centre", map.sharePx(primary, cx + near, cy - half, cx + far, cy + half) > 0.9f)
+        assertTrue("west of the centre", map.sharePx(primary, cx - far, cy - half, cx - near, cy + half) > 0.9f)
+        // Past the marker and its ring is sea again.
+        val past = (8f * density).toInt()
+        assertTrue("past the marker", map.sharePx(sea, cx + past, cy - half, cx + past + half, cy + half) > 0.9f)
     }
 
     @Test

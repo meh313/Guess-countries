@@ -37,6 +37,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -66,6 +69,8 @@ fun LearnScreen(
     modifier: Modifier = Modifier
 ) {
     val session by viewModel.learnSession.collectAsStateWithLifecycle()
+    // True while a cold start waits for the skill rows: no verdict about "nothing new" until it is false.
+    val planning by viewModel.learnPlanning.collectAsStateWithLifecycle()
     // The holder reads the skill states when a session starts; collecting them here keeps them current meanwhile.
     viewModel.skills.collectAsStateWithLifecycle()
     val countriesByCode = remember(viewModel) { viewModel.repository.allCountries.associateBy { it.code } }
@@ -97,7 +102,10 @@ fun LearnScreen(
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.testTag("learn_progress")
+                        // Next swaps the card in place: the new position is announced, so a screen reader hears it moved on.
+                        modifier = Modifier
+                            .testTag("learn_progress")
+                            .semantics { liveRegion = LiveRegionMode.Polite }
                     )
                     Text(
                         text = stringResource(R.string.learn_intro),
@@ -142,7 +150,7 @@ fun LearnScreen(
                         }
                     }
                 }
-                started -> Text(
+                started && !planning -> Text(
                     text = stringResource(R.string.learn_nothing_new),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,

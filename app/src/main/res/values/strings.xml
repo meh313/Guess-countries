@@ -8,8 +8,8 @@
 <resources>
     <string name="app_name">World Flags</string>
     <plurals name="countries_count">
-        <item quantity="one">%d Country</item>
-        <item quantity="other">%d Countries</item>
+        <item quantity="one">%d country</item>
+        <item quantity="other">%d countries</item>
     </plurals>
 
     <!-- Tabs -->
@@ -47,7 +47,7 @@
     <string name="mode_continent_hint">Covers the whole world</string>
     <string name="mode_locate">Map → Country</string>
     <string name="mode_locate_hint">Where in the world is it?</string>
-    <string name="mode_speed_round">Speed Round</string>
+    <string name="mode_speed_round">Speed round</string>
     <string name="mode_speed_round_hint">10 seconds per question</string>
     <string name="mode_blitz">60-second blitz</string>
     <string name="mode_blitz_hint">As many flags as you can in one minute</string>
@@ -85,10 +85,10 @@
     <string name="continent_antarctica">Antarctica</string>
 
     <!-- Sort orders -->
-    <string name="sort_by_name">Sort by Name</string>
-    <string name="sort_by_population">Sort by Population</string>
-    <string name="sort_by_area">Sort by Area</string>
-    <string name="sort_by_continent">Sort by Continent</string>
+    <string name="sort_by_name">Sort by name</string>
+    <string name="sort_by_population">Sort by population</string>
+    <string name="sort_by_area">Sort by area</string>
+    <string name="sort_by_continent">Sort by continent</string>
     <string name="sort_noun_name">name</string>
     <string name="sort_noun_population">population</string>
     <string name="sort_noun_area">area</string>
@@ -115,7 +115,7 @@
     <string name="skill_flag">Flag</string>
     <string name="skill_capital">Capital</string>
     <string name="skill_continent">Continent</string>
-    <string name="skill_location">Location</string>
+    <string name="skill_location">Map</string>
 
     <!-- Settings enums -->
     <string name="theme_system">System</string>

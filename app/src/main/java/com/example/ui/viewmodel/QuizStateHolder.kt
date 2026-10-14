@@ -24,6 +24,7 @@ import kotlin.random.Random
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
@@ -82,6 +83,7 @@ class QuizStateHolder(
      * included, from the whole world.
      */
     fun start(mode: QuizMode, scope: String, difficulty: QuizDifficulty) {
+        // The plan as it stands: the setup screen has been collecting it, so it is warm by the time Start is tapped.
         val plan = progress.quizPlan.value
         val skill = SkillMastery.skillOf(mode)
         val weak = plan.weak(skill)
@@ -333,6 +335,7 @@ class QuizStateHolder(
 
         /** How many missed countries a fixed-length quiz asks again at its end. */
         const val REASK_LIMIT = 2
+
 
         /** The local day of [epochMillis] in [zone], as `yyyy-MM-dd`: the stamp [UserSettings.newItemsDay] keeps. */
         fun dayStamp(epochMillis: Long, zone: TimeZone): String =

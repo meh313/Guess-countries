@@ -11,9 +11,9 @@
     <!-- Settings: Quiz -->
     <string name="settings_section_quiz">Quiz</string>
     <string name="settings_timer_label">Timer</string>
-    <string name="settings_timer_hint_normal">Speed Round: 10 seconds per question. Blitz: a new flag a moment after each answer.</string>
-    <string name="settings_timer_hint_relaxed">Speed Round: 20 seconds per question. Blitz: a new flag a moment after each answer.</string>
-    <string name="settings_timer_hint_off">Speed Round: no time limit. Blitz: the minute still runs, but the next flag waits for Next.</string>
+    <string name="settings_timer_hint_normal">Speed round: 10 seconds per question. Blitz: a new flag a moment after each answer.</string>
+    <string name="settings_timer_hint_relaxed">Speed round: 20 seconds per question. Blitz: a new flag a moment after each answer.</string>
+    <string name="settings_timer_hint_off">Speed round: no time limit. Blitz: the minute still runs, but the next flag waits for Next.</string>
     <!-- The daily goal: "Daily goal: 5 · 10 · 20 items" as a label and a segmented row -->
     <string name="settings_goal_label">Daily goal</string>
     <plurals name="settings_goal_option">
@@ -94,13 +94,15 @@
     <string name="about_sources_text">Each country entry was researched against public sources, mostly Wikipedia, national constitutions and official sites, and then checked a second time by two independent reviewers who could only change a fact they could both source. Population figures are the United Nations World Population Prospects 2024 estimates, rounded to three significant figures; the other facts were checked in 2026. The research notes, the audit and the owner\'s decisions are in the repository, and a country\'s detail sheet lists the pages its facts were checked against.</string>
     <string name="about_open_repository">Open the repository</string>
 
-    <!-- About: what is in the catalog -->
-    <string name="about_catalog_title">What is in the catalog</string>
+    <!-- About: what is in the catalogue -->
+    <string name="about_catalog_title">What is in the catalogue</string>
     <string name="about_catalog_text">The 196 sovereign states as widely recognised, plus Antarctica to browse. Flags are drawn to each country\'s own proportions. Where the meaning of a flag is disputed or legendary, the text says so instead of picking a side; a fact that could not be settled was left out rather than guessed.</string>
 
     <!-- About: privacy -->
     <string name="about_privacy_title">Privacy</string>
     <string name="about_privacy_text">The app has no network permission: nothing you do leaves the device, and there is no account. Your progress is stored in the app\'s own database and included in Android\'s backup of the app, so it moves with you to a new phone when backup is on. Settings &gt; Reset progress deletes all of it.</string>
+    <!-- A link row under the text: opens PRIVACY.md in the repository in the browser -->
+    <string name="about_privacy_link">Full privacy statement</string>
 
     <!-- About: licences -->
     <string name="about_licences_title">Licences</string>

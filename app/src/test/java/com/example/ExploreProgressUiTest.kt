@@ -138,29 +138,29 @@ class ExploreProgressUiTest {
         rule.eventually("the states") { assertEquals(2, viewModel.skills.value[Skill.FLAG]?.size) }
 
         rule.onNodeWithTag("standing_chip_mastered").performClick()
-        rule.eventually("one mastered") { rule.onNodeWithText("1 Country").assertIsDisplayed() }
+        rule.eventually("one mastered") { rule.onNodeWithText("1 country").assertIsDisplayed() }
         rule.onNodeWithTag("explore_grid").performScrollToNode(hasTestTag(card("FR")))
         rule.onNodeWithTag(card("FR")).assertIsDisplayed()
 
         // A second chip joins the first instead of replacing it.
         rule.onNodeWithTag("standing_chip_weak").performClick()
-        rule.eventually("mastered and learning") { rule.onNodeWithText("2 Countries").assertIsDisplayed() }
+        rule.eventually("mastered and learning") { rule.onNodeWithText("2 countries").assertIsDisplayed() }
         rule.onNodeWithTag("standing_chip_mastered").assertIsSelected()
         rule.onNodeWithTag("standing_chip_weak").assertIsSelected()
 
         rule.onNodeWithTag("standing_chip_mastered").performClick()
-        rule.eventually("one learning") { rule.onNodeWithText("1 Country").assertIsDisplayed() }
+        rule.eventually("one learning") { rule.onNodeWithText("1 country").assertIsDisplayed() }
         rule.onNodeWithTag("explore_grid").performScrollToNode(hasTestTag(card("DE")))
         rule.onNodeWithTag(card("DE")).assertIsDisplayed()
 
         rule.onNodeWithTag("standing_chip_unseen").performClick()
-        rule.eventually("learning and unseen") { rule.onNodeWithText("195 Countries").assertIsDisplayed() }
+        rule.eventually("learning and unseen") { rule.onNodeWithText("195 countries").assertIsDisplayed() }
         rule.onNodeWithTag("standing_chip_weak").performClick()
-        rule.eventually("the unseen") { rule.onNodeWithText("194 Countries").assertIsDisplayed() }
+        rule.eventually("the unseen") { rule.onNodeWithText("194 countries").assertIsDisplayed() }
 
         // A second tap on the last chip takes it off again.
         rule.onNodeWithTag("standing_chip_unseen").performClick()
-        rule.eventually("everyone") { rule.onNodeWithText("197 Countries").assertIsDisplayed() }
+        rule.eventually("everyone") { rule.onNodeWithText("197 countries").assertIsDisplayed() }
 
         rule.onNodeWithTag("standing_chip_mastered").performClick()
         rule.onNodeWithTag("continent_chips").performScrollToNode(hasTestTag("continent_chip_asia"))
@@ -168,7 +168,7 @@ class ExploreProgressUiTest {
         rule.eventually("nothing mastered in Asia") { rule.onNodeWithText("No countries found").assertIsDisplayed() }
         rule.onNodeWithTag("explore_empty_hint").assert(hasText("No countries mastered in Asia. Clear the filters?"))
         rule.onNodeWithTag("explore_clear_filters_btn").performClick()
-        rule.eventually("everyone again") { rule.onNodeWithText("197 Countries").assertIsDisplayed() }
+        rule.eventually("everyone again") { rule.onNodeWithText("197 countries").assertIsDisplayed() }
     }
 
     @Test
@@ -291,7 +291,7 @@ class ExploreProgressUiTest {
         rule.onNodeWithTag("standing_chip_weak").assertIsSelected()
         rule.onNodeWithTag("standing_chip_mastered").assertIsNotSelected()
         val stillToLearn = allCountries.count { it.continent == "Europe" && it.isSovereign } - 1
-        rule.eventually("everyone in Europe but Italy") { rule.onNodeWithText("$stillToLearn Countries").assertIsDisplayed() }
+        rule.eventually("everyone in Europe but Italy") { rule.onNodeWithText("$stillToLearn countries").assertIsDisplayed() }
 
         // Italy is mastered, so a search for it inside this filter finds nothing, and the hint says what is on.
         rule.onNodeWithTag("search_country_input").performTextInput("Italy")
@@ -412,7 +412,7 @@ class ExploreProgressUiTest {
         rule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("stats_located"))
 
         val sovereign = allCountries.count { it.isSovereign }
-        rule.eventually("two located") { rule.onNodeWithTag("stats_located").assert(describedAs("Located: 2 / $sovereign")) }
+        rule.eventually("two on the map") { rule.onNodeWithTag("stats_located").assert(describedAs("On the map: 2 / $sovereign")) }
         rule.onNodeWithTag("stats_located").assert(!hasClickAction())
         rule.onNodeWithTag("stats_capitals").assert(describedAs("Capitals known: 0 / $sovereign"))
     }
@@ -427,7 +427,7 @@ class ExploreProgressUiTest {
 
         rule.onNode(hasScrollAction() and hasTestTag("country_detail_sheet_fr")).performScrollToNode(hasTestTag("sheet_progress"))
         rule.eventually("the location row") {
-            rule.onNodeWithText("Location: Mastered · step 4 of 5 · next review in 12 days · last answer right").assertIsDisplayed()
+            rule.onNodeWithText("Map: Mastered · step 4 of 5 · next review in 12 days · last answer right").assertIsDisplayed()
         }
         rule.onNodeWithText("Flag: Not reviewed yet").assertIsDisplayed()
         // The card keeps its two pips (flag and capital); the location skill is read in the sheet.
@@ -530,6 +530,9 @@ class ExploreProgressUiTest {
         rule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("stats_log_row_${withAnswers.id}"))
         rule.eventually("the row is a button") { rule.onNodeWithTag("stats_log_row_${withAnswers.id}").assert(hasClickAction()) }
         rule.onNodeWithTag("stats_log_row_${without.id}").assert(!hasClickAction())
+        // The row that opens ends in a chevron; the plain one does not.
+        rule.onNode(hasTestTag("stats_log_chevron_${withAnswers.id}") and androidx.compose.ui.test.hasAnyAncestor(hasTestTag("stats_log_row_${withAnswers.id}")), useUnmergedTree = true).assertExists()
+        rule.onAllNodesWithTag("stats_log_chevron_${without.id}", useUnmergedTree = true).assertCountEquals(0)
 
         rule.onNodeWithTag("stats_log_row_${withAnswers.id}").performClick()
         rule.eventually("the review") { rule.onNodeWithTag("quiz_review").assertIsDisplayed() }
