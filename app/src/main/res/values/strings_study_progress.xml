@@ -151,7 +151,7 @@
 
     <!-- The daily reminder card -->
     <string name="reminder_title">Daily reminder</string>
-    <string name="reminder_detail">A nudge at %1$s, only on days without a quiz or study session</string>
+    <string name="reminder_detail">A nudge at %1$s, only on days short of your goal</string>
     <string name="reminder_time">Remind me at %1$s</string>
     <string name="reminder_blocked">Allow notifications for %1$s in system settings to get the reminder.</string>
     <string name="reminder_open_settings">Open settings</string>
