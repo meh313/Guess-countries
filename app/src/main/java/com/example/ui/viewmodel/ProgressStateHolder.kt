@@ -89,7 +89,6 @@ class ProgressStateHolder(
     fun refreshClock() = refresh.update { it + 1 }
 
     // Declared before the plan: its initializer reads it.
-    private val planCollectors = MutableStateFlow(0)
 
     /**
      * What the quiz setup needs: the skill states, which countries are weak or due in each skill and what the quizzes
@@ -112,20 +111,14 @@ class ProgressStateHolder(
     }
         // Two passes over every skill state, on every write: keep them off the main thread.
         .flowOn(Dispatchers.Default)
-        .stateIn(scope, whileSubscribedCounting(planCollectors), QuizPlan.EMPTY)
+        .stateIn(scope, SharingStarted.WhileSubscribed(5000), QuizPlan.EMPTY)
 
     /**
      * How many collectors [quizPlan] has right now. While it has one and still holds [QuizPlan.EMPTY], its first
      * real value is on its way (the setup screen opened a moment ago); with none, nothing is coming until someone
      * asks. See [QuizStateHolder.start].
      */
-    val quizPlanCollectors: StateFlow<Int> get() = planCollectors
 
-    /** [SharingStarted.WhileSubscribed] (five seconds) that also mirrors the subscriber count into [into]. */
-    private fun whileSubscribedCounting(into: MutableStateFlow<Int>) = SharingStarted { count ->
-        scope.launch { count.collect { into.value = it } }
-        SharingStarted.WhileSubscribed(5000).command(count)
-    }
 
     /** The countries whose flag was practiced but is not (or no longer) mastered, weakest first: the flashcard deck. */
     val weakSpots: StateFlow<List<Country>> = quizPlan

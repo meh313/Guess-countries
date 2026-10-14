@@ -22,12 +22,10 @@ import java.util.Locale
 import java.util.TimeZone
 import kotlin.random.Random
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * The quiz in progress and the actions on it. The session lives here so it survives rotation and tab switches, and
@@ -76,9 +74,6 @@ class QuizStateHolder(
     private fun restored(): QuizSession? =
         savedState?.get<Bundle>(SAVED_QUIZ)?.let { QuizSnapshotBundle.read(it) }?.restore(repository.allCountries, clock())
 
-    /** A [start] waiting for the quiz plan's first value; the next start, or [end], drops it. */
-    private var pendingStart: Job? = null
-
     /**
      * Starts a quiz; does nothing if the scope has nothing to ask about. A fixed-length quiz over a place fills its
      * ten questions by group, due reviews first and at most a few never-seen countries (see [QuestionPicker.select]
@@ -86,26 +81,10 @@ class QuizStateHolder(
      * ([QuestionPicker.order]). The weak-spots scope asks about the ten weakest in the mode's skill (every weak spot
      * in the endless blitz), the due scope about the ten longest due; both take the wrong answers, look-alike flags
      * included, from the whole world.
-     *
-     * The questions come from [ProgressStateHolder.quizPlan] as it stands, at once. When a screen is collecting the
-     * plan but its first value has not arrived yet (the setup screen opened a moment ago, say right after the
-     * process came back), the quiz starts once it has: a plan still at its placeholder would ask as if nothing had
-     * ever been practiced. With no collector nothing is on its way, so the placeholder is used as it is.
      */
     fun start(mode: QuizMode, scope: String, difficulty: QuizDifficulty) {
-        pendingStart?.cancel()
+        // The plan as it stands: the setup screen has been collecting it, so it is warm by the time Start is tapped.
         val plan = progress.quizPlan.value
-        if (plan !== QuizPlan.EMPTY || progress.quizPlanCollectors.value == 0) {
-            start(mode, scope, difficulty, plan)
-            return
-        }
-        pendingStart = this.scope.launch {
-            val ready = withTimeoutOrNull(PLAN_WAIT_MILLIS) { progress.quizPlan.first { it !== QuizPlan.EMPTY } } ?: progress.quizPlan.value
-            start(mode, scope, difficulty, ready)
-        }
-    }
-
-    private fun start(mode: QuizMode, scope: String, difficulty: QuizDifficulty, plan: QuizPlan) {
         val skill = SkillMastery.skillOf(mode)
         val weak = plan.weak(skill)
         val due = plan.due(skill)
@@ -245,7 +224,6 @@ class QuizStateHolder(
     }
 
     fun end() {
-        pendingStart?.cancel()
         _session.value = null
         _finishOutcome.value = null
     }
@@ -303,7 +281,6 @@ class QuizStateHolder(
      * Nothing happens with no known codes or no repeats.
      */
     fun startOver(codes: List<String>, mode: QuizMode, repeats: Int) {
-        pendingStart?.cancel()
         val byCode = repository.allCountries.associateBy { it.code }
         val targets = codes.distinct().mapNotNull { byCode[it] }.filter { it.isSovereign }
         if (targets.isEmpty() || repeats <= 0) return
@@ -359,8 +336,6 @@ class QuizStateHolder(
         /** How many missed countries a fixed-length quiz asks again at its end. */
         const val REASK_LIMIT = 2
 
-        /** How long [start] waits for the quiz plan's first value before it goes with what it has. */
-        const val PLAN_WAIT_MILLIS = 2_000L
 
         /** The local day of [epochMillis] in [zone], as `yyyy-MM-dd`: the stamp [UserSettings.newItemsDay] keeps. */
         fun dayStamp(epochMillis: Long, zone: TimeZone): String =
