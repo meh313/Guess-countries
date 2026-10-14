@@ -146,7 +146,20 @@ class ScreenshotsTest {
         viewModel.endQuiz()
         rule.waitForIdle()
 
-        // Six countries answered wrong (and the two quizzes above left their own marks): the weak-spots scope unlocks
+        // Map → Country: a highlighted country to name, then the same question answered, the flag beside the outcome.
+        viewModel.startQuiz(QuizMode.LOCATE, "Europe")
+        rule.waitForIdle()
+        rule.awaitDelivered { WorldMapData.peek() != null }
+        rule.waitForIdle()
+        save("quiz_locate")
+        val located = viewModel.quizSession.value!!.current
+        viewModel.answerQuiz(located.correctAnswerIndex)
+        rule.waitForIdle()
+        save("quiz_locate_answered")
+        viewModel.endQuiz()
+        rule.waitForIdle()
+
+        // Six countries answered wrong (and the quizzes above left their own marks): the weak-spots scope unlocks
         // and so does the study source.
         listOf("FR", "DE", "ES", "JP", "BR", "IT").forEach { viewModel.gradeFlashcard(it, Grade.AGAIN) }
         rule.awaitWeakSpotsWhere(viewModel) { it >= 6 }

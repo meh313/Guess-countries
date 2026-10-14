@@ -161,7 +161,8 @@ internal class MapPaths(val land: Path, val byCode: Map<String, Path>) {
  * longitude carries a small world inset in its bottom-end corner with the framed area marked, so a small country is
  * placed on Earth as well as seen. A country that straddles the antimeridian is drawn whole: the world is painted
  * again shifted by 360°. While the asset loads the box is plain sea; a country the asset does not know composes
- * nothing at all. TalkBack hears "Map: France, in Europe · Western Europe".
+ * nothing at all. TalkBack hears "Map: France, in Europe · Western Europe", or [contentDescription] where the name
+ * must not be said (the Map → Country question, whose answer it is).
  */
 @Composable
 fun WorldMap(
@@ -170,7 +171,8 @@ fun WorldMap(
     aspectRatio: Float = 16f / 10f,
     zoom: Boolean = true,
     showCapital: Boolean = true,
-    testTag: String = "world_map"
+    testTag: String = "world_map",
+    contentDescription: String? = null
 ) {
     val data = rememberWorldMapData()
     val place = data?.get(country.code)
@@ -186,7 +188,7 @@ fun WorldMap(
     val ring = scheme.surface
     val insetSea = scheme.surface
     val insetFrame = scheme.outline
-    val description = stringResource(R.string.map_description, country.name, country.regionLabel)
+    val description = contentDescription ?: stringResource(R.string.map_description, country.name, country.regionLabel)
     val shape = RoundedCornerShape(12.dp)
 
     Canvas(
@@ -198,7 +200,8 @@ fun WorldMap(
             .testTag(testTag)
             .semantics {
                 role = Role.Image
-                contentDescription = description
+                // The parameter of the same name shadows the semantics property here: say which one is meant.
+                this.contentDescription = description
             }
     ) {
         if (place == null || paths == null) return@Canvas

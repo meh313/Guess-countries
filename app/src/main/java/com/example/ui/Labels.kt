@@ -29,6 +29,7 @@ val QuizMode.titleRes: Int
         QuizMode.PICK_FLAG -> R.string.mode_pick_flag
         QuizMode.CAPITAL -> R.string.mode_capital
         QuizMode.CONTINENT -> R.string.mode_continent
+        QuizMode.LOCATE -> R.string.mode_locate
         QuizMode.SPEED_MATCH -> R.string.mode_speed_round
         QuizMode.BLITZ -> R.string.mode_blitz
     }
@@ -38,6 +39,7 @@ val QuizMode.hintRes: Int?
     @StringRes get() = when (this) {
         QuizMode.PICK_FLAG -> R.string.mode_pick_flag_hint
         QuizMode.CONTINENT -> R.string.mode_continent_hint
+        QuizMode.LOCATE -> R.string.mode_locate_hint
         QuizMode.SPEED_MATCH -> R.string.mode_speed_round_hint
         QuizMode.BLITZ -> R.string.mode_blitz_hint
         QuizMode.FLAG_NAME, QuizMode.CAPITAL -> null
@@ -50,6 +52,7 @@ fun QuizMode.questionText(target: Country): String = when (this) {
     QuizMode.PICK_FLAG -> stringResource(R.string.question_pick_flag, target.name)
     QuizMode.CAPITAL -> stringResource(R.string.question_capital, target.name)
     QuizMode.CONTINENT -> stringResource(R.string.question_continent)
+    QuizMode.LOCATE -> stringResource(R.string.question_locate)
     QuizMode.BLITZ -> stringResource(R.string.question_blitz)
     QuizMode.SPEED_MATCH -> stringResource(R.string.question_speed_round)
 }
@@ -153,6 +156,7 @@ val Skill.labelRes: Int
         Skill.FLAG -> R.string.skill_flag
         Skill.CAPITAL -> R.string.skill_capital
         Skill.CONTINENT -> R.string.skill_continent
+        Skill.LOCATION -> R.string.skill_location
     }
 
 /** The resource for a continent name of the catalog (or "All"), null for a name that is not one. */

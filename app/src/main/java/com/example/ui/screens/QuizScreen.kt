@@ -37,6 +37,7 @@ import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.LocationCity
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Timer
@@ -106,6 +107,7 @@ import com.example.ui.components.readingWidth
 import com.example.ui.components.MissComparison
 import com.example.ui.components.TellApartLine
 import com.example.ui.components.tellApartLine
+import com.example.ui.components.WorldMap
 import com.example.ui.hintRes
 import com.example.ui.questionText
 import com.example.ui.scopeLabel
@@ -132,6 +134,7 @@ private val QuizMode.icon: ImageVector
         QuizMode.PICK_FLAG -> Icons.Default.GridView
         QuizMode.CAPITAL -> Icons.Default.LocationCity
         QuizMode.CONTINENT -> Icons.Default.Public
+        QuizMode.LOCATE -> Icons.Default.Map
         QuizMode.SPEED_MATCH -> Icons.Default.Speed
         QuizMode.BLITZ -> Icons.Default.Timer
     }
@@ -706,7 +709,21 @@ fun QuizScreen(
                     modifier = Modifier.padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    if (active.mode.showsFlag) {
+                    if (active.mode.showsMap) {
+                        // Map → Country: the country is highlighted on a zoomed map, no capital dot and no flag (its
+                        // name is the answer, and the flag would give it away). TalkBack hears a neutral text, as it
+                        // does for the flag, instead of the map's usual "Map: France, in Europe".
+                        WorldMap(
+                            country = q.targetCountry,
+                            modifier = Modifier.fillMaxWidth(),
+                            aspectRatio = 16f / 10f,
+                            zoom = true,
+                            showCapital = false,
+                            testTag = "quiz_map",
+                            contentDescription = stringResource(R.string.map_to_identify)
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                    } else if (active.mode.showsFlag) {
                         FlagView(
                             country = q.targetCountry,
                             modifier = Modifier
@@ -837,16 +854,31 @@ fun QuizScreen(
                     shape = RoundedCornerShape(16.dp)
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
-                        Text(
-                            text = result,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier
-                                .padding(bottom = 6.dp)
-                                // Announced as soon as it appears, so TalkBack users hear the outcome.
-                                .semantics { liveRegion = LiveRegionMode.Polite }
-                                .testTag("quiz_result")
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 6.dp)) {
+                            // Map → Country: the question showed no flag, so the right country's flag comes with the
+                            // outcome, small, and the player links the shape on the map to the flag.
+                            if (active.mode.showsMap) {
+                                FlagView(
+                                    country = q.targetCountry,
+                                    modifier = Modifier
+                                        .width(48.dp)
+                                        .testTag("quiz_result_flag"),
+                                    contentDescription = q.targetCountry.name,
+                                    thumbnail = true
+                                )
+                                Spacer(modifier = Modifier.width(10.dp))
+                            }
+                            Text(
+                                text = result,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    // Announced as soon as it appears, so TalkBack users hear the outcome.
+                                    .semantics { liveRegion = LiveRegionMode.Polite }
+                                    .testTag("quiz_result")
+                            )
+                        }
                         // A wrong flag in the grid: the two flags are already side by side there, so one line under
                         // the result says how to tell them apart next time (or how to spot the right one).
                         if (pickedCountry != null && !active.mode.isEndless && active.mode.answersAreFlags) {
@@ -906,7 +938,7 @@ fun QuizScreen(
 
         BoxWithConstraints(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
             // A short window (a phone on its side): the question on the start side, the answers on the end side,
-            // each scrolling on its own, so the flag and all four answers are in view together.
+            // each scrolling on its own, so the flag (or the map) and all four answers are in view together.
             val twoPanes = maxHeight < TWO_PANE_BELOW_HEIGHT
             // Each new question starts at the top so the flag is visible.
             LaunchedEffect(active.currentIndex) {

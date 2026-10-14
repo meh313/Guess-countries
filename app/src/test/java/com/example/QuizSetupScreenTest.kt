@@ -12,6 +12,8 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import com.example.data.local.AppDatabase
 import com.example.data.local.SkillProgressEntity
+import com.example.data.model.Country
+import com.example.data.model.CountryCatalog
 import com.example.data.model.CountryRepository
 import com.example.progress.Evidence
 import com.example.progress.Skill
@@ -19,6 +21,7 @@ import com.example.progress.SkillState
 import com.example.data.settings.InMemoryUserSettings
 import com.example.quiz.QuizDifficulty
 import com.example.quiz.QuizEngine
+import com.example.quiz.QuizMode
 import com.example.quiz.sovereign
 import com.example.support.setupNode
 import com.example.support.FakeSpeech
@@ -73,8 +76,8 @@ class QuizSetupScreenTest {
 
     private val created = mutableListOf<CountryViewModel>()
 
-    private fun newViewModel(settings: InMemoryUserSettings = InMemoryUserSettings()) =
-        CountryViewModel(CountryRepository(db.userProgressDao(), smallWorld), FakeSpeech(), settings = settings).also { created += it }
+    private fun newViewModel(settings: InMemoryUserSettings = InMemoryUserSettings(), countries: List<Country> = smallWorld) =
+        CountryViewModel(CountryRepository(db.userProgressDao(), countries), FakeSpeech(), settings = settings).also { created += it }
 
     private fun show() {
         val vm = newViewModel()
@@ -147,6 +150,32 @@ class QuizSetupScreenTest {
         rule.onNodeWithText("Start 60-second blitz").assertIsDisplayed()
         // It uses flags, so the Answers row still applies.
         rule.setupNode("quiz_difficulty_hard").assertIsEnabled()
+    }
+
+    @Test
+    fun theMapMode_isOfferedWithItsTitleAndHint_andStartsATenQuestionQuizOverTheWorld() {
+        val vm = newViewModel(countries = CountryCatalog.all)
+        rule.setContent { WorldFlagsTheme { QuizScreen(vm) } }
+        rule.waitForIdle()
+
+        clickSetup("quiz_mode_locate")
+
+        rule.onNodeWithTag("quiz_mode_locate").assertIsSelected()
+        rule.onNodeWithText("Map → Country").assertIsDisplayed()
+        rule.onNodeWithText("Where in the world is it?").assertIsDisplayed()
+        // Not a flag question, so the Answers row does not apply; untimed and of a fixed length.
+        rule.setupNode("quiz_difficulty_hard").assertIsNotEnabled()
+        rule.onNodeWithTag("start_quiz_btn").assertIsEnabled()
+        rule.onNodeWithText("Start 10-question quiz").assertIsDisplayed()
+
+        rule.onNodeWithTag("start_quiz_btn").performClick()
+        rule.waitForIdle()
+
+        val session = vm.quizSession.value!!
+        assertEquals(QuizMode.LOCATE, session.mode)
+        assertEquals(QuizEngine.GLOBAL, session.scope)
+        assertEquals(QuizEngine.MAX_QUESTIONS, session.questions.size)
+        assertTrue(session.questions.all { q -> q.options.size == 4 && q.optionCodes.none { it == null } })
     }
 
     /** Gives four countries of the small world a wrong review each, so four weak spots exist before the screen opens. */

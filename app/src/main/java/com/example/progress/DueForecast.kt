@@ -14,8 +14,11 @@ data class DueForecast(val tomorrow: Int, val week: Int) {
     companion object {
         val NONE = DueForecast(0, 0)
 
-        /** The skills the forecast reads; the continent skill is kept but not shown anywhere. */
-        private val SHOWN = listOf(Skill.FLAG, Skill.CAPITAL)
+        /**
+         * The skills the forecast reads: flags, capitals and locations, each with its own due dates (a country due
+         * in any of them counts once); the continent skill is kept but not shown anywhere.
+         */
+        private val SHOWN = listOf(Skill.FLAG, Skill.CAPITAL, Skill.LOCATION)
 
         /**
          * The forecast at [now] in [zone] over [skills] (per skill, per country code), counting only the countries

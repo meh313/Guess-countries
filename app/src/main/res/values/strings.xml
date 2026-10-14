@@ -45,6 +45,8 @@
     <string name="mode_capital">Country → Capital</string>
     <string name="mode_continent">Flag → Continent</string>
     <string name="mode_continent_hint">Covers the whole world</string>
+    <string name="mode_locate">Map → Country</string>
+    <string name="mode_locate_hint">Where in the world is it?</string>
     <string name="mode_speed_round">Speed Round</string>
     <string name="mode_speed_round_hint">10 seconds per question</string>
     <string name="mode_blitz">60-second blitz</string>
@@ -56,6 +58,7 @@
     <string name="question_pick_flag">Which of these is the flag of %1$s?</string>
     <string name="question_capital">What is the capital city of %1$s?</string>
     <string name="question_continent">Which continent does this flag belong to?</string>
+    <string name="question_locate">Which country is highlighted on the map?</string>
     <string name="question_blitz">Which country is this?</string>
     <string name="question_speed_round">Identify the country for this flag:</string>
 
@@ -112,6 +115,7 @@
     <string name="skill_flag">Flag</string>
     <string name="skill_capital">Capital</string>
     <string name="skill_continent">Continent</string>
+    <string name="skill_location">Location</string>
 
     <!-- Settings enums -->
     <string name="theme_system">System</string>

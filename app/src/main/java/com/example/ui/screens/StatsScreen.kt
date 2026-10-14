@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.LocationCity
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Settings
@@ -106,6 +107,7 @@ fun StatsScreen(
     val mastered by viewModel.mastered.collectAsStateWithLifecycle()
     val masteredFlags = mastered[Skill.FLAG].orEmpty()
     val masteredCapitals = mastered[Skill.CAPITAL].orEmpty()
+    val masteredLocations = mastered[Skill.LOCATION].orEmpty()
     val plan by viewModel.quizPlan.collectAsStateWithLifecycle()
     val forecast by viewModel.forecast.collectAsStateWithLifecycle()
     val confusions by viewModel.confusions.collectAsStateWithLifecycle()
@@ -129,8 +131,11 @@ fun StatsScreen(
     val sovereignCodes = remember(allCountries) { allCountries.map { it.code }.toSet() }
     val masteredCount = remember(masteredFlags, sovereignCodes) { masteredFlags.count { it in sovereignCodes } }
     val capitalsCount = remember(masteredCapitals, sovereignCodes) { masteredCapitals.count { it in sovereignCodes } }
+    // Placed on the map and remembered: the location skill the Map → Country quiz exercises.
+    val locatedCount = remember(masteredLocations, sovereignCodes) { masteredLocations.count { it in sovereignCodes } }
     val dueCount = remember(plan) { plan.due(Skill.FLAG).size }
     val dueCapitals = remember(plan) { plan.due(Skill.CAPITAL).size }
+    val dueLocations = remember(plan) { plan.due(Skill.LOCATION).size }
     // Reviewed and not (or no longer) mastered: the flags the player is still learning.
     val learningCount = remember(plan) { plan.weak(Skill.FLAG).size }
     // Study sessions are logged for the streak, but they are not quizzes.
@@ -192,8 +197,9 @@ fun StatsScreen(
 
         item { ReminderCard(viewModel) }
 
-        // Top metric grid: the two mastery ratios, then the two country counts, the Due tile on a row of its own
-        // (its value is the longest, "flags 12 · capitals 4"), then the two quiz figures.
+        // Top metric grid, two tiles to a row: the flag and capital mastery ratios, then Learning and Located, then
+        // Due today and Saved, then the two quiz figures. The Due tile's value is the longest ("flags 12 · capitals 4
+        // · map 3"): once it names more than the flags, its row stacks so the value stays on one line at any font size.
         item {
             TileRow { tile ->
                 StatBadge(
@@ -225,6 +231,43 @@ fun StatsScreen(
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 StatBadge(
+                    title = stringResource(R.string.stats_located),
+                    value = stringResource(R.string.stats_ratio, locatedCount, allCountries.size),
+                    icon = Icons.Default.Map,
+                    iconColor = Color(0xFFD35400),
+                    modifier = tile.testTag("stats_located")
+                )
+            }
+        }
+
+        item {
+            // A tap starts a study session over the flags due; with none due the tile is plain. Capitals and map
+            // reviews due are named beside the flags (the capital and Map → Country quizzes' Due scopes review them).
+            val dueCodes = plan.due(Skill.FLAG)
+            val severalDue = dueCapitals > 0 || dueLocations > 0
+            TileRow(stack = severalDue) { tile ->
+                StatBadge(
+                    title = stringResource(R.string.stats_due_today),
+                    value = when {
+                        dueLocations > 0 -> stringResource(R.string.stats_due_three, dueCount, dueCapitals, dueLocations)
+                        dueCapitals > 0 -> stringResource(R.string.stats_due_both, dueCount, dueCapitals)
+                        else -> "$dueCount"
+                    },
+                    icon = Icons.Default.Today,
+                    iconColor = Color(0xFF16A085),
+                    modifier = tile.testTag("stats_due"),
+                    onClick = if (dueCount > 0) {
+                        {
+                            viewModel.startStudy(StudySession.DUE, dueCodes.map { it.code })
+                            onOpenFlashcards()
+                        }
+                    } else {
+                        null
+                    },
+                    onClickLabel = stringResource(R.string.stats_due_open)
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                StatBadge(
                     title = stringResource(R.string.stats_saved),
                     value = "$bookmarkedCount",
                     icon = Icons.Default.Bookmark,
@@ -232,30 +275,6 @@ fun StatsScreen(
                     modifier = tile
                 )
             }
-        }
-
-        item {
-            // A tap starts a study session over the flags due; with none due the tile is plain. Capitals due are
-            // named beside the flags (the capital quiz's Due scope reviews them).
-            val dueCodes = plan.due(Skill.FLAG)
-            StatBadge(
-                title = stringResource(R.string.stats_due_today),
-                value = if (dueCapitals > 0) stringResource(R.string.stats_due_both, dueCount, dueCapitals) else "$dueCount",
-                icon = Icons.Default.Today,
-                iconColor = Color(0xFF16A085),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("stats_due"),
-                onClick = if (dueCount > 0) {
-                    {
-                        viewModel.startStudy(StudySession.DUE, dueCodes.map { it.code })
-                        onOpenFlashcards()
-                    }
-                } else {
-                    null
-                },
-                onClickLabel = stringResource(R.string.stats_due_open)
-            )
         }
 
         item {
@@ -638,11 +657,12 @@ private fun DialogSide(country: Country, modifier: Modifier = Modifier) {
 
 /**
  * Two tiles side by side, or one under the other once the font is 1.5 times its size or more: a half-width tile
- * cannot hold "0 / 196" at that size on a phone.
+ * cannot hold "0 / 196" at that size on a phone. [stack] puts them one under the other at any size, for a row whose
+ * value is too long for half the width ("flags 12 · capitals 4 · map 3").
  */
 @Composable
-private fun TileRow(content: @Composable (tile: Modifier) -> Unit) {
-    if (LocalDensity.current.fontScale >= 1.5f) {
+private fun TileRow(stack: Boolean = false, content: @Composable (tile: Modifier) -> Unit) {
+    if (stack || LocalDensity.current.fontScale >= 1.5f) {
         Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) { content(Modifier.fillMaxWidth()) }
     } else {
         Row(modifier = Modifier.fillMaxWidth()) { content(Modifier.weight(1f)) }

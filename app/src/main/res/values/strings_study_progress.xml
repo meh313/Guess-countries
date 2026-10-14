@@ -105,9 +105,12 @@
     <string name="stats_capitals_known">Capitals known</string>
     <string name="stats_ratio">%1$d / %2$d</string>
     <string name="stats_due_today">Due today</string>
-    <!-- The Due tile's value when capitals are due too: "flags 4 · capitals 2" -->
+    <!-- The Due tile's value when capitals are due too: "flags 4 · capitals 2"; with map reviews due as well: "flags 4 · capitals 2 · map 1" -->
     <string name="stats_due_both">flags %1$d · capitals %2$d</string>
+    <string name="stats_due_three">flags %1$d · capitals %2$d · map %3$d</string>
     <string name="stats_learning">Learning</string>
+    <!-- Countries placed on the map and remembered (the location skill): "Located 12 / 196" -->
+    <string name="stats_located">Located</string>
     <string name="stats_due_open">Start a study session of the cards due</string>
     <string name="stats_saved">Saved</string>
     <string name="stats_quizzes_finished">Quizzes finished</string>

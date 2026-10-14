@@ -3,11 +3,13 @@ package com.example.progress
 import com.example.quiz.QuizMode
 
 /**
- * What a country can be known by. A flag quiz, a capital quiz and a continent quiz measure different things; the
- * continent is its own skill so that a right continent pick never marks a flag as learning. The UI shows FLAG and
- * CAPITAL; CONTINENT rows are stored like the others.
+ * What a country can be known by. A flag quiz, a capital quiz, a continent quiz and a map quiz measure different
+ * things; the continent is its own skill so that a right continent pick never marks a flag as learning, and the
+ * location (Map → Country) its own so that knowing where a country is never counts as knowing its flag. The UI shows
+ * FLAG and CAPITAL on the cards and LOCATION on the detail sheet and Progress; CONTINENT rows are stored like the
+ * others. The names are stored in the skill rows.
  */
-enum class Skill { FLAG, CAPITAL, CONTINENT }
+enum class Skill { FLAG, CAPITAL, CONTINENT, LOCATION }
 
 /**
  * How much an answer says. A quiz answer among four countries is FULL evidence; one given against a clock (Speed
@@ -77,9 +79,11 @@ object SkillMastery {
     fun skillOf(mode: QuizMode): Skill = when (mode) {
         QuizMode.CAPITAL -> Skill.CAPITAL
         QuizMode.CONTINENT -> Skill.CONTINENT
+        QuizMode.LOCATE -> Skill.LOCATION
         else -> Skill.FLAG
     }
 
+    /** A map pick among four named countries (LOCATE) is as telling as a flag pick: full evidence, like the rest. */
     fun evidenceOf(mode: QuizMode): Evidence = when (mode) {
         QuizMode.CONTINENT -> Evidence.LIGHT
         QuizMode.SPEED_MATCH, QuizMode.BLITZ -> Evidence.TIMED
