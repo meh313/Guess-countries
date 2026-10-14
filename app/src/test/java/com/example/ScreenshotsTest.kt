@@ -49,6 +49,9 @@ import com.example.ui.viewmodel.CountryViewModel
 /**
  * Saves a picture of each screen under app/build/screenshots so a change can be looked at without a
  * device (CI uploads the folder). Not an assertion suite: a screen that fails to render fails the test.
+ *
+ * The `store*` tests write the Play Store screenshots to the subfolder `store/` (phone 1080x2400 light and dark,
+ * tablet 1600x2560); after a run, that folder is copied into `store/screenshots/` in the repository.
  */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -62,11 +65,138 @@ class ScreenshotsTest {
 
     private val rule get() = composeRule
 
-    private fun save(name: String) = saveBitmap(name, rule.drawWindow())
+    /** Writes the window to `build/screenshots/<folder>/<name>.png` (`folder` empty: straight into `build/screenshots`). */
+    private fun save(name: String, folder: String = "") = saveBitmap(name, rule.drawWindow(), folder)
 
-    private fun saveBitmap(name: String, bitmap: Bitmap) {
-        val dir = File("build/screenshots").apply { mkdirs() }
+    private fun saveBitmap(name: String, bitmap: Bitmap, folder: String = "") {
+        val dir = File("build/screenshots", folder).apply { mkdirs() }
         File(dir, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    }
+
+    /** The Play Store subfolder; its files are copied to `store/screenshots/` in the repository. */
+    private val store = "store"
+
+    /**
+     * A player a few days in: one finished quiz today, a quiz on each of the two days before, three days of streak.
+     * What the Progress screen needs to have something to show in a store picture.
+     */
+    private fun seedProgress(viewModel: CountryViewModel) {
+        rule.openTab("quiz")
+        viewModel.startQuiz(QuizMode.FLAG_NAME, "Africa")
+        rule.waitForIdle()
+        var missedOne = false
+        while (viewModel.quizSession.value?.isFinished == false) {
+            val q = viewModel.quizSession.value!!.current
+            viewModel.answerQuiz(if (missedOne) q.correctAnswerIndex else (q.correctAnswerIndex + 1) % q.options.size)
+            missedOne = true
+            viewModel.nextQuizQuestion()
+        }
+        rule.awaitDelivered { viewModel.finishOutcome.value != null }
+        viewModel.endQuiz()
+        rule.waitForIdle()
+        listOf(1, 2).forEach { daysAgo ->
+            val day = java.util.Calendar.getInstance().apply { add(java.util.Calendar.DAY_OF_YEAR, -daysAgo) }.timeInMillis
+            runBlocking {
+                AppDatabase.getDatabase(rule.activity).userProgressDao().insertQuizScore(
+                    QuizScoreEntity(mode = "FLAG_NAME", score = 120, total = 190, continentFilter = "Global", timestamp = day)
+                )
+            }
+        }
+    }
+
+    /** Progress with the seeded run on it, drawn once the streak card shows it. */
+    private fun saveProgress(name: String, viewModel: CountryViewModel) {
+        rule.openTab("stats")
+        rule.awaitDelivered { viewModel.streak.value.current == 3 }
+        rule.onNodeWithText("3-day streak").assertIsDisplayed()
+        save(name, store)
+    }
+
+    /**
+     * The phone screenshots for the store listing, at 1080x2400 (the class default). Numbered in the order they are
+     * shown on the store page: Explore, a Learn card, the map quiz, a wrong answer with the two flags and the map,
+     * the back of a flashcard, Progress, a country sheet scrolled to its map.
+     */
+    @Test
+    fun storePhone() {
+        rule.waitForIdle()
+        save("01_explore", store)
+
+        val viewModel = ViewModelProvider(rule.activity)[CountryViewModel::class.java]
+        rule.openTab("flashcards")
+        rule.onNodeWithTag("flashcard_study_btn").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithTag("study_learn_btn").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithTag("learn_card").assertIsDisplayed()
+        save("02_learn_card", store)
+        rule.onNodeWithTag("learn_back_btn").performClick()
+        rule.waitForIdle()
+
+        rule.openTab("quiz")
+        viewModel.startQuiz(QuizMode.LOCATE, "Europe")
+        rule.waitForIdle()
+        rule.awaitDelivered { WorldMapData.peek() != null }
+        rule.waitForIdle()
+        save("03_quiz_locate", store)
+        viewModel.endQuiz()
+        rule.waitForIdle()
+
+        viewModel.startQuiz(QuizMode.FLAG_NAME, "Europe")
+        rule.waitForIdle()
+        val europe = viewModel.quizSession.value!!.current
+        viewModel.answerQuiz((europe.correctAnswerIndex + 1) % europe.options.size)
+        rule.waitForIdle()
+        rule.onNodeWithTag("quiz_miss_comparison").performScrollTo()
+        save("04_quiz_answered", store)
+        viewModel.endQuiz()
+        rule.waitForIdle()
+
+        rule.openTab("flashcards")
+        rule.onNodeWithTag("flashcard_flip_card").performClick()
+        rule.waitForIdle()
+        rule.awaitDelivered { WorldMapData.peek() != null }
+        if (rule.onAllNodesWithTag("flashcard_map", useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()) {
+            rule.onNodeWithTag("flashcard_map", useUnmergedTree = true).performScrollTo()
+            rule.waitForIdle()
+        }
+        save("05_flashcard_back", store)
+
+        seedProgress(viewModel)
+        saveProgress("06_progress", viewModel)
+
+        rule.openTab("explore")
+        rule.onNodeWithTag("explore_grid").performScrollToNode(hasTestTag("country_card_fr"))
+        rule.onNodeWithTag("country_card_fr").performClick()
+        rule.waitForIdle()
+        rule.awaitDelivered { WorldMapData.peek() != null }
+        rule.onNode(hasScrollAction() and hasTestTag("country_detail_sheet_fr")).performScrollToNode(hasTestTag("sheet_map"))
+        rule.waitForIdle()
+        saveBitmap("07_sheet_map", drawLatestDialog(), store)
+        rule.onNodeWithContentDescription("Close").performClick()
+        rule.waitForIdle()
+    }
+
+    /** Two of the phone screenshots in the dark theme. */
+    @Test
+    @Config(qualifiers = "+night")
+    fun storePhoneDark() {
+        rule.waitForIdle()
+        save("dark_01_explore", store)
+        val viewModel = ViewModelProvider(rule.activity)[CountryViewModel::class.java]
+        seedProgress(viewModel)
+        saveProgress("dark_06_progress", viewModel)
+    }
+
+    /** Two of the screenshots on a 1600x2560 tablet: the rail on the start edge, the columns at their reading width. */
+    @Test
+    @Config(qualifiers = "w800dp-h1280dp-xhdpi")
+    fun storeTablet() {
+        rule.waitForIdle()
+        save("tablet_01_explore", store)
+        val viewModel = ViewModelProvider(rule.activity)[CountryViewModel::class.java]
+        seedProgress(viewModel)
+        saveProgress("tablet_06_progress", viewModel)
     }
 
     @Test

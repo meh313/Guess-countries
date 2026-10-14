@@ -1,7 +1,10 @@
 # World Flags & Continents
 
-An offline Android app for learning world geography: browse all 196 countries of the world plus Antarctica,
-drill them with flashcards, and test yourself with quizzes. Everything runs on the device; there is no network access.
+An offline Android app for learning world geography: the flags, capitals and locations of all 196 countries of the
+world plus Antarctica. It teaches first (five new flags at a time, each with a cue on what to look for and the flag it
+is confused with, and a map of where it is), then reviews what you learnt on a spaced schedule per skill, through
+quizzes and flashcards, and shows you how you are doing against a daily goal. Everything runs on the device; the app
+has no network permission.
 
 ## Features
 
@@ -48,7 +51,7 @@ Each country is tracked per skill (its flag, its capital, its continent, its loc
 from 0 to 100 and a box from 1 to 5 whose review intervals are 1, 3, 7, 21 and 60 days. A right quiz answer raises the
 score and, when the review was due, moves the box up; an answer before the due date keeps its schedule, so nothing is
 mastered in one sitting. A wrong answer drops the country two boxes (never below box 1); a miss under time pressure
-(Speed Round, Blitz) drops it one and costs half the score. The continent quiz has its own skill, so a right continent
+(Speed round, Blitz) drops it one and costs half the score. The continent quiz has its own skill, so a right continent
 pick never counts as knowing the flag; its answers and the flashcard grades are light evidence: they move the score a
 little and never past 60. The map quiz feeds a fourth skill, *Location*, with its own due dates (the *Due today* and
 *Weak spots* scopes follow it in that mode); it is shown on a country's detail sheet and on Progress, not as a card pip. Studying a card, *Again* drops it two boxes, *Good* reschedules a due card at its current
@@ -80,7 +83,8 @@ The catalog itself (names, capitals, flag texts, facts) is English; translating 
 The app has no network permission. Everything stays on the device: progress in the app's own database, a few
 settings in SharedPreferences, both named in the backup rules (`res/xml/backup_rules.xml`, `data_extraction_rules.xml`)
 and so included in Android's backup of the app. Settings > Export writes the same data to a file you keep; Import
-replaces everything with such a file. There is no account and no analytics.
+replaces everything with such a file. There is no account and no analytics. The full statement is
+[`PRIVACY.md`](PRIVACY.md); the About screen's Privacy section links to it (*Full privacy statement*).
 
 ## Build
 
@@ -98,7 +102,8 @@ wider gets a navigation rail and columns held to a reading width.
 
 ### Release builds
 
-`./gradlew assembleRelease` always works and produces an unsigned, R8-shrunk APK. To sign it, provide a
+`./gradlew assembleRelease` always works and produces an unsigned, R8-shrunk APK; `./gradlew bundleRelease`
+produces the app bundle (`.aab`) the Play Console takes, built and signed the same way. To sign them, provide a
 keystore (alias `upload`) and its passwords:
 
 ```sh
@@ -106,7 +111,7 @@ export KEYSTORE_PATH=/path/to/upload.jks   # defaults to ./my-upload-key.jks
 export STORE_PASSWORD=...
 export KEY_PASSWORD=...
 export VERSION_CODE=42                     # optional; defaults to 1, must be a positive integer
-./gradlew assembleRelease
+./gradlew assembleRelease bundleRelease
 ```
 
 The keystore and its passwords are never read from the repository.
@@ -119,8 +124,9 @@ which reads the upload keystore and its passwords from the repository secrets `K
 
 1. Bump `versionName` in `app/build.gradle.kts` (for example `"1.6"`) and merge it to `main`.
 2. Open Actions > Release > Run workflow on `main`. The run creates the tag `v1.6`, builds and signs the
-   APK, checks the certificate, alignment and version, and publishes a release with the APK, its SHA-256
-   and the R8 mapping. Pushing a tag `v1.6` does the same, provided the tagged commit is on `main`.
+   APK and the app bundle, checks the certificate of both (and the APK's alignment and version), and publishes a
+   release with the APK (for sideloading), the `.aab` (for the Play Console), a SHA-256 beside each and the R8
+   mapping. Pushing a tag `v1.6` does the same, provided the tagged commit is on `main`.
 
 The workflow is two jobs: `build` (read-only token) lints, tests, builds, signs and verifies, and keeps the files as
 a workflow artifact; `publish` (write token, GitHub environment `release`) downloads them and creates the release.
@@ -129,6 +135,19 @@ approval. `versionCode` is derived from the version (`major*10000 + minor*100 + 
 keeps it increasing without a manual bump. A file `release-notes/<version>.md`, when there is one, is appended
 to the generated release notes. Tick "dry run" to build and verify without publishing; the `publish` job is then
 skipped and the files stay as a workflow artifact for a week.
+
+## Store
+
+What a Play Store listing needs is in the repository:
+
+- `store/listing.md`: the title, the short and full descriptions, the "What's new" text, the category and the data
+  safety answers.
+- `store/screenshots/`: the store screenshots, written by the `store*` tests of `ScreenshotsTest`
+  (`./gradlew testDebugUnitTest --tests '*ScreenshotsTest*'`) to `app/build/screenshots/store/` and copied from there
+  into `store/screenshots/` when they change: phone 1080×2400 in light and dark, tablet 1600×2560.
+- `PRIVACY.md`: the privacy statement to link from the listing; the About screen links to the same file.
+- The `.aab` on each GitHub release (see above) is the file to upload to the Play Console; the `.apk` beside it is
+  for sideloading.
 
 ## Project layout
 

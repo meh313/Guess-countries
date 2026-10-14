@@ -1,8 +1,10 @@
 package com.example
 
 import android.app.UiModeManager
+import android.content.Intent
 import androidx.activity.compose.setContent
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.onAllNodesWithTag
@@ -30,12 +32,14 @@ import com.example.speech.Speech
 import com.example.support.FreshDatabaseRule
 import com.example.support.eventually
 import com.example.support.openTab
+import com.example.ui.screens.PRIVACY_URL
 import com.example.ui.screens.SettingsScreen
 import com.example.ui.viewmodel.CountryViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -156,7 +160,7 @@ class SettingsAndAboutUiTest {
 
         rule.onNodeWithTag("settings_timer_relaxed").performClick()
         rule.waitForIdle()
-        rule.onNodeWithTag("settings_timer_hint").assert(hasText("Speed Round: 20 seconds per question", substring = true))
+        rule.onNodeWithTag("settings_timer_hint").assert(hasText("Speed round: 20 seconds per question", substring = true))
         assertEquals(TimerPace.RELAXED, PrefsUserSettings(ApplicationProvider.getApplicationContext()).timerPace)
 
         // The Progress tab keeps Settings open while another tab is shown, so leave it before switching.
@@ -279,6 +283,29 @@ class SettingsAndAboutUiTest {
         // Settings comes back where it was scrolled to (the About row), so its title may sit above the fold.
         rule.onNodeWithTag("settings_about_btn").assertIsDisplayed()
         rule.onNodeWithTag("about_screen").assertDoesNotExist()
+    }
+
+    /** The Privacy section keeps its summary and links to the full statement, which opens in the browser like a source link. */
+    @Test
+    fun about_linksToTheFullPrivacyStatement_whichOpensInTheBrowser() {
+        openSettings()
+        rule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("settings_about_btn"))
+        rule.onNodeWithTag("settings_about_btn").performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithTag("about_privacy_link").performScrollTo()
+        rule.onNodeWithText("The app has no network permission", substring = true).assertExists()
+        rule.onNodeWithTag("about_privacy_link")
+            .assertIsDisplayed()
+            .assert(hasText("Full privacy statement"))
+            .assertHasClickAction()
+            .performClick()
+
+        val opened = shadowOf(rule.activity).nextStartedActivity
+        assertNotNull("the browser was asked to open the statement", opened)
+        assertEquals(Intent.ACTION_VIEW, opened.action)
+        assertEquals("https://github.com/meh313/Guess-countries/blob/main/PRIVACY.md", opened.dataString)
+        assertEquals(PRIVACY_URL, opened.dataString)
     }
 
     @Test

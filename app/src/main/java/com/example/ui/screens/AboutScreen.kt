@@ -1,6 +1,7 @@
 package com.example.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -8,7 +9,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -26,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
@@ -38,6 +42,9 @@ import kotlinx.coroutines.withContext
 
 /** The app's GitHub repository, where the catalog's research and audit files live. */
 const val REPOSITORY_URL = "https://github.com/meh313/Guess-countries"
+
+/** The full privacy statement, PRIVACY.md in the repository; the About screen's Privacy section links to it. */
+const val PRIVACY_URL = "$REPOSITORY_URL/blob/main/PRIVACY.md"
 
 /**
  * The asset with the player-facing third-party notices: one block per work (name, use, licence, copyright, licence
@@ -104,6 +111,19 @@ fun AboutScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
             Text(
                 text = stringResource(R.string.about_privacy_text),
                 style = MaterialTheme.typography.bodyMedium
+            )
+            // The full statement lives next to the code. Like a detail sheet's source links: a 48dp-tall row that
+            // hands the address to the browser, which needs no permission of this app's.
+            Text(
+                text = stringResource(R.string.about_privacy_link),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 48.dp)
+                    .clickable(role = Role.Button, onClickLabel = stringResource(R.string.sheet_open_in_browser)) { openUrl(context, PRIVACY_URL) }
+                    .wrapContentHeight(Alignment.CenterVertically)
+                    .testTag("about_privacy_link")
             )
         }
 

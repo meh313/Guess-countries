@@ -31,6 +31,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -62,8 +63,18 @@ class ProgressStateHolder(
     val quizHistory: StateFlow<List<QuizScoreEntity>> = repository.quizHistory
         .stateIn(scope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    private val _skillsLoaded = MutableStateFlow(false)
+
+    /**
+     * True once [skills] has carried what the database holds. Until then its value is the placeholder it starts
+     * with, which an empty database is indistinguishable from; a holder that plans from the states (Learn) waits
+     * for the first real answer instead.
+     */
+    val skillsLoaded: StateFlow<Boolean> get() = _skillsLoaded
+
     /** Every country's standing in every skill, as the database has it. */
     val skills: StateFlow<Map<Skill, Map<String, SkillState>>> = repository.skills
+        .onEach { _skillsLoaded.value = true }
         .stateIn(scope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
     private val refresh = MutableStateFlow(0)
@@ -76,6 +87,9 @@ class ProgressStateHolder(
      * a screen is open.
      */
     fun refreshClock() = refresh.update { it + 1 }
+
+    // Declared before the plan: its initializer reads it.
+    private val planCollectors = MutableStateFlow(0)
 
     /**
      * What the quiz setup needs: the skill states, which countries are weak or due in each skill and what the quizzes
@@ -98,7 +112,20 @@ class ProgressStateHolder(
     }
         // Two passes over every skill state, on every write: keep them off the main thread.
         .flowOn(Dispatchers.Default)
-        .stateIn(scope, SharingStarted.WhileSubscribed(5000), QuizPlan.EMPTY)
+        .stateIn(scope, whileSubscribedCounting(planCollectors), QuizPlan.EMPTY)
+
+    /**
+     * How many collectors [quizPlan] has right now. While it has one and still holds [QuizPlan.EMPTY], its first
+     * real value is on its way (the setup screen opened a moment ago); with none, nothing is coming until someone
+     * asks. See [QuizStateHolder.start].
+     */
+    val quizPlanCollectors: StateFlow<Int> get() = planCollectors
+
+    /** [SharingStarted.WhileSubscribed] (five seconds) that also mirrors the subscriber count into [into]. */
+    private fun whileSubscribedCounting(into: MutableStateFlow<Int>) = SharingStarted { count ->
+        scope.launch { count.collect { into.value = it } }
+        SharingStarted.WhileSubscribed(5000).command(count)
+    }
 
     /** The countries whose flag was practiced but is not (or no longer) mastered, weakest first: the flashcard deck. */
     val weakSpots: StateFlow<List<Country>> = quizPlan

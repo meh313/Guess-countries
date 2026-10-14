@@ -13,8 +13,9 @@ import org.json.JSONObject
 
 /**
  * Everything the player did, as one file: the four tables and the settings, in a JSON document the app can read
- * back on another device. Format 1. Unknown keys are ignored on the way in; a file that is not one of ours, a later
- * format, or one whose rows cannot be stored is refused with an [ImportProblem].
+ * back on another device. Format 2: format 1 (from before the map quiz's LOCATION skill and LOCATE mode) reads the
+ * same way. Unknown keys are ignored on the way in; a file that is not one of ours, a later format, or one whose
+ * rows cannot be stored is refused with an [ImportProblem].
  */
 data class ProgressSnapshot(
     val progress: List<UserProgressEntity>,
@@ -47,7 +48,12 @@ sealed class ImportProblem(message: String) : IllegalArgumentException(message) 
 }
 
 object ProgressTransfer {
-    const val FORMAT = 1
+    /**
+     * Goes up whenever a file may hold something an older reader would refuse, so that reader says "newer version"
+     * rather than "damaged": 2 since the LOCATION skill rows and LOCATE quizzes of 3.0, which a 1.x reader took for
+     * a broken row.
+     */
+    const val FORMAT = 2
     const val APP = "World Flags"
 
     /** The most characters an import is read up to; years of daily play stay well under it. */
@@ -130,8 +136,10 @@ object ProgressTransfer {
 
     /**
      * The snapshot in [json], or an [ImportProblem] saying why the text is not one of our files. Rows about countries
-     * not in [knownCodes] (a catalog change, or a hand-edited file) are dropped rather than refused; numbers are held
-     * to their ranges; quiz ids are only used to tie answers to their quiz (the database gives new ones).
+     * not in [knownCodes] (a catalog change, or a hand-edited file) and skill rows naming a skill this version does
+     * not know (a later one's) are dropped rather than refused; a quiz keeps whatever mode it names, since that is
+     * only text; numbers are held to their ranges; quiz ids are only used to tie answers to their quiz (the
+     * database gives new ones). A malformed row (no code, no skill name, an impossible id) still refuses the file.
      */
     fun fromJson(json: String, knownCodes: Set<String> = catalogCodes): Result<ProgressSnapshot> = runCatching {
         if (json.length > MAX_CHARS) throw ImportProblem.TooLarge()
@@ -160,8 +168,7 @@ object ProgressTransfer {
         val skills = root.table("skills").mapNotNull {
             val code = it.code()
             val skill = it.getString("skill")
-            damagedIf(skill !in skillNames) { "'$skill' is not a skill" }
-            if (code !in knownCodes) return@mapNotNull null
+            if (code !in knownCodes || skill !in skillNames) return@mapNotNull null
             SkillProgressEntity(
                 countryCode = code,
                 skill = skill,

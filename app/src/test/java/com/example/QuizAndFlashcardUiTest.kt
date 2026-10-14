@@ -300,9 +300,9 @@ class QuizAndFlashcardUiTest {
         tab("stats")
         rule.waitUntil(10_000) { viewModel.quizHistory.value.isNotEmpty() }
 
-        rule.onNode(hasScrollAction()).performScrollToNode(hasText("Speed Round · Global"))
+        rule.onNode(hasScrollAction()).performScrollToNode(hasText("Speed round · Global"))
 
-        rule.onNodeWithText("Speed Round · Global").assertIsDisplayed()
+        rule.onNodeWithText("Speed round · Global").assertIsDisplayed()
         rule.onAllNodesWithText("SPEED_MATCH", substring = true).assertCountEquals(0)
     }
 
@@ -331,7 +331,7 @@ class QuizAndFlashcardUiTest {
 
     @Test
     fun explore_andFlashcards_stillIncludeAntarctica() {
-        rule.onNodeWithText("${allCountries.size} Countries").assertIsDisplayed()
+        rule.onNodeWithText("${allCountries.size} countries").assertIsDisplayed()
         tab("flashcards")
         rule.onNodeWithText("Card 1 of ${allCountries.size}").assertIsDisplayed()
     }
@@ -793,7 +793,7 @@ class QuizAndFlashcardUiTest {
     fun sortOrder_isShownInTheFilterNoticeAndClearedByClear() {
         tab("explore")
         rule.onNodeWithTag("sort_menu_btn").performClick()
-        rule.onNodeWithText("Sort by Population").performClick()
+        rule.onNodeWithText("Sort by population").performClick()
         rule.waitForIdle()
 
         tab("flashcards")

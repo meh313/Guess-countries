@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.LocalFireDepartment
@@ -452,11 +453,11 @@ fun StatsScreen(
                         shape = shape,
                         colors = colors
                     ) {
-                        LogRow(entry, dateFormat)
+                        LogRow(entry, dateFormat, opens = true)
                     }
                 } else {
                     Card(modifier = rowModifier, shape = shape, colors = colors) {
-                        LogRow(entry, dateFormat)
+                        LogRow(entry, dateFormat, opens = false)
                     }
                 }
             }
@@ -503,9 +504,12 @@ private data class ConfusedPair(val first: Country, val second: Country, val cou
     }
 }
 
-/** One quiz log row: the mode and scope, when it was played, and its result in a chip. */
+/**
+ * One quiz log row: the mode and scope, when it was played, and its result in a chip. A row that [opens] its result
+ * again ends in a chevron, so it is told apart from a plain one.
+ */
 @Composable
-private fun LogRow(entry: QuizScoreEntity, dateFormat: DateFormat) {
+private fun LogRow(entry: QuizScoreEntity, dateFormat: DateFormat, opens: Boolean) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -513,7 +517,7 @@ private fun LogRow(entry: QuizScoreEntity, dateFormat: DateFormat) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column {
+        Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = stringResource(R.string.stats_log_entry, modeTitle(entry.mode), scopeLabel(entry.continentFilter)),
                 style = MaterialTheme.typography.titleSmall,
@@ -543,6 +547,16 @@ private fun LogRow(entry: QuizScoreEntity, dateFormat: DateFormat) {
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+            )
+        }
+        if (opens) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null, // the row's click label already says what a tap does
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .padding(start = 6.dp)
+                    .testTag("stats_log_chevron_${entry.id}")
             )
         }
     }

@@ -1,11 +1,13 @@
 name: Release
 
-# Builds the release APK from the checked-out commit, signs it with the upload key kept in the
-# repository secrets, verifies it and publishes it as a GitHub Release.
+# Builds the release APK and the app bundle (.aab) from the checked-out commit, signs both with the upload
+# key kept in the repository secrets, verifies them and publishes them as a GitHub Release. The .apk is for
+# sideloading; the .aab is what the Play Console takes.
 #
 # Two jobs, so the signed files are made with a read-only token and only the last step holds a write one:
-#   build    permissions: contents: read. Lints, tests, builds, signs and verifies the APK and keeps it, its
-#            checksum, the R8 mapping and the release notes as the workflow artifact "release-files".
+#   build    permissions: contents: read. Lints, tests, builds, signs and verifies the APK and the bundle and
+#            keeps them, their checksums, the R8 mapping and the release notes as the workflow artifact
+#            "release-files".
 #   publish  permissions: contents: write, in the GitHub environment "release". Downloads that artifact and
 #            creates the tag and the release. Skipped on a dry run. To have every publish wait for a person,
 #            add required reviewers to the "release" environment (Settings > Environments > release); the
@@ -59,6 +61,7 @@ jobs:
       tag: ${{ steps.version.outputs.tag }}
       code: ${{ steps.version.outputs.code }}
       apk: ${{ steps.files.outputs.apk }}
+      aab: ${{ steps.files.outputs.aab }}
     steps:
       # A release is main as CI tested it, or a version tag. Nothing else gets signed and published.
       - name: Refuse any ref but main or a version tag
@@ -146,12 +149,12 @@ jobs:
       - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6
 
       # Lint and the unit tests run again here: a release must not depend on remembering to look at CI first.
-      - name: Lint, test and build the signed release APK
+      - name: Lint, test and build the signed release APK and app bundle
         env:
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           VERSION_CODE: ${{ steps.version.outputs.code }}
-        run: ./gradlew --console=plain lintDebug testDebugUnitTest assembleRelease
+        run: ./gradlew --console=plain lintDebug testDebugUnitTest assembleRelease bundleRelease
 
       - name: Upload reports
         if: failure()
@@ -163,7 +166,7 @@ jobs:
             app/build/test-results/
           if-no-files-found: ignore
 
-      - name: Verify the APK and collect the files
+      - name: Verify the APK and the bundle and collect the files
         id: files
         env:
           VERSION: ${{ steps.version.outputs.version }}
@@ -183,29 +186,54 @@ jobs:
             echo "::error::Unexpected version in the APK: $badging"
             exit 1
           fi
+          # The bundle is a jar signed with the same key (Gradle signs it with the release signingConfig). jarsigner
+          # checks the signature; keytool reads the signer's certificate out of it and prints its SHA-256 fingerprint
+          # as colon-separated hex, which is compared with EXPECTED_CERT. bundletool is not on the runner, so the
+          # bundle's version is not re-read; it comes from the same Gradle invocation as the APK checked above.
+          bundle=app/build/outputs/bundle/release/app-release.aab
+          [ -s "$bundle" ] || { echo "::error::bundleRelease produced no $bundle"; exit 1; }
+          jarsigner -verify -verbose -certs "$bundle" > "$RUNNER_TEMP/aab-verify.txt"
+          if ! grep -q '^jar verified' "$RUNNER_TEMP/aab-verify.txt"; then
+            tail -20 "$RUNNER_TEMP/aab-verify.txt"
+            echo "::error::The app bundle's signature does not verify. Is the release signing config applied?"
+            exit 1
+          fi
+          aabcert=$(keytool -printcert -jarfile "$bundle" | sed -n 's/^[[:space:]]*SHA256: //p' | head -1 | tr -d : | tr 'A-F' 'a-f')
+          if [ "$aabcert" != "$EXPECTED_CERT" ]; then
+            echo "::error::The app bundle is signed with an unexpected certificate ($aabcert). Check KEYSTORE_BASE64."
+            exit 1
+          fi
           apk="world-flags-$VERSION-code$CODE-release.apk"
+          aab="world-flags-$VERSION-code$CODE-release.aab"
           mkdir -p dist
           cp "$src" "dist/$apk"
-          (cd dist && sha256sum "$apk" > "$apk.sha256")
+          cp "$bundle" "dist/$aab"
+          (cd dist && sha256sum "$apk" > "$apk.sha256" && sha256sum "$aab" > "$aab.sha256")
           gzip -9 -c app/build/outputs/mapping/release/mapping.txt > "dist/mapping-$VERSION.txt.gz"
           sha=$(cut -c1-64 "dist/$apk.sha256")
+          aabsha=$(cut -c1-64 "dist/$aab.sha256")
           commit=$(git rev-parse --short HEAD)
           {
             echo "apk=$apk"
+            echo "aab=$aab"
             echo "sha=$sha"
+            echo "aabsha=$aabsha"
           } >> "$GITHUB_OUTPUT"
           cat > dist/notes.md <<EOF
           **World Flags $VERSION** (versionCode $CODE), built by GitHub Actions from \`$commit\`.
 
           **Install:** Android 7.0 or newer. Installs over any earlier release from this page (same signing key); your progress is kept.
 
+          The \`.apk\` is for sideloading; the \`.aab\` is the app bundle for the Play Console.
+
           **Verify**
 
           | File | SHA-256 |
           |---|---|
           | \`$apk\` | \`$sha\` |
+          | \`$aab\` | \`$aabsha\` |
 
-          Signing certificate SHA-256 (the same for every release): \`$EXPECTED_CERT\`
+          Signing certificate SHA-256 (the same for every release, APK and bundle alike): \`$EXPECTED_CERT\`
 
           \`mapping-$VERSION.txt.gz\` is the R8 mapping file for reading obfuscated crash traces.
           EOF
@@ -241,11 +269,12 @@ jobs:
       - name: Check the files are the ones the build verified
         env:
           APK: ${{ needs.build.outputs.apk }}
+          AAB: ${{ needs.build.outputs.aab }}
           VERSION: ${{ needs.build.outputs.version }}
         run: |
           set -euo pipefail
           ls -l dist
-          (cd dist && sha256sum -c "$APK.sha256")
+          (cd dist && sha256sum -c "$APK.sha256" "$AAB.sha256")
           [ -s "dist/mapping-$VERSION.txt.gz" ] && [ -s dist/notes.md ]
 
       - name: Publish the release
@@ -255,9 +284,10 @@ jobs:
           TAG: ${{ needs.build.outputs.tag }}
           VERSION: ${{ needs.build.outputs.version }}
           APK: ${{ needs.build.outputs.apk }}
+          AAB: ${{ needs.build.outputs.aab }}
         run: |
           set -euo pipefail
           gh release create "$TAG" --target "$GITHUB_SHA" --title "World Flags $VERSION" \
             --notes-file dist/notes.md --generate-notes --latest \
-            "dist/$APK" "dist/$APK.sha256" "dist/mapping-$VERSION.txt.gz"
+            "dist/$APK" "dist/$APK.sha256" "dist/$AAB" "dist/$AAB.sha256" "dist/mapping-$VERSION.txt.gz"
           echo "Published https://github.com/$GITHUB_REPOSITORY/releases/tag/$TAG"

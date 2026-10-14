@@ -57,7 +57,7 @@ class ProgressTransferTest {
         val root = JSONObject(ProgressTransfer.toJson(snapshot))
 
         assertEquals("World Flags", root.getString("app"))
-        assertEquals(1, root.getInt("format"))
+        assertEquals(2, root.getInt("format"))
         assertTrue(root.getJSONObject("settings").has("themeMode"))
         assertTrue(!root.getJSONObject("settings").has("notASetting"))
     }
@@ -108,7 +108,18 @@ class ProgressTransferTest {
         assertTrue(problemOf("not json at all") is ImportProblem.NotOurs)
         assertTrue(problemOf("""{"app":"Other","format":1}""") is ImportProblem.NotOurs)
         assertEquals(99, (problemOf("""{"app":"World Flags","format":99}""") as ImportProblem.NewerFormat).format)
+        assertEquals(3, (problemOf("""{"app":"World Flags","format":3}""") as ImportProblem.NewerFormat).format)
         assertTrue(problemOf("""{"app":"World Flags","format":1}""") is ImportProblem.Damaged)
+    }
+
+    @Test
+    fun aFormat1File_fromBeforeTheMapQuiz_readsLikeAFormat2One() {
+        val format1 = edited { put("format", 1) }
+
+        val back = ProgressTransfer.fromJson(format1).getOrThrow()
+
+        assertEquals(snapshot.skills, back.skills)
+        assertEquals(snapshot.quizzes, back.quizzes)
     }
 
     @Test
@@ -118,11 +129,16 @@ class ProgressTransferTest {
         assertTrue((problemOf(noQuizzes) as ImportProblem.Damaged).detail.contains("quizzes"))
     }
 
+    /** A later version's skill, like the location skill was to 2.x: the row is left out, the rest of the file is kept. */
     @Test
-    fun anUnknownSkill_isRefused() {
+    fun anUnknownSkill_isDropped_notRefused() {
         val json = edited { getJSONArray("skills").getJSONObject(0).put("skill", "SHAPE") }
 
-        assertTrue((problemOf(json) as ImportProblem.Damaged).detail.contains("SHAPE"))
+        val back = ProgressTransfer.fromJson(json).getOrThrow()
+
+        assertEquals(listOf("CAPITAL"), back.skills.map { it.skill })
+        assertEquals(snapshot.progress, back.progress)
+        assertEquals(snapshot.quizzes, back.quizzes)
     }
 
     @Test

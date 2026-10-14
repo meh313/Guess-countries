@@ -344,7 +344,8 @@ class CountryViewModel(
         quiz.end()
         study.dismiss()
         learn.dismiss()
-        viewModelScope.launch { repository.clearProgress() }
+        // Under the shared handler like every other write: a failure is reported, not fatal.
+        viewModelScope.launch(progress.writeErrors.handler) { repository.clearProgress() }
     }
 
     // --- Quiz -------------------------------------------------------------------------------------------------------
@@ -424,6 +425,9 @@ class CountryViewModel(
 
     /** The Learn session in progress (five new flags, then a quiz over them), or null outside one. */
     val learnSession: StateFlow<LearnSession?> get() = learn.session
+
+    /** True while [startLearn] still reads the skill states before choosing the cards; [learnSession] is not final until it is false. */
+    val learnPlanning: StateFlow<Boolean> get() = learn.planning
 
     /** Starts a Learn session over the next five never-seen flags, the focus continent's first; see [LearnStateHolder.start]. */
     fun startLearn() = learn.start()

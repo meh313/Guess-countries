@@ -158,8 +158,10 @@ internal class MapPaths(val land: Path, val byCode: Map<String, Path>) {
  * background, [country] filled in the primary colour and its capital marked, in a rounded box of [aspectRatio].
  *
  * [zoom] frames the country ([mapViewport]); off, the whole world is shown. A zoomed box narrower than 60° of
- * longitude carries a small world inset in its bottom-end corner with the framed area marked, so a small country is
- * placed on Earth as well as seen. A country that straddles the antimeridian is drawn whole: the world is painted
+ * longitude and at least 160dp wide carries a small world inset in its bottom-end corner with the framed area marked,
+ * so a small country is placed on Earth as well as seen; a thumbnail is too small for the inset to be read, so it
+ * goes without. A [MapCountry.point] microstate always carries a fixed-size marker in the highlight colour, whatever
+ * [showCapital]: its outline alone is a speck. A country that straddles the antimeridian is drawn whole: the world is painted
  * again shifted by 360°. While the asset loads the box is plain sea; a country the asset does not know composes
  * nothing at all. TalkBack hears "Map: France, in Europe · Western Europe", or [contentDescription] where the name
  * must not be said (the Map → Country question, whose answer it is).
@@ -210,10 +212,16 @@ fun WorldMap(
         // The cut-off world hides Antarctica unless Antarctica is the country being shown.
         val band = if (!zoom && !place.isPolar) WorldBand else null
         drawWorld(paths, place.code, viewport, box, band, land, coast, highlight, 0.75.dp.toPx(), 1.5.dp.toPx())
+        // A point-sized microstate's outline is a speck at any scale, so it always gets a marker of a fixed size in
+        // the highlight colour, capital dot or not: without one the map would look empty when the capital is hidden.
+        if (place.point) {
+            drawDot(place.label, viewport, box, highlight, ring, 5.dp.toPx(), 1.5.dp.toPx())
+        }
         if (showCapital) {
             place.capital?.let { capital -> drawDot(capital, viewport, box, capitalDot, ring, 2.dp.toPx(), 1.dp.toPx()) }
         }
-        if (zoom && viewport.width < 60f) {
+        // The inset only where it can be read: at a thumbnail's size it would be a smudge in the corner.
+        if (zoom && viewport.width < 60f && size.width >= 160.dp.toPx()) {
             drawInset(paths, place, viewport, insetSea, land, coast, highlight, insetFrame, capitalDot, ring)
         }
     }

@@ -109,8 +109,8 @@
     <string name="stats_due_both">flags %1$d · capitals %2$d</string>
     <string name="stats_due_three">flags %1$d · capitals %2$d · map %3$d</string>
     <string name="stats_learning">Learning</string>
-    <!-- Countries placed on the map and remembered (the location skill): "Located 12 / 196" -->
-    <string name="stats_located">Located</string>
+    <!-- Countries placed on the map and remembered (the map skill): "On the map 12 / 196" -->
+    <string name="stats_located">On the map</string>
     <string name="stats_due_open">Start a study session of the cards due</string>
     <string name="stats_saved">Saved</string>
     <string name="stats_quizzes_finished">Quizzes finished</string>

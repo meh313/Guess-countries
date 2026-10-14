@@ -72,6 +72,25 @@ class SettledTodayRule : TestWatcher() {
     }
 }
 
+/**
+ * An in-memory database of a test's own, closed once the test and every rule inside this one are done. Chain it
+ * outside a compose rule (`RuleChain.outerRule(OwnDatabaseRule { viewModels }).around(composeRule)`): closed from
+ * `@After`, while the activity and the view models over it are still alive, it threw "connection pool has been
+ * closed" on a background thread once in a while. [viewModels] names the view models built over it, released
+ * before the close as [closeWhenIdle] wants.
+ */
+class OwnDatabaseRule(private val viewModels: () -> List<ViewModel> = { emptyList() }) : TestWatcher() {
+    private var database: AppDatabase? = null
+
+    /** The test's database, opened on first use. */
+    val db: AppDatabase get() = database ?: inMemoryDatabase().also { database = it }
+
+    override fun finished(description: Description) {
+        database?.takeIf { it.isOpen }?.closeWhenIdle(*viewModels().toTypedArray())
+        database = null
+    }
+}
+
 class FreshDatabaseRule : TestWatcher() {
     override fun starting(description: Description) {
         AppDatabase.closeAndReset()

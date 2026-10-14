@@ -395,11 +395,11 @@ class LayoutAndSemanticsUiTest {
     @Test
     @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
     fun countryCount_usesTheSingularForExactlyOne() {
-        rule.onNodeWithText("${allCountries.size} Countries").assertIsDisplayed()
+        rule.onNodeWithText("${allCountries.size} countries").assertIsDisplayed()
 
         rule.onNodeWithTag("search_country_input").performTextInput("Japan")
 
-        rule.eventually("one result") { rule.onNodeWithText("1 Country").assertIsDisplayed() }
+        rule.eventually("one result") { rule.onNodeWithText("1 country").assertIsDisplayed() }
     }
 
     @Test
@@ -410,7 +410,7 @@ class LayoutAndSemanticsUiTest {
         rule.eventually("the empty state") { rule.onNodeWithText("No countries found").assertIsDisplayed() }
         rule.onNodeWithTag("explore_clear_filters_btn").performClick()
 
-        rule.eventually("the full list") { rule.onNodeWithText("${allCountries.size} Countries").assertIsDisplayed() }
+        rule.eventually("the full list") { rule.onNodeWithText("${allCountries.size} countries").assertIsDisplayed() }
     }
 
     @Test
@@ -422,7 +422,7 @@ class LayoutAndSemanticsUiTest {
         rule.onNodeWithText("Tap the bookmark on any country to save it here").assertIsDisplayed()
 
         rule.onNodeWithTag("explore_clear_filters_btn").performClick()
-        rule.eventually("the full list") { rule.onNodeWithText("${allCountries.size} Countries").assertIsDisplayed() }
+        rule.eventually("the full list") { rule.onNodeWithText("${allCountries.size} countries").assertIsDisplayed() }
     }
 
     @Test
@@ -430,7 +430,7 @@ class LayoutAndSemanticsUiTest {
     fun sortByContinent_isOfferedAndGroupsCountriesByContinent() {
         // Alphabetical by name puts Antarctica, Argentina, Australia first; by continent it is Africa first.
         rule.onNodeWithTag("sort_menu_btn").performClick()
-        rule.onNodeWithText("Sort by Continent").performClick()
+        rule.onNodeWithText("Sort by continent").performClick()
         rule.waitForIdle()
 
         val expected = allCountries.sortedWith(CountryRepository.byContinentThenName).take(4).map { "country_card_${it.code.lowercase()}" }

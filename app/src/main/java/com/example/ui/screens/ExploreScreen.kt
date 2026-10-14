@@ -2,6 +2,8 @@ package com.example.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -136,15 +138,18 @@ fun ExploreScreen(
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
+                // The texts set the height within a band: the banner image is cropped to it, so it never
+                // grows to its own size and pushes the first cards below the fold, and at a large font
+                // scale the two lines still fit instead of being clipped.
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 130.dp)
+                        .heightIn(min = 150.dp, max = 200.dp)
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.img_world_banner),
                         contentDescription = null, // decorative
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier.matchParentSize(),
                         contentScale = ContentScale.Crop,
                         alpha = 0.45f
                     )
@@ -152,7 +157,7 @@ fun ExploreScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(min = 130.dp)
+                            .heightIn(min = 150.dp)
                             .padding(16.dp),
                         verticalArrangement = Arrangement.Center
                     ) {
@@ -235,10 +240,13 @@ fun ExploreScreen(
 
                 // Standing chips: how the player stands on the flag. Each chip toggles its own standing in the filter;
                 // a Progress continent card opens Explore with Unseen and Learning set together. Each chip carries
-                // the pip the cards draw for that standing, so the row is also the legend.
+                // the pip the cards draw for that standing, so the row is also the legend. The row scrolls
+                // sideways and each label stays on one line, so a large font scale never wraps a label
+                // letter by letter.
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
                         .padding(vertical = 4.dp)
                         .testTag("standing_chips"),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -247,7 +255,7 @@ fun ExploreScreen(
                         FilterChip(
                             selected = standing in standingFilter,
                             onClick = { viewModel.toggleStanding(standing) },
-                            label = { Text(stringResource(standing.chipLabelRes), style = MaterialTheme.typography.labelMedium) },
+                            label = { Text(stringResource(standing.chipLabelRes), style = MaterialTheme.typography.labelMedium, maxLines = 1) },
                             // The chip doubles as the legend: the same pip the cards draw for this standing.
                             leadingIcon = { Pip(standing, modifier = Modifier.testTag("standing_pip_${standing.name.lowercase()}")) },
                             shape = RoundedCornerShape(16.dp),
