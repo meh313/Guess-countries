@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -27,18 +29,19 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.GridView
-import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.LocationCity
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Today
+import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -114,6 +117,12 @@ internal const val BLITZ_ADVANCE_MS = 800L
 /** How long a wrong blitz answer stays on screen, in milliseconds: long enough to take in the right answer. */
 internal const val BLITZ_WRONG_HOLD_MS = 2000L
 
+/** Below this window height the question and the answers sit side by side instead of one above the other. */
+internal val TWO_PANE_BELOW_HEIGHT: Dp = 480.dp
+
+/** The widest a flag tile gets in the answers pane of the two-pane layout, so four flags fit beside the question. */
+internal val TWO_PANE_TILE_MAX_WIDTH: Dp = 160.dp
+
 private val QuizMode.icon: ImageVector
     get() = when (this) {
         QuizMode.FLAG_NAME -> Icons.Default.Flag
@@ -164,22 +173,30 @@ fun QuizScreen(
     }
     val countriesByCode = remember(allCountries) { allCountries.associateBy { it.code } }
     val quizScrollState = rememberScrollState()
+    // The answers' own pane on a short window (see the two-pane layout below).
+    val optionsScrollState = rememberScrollState()
     var showQuitConfirm by rememberSaveable { mutableStateOf(false) }
 
     val active = session
 
     if (active == null) {
-        // QUIZ CONFIGURATION SCREEN
-        Box(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        // QUIZ CONFIGURATION SCREEN: the choices scroll; the Start button stays pinned at the bottom.
+        // Some modes always cover the whole world; their scope chips show "Global" and are inactive.
+        val scopeApplies = !selectedMode.usesWholeWorld
+        val shownScope = QuizEngine.effectiveScope(selectedMode, selectedContinentScope, weakSpotsAvailable, dueAvailable)
+        Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
         Column(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .readingWidth()
                 .fillMaxHeight()
-                .padding(20.dp)
-                .verticalScroll(rememberScrollState()),
+                .padding(horizontal = 20.dp)
+                .verticalScroll(rememberScrollState())
+                .testTag("quiz_setup_scroll"),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(modifier = Modifier.height(20.dp))
             Text(
                 text = stringResource(R.string.quiz_title),
                 style = MaterialTheme.typography.headlineMedium,
@@ -269,9 +286,6 @@ fun QuizScreen(
             )
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Some modes always cover the whole world; their scope chips show "Global" and are inactive.
-            val scopeApplies = !selectedMode.usesWholeWorld
-            val shownScope = QuizEngine.effectiveScope(selectedMode, selectedContinentScope, weakSpotsAvailable, dueAvailable)
             if (!scopeApplies) {
                 Text(
                     text = stringResource(R.string.quiz_scope_whole_world),
@@ -300,6 +314,8 @@ fun QuizScreen(
                         color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
                         modifier = Modifier
                             .alpha(if (chipEnabled) 1f else 0.5f)
+                            // A 48dp touch target (Surface hands its minimum height on to the row, which centres the label).
+                            .defaultMinSize(minHeight = 48.dp)
                             .selectable(
                                 selected = isSelected,
                                 enabled = chipEnabled,
@@ -414,6 +430,7 @@ fun QuizScreen(
                         color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
                         modifier = Modifier
                             .alpha(if (difficultyApplies) 1f else 0.5f)
+                            .defaultMinSize(minHeight = 48.dp)
                             .selectable(
                                 selected = isSelected,
                                 enabled = difficultyApplies,
@@ -422,46 +439,60 @@ fun QuizScreen(
                             )
                             .testTag("quiz_difficulty_${difficulty.name.lowercase()}")
                     ) {
-                        Text(
-                            text = stringResource(difficulty.titleRes),
-                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                        )
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(
+                                text = stringResource(difficulty.titleRes),
+                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                            )
+                        }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(20.dp))
+        }
+        }
 
-            // Start Quiz Button
-            val scopePoolSize = when (shownScope) {
-                QuizEngine.WEAK_SPOTS -> weakSpots.size
-                QuizEngine.DUE -> due.size
-                else -> QuizEngine.poolFor(shownScope, allCountries).size
-            }
-            val questionCount = QuizEngine.questionCount(scopePoolSize, shownScope)
-            val canStart = questionCount > 0
-            Button(
-                onClick = { viewModel.startQuiz(selectedMode, selectedContinentScope, selectedDifficulty) },
-                enabled = canStart,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 56.dp)
-                    .testTag("start_quiz_btn"),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-            ) {
-                Text(
-                    text = if (canStart) {
-                        if (selectedMode.isEndless) stringResource(R.string.quiz_start_blitz, selectedMode.totalTimeSeconds ?: 0)
-                        else stringResource(R.string.quiz_start_quiz, questionCount)
-                    } else {
-                        stringResource(R.string.quiz_needs_countries, QuizEngine.MIN_POOL)
-                    },
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold
-                )
+        // Start Quiz Button, pinned under the scrolling choices so it is always in reach. The Scaffold in
+        // MainActivity already keeps the content above the navigation bar and the system bar, so no further
+        // inset padding is added here (it would double up under the bottom bar).
+        val scopePoolSize = when (shownScope) {
+            QuizEngine.WEAK_SPOTS -> weakSpots.size
+            QuizEngine.DUE -> due.size
+            else -> QuizEngine.poolFor(shownScope, allCountries).size
+        }
+        val questionCount = QuizEngine.questionCount(scopePoolSize, shownScope)
+        val canStart = questionCount > 0
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            color = MaterialTheme.colorScheme.surface,
+            shadowElevation = 8.dp
+        ) {
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+                Button(
+                    onClick = { viewModel.startQuiz(selectedMode, selectedContinentScope, selectedDifficulty) },
+                    enabled = canStart,
+                    modifier = Modifier
+                        .readingWidth()
+                        .padding(horizontal = 20.dp, vertical = 12.dp)
+                        .heightIn(min = 56.dp)
+                        .testTag("start_quiz_btn"),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Text(
+                        text = if (canStart) {
+                            if (selectedMode.isEndless) stringResource(R.string.quiz_start_blitz, selectedMode.totalTimeSeconds ?: 0)
+                            else stringResource(R.string.quiz_start_quiz, questionCount)
+                        } else {
+                            stringResource(R.string.quiz_needs_countries, QuizEngine.MIN_POOL)
+                        },
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
         }
@@ -562,27 +593,8 @@ fun QuizScreen(
         }
         val questionCount = active.questions.size
 
-        // Each new question starts at the top so the flag is visible.
-        LaunchedEffect(active.currentIndex) { quizScrollState.scrollTo(0) }
-        // After answering, bring the explanation and Next button into view on small screens.
-        LaunchedEffect(active.hasAnswered) {
-            if (active.hasAnswered && !active.mode.isEndless) {
-                withFrameNanos { } // wait one frame so the explanation card has been measured
-                quizScrollState.animateScrollTo(quizScrollState.maxValue)
-            }
-        }
-
-        Box(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-        Column(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .readingWidth()
-                .fillMaxHeight()
-                .padding(20.dp)
-                .verticalScroll(quizScrollState),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Top Status Bar: Score & Streak
+        // The status row: progress and score on the start side, the answer streak and the way out on the end side.
+        val header: @Composable () -> Unit = {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -604,23 +616,26 @@ fun QuizScreen(
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    // Right answers in a row; one sentence for the eye and for TalkBack.
+                    val streakText = stringResource(R.string.quiz_streak, active.streak)
                     Surface(
                         shape = RoundedCornerShape(20.dp),
-                        color = StreakColor
+                        color = StreakColor,
+                        modifier = Modifier.semantics(mergeDescendants = true) { contentDescription = streakText }
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
-                                imageVector = Icons.Default.LocalFireDepartment,
+                                imageVector = Icons.Default.Bolt,
                                 contentDescription = null,
                                 tint = Color.White,
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = stringResource(R.string.quiz_streak, active.streak),
+                                text = streakText,
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,
                                 style = MaterialTheme.typography.labelMedium
@@ -674,10 +689,10 @@ fun QuizScreen(
                     modifier = Modifier.padding(top = 8.dp)
                 )
             }
+        }
 
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Question Visual Card
+        // Question Visual Card
+        val questionCard: @Composable () -> Unit = {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
@@ -704,14 +719,18 @@ fun QuizScreen(
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.semantics { heading() }
+                        // Each new question is announced as it appears.
+                        modifier = Modifier.semantics {
+                            heading()
+                            liveRegion = LiveRegionMode.Polite
+                        }
                     )
                 }
             }
+        }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // 4 Options Grid
+        // 4 Options Grid. [tileMaxWidth] caps the flag tiles where the answers have a pane of their own.
+        val answers: @Composable (tileMaxWidth: Dp) -> Unit = { tileMaxWidth ->
             if (active.mode.answersAreFlags) {
                 FlagOptionGrid(
                     optionCodes = q.options,
@@ -722,7 +741,8 @@ fun QuizScreen(
                     onPick = { index ->
                         viewModel.answerQuiz(index)
                         view.performAnswerHaptic(correct = index in q.acceptedIndices)
-                    }
+                    },
+                    tileMaxWidth = tileMaxWidth
                 )
             } else Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 val correctAnswerDescription = stringResource(R.string.quiz_option_correct)
@@ -744,6 +764,7 @@ fun QuizScreen(
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .heightIn(min = 48.dp)
                             .clickable(enabled = !active.hasAnswered, role = Role.Button) {
                                 viewModel.answerQuiz(index)
                                 view.performAnswerHaptic(correct = isCorrect)
@@ -785,10 +806,10 @@ fun QuizScreen(
                     }
                 }
             }
+        }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Post-Answer Explanation & Next Button
+        // Post-Answer Explanation & Next Button
+        val afterAnswer: @Composable () -> Unit = {
             if (active.hasAnswered) {
                 // For "pick the flag" the options are country codes, so say the country instead.
                 val answerText = if (active.mode.answersAreFlags) q.targetCountry.name else q.options[q.correctAnswerIndex]
@@ -804,9 +825,7 @@ fun QuizScreen(
                 }
                 Card(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                    shape = RoundedCornerShape(16.dp),
-                    // Announced as soon as it appears, so TalkBack users hear the outcome.
-                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
+                    shape = RoundedCornerShape(16.dp)
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
                         Text(
@@ -815,6 +834,8 @@ fun QuizScreen(
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
                             modifier = Modifier
                                 .padding(bottom = 6.dp)
+                                // Announced as soon as it appears, so TalkBack users hear the outcome.
+                                .semantics { liveRegion = LiveRegionMode.Polite }
                                 .testTag("quiz_result")
                         )
                         // A wrong text answer shows the flag that was picked beside the right one, the one time the two
@@ -836,11 +857,20 @@ fun QuizScreen(
                         }
                         // A blitz moves on in under a second: no time for the capital and the fun fact.
                         if (!active.mode.isEndless) {
-                            Text(
-                                text = stringResource(R.string.quiz_fact_capital, q.targetCountry.name, q.targetCountry.capital),
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                // Decorative: the sentence after it is what TalkBack reads.
+                                Icon(
+                                    Icons.Outlined.Lightbulb,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    modifier = Modifier.size(18.dp).padding(end = 4.dp)
+                                )
+                                Text(
+                                    text = stringResource(R.string.quiz_fact_capital, q.targetCountry.name, q.targetCountry.capital),
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
                             Text(
                                 text = q.targetCountry.funFact,
                                 style = MaterialTheme.typography.bodySmall,
@@ -850,7 +880,10 @@ fun QuizScreen(
                         Spacer(modifier = Modifier.height(10.dp))
                         Button(
                             onClick = { viewModel.nextQuizQuestion() },
-                            modifier = Modifier.fillMaxWidth().testTag("next_question_btn")
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 48.dp)
+                                .testTag("next_question_btn")
                         ) {
                             Text(stringResource(if (active.isLastQuestion) R.string.quiz_finish else R.string.quiz_next_question))
                         }
@@ -858,6 +891,74 @@ fun QuizScreen(
                 }
             }
         }
+
+        BoxWithConstraints(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+            // A short window (a phone on its side): the question on the start side, the answers on the end side,
+            // each scrolling on its own, so the flag and all four answers are in view together.
+            val twoPanes = maxHeight < TWO_PANE_BELOW_HEIGHT
+            // Each new question starts at the top so the flag is visible.
+            LaunchedEffect(active.currentIndex) {
+                quizScrollState.scrollTo(0)
+                optionsScrollState.scrollTo(0)
+            }
+            // After answering, bring the explanation and Next button into view on small screens.
+            val answerScrollState = if (twoPanes) optionsScrollState else quizScrollState
+            LaunchedEffect(active.hasAnswered, answerScrollState) {
+                if (active.hasAnswered && !active.mode.isEndless) {
+                    withFrameNanos { } // wait one frame so the explanation card has been measured
+                    answerScrollState.animateScrollTo(answerScrollState.maxValue)
+                }
+            }
+
+            if (twoPanes) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 20.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .verticalScroll(quizScrollState),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        header()
+                        Spacer(modifier = Modifier.height(12.dp))
+                        questionCard()
+                    }
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .verticalScroll(optionsScrollState),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        answers(TWO_PANE_TILE_MAX_WIDTH)
+                        if (active.hasAnswered) Spacer(modifier = Modifier.height(16.dp))
+                        afterAnswer()
+                    }
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .readingWidth()
+                        .fillMaxHeight()
+                        .padding(20.dp)
+                        .verticalScroll(quizScrollState),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    header()
+                    Spacer(modifier = Modifier.height(20.dp))
+                    questionCard()
+                    Spacer(modifier = Modifier.height(16.dp))
+                    answers(Dp.Unspecified)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    afterAnswer()
+                }
+            }
         }
     }
 

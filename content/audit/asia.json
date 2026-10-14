@@ -268,6 +268,136 @@
    "sources": [],
    "confidence": "high",
    "from": "critic"
+  },
+  {
+   "code": "KP",
+   "field": "population",
+   "current": "26499000",
+   "value": "26500000",
+   "reason": "Population rule changed with the compact number format: the app now shows three significant figures rounded half up, so every figure is the UN WPP 2024 mid-2024 medium-variant estimate (26,498,823) rounded to three significant figures, 26,500,000. The extra digit kept to keep the figure off a rounding tie under the old two-figure, half-even display is dropped.",
+   "sources": [
+    "https://www.worldometers.info/world-population/north-korea-population/",
+    "https://en.wikipedia.org/wiki/List_of_countries_by_population_(United_Nations)",
+    "population rounding rule in the task brief (no page opened; value unchanged from the entry's own WPP 2024 figure 26,498,823)"
+   ],
+   "confidence": "high",
+   "from": "content-review"
+  },
+  {
+   "code": "MM",
+   "field": "population",
+   "current": "54500100",
+   "value": "54500000",
+   "reason": "Population rule changed with the compact number format: the app now shows three significant figures rounded half up, so every figure is the UN WPP 2024 mid-2024 medium-variant estimate (54,500,091) rounded to three significant figures, 54,500,000. The extra digit kept to keep the figure off a rounding tie under the old two-figure, half-even display is dropped.",
+   "sources": [
+    "https://www.worldometers.info/world-population/myanmar-population/",
+    "https://en.wikipedia.org/wiki/List_of_countries_by_population_(United_Nations)"
+   ],
+   "confidence": "high",
+   "from": "content-review"
+  },
+  {
+   "code": "QA",
+   "field": "population",
+   "current": "3048000",
+   "value": "3050000",
+   "reason": "Population rule changed with the compact number format: the app now shows three significant figures rounded half up, so every figure is the UN WPP 2024 mid-2024 medium-variant estimate (3,048,423) rounded to three significant figures, 3,050,000. The extra digit kept to keep the figure off a rounding tie under the old two-figure, half-even display is dropped.",
+   "sources": [
+    "https://www.worldometers.info/world-population/qatar-population/",
+    "https://en.wikipedia.org/wiki/List_of_countries_by_population_(United_Nations)"
+   ],
+   "confidence": "high",
+   "from": "content-review"
+  },
+  {
+   "code": "TR",
+   "field": "population",
+   "current": "87470000",
+   "value": "87500000",
+   "reason": "Population rule changed with the compact number format: the app now shows three significant figures rounded half up, so every figure is the UN WPP 2024 mid-2024 medium-variant estimate (87,473,805) rounded to three significant figures, 87,500,000. The extra digit kept to keep the figure off a rounding tie under the old two-figure, half-even display is dropped.",
+   "sources": [
+    "https://www.worldometers.info/world-population/turkey-population/",
+    "https://en.wikipedia.org/wiki/List_of_countries_by_population_(United_Nations)"
+   ],
+   "confidence": "high",
+   "from": "content-review"
+  },
+  {
+   "code": "IN",
+   "field": "population",
+   "current": "1451000000",
+   "value": "1450000000",
+   "reason": "Population rule changed with the compact number format: the app now shows three significant figures rounded half up, so every figure is the UN WPP 2024 mid-2024 medium-variant estimate (1,450,935,791) rounded to three significant figures, 1,450,000,000. The extra digit kept to keep the figure off a rounding tie under the old two-figure, half-even display is dropped. First-catalog entry with no research note: the UN figure was read from Worldometers' table of the WPP 2024 revision.",
+   "sources": [
+    "https://www.worldometers.info/world-population/india-population/",
+    "https://population.un.org/wpp/assets/Excel%20Files/1_Indicator%20(Standard)/CSV_FILES/WPP2024_TotalPopulationBySex.csv.gz"
+   ],
+   "confidence": "high",
+   "from": "content-review"
+  },
+  {
+   "code": "QA",
+   "field": "funFact",
+   "current": "Qatar's flag is the only national flag that is more than twice as wide as it is tall: its official proportions are 11 to 28.",
+   "value": "Qatar hosted the 2022 FIFA World Cup, the first held in the Middle East and the first played in November and December; Argentina beat France in the final.",
+   "reason": "Old fact repeated the flag text's 11:28 proportions. Wikipedia 2022 FIFA World Cup: 'the first World Cup to be held in the Middle East and the Arabian Peninsula', held in November and December, 'the first to take place in the end of the year'; Argentina beat France 4-2 on penalties after 3-3.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/2022_FIFA_World_Cup"
+   ],
+   "confidence": "high",
+   "from": "content-review"
+  },
+  {
+   "code": "TM",
+   "field": "funFact",
+   "current": "The Karakum Desert covers most of Turkmenistan, and in 1995 the United Nations recognized the country as a permanently neutral state.",
+   "value": "Ashgabat, Turkmenistan's capital, entered Guinness World Records in 2013 for the world's highest density of white marble-clad buildings: 543 of them.",
+   "reason": "Old fact repeated the flag text's 1995 neutrality. Wikipedia Ashgabat: listed in Guinness in 2013 for 'the world's highest concentration of white marble buildings'; Guinness record page 'Highest density of white marble-clad buildings': Ashgabat, 25 March 2013, 543 new marble-clad buildings, 4,513,584 m2 of marble.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Ashgabat",
+    "https://www.guinnessworldrecords.com/world-records/highest-density-of-white-marble-clad-buildings"
+   ],
+   "confidence": "high",
+   "from": "content-review"
+  },
+  {
+   "code": "BT",
+   "field": "funFact",
+   "current": "Bhutan's constitution says at least 60 percent of the land must stay under forest for all time, and the country is guided by Gross National Happiness.",
+   "value": "Bhutan's constitution says at least 60% of the land must stay under forest for all time, and the country is guided by Gross National Happiness.",
+   "reason": "House style: a percentage after a number is written with the % sign, as the other entries do. No fact changes.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Bhutan",
+    "https://www.constituteproject.org/constitution/Bhutan_2008"
+   ],
+   "confidence": "high",
+   "from": "content-review"
+  },
+  {
+   "code": "TJ",
+   "field": "funFact",
+   "current": "Mountains cover over 90 percent of Tajikistan; Ismoil Somoni Peak in the Pamirs, at 7,495 meters, was the highest point in the former Soviet Union.",
+   "value": "Mountains cover over 90% of Tajikistan; Ismoil Somoni Peak in the Pamirs, at 7,495 meters, was the highest point in the former Soviet Union.",
+   "reason": "House style: a percentage after a number is written with the % sign, as the other entries do. No fact changes.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Tajikistan",
+    "https://en.wikipedia.org/wiki/Ismoil_Somoni_Peak"
+   ],
+   "confidence": "high",
+   "from": "content-review"
+  },
+  {
+   "code": "GE",
+   "field": "flagDescription",
+   "current": "Georgia adopted this flag in 2004 after the Rose Revolution, whose leaders had marched under it. The big red cross on white is the cross of St. George, the country's patron saint, a sign said to be used by early Georgian kings. The four small crosses are thought to copy the Jerusalem cross, a mark of the medieval kingdom's Christian faith; a map from 1367 shows this five-cross flag over Tbilisi. The law gives the crosses no meaning.",
+   "value": "Georgia adopted this flag in 2004 after the Rose Revolution, whose leaders had marched under it. The big red cross on white is the cross of St George, the country's patron saint, a sign said to be used by early Georgian kings. The four small crosses are thought to copy the Jerusalem cross, a mark of the medieval kingdom's Christian faith; a map from 1367 shows this five-cross flag over Tbilisi. The law gives the crosses no meaning.",
+   "reason": "House style: Saint is abbreviated St without a full stop. No fact changes.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Georgia_(country)",
+    "https://www.crwflags.com/fotw/flags/ge.html"
+   ],
+   "confidence": "high",
+   "from": "content-review"
   }
  ],
  "ownerDecisions": [],

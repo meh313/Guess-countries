@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -41,6 +42,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -49,6 +51,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -65,6 +68,7 @@ import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -77,6 +81,7 @@ import com.example.data.model.Country
 import com.example.progress.Skill
 import com.example.progress.SkillMastery
 import com.example.progress.SkillState
+import com.example.speech.Speech
 import com.example.ui.chipLabelRes
 import com.example.ui.components.Standing
 import com.example.ui.components.formatArea
@@ -96,6 +101,9 @@ fun CountryDetailSheet(
     onSpeak: () -> Unit,
     speechAvailable: Boolean,
     onToggleFavorite: () -> Unit,
+    /** Where the speech engine stands: a spinner while it loads, an install action when it lacks voice data. */
+    speechState: Speech.State = if (speechAvailable) Speech.State.READY else Speech.State.IDLE,
+    onInstallVoiceData: () -> Unit = {},
     /** The web pages this country's facts were checked against; empty for the first catalog's countries. */
     sources: List<String> = emptyList(),
     /** The player's state per skill (null where never reviewed); empty hides the progress row (Antarctica). */
@@ -144,7 +152,8 @@ fun CountryDetailSheet(
                         Text(
                             text = country.name,
                             style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.semantics { heading() }
                         )
                         Text(
                             text = country.officialName,
@@ -156,24 +165,18 @@ fun CountryDetailSheet(
                     }
                 }
 
-                Row {
-                    IconButton(
-                        onClick = onSpeak,
-                        enabled = speechAvailable,
-                        modifier = Modifier.testTag("speak_country_btn")
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.VolumeUp,
-                            contentDescription = if (speechAvailable) {
-                                stringResource(R.string.action_read_aloud)
-                            } else {
-                                stringResource(R.string.read_aloud_unavailable)
-                            },
-                            tint = if (speechAvailable) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                            }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (speechState == Speech.State.MISSING_DATA) {
+                        // An engine without English voice data: the fix is one tap away.
+                        TextButton(onClick = onInstallVoiceData, modifier = Modifier.testTag("speak_country_install_btn")) {
+                            Text(stringResource(R.string.settings_speech_install))
+                        }
+                    } else {
+                        SpeakButton(
+                            speechState = speechState,
+                            speechAvailable = speechAvailable,
+                            onSpeak = onSpeak,
+                            modifier = Modifier.testTag("speak_country_btn")
                         )
                     }
                     IconButton(onClick = onDismiss) {
@@ -429,6 +432,7 @@ fun CountryDetailSheet(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .heightIn(min = 48.dp)
                         .clickable(role = Role.Button, onClickLabel = stringResource(if (sourcesOpen) R.string.sheet_hide_sources else R.string.sheet_show_sources)) { sourcesOpen = !sourcesOpen }
                         .testTag("sheet_sources_btn"),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -457,15 +461,18 @@ fun CountryDetailSheet(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        sources.forEach { url ->
+                        // Each link is a 48dp-tall target, the address centred in it.
+                        sources.forEachIndexed { index, url ->
                             Text(
                                 text = url,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier
                                     .fillMaxWidth()
+                                    .heightIn(min = 48.dp)
                                     .clickable(role = Role.Button, onClickLabel = stringResource(R.string.sheet_open_in_browser)) { openUrl(context, url) }
-                                    .padding(vertical = 2.dp)
+                                    .wrapContentHeight(Alignment.CenterVertically)
+                                    .testTag("sheet_source_link_$index")
                             )
                         }
                     }
@@ -477,7 +484,7 @@ fun CountryDetailSheet(
     }
 }
 
-/** One line on a skill: "Mastered · box 4 · next review in 12 days", "Learning · box 1 · due now", or "Not reviewed yet". */
+/** One line on a skill: "Mastered · step 4 of 5 · next review in 12 days", "Learning · step 1 of 5 · due now", or "Not reviewed yet". */
 internal fun describeStanding(resources: Resources, state: SkillState?, now: Long): String {
     if (state == null || state.isNew) return resources.getString(R.string.sheet_standing_not_reviewed)
     val standing = Standing.of(state, now)
@@ -490,7 +497,41 @@ internal fun describeStanding(resources: Resources, state: SkillState?, now: Lon
         else -> resources.getQuantityString(R.plurals.sheet_next_review_days, days, days)
     }
     val last = resources.getString(if (state.lastResult > 0) R.string.sheet_last_answer_right else R.string.sheet_last_answer_wrong)
-    return resources.getString(R.string.sheet_standing_line, head, resources.getString(R.string.sheet_standing_box, state.box), due, last)
+    return resources.getString(R.string.sheet_standing_line, head, resources.getString(R.string.sheet_standing_step, state.box, SkillMastery.MAX_BOX), due, last)
+}
+
+/**
+ * The Read aloud button: a spinner in its place while the engine loads, disabled (and saying why) when it cannot
+ * speak, the speaker once it can. The sheet and the flashcard share it.
+ */
+@Composable
+internal fun SpeakButton(speechState: Speech.State, speechAvailable: Boolean, onSpeak: () -> Unit, modifier: Modifier = Modifier) {
+    val loading = speechState == Speech.State.LOADING
+    val preparing = stringResource(R.string.read_aloud_loading)
+    IconButton(
+        onClick = onSpeak,
+        enabled = speechAvailable,
+        // The description sits on the button: a disabled button does not merge the spinner's own.
+        modifier = if (loading) modifier.semantics { contentDescription = preparing } else modifier
+    ) {
+        if (loading) {
+            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+        } else {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.VolumeUp,
+                contentDescription = if (speechAvailable) {
+                    stringResource(R.string.action_read_aloud)
+                } else {
+                    stringResource(R.string.read_aloud_unavailable)
+                },
+                tint = if (speechAvailable) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                }
+            )
+        }
+    }
 }
 
 /** Hands [url] to the browser; nothing happens on a device without one. */

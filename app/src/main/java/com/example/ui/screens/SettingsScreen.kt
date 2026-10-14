@@ -1,5 +1,7 @@
 package com.example.ui.screens
 
+import android.app.UiModeManager
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -16,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectableGroup
@@ -30,6 +33,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -66,28 +70,38 @@ import com.example.data.transfer.ImportProblem
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.R
 import com.example.data.settings.ThemeMode
 import com.example.data.settings.TimerPace
 import com.example.data.transfer.ProgressTransfer
+import com.example.speech.Speech
 import com.example.ui.titleRes
 import com.example.ui.viewmodel.CountryViewModel
 import com.example.ui.components.readingWidth
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * Settings: the look of the app, the pace of the timed quizzes, the reset of everything learned, and the way to
- * the About screen. The reminder stays on the Progress screen, next to the streak it serves.
+ * Settings: the look of the app, the pace of the timed quizzes, where the speech engine stands, the reset of
+ * everything learned, and the way to the About screen. The reminder stays on the Progress screen, next to the streak
+ * it serves.
+ *
+ * [speechState] is the engine's state and [onInstallVoiceData] opens the system's voice-data installer (returning
+ * whether there was one); with no [speechState] the Read aloud section is left out.
  */
 @Composable
 fun SettingsScreen(
     viewModel: CountryViewModel,
     onBack: () -> Unit,
     onAbout: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    speechState: StateFlow<Speech.State>? = null,
+    onInstallVoiceData: () -> Boolean = { false }
 ) {
     val appearance by viewModel.appearance.collectAsStateWithLifecycle()
     val pace by viewModel.timerPace.collectAsStateWithLifecycle()
@@ -159,7 +173,10 @@ fun SettingsScreen(
                 ThemeMode.entries.forEachIndexed { index, mode ->
                     SegmentedButton(
                         selected = appearance.themeMode == mode,
-                        onClick = { viewModel.setThemeMode(mode) },
+                        onClick = {
+                            viewModel.setThemeMode(mode)
+                            applyNightMode(context, mode)
+                        },
                         shape = SegmentedButtonDefaults.itemShape(index = index, count = ThemeMode.entries.size),
                         modifier = Modifier.testTag("settings_theme_${mode.name.lowercase()}")
                     ) {
@@ -208,6 +225,24 @@ fun SettingsScreen(
                     .padding(top = 8.dp)
                     .testTag("settings_timer_hint")
             )
+        }
+
+        speechState?.let { flow ->
+            val state by flow.collectAsStateWithLifecycle()
+            // Explore and Flashcards bind the engine when they appear; here it is bound so the row has something to
+            // say, and again on every return to the screen, as from the voice-data installer (prepare is a no-op
+            // while the engine is up).
+            LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.prepareSpeech() }
+            SettingsSection(stringResource(R.string.settings_section_speech)) {
+                SpeechStatus(
+                    state = state,
+                    onInstall = {
+                        if (!onInstallVoiceData()) {
+                            scope.launch { snackbarHostState.showSnackbar(resources.getString(R.string.settings_speech_no_installer)) }
+                        }
+                    }
+                )
+            }
         }
 
         SettingsSection(stringResource(R.string.settings_section_data)) {
@@ -314,6 +349,8 @@ fun SettingsScreen(
                             transferNote = viewModel.applyImport().fold(
                                 onSuccess = {
                                     transferFailed = false
+                                    // The file may carry another theme; the system's copy of the choice follows it.
+                                    applyNightMode(context, viewModel.appearance.value.themeMode)
                                     resources.getString(R.string.settings_import_done, quizzes, skills, countries)
                                 },
                                 onFailure = {
@@ -398,6 +435,51 @@ private fun SettingsSection(title: String, content: @Composable () -> Unit) {
     Spacer(modifier = Modifier.height(8.dp))
 }
 
+/**
+ * Where the speech engine stands: a spinner while it starts, a line once it is known, and the way to the system's
+ * voice-data installer when English is missing. The detail sheet's speaker shows the same states beside its button.
+ */
+@Composable
+internal fun SpeechStatus(state: Speech.State, onInstall: () -> Unit) {
+    val starting = state == Speech.State.IDLE || state == Speech.State.LOADING
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("settings_speech_status"),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (starting) {
+            CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+            Spacer(modifier = Modifier.width(10.dp))
+        }
+        Text(
+            text = stringResource(
+                when (state) {
+                    Speech.State.IDLE, Speech.State.LOADING -> R.string.settings_speech_loading
+                    Speech.State.READY -> R.string.settings_speech_ready
+                    Speech.State.MISSING_DATA -> R.string.settings_speech_missing_data
+                    Speech.State.UNAVAILABLE -> R.string.settings_speech_unavailable
+                }
+            ),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
+        )
+    }
+    if (state == Speech.State.MISSING_DATA) {
+        Spacer(modifier = Modifier.height(10.dp))
+        OutlinedButton(
+            onClick = onInstall,
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("settings_install_voice_btn"),
+            shape = RoundedCornerShape(14.dp)
+        ) {
+            Text(stringResource(R.string.settings_speech_install), fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
 @Composable
 private fun SettingLabel(text: String) {
     Text(
@@ -426,6 +508,23 @@ private fun SwitchRow(title: String, detail: String, checked: Boolean, onChecked
         // The row is the switch for touch and screen readers; this one only shows the state.
         Switch(checked = checked, onCheckedChange = null)
     }
+}
+
+/**
+ * Tells the system the theme choice too (Android 12 and newer), so the splash screen and system dialogs follow it;
+ * the Compose theme switches on its own from the setting. The system keeps the value for the app, so once is enough.
+ * Anything but yes or no clears the app's override and the system setting applies, which is what [ThemeMode.SYSTEM]
+ * means.
+ */
+internal fun applyNightMode(context: Context, mode: ThemeMode) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+    val manager = context.getSystemService(UiModeManager::class.java) ?: return
+    val nightMode = when (mode) {
+        ThemeMode.SYSTEM -> UiModeManager.MODE_NIGHT_AUTO
+        ThemeMode.LIGHT -> UiModeManager.MODE_NIGHT_NO
+        ThemeMode.DARK -> UiModeManager.MODE_NIGHT_YES
+    }
+    runCatching { manager.setApplicationNightMode(nightMode) }
 }
 
 /** The installed version name, as the package manager has it; "?" should that fail. */

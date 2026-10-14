@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -34,8 +35,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -93,7 +96,11 @@ fun QuizResultScreen(
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
-            modifier = Modifier.semantics { heading() }
+            // Announced as soon as the score screen replaces the last question.
+            modifier = Modifier.semantics {
+                heading()
+                liveRegion = LiveRegionMode.Polite
+            }
         )
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -198,6 +205,7 @@ fun QuizResultScreen(
                 onClick = onPractiseMistakes,
                 modifier = Modifier
                     .fillMaxWidth()
+                    .heightIn(min = 48.dp)
                     .testTag("quiz_practise_mistakes_btn"),
                 shape = RoundedCornerShape(16.dp)
             ) {
@@ -209,6 +217,7 @@ fun QuizResultScreen(
             onClick = onRetry,
             modifier = Modifier
                 .fillMaxWidth()
+                .heightIn(min = 48.dp)
                 .testTag("quiz_retry_btn"),
             shape = RoundedCornerShape(16.dp)
         ) {
@@ -219,6 +228,7 @@ fun QuizResultScreen(
             onClick = onDone,
             modifier = Modifier
                 .fillMaxWidth()
+                .heightIn(min = 48.dp)
                 .testTag("quiz_finish_done_btn")
         ) {
             Text(stringResource(R.string.action_done), fontWeight = FontWeight.Bold)

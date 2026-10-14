@@ -12,6 +12,7 @@ import com.example.progress.Grade
 import com.example.progress.Skill
 import com.example.progress.SkillState
 import com.example.support.inMemoryDatabase
+import com.example.support.seedQuiz
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -221,12 +222,24 @@ class UserProgressDaoTest {
 
         runBlocking {
             repository.recordAnswer("FR", Skill.FLAG, true, Evidence.FULL)
-            repository.saveQuizScore("FLAG_NAME", 120, 190, "Global")
+            repository.saveStudySession("Due today", 8, 10)
         }
 
         assertEquals(777L, skill("FR")!!.lastReviewed)
         assertEquals(777L, row("FR")!!.lastReviewed)
         assertEquals(777L, runBlocking { dao.getQuizHistory().first() }.single().timestamp)
+    }
+
+    @Test
+    fun seedQuiz_writesARowWithoutAnswers_andReturnsTheEarlierTimes() {
+        val first = runBlocking { dao.seedQuiz("FLAG_NAME", 120, 190, "Global", at = 100L) }
+        val second = runBlocking { dao.seedQuiz("CAPITAL", 50, 190, "Asia", at = 200L) }
+
+        assertEquals(emptyList<Long>(), first)
+        assertEquals(listOf(100L), second)
+        val quizzes = runBlocking { dao.getQuizHistory().first() }
+        assertEquals(listOf(200L, 100L), quizzes.map { it.timestamp })
+        assertTrue(runBlocking { dao.answersOf(quizzes.first().id) }.isEmpty())
     }
 
     @Test

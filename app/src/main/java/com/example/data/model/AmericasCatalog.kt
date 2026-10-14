@@ -123,7 +123,7 @@ object AmericasCatalog {
             areaSqKm = 8510346.0,
             flagEmoji = "🇧🇷",
             flagColors = listOf("Green", "Yellow", "Blue", "White"),
-            flagDescription = "The green background and yellow diamond come from the empire's flag, kept in 1889. They are linked to the royal houses of Emperor Pedro I (green) and his wife (yellow), or read as forests and gold. The blue circle shows the sky over Rio de Janeiro on November 15, 1889, when the republic began. Its 27 stars stand for 26 states and the Federal District. The white band says Ordem e Progresso (Order and Progress), from a motto by Auguste Comte.",
+            flagDescription = "The green background and yellow diamond come from the empire's flag, kept in 1889. They are linked to the royal houses of Emperor Pedro I (green) and his wife (yellow), or read as forests and gold. The blue circle shows the sky over Rio de Janeiro on 15 November 1889, when the republic began. Its 27 stars stand for 26 states and the Federal District. The white band says Ordem e Progresso (Order and Progress), from a motto by Auguste Comte.",
             languages = listOf("Portuguese"),
             currency = "Brazilian Real (R$)",
             landmarks = listOf("Christ the Redeemer", "Iguazu Falls", "Amazon Rainforest"),
@@ -298,7 +298,7 @@ object AmericasCatalog {
             languages = listOf("English"),
             currency = "East Caribbean Dollar (EC\$)",
             landmarks = listOf("Grand Anse Beach", "Molinere Underwater Sculpture Park", "Grand Etang National Park"),
-            funFact = "Grenada is nicknamed the Isle of Spice for its nutmeg and mace crops, and a nutmeg pod even appears on its national flag.",
+            funFact = "The world's first underwater sculpture park opened in 2006 in Molinere Bay, off Grenada's west coast, with statues by British sculptor Jason deCaires Taylor.",
             driveSide = "Left"
         ),
         Country(
@@ -570,7 +570,7 @@ object AmericasCatalog {
             capital = "Washington, D.C.",
             continent = "Americas",
             subregion = "Northern America",
-            population = 345400000L,
+            population = 345000000L,
             areaSqKm = 9525067.0,
             flagEmoji = "🇺🇸",
             flagColors = listOf("Red", "White", "Blue"),

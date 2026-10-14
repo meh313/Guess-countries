@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
@@ -24,13 +25,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.isSpecified
 import com.example.R
 import com.example.data.model.Country
 
@@ -39,8 +44,11 @@ import com.example.data.model.Country
  *
  * Each card keeps the tag `quiz_option_<index>`, the green and red result colours and the "Correct answer" and
  * "Your answer, incorrect" descriptions of the text options, so the same tests and the same screen readers work
- * for both. Before an answer a card is only "Option 2 of 4" (the flag is the question, its name would give it
- * away); after the answer every card says whose flag it is and shows the name under the flag.
+ * for both. Each card is a button whose description is "Option 2 of 4" before an answer (the flag is the question,
+ * its name would give it away); after the answer every card says whose flag it is and shows the name under the flag.
+ *
+ * [tileMaxWidth] caps each tile (two to a row, so the grid is at most twice that plus the gap): on a short landscape
+ * window the four flags then fit beside the question instead of one flag filling the pane.
  */
 @Composable
 fun FlagOptionGrid(
@@ -50,9 +58,11 @@ fun FlagOptionGrid(
     selectedIndex: Int?,
     answered: Boolean,
     onPick: (Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    tileMaxWidth: Dp = Dp.Unspecified
 ) {
-    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    val gridWidth = if (tileMaxWidth.isSpecified) Modifier.widthIn(max = tileMaxWidth * 2 + 10.dp) else Modifier
+    Column(modifier = modifier.then(gridWidth).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         optionCodes.chunked(2).forEachIndexed { row, codes ->
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 codes.forEachIndexed { column, code ->
@@ -68,11 +78,17 @@ fun FlagOptionGrid(
                     }
                     val correctAnswer = stringResource(R.string.option_correct_answer)
                     val yourAnswerIncorrect = stringResource(R.string.option_your_answer_incorrect)
+                    // The card, not the flag inside it, is the button TalkBack lands on: its number, and once
+                    // answered the country, are its description.
+                    val description =
+                        if (answered && country != null) stringResource(R.string.option_flag_of, index + 1, country.name)
+                        else stringResource(R.string.option_of, index + 1, optionCodes.size)
                     Card(
                         modifier = Modifier
                             .weight(1f)
-                            .clickable(enabled = !answered) { onPick(index) }
+                            .clickable(enabled = !answered, role = Role.Button) { onPick(index) }
                             .semantics {
+                                contentDescription = description
                                 if (answered && isCorrect) {
                                     stateDescription = correctAnswer
                                 } else if (answered && isSelected) {
@@ -91,11 +107,9 @@ fun FlagOptionGrid(
                                         country = country,
                                         modifier = Modifier.fillMaxWidth(),
                                         thumbnail = true,
-                                        contentDescription =
-                                            if (answered) stringResource(R.string.option_flag_of, index + 1, country.name)
-                                            else stringResource(R.string.option_of, index + 1, optionCodes.size)
+                                        contentDescription = null
                                     )
-                                    // Once answered, every flag gets its name: the teaching moment of this mode. The flag's own
+                                    // Once answered, every flag gets its name: the teaching moment of this mode. The card's
                                     // description already names it, so TalkBack is not told twice.
                                     if (answered) {
                                         Text(

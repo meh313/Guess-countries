@@ -49,6 +49,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.shadows.ShadowTextToSpeech
+import com.example.support.setupNode
 import com.example.support.FreshDatabaseRule
 import com.example.support.awaitQuizPlan
 import com.example.support.awaitWeakSpots
@@ -82,20 +83,18 @@ class QuizAndFlashcardUiTest {
     }
 
     /**
-     * Clicks a quiz setup control. The setup screen scrolls under the bottom bar, so a chip near the bottom can
-     * count as visible while the bar covers it and swallows the tap; scrolling to the Start button first lifts
-     * every control above it clear of the bar.
+     * Clicks a quiz setup control. The choices scroll above the pinned Start button (which never needs scrolling
+     * to), so a control is brought into the scrolling area before the tap.
      */
     private fun clickSetup(tag: String) {
-        rule.onNodeWithTag("start_quiz_btn").performScrollTo()
-        rule.onNodeWithTag(tag).performScrollTo().performClick()
+        rule.setupNode(tag).performClick()
     }
 
     private fun startQuiz(scope: String) {
         tab("quiz")
         clickSetup("quiz_scope_${scope.lowercase()}")
-        // The setup screen scrolls; on a small window the Start button starts below the fold.
-        rule.onNodeWithTag("start_quiz_btn").performScrollTo().performClick()
+        // The Start button is pinned at the bottom, in reach however long the setup screen is.
+        rule.onNodeWithTag("start_quiz_btn").performClick()
         rule.waitForIdle()
     }
 
@@ -139,11 +138,11 @@ class QuizAndFlashcardUiTest {
         }
         playOutWithFirstOption()
 
-        rule.onNodeWithText("Quiz Complete!").assertIsDisplayed()
+        rule.onNodeWithText("Quiz complete!").assertIsDisplayed()
         // The score screen scrolls (a list of misses can be long); Done sits at its end.
         rule.onNodeWithTag("quiz_finish_done_btn").performScrollTo().performClick()
         rule.waitForIdle()
-        rule.onNodeWithTag("start_quiz_btn").performScrollTo().assertIsDisplayed()
+        rule.onNodeWithTag("start_quiz_btn").assertIsDisplayed()
     }
 
     @Test
@@ -158,13 +157,11 @@ class QuizAndFlashcardUiTest {
         tab("quiz")
 
         clickSetup("quiz_scope_africa")
-        rule.onNodeWithTag("start_quiz_btn").performScrollTo()
-        rule.onNodeWithText("Start ${questionsFor("Africa")}-Question Quiz").assertIsDisplayed()
+        rule.onNodeWithText("Start ${questionsFor("Africa")}-question quiz").assertIsDisplayed()
         rule.onNodeWithTag("start_quiz_btn").assertIsEnabled()
 
         clickSetup("quiz_scope_global")
-        rule.onNodeWithTag("start_quiz_btn").performScrollTo()
-        rule.onNodeWithText("Start ${questionsFor("Global")}-Question Quiz").assertIsDisplayed()
+        rule.onNodeWithText("Start ${questionsFor("Global")}-question quiz").assertIsDisplayed()
     }
 
     private val viewModel get() = ViewModelProvider(rule.activity)[CountryViewModel::class.java]
@@ -173,7 +170,7 @@ class QuizAndFlashcardUiTest {
         tab("quiz")
         clickSetup("quiz_scope_${scope.lowercase()}")
         clickSetup("quiz_mode_${mode.name.lowercase()}")
-        rule.onNodeWithTag("start_quiz_btn").performScrollTo().performClick()
+        rule.onNodeWithTag("start_quiz_btn").performClick()
         rule.waitForIdle()
     }
 
@@ -189,16 +186,14 @@ class QuizAndFlashcardUiTest {
     fun continentMode_makesTheScopeChipsInactiveAndSaysWhy() {
         tab("quiz")
         clickSetup("quiz_scope_africa")
-        rule.onNodeWithTag("start_quiz_btn").performScrollTo()
-        rule.onNodeWithText("Start ${questionsFor("Africa")}-Question Quiz").assertIsDisplayed()
+        rule.onNodeWithText("Start ${questionsFor("Africa")}-question quiz").assertIsDisplayed()
 
         clickSetup("quiz_mode_continent")
 
         rule.onNodeWithText("The continent quiz always covers the whole world").performScrollTo().assertIsDisplayed()
         rule.onNodeWithTag("quiz_scope_africa").assertIsNotEnabled()
         rule.onNodeWithTag("quiz_scope_global").assertIsSelected()
-        rule.onNodeWithTag("start_quiz_btn").performScrollTo()
-        rule.onNodeWithText("Start ${questionsFor("Global")}-Question Quiz").assertIsDisplayed()
+        rule.onNodeWithText("Start ${questionsFor("Global")}-question quiz").assertIsDisplayed()
     }
 
     @Test
@@ -209,9 +204,8 @@ class QuizAndFlashcardUiTest {
 
         clickSetup("quiz_mode_flag_name")
 
-        rule.onNodeWithTag("quiz_scope_africa").performScrollTo().assertIsEnabled().assertIsSelected()
-        rule.onNodeWithTag("start_quiz_btn").performScrollTo()
-        rule.onNodeWithText("Start ${questionsFor("Africa")}-Question Quiz").assertIsDisplayed()
+        rule.setupNode("quiz_scope_africa").assertIsEnabled().assertIsSelected()
+        rule.onNodeWithText("Start ${questionsFor("Africa")}-question quiz").assertIsDisplayed()
     }
 
     @Test
@@ -295,9 +289,9 @@ class QuizAndFlashcardUiTest {
         tab("stats")
         rule.waitUntil(10_000) { viewModel.quizHistory.value.isNotEmpty() }
 
-        rule.onNode(hasScrollAction()).performScrollToNode(hasText("Speed Round • Global"))
+        rule.onNode(hasScrollAction()).performScrollToNode(hasText("Speed Round · Global"))
 
-        rule.onNodeWithText("Speed Round • Global").assertIsDisplayed()
+        rule.onNodeWithText("Speed Round · Global").assertIsDisplayed()
         rule.onAllNodesWithText("SPEED_MATCH", substring = true).assertCountEquals(0)
     }
 
@@ -404,13 +398,13 @@ class QuizAndFlashcardUiTest {
     fun finishedQuiz_backReturnsToSetup() {
         startQuiz("Africa")
         playOutWithFirstOption()
-        rule.onNodeWithText("Quiz Complete!").assertIsDisplayed()
+        rule.onNodeWithText("Quiz complete!").assertIsDisplayed()
 
         rule.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
         rule.waitForIdle()
 
-        rule.onNodeWithText("Quiz Complete!").assertDoesNotExist()
-        rule.onNodeWithTag("start_quiz_btn").performScrollTo().assertIsDisplayed()
+        rule.onNodeWithText("Quiz complete!").assertDoesNotExist()
+        rule.onNodeWithTag("start_quiz_btn").assertIsDisplayed()
     }
 
     // --- The score screen ---------------------------------------------------------------------------------------------
@@ -434,7 +428,7 @@ class QuizAndFlashcardUiTest {
             goNext()
             check(++n <= total + 2) { "the quiz never finished" }
         }
-        rule.onNodeWithText("Quiz Complete!").assertIsDisplayed()
+        rule.onNodeWithText("Quiz complete!").assertIsDisplayed()
         return missed
     }
 
@@ -584,11 +578,10 @@ class QuizAndFlashcardUiTest {
         rule.onNodeWithTag("quiz_quit_confirm_btn").performClick()
         rule.waitForIdle()
 
-        rule.onNodeWithTag("start_quiz_btn").performScrollTo().assertIsDisplayed()
+        rule.onNodeWithTag("start_quiz_btn").assertIsDisplayed()
         // Free to choose something else again.
         clickSetup("quiz_scope_europe")
-        rule.onNodeWithTag("start_quiz_btn").performScrollTo()
-        rule.onNodeWithText("Start ${questionsFor("Europe")}-Question Quiz").assertIsDisplayed()
+        rule.onNodeWithText("Start ${questionsFor("Europe")}-question quiz").assertIsDisplayed()
     }
 
     @Test
@@ -614,7 +607,7 @@ class QuizAndFlashcardUiTest {
         tab("flashcards")
         rule.onNodeWithTag("flashcard_flip_card").performClick()
         rule.waitForIdle()
-        rule.onNodeWithText("Flag Meaning").assertIsDisplayed()
+        rule.onNodeWithText("Flag meaning").assertIsDisplayed()
 
         val continent = continentWhoseFirstCardIsNotTheDecksFirst()
         tab("explore")
@@ -623,8 +616,8 @@ class QuizAndFlashcardUiTest {
         tab("flashcards")
 
         rule.onNodeWithText("Card 1 of ${allCountries.count { it.continent == continent }}").assertIsDisplayed()
-        rule.onNodeWithText("Flag Meaning").assertDoesNotExist()
-        rule.onNodeWithText("Tap to reveal Country Name & Capital").assertIsDisplayed()
+        rule.onNodeWithText("Flag meaning").assertDoesNotExist()
+        rule.onNodeWithText("Tap to reveal the country name & capital").assertIsDisplayed()
     }
 
     @Test
@@ -636,13 +629,13 @@ class QuizAndFlashcardUiTest {
         tab("flashcards")
         rule.onNodeWithTag("flashcard_flip_card").performClick()
         rule.waitForIdle()
-        rule.onNodeWithText("Flag Meaning").assertIsDisplayed()
+        rule.onNodeWithText("Flag meaning").assertIsDisplayed()
 
         rule.onNodeWithTag("flashcard_clear_filters_btn").performClick()
         rule.waitForIdle()
 
         rule.onNodeWithText("Card 1 of ${allCountries.size}").assertIsDisplayed()
-        rule.onNodeWithText("Flag Meaning").assertDoesNotExist()
+        rule.onNodeWithText("Flag meaning").assertDoesNotExist()
     }
 
     @Test
@@ -676,7 +669,7 @@ class QuizAndFlashcardUiTest {
         }
         rule.onNodeWithText("Card 3 of ${allCountries.size}").assertIsDisplayed()
 
-        rule.onNodeWithContentDescription("Shuffle Cards").performClick()
+        rule.onNodeWithContentDescription("Shuffle cards").performClick()
         rule.waitForIdle()
 
         rule.onNodeWithText("Card 1 of ${allCountries.size}").assertIsDisplayed()
@@ -687,10 +680,10 @@ class QuizAndFlashcardUiTest {
         tab("flashcards")
         rule.onNodeWithTag("flashcard_next_btn").performClick()
         rule.waitForIdle()
-        rule.onNodeWithContentDescription("Shuffle Cards").performClick()
+        rule.onNodeWithContentDescription("Shuffle cards").performClick()
         rule.waitForIdle()
 
-        rule.onNodeWithContentDescription("Reset Deck").performClick()
+        rule.onNodeWithContentDescription("Reset deck").performClick()
         rule.waitForIdle()
 
         rule.onNodeWithText("Card 1 of ${allCountries.size}").assertIsDisplayed()
@@ -735,14 +728,14 @@ class QuizAndFlashcardUiTest {
     @Test
     fun flashcardFlip_survivesRotation() {
         tab("flashcards")
-        rule.onNodeWithText("Tap to reveal Country Name & Capital").assertIsDisplayed()
+        rule.onNodeWithText("Tap to reveal the country name & capital").assertIsDisplayed()
         rule.onNodeWithTag("flashcard_flip_card").performClick()
         rule.waitForIdle()
-        rule.onNodeWithText("Flag Meaning").assertIsDisplayed()
+        rule.onNodeWithText("Flag meaning").assertIsDisplayed()
 
         rotate()
 
-        rule.onNodeWithText("Flag Meaning").assertIsDisplayed()
+        rule.onNodeWithText("Flag meaning").assertIsDisplayed()
     }
 
     @Test
@@ -842,14 +835,14 @@ class QuizAndFlashcardUiTest {
     @Test
     fun theDifficultyChosenOnTheSetupScreenReachesTheQuizAndTheScoreDialog() {
         tab("quiz")
-        rule.onNodeWithTag("quiz_difficulty_hard").performScrollTo().performClick()
-        rule.onNodeWithTag("start_quiz_btn").performScrollTo().performClick()
+        rule.setupNode("quiz_difficulty_hard").performClick()
+        rule.onNodeWithTag("start_quiz_btn").performClick()
         rule.waitForIdle()
 
         assertEquals(QuizDifficulty.HARD, viewModel.quizSession.value!!.difficulty)
 
         playOutWithFirstOption()
-        rule.onNodeWithText("Quiz Complete!").assertIsDisplayed()
+        rule.onNodeWithText("Quiz complete!").assertIsDisplayed()
         rule.onNodeWithTag("quiz_finish_difficulty").assert(hasText("Answers: Hard"))
     }
 
@@ -863,7 +856,7 @@ class QuizAndFlashcardUiTest {
         rule.onNodeWithText("120 pts").assertIsDisplayed()
         rule.onNode(hasScrollAction()).performScrollToNode(hasText("14 correct · 340 pts"))
         rule.onNodeWithText("14 correct · 340 pts").assertIsDisplayed()
-        rule.onNodeWithText("60-Second Blitz • Global").assertIsDisplayed()
+        rule.onNodeWithText("60-second blitz · Global").assertIsDisplayed()
         rule.onAllNodesWithText("340 pts", substring = false).assertCountEquals(0)
     }
 
@@ -926,9 +919,13 @@ class QuizAndFlashcardUiTest {
 
     @Test
     fun studyChooser_countsItsSources_andLocksTheEmptyOnes() {
-        openStudyChooser()
+        tab("flashcards")
+        // Nothing due: the button is plain "Study".
+        rule.onNodeWithTag("flashcard_study_btn").assert(hasText("Study"))
+        rule.onNodeWithTag("flashcard_study_btn").performClick()
+        rule.waitForIdle()
 
-        rule.onNodeWithText("Study").assertIsDisplayed()
+        rule.onNodeWithText("Up to 20 cards; grade each one after the flip. Ten or more count as practice.").assertIsDisplayed()
         rule.onNodeWithTag("study_due_btn").assertIsNotEnabled()
         rule.onNodeWithText("0 cards due for review").assertIsDisplayed()
         rule.onNodeWithTag("study_weak_btn").assertIsNotEnabled()
@@ -979,7 +976,11 @@ class QuizAndFlashcardUiTest {
     fun studyDueToday_writesEachGradeOneStepLate_andUndoTakesTheLastOneBack() {
         due("FR", "DE", "ES")
         rule.awaitQuizPlan(viewModel) { it.due(Skill.FLAG).size == 3 }
-        openStudyChooser()
+        tab("flashcards")
+        // The Study button carries the number due.
+        rule.onNodeWithTag("flashcard_study_btn").assert(hasText("Study · 3 due"))
+        rule.onNodeWithTag("flashcard_study_btn").performClick()
+        rule.waitForIdle()
         rule.onNodeWithText("3 cards due for review").assertIsDisplayed()
         rule.onNodeWithTag("study_due_btn").performClick()
         rule.waitForIdle()
@@ -994,7 +995,7 @@ class QuizAndFlashcardUiTest {
         rule.onNodeWithTag("flashcard_undo_btn").performClick()
         rule.waitForIdle()
         rule.onNodeWithText("Card 1 of 3").assertIsDisplayed()
-        rule.onNodeWithText("Flag Meaning").assertIsDisplayed() // back on top, flipped
+        rule.onNodeWithText("Flag meaning").assertIsDisplayed() // back on top, flipped
         rule.onNodeWithTag("grade_again_btn").performClick()
         rule.waitForIdle()
         rule.onNodeWithText("Card 2 of 3").assertIsDisplayed()
@@ -1069,7 +1070,7 @@ class QuizAndFlashcardUiTest {
         tab("stats")
         rule.eventually("the study session in the log") {
             rule.onNode(hasScrollAction()).performScrollToNode(hasText("10 of 10 remembered"))
-            rule.onNodeWithText("Flashcards • This deck").assertIsDisplayed()
+            rule.onNodeWithText("Flashcards · This deck").assertIsDisplayed()
         }
         rule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("stats_quizzes"))
         // The tile's texts sit in its children; a study session is not a quiz.
@@ -1100,8 +1101,8 @@ class QuizAndFlashcardUiTest {
         tab("quiz")
 
         clickSetup("quiz_scope_weak_spots")
-        rule.onNodeWithText("Start 5-Question Quiz").assertIsDisplayed()
-        rule.onNodeWithTag("start_quiz_btn").performScrollTo().performClick()
+        rule.onNodeWithText("Start 5-question quiz").assertIsDisplayed()
+        rule.onNodeWithTag("start_quiz_btn").performClick()
         rule.waitForIdle()
 
         rule.onNodeWithText("Question 1 of 5").assertIsDisplayed()
@@ -1127,7 +1128,7 @@ class QuizAndFlashcardUiTest {
     private fun finishAfricaQuiz() {
         startQuiz("Africa")
         playOutWithFirstOption()
-        rule.onNodeWithText("Quiz Complete!").assertIsDisplayed()
+        rule.onNodeWithText("Quiz complete!").assertIsDisplayed()
     }
 
     @Test
@@ -1148,7 +1149,7 @@ class QuizAndFlashcardUiTest {
 
         rule.eventually("the streak") {
             rule.onNodeWithText("3-day streak").assertIsDisplayed()
-            rule.onNodeWithText("Best: 4 days · Practiced today").assertIsDisplayed()
+            rule.onNodeWithText("Best: 4 days · Practised today").assertIsDisplayed()
         }
     }
 

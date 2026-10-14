@@ -73,6 +73,18 @@ class FakeSpeech(initiallyAvailable: Boolean = false) : Speech {
     private val available = MutableStateFlow(initiallyAvailable)
     override val isAvailable: StateFlow<Boolean> = available
 
+    /** The engine's state as the screens see it; tests set it to drive the spinner and the install button. */
+    val stateFlow = MutableStateFlow(if (initiallyAvailable) Speech.State.READY else Speech.State.IDLE)
+    override val state: StateFlow<Speech.State> = stateFlow
+
+    var installCalls = 0
+        private set
+
+    override fun installVoiceData(): Boolean {
+        installCalls++
+        return true
+    }
+
     var prepareCalls = 0
         private set
     var stopCalls = 0
@@ -83,6 +95,13 @@ class FakeSpeech(initiallyAvailable: Boolean = false) : Speech {
 
     fun setAvailable(value: Boolean) {
         available.value = value
+        stateFlow.value = if (value) Speech.State.READY else Speech.State.IDLE
+    }
+
+    /** Moves the engine to [state]; READY is the only state in which it can speak. */
+    fun setState(state: Speech.State) {
+        stateFlow.value = state
+        available.value = state == Speech.State.READY
     }
 
     override fun prepare() {

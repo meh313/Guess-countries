@@ -348,6 +348,154 @@
    ],
    "confidence": "medium",
    "from": "critic"
+  },
+  {
+   "code": "BF",
+   "field": "population",
+   "current": "23550000",
+   "value": "23500000",
+   "reason": "Population rule changed with the compact number format: the app now shows three significant figures rounded half up, so every figure is the UN WPP 2024 mid-2024 medium-variant estimate (23,548,781) rounded to three significant figures, 23,500,000. The extra digit kept to keep the figure off a rounding tie under the old two-figure, half-even display is dropped.",
+   "sources": [
+    "https://www.worldometers.info/world-population/burkina-faso-population/",
+    "https://en.wikipedia.org/wiki/List_of_countries_by_population_(United_Nations)"
+   ],
+   "confidence": "high",
+   "from": "content-review"
+  },
+  {
+   "code": "BJ",
+   "field": "population",
+   "current": "14460000",
+   "value": "14500000",
+   "reason": "Population rule changed with the compact number format: the app now shows three significant figures rounded half up, so every figure is the UN WPP 2024 mid-2024 medium-variant estimate (14,462,724) rounded to three significant figures, 14,500,000. The extra digit kept to keep the figure off a rounding tie under the old two-figure, half-even display is dropped.",
+   "sources": [
+    "https://www.worldometers.info/world-population/benin-population/",
+    "https://en.wikipedia.org/wiki/List_of_countries_by_population_(United_Nations)"
+   ],
+   "confidence": "high",
+   "from": "content-review"
+  },
+  {
+   "code": "CV",
+   "field": "population",
+   "current": "524900",
+   "value": "525000",
+   "reason": "Population rule changed with the compact number format: the app now shows three significant figures rounded half up, so every figure is the UN WPP 2024 mid-2024 medium-variant estimate (524,877) rounded to three significant figures, 525,000. The extra digit kept to keep the figure off a rounding tie under the old two-figure, half-even display is dropped.",
+   "sources": [
+    "https://www.worldometers.info/world-population/cabo-verde-population/",
+    "https://en.wikipedia.org/wiki/List_of_countries_by_population_(United_Nations)"
+   ],
+   "confidence": "high",
+   "from": "content-review"
+  },
+  {
+   "code": "ML",
+   "field": "population",
+   "current": "24480000",
+   "value": "24500000",
+   "reason": "Population rule changed with the compact number format: the app now shows three significant figures rounded half up, so every figure is the UN WPP 2024 mid-2024 medium-variant estimate (24,478,595) rounded to three significant figures, 24,500,000. The extra digit kept to keep the figure off a rounding tie under the old two-figure, half-even display is dropped.",
+   "sources": [
+    "https://www.worldometers.info/world-population/mali-population/",
+    "https://en.wikipedia.org/wiki/List_of_countries_by_population_(United_Nations)"
+   ],
+   "confidence": "high",
+   "from": "content-review"
+  },
+  {
+   "code": "SN",
+   "field": "population",
+   "current": "18502000",
+   "value": "18500000",
+   "reason": "Population rule changed with the compact number format: the app now shows three significant figures rounded half up, so every figure is the UN WPP 2024 mid-2024 medium-variant estimate (18,501,984) rounded to three significant figures, 18,500,000. The extra digit kept to keep the figure off a rounding tie under the old two-figure, half-even display is dropped.",
+   "sources": [
+    "https://www.populationpyramid.net/senegal/2024/",
+    "https://en.wikipedia.org/wiki/List_of_countries_by_population_(United_Nations)"
+   ],
+   "confidence": "high",
+   "from": "content-review"
+  },
+  {
+   "code": "BW",
+   "field": "funFact",
+   "current": "Botswana's motto and its money share one name: pula, the Setswana word for rain, which is precious in a country that is mostly Kalahari Desert.",
+   "value": "The Okavango Delta, one of the world's largest inland deltas, whose river never reaches the sea, became UNESCO's 1,000th World Heritage Site in 2014.",
+   "reason": "Old fact repeated the flag text's pula-means-rain point. Wikipedia Okavango Delta: 'On 22 June 2014, the Okavango Delta became the 1000th site to be officially inscribed on the UNESCO World Heritage List'; 'one of the world's largest inland deltas'; 'one of the few interior delta systems that do not flow into a sea or ocean'.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Okavango_Delta"
+   ],
+   "confidence": "high",
+   "from": "content-review"
+  },
+  {
+   "code": "CM",
+   "field": "funFact",
+   "current": "Cameroon is nicknamed Africa in miniature because beaches, deserts, mountains, rainforests and savannas can all be found within its borders.",
+   "value": "Cameroon is often called Africa in miniature: beaches, desert, mountains, rainforest and savanna all lie within one country.",
+   "reason": "Wording only, same facts and source as the research entry: the old sentence ('because ... can all be found within its borders') read awkwardly.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Cameroon"
+   ],
+   "confidence": "high",
+   "from": "content-review"
+  },
+  {
+   "code": "TZ",
+   "field": "funFact",
+   "current": "Tanzania contains Mount Kilimanjaro, Africa's highest mountain peak at 5,895 meters above sea level.",
+   "value": "Mount Kilimanjaro, Africa's highest mountain at 5,895 meters above sea level, stands in northern Tanzania.",
+   "reason": "Wording only, same fact: 'Tanzania contains Mount Kilimanjaro, Africa's highest mountain peak' read awkwardly. Wikipedia Mount Kilimanjaro: a dormant volcano in Tanzania, 5,895 m above sea level, the highest mountain in Africa.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Mount_Kilimanjaro"
+   ],
+   "confidence": "high",
+   "from": "content-review"
+  },
+  {
+   "code": "NG",
+   "field": "flagDescription",
+   "current": "A student in London, Michael Taiwo Akinkunmi, designed Nigeria's flag and won a nationwide contest in 1959. Green stands for farming. White stands for unity and peace. His design also had a red sun on the white band, meant for divine protection and guidance, but the committee left it out. No reason is given for the three bands. It became official at independence, on October 1, 1960.",
+   "value": "A student in London, Michael Taiwo Akinkunmi, designed Nigeria's flag and won a nationwide contest in 1959. Green stands for farming. White stands for unity and peace. His design also had a red sun on the white band, meant for divine protection and guidance, but the committee left it out. No reason is given for the three bands. It became official at independence, on 1 October 1960.",
+   "reason": "House style: dates are written day month year. No fact changes.",
+   "sources": [],
+   "confidence": "high",
+   "from": "content-review"
+  },
+  {
+   "code": "MG",
+   "field": "funFact",
+   "current": "Madagascar broke away from India about 90 million years ago, and around 90 percent of its wildlife, including lemurs, lives nowhere else on Earth.",
+   "value": "Madagascar broke away from India about 90 million years ago, and around 90% of its wildlife, including lemurs, lives nowhere else on Earth.",
+   "reason": "House style: a percentage after a number is written with the % sign, as the other entries do. No fact changes.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Madagascar"
+   ],
+   "confidence": "high",
+   "from": "content-review"
+  },
+  {
+   "code": "CI",
+   "field": "funFact",
+   "current": "The Basilica of Our Lady of Peace in Yamoussoukro, modeled on St. Peter's in Rome, is listed by Guinness World Records as the largest church in the world.",
+   "value": "The Basilica of Our Lady of Peace in Yamoussoukro, modeled on St Peter's in Rome, is listed by Guinness World Records as the largest church in the world.",
+   "reason": "House style: Saint is abbreviated St without a full stop. No fact changes.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Basilica_of_Our_Lady_of_Peace"
+   ],
+   "confidence": "high",
+   "from": "content-review"
+  },
+  {
+   "code": "SZ",
+   "field": "flagDescription",
+   "current": "The flag comes from a banner King Sobhuza II gave in 1941 to Swazi soldiers in the Second World War; first raised in 1967, it became the national flag in October 1968, just after independence. Officially red stands for past battles, blue for peace and yellow for resources. The black and white ox-hide shield shows black and white people living in peace, two spears mean protection, and the stick carries feather tassels that only the king may use.",
+   "value": "The flag comes from a banner King Sobhuza II gave in 1941 to Swazi soldiers in the World War II; first raised in 1967, it became the national flag in October 1968, just after independence. Officially red stands for past battles, blue for peace and yellow for resources. The black and white ox-hide shield shows black and white people living in peace, two spears mean protection, and the stick carries feather tassels that only the king may use.",
+   "reason": "House style: the wars are named World War I and World War II. No fact changes.",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Flag_of_Eswatini",
+    "https://www.crwflags.com/fotw/flags/sz.html"
+   ],
+   "confidence": "high",
+   "from": "content-review"
   }
  ],
  "ownerDecisions": [

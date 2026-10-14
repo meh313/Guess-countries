@@ -33,7 +33,7 @@ android {
     minSdk = 24
     targetSdk = 36
     versionCode = versionCodeFromEnv ?: 1
-    versionName = "2.2"
+    versionName = "2.3"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -100,8 +100,6 @@ android {
   // Exported Room schemas double as fixtures for migration tests.
   sourceSets {
     getByName("androidTest").assets.directories.add("$projectDir/schemas")
-    // The third-party licence text ships inside the APK next to the artwork it covers.
-    getByName("main").assets.directories.add("$rootDir/licenses")
   }
 }
 

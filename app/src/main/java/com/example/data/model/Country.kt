@@ -28,9 +28,9 @@ data class Country(
      */
     val isSovereign: Boolean = true
 ) {
-    /** "Africa • Southern Africa", or just "Antarctica" where the subregion repeats the continent. */
+    /** "Africa · Southern Africa", or just "Antarctica" where the subregion repeats the continent. */
     val regionLabel: String
-        get() = if (subregion.equals(continent, ignoreCase = true)) continent else "$continent • $subregion"
+        get() = if (subregion.equals(continent, ignoreCase = true)) continent else "$continent · $subregion"
 
     /** The key the country lists sort names by: lowercase, accents dropped. Folded once, since sorting compares it often. */
     val nameSortKey: String by lazy { fold(name) }

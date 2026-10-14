@@ -9,12 +9,17 @@
     <!-- Flashcards: the deck header, the filter notice and the empty deck -->
     <string name="flashcards_title">Flashcards</string>
     <string name="flashcards_card_position">Card %1$d of %2$d</string>
-    <string name="flashcards_shuffle">Shuffle Cards</string>
-    <string name="flashcards_reset">Reset Deck</string>
+    <string name="flashcards_shuffle">Shuffle cards</string>
+    <string name="flashcards_reset">Reset deck</string>
     <string name="flashcards_filter_saved_only">Saved only</string>
     <string name="flashcards_filter_search">\"%1$s\"</string>
     <string name="flashcards_filter_sorted_by">Sorted by %1$s</string>
     <string name="flashcards_filter_notice">Deck filtered by Explore: %1$s</string>
+    <!-- The Study button; "Study" alone when nothing is due -->
+    <plurals name="flashcards_study_due">
+        <item quantity="one">Study · %d due</item>
+        <item quantity="other">Study · %d due</item>
+    </plurals>
     <string name="flashcards_action_clear">Clear</string>
     <string name="flashcards_empty">No flashcards available for current filters.</string>
 
@@ -23,10 +28,10 @@
     <string name="flashcards_show_flag_again">Show the flag again</string>
     <string name="flashcards_state_flag">Showing the flag</string>
     <string name="flashcards_state_details">Showing country details</string>
-    <string name="flashcards_tap_to_reveal">Tap to reveal Country Name &amp; Capital</string>
+    <string name="flashcards_tap_to_reveal">Tap to reveal the country name &amp; capital</string>
     <string name="flashcards_population">Population</string>
-    <string name="flashcards_flag_meaning">Flag Meaning</string>
-    <string name="flashcards_trivia">Trivia Fact</string>
+    <string name="flashcards_flag_meaning">Flag meaning</string>
+    <string name="flashcards_trivia">Trivia fact</string>
 
     <!-- Flashcards: Previous and Next -->
     <string name="flashcards_previous">Previous</string>
@@ -81,34 +86,41 @@
         <item quantity="one">Best: %d day</item>
         <item quantity="other">Best: %d days</item>
     </plurals>
-    <string name="stats_practiced_today">Practiced today</string>
+    <string name="stats_practiced_today">Practised today</string>
     <string name="stats_not_yet_today">Not yet today</string>
 
     <!-- Progress: the metric tiles -->
-    <string name="stats_mastered_flags">Mastered Flags</string>
-    <string name="stats_capitals_known">Capitals Known</string>
+    <string name="stats_mastered_flags">Mastered flags</string>
+    <string name="stats_capitals_known">Capitals known</string>
     <string name="stats_ratio">%1$d / %2$d</string>
-    <string name="stats_due_today">Due Today</string>
+    <string name="stats_due_today">Due today</string>
+    <string name="stats_due_open">Start a study session of the cards due</string>
     <string name="stats_saved">Saved</string>
-    <string name="stats_quizzes_finished">Quizzes Finished</string>
-    <string name="stats_highest_score">Highest Score</string>
+    <string name="stats_quizzes_finished">Quizzes finished</string>
+    <string name="stats_highest_score">Highest score</string>
     <string name="stats_points">%1$d pts</string>
+    <string name="stats_blitz_best">Blitz best: %1$d</string>
+    <!-- What TalkBack reads for a tile: title, value and (when there is one) the detail line -->
+    <string name="stat_badge_description">%1$s: %2$s</string>
+    <string name="stat_badge_description_detail">%1$s: %2$s · %3$s</string>
 
     <!-- Progress: continent mastery -->
-    <string name="stats_continent_heading">Continent Mastery Breakdown</string>
+    <string name="stats_continent_heading">Mastery by continent</string>
     <string name="stats_continent_open">Show the %1$s countries still to learn</string>
-    <string name="stats_mastered_of">%1$d of %2$d Mastered</string>
+    <string name="stats_mastered_of">%1$d of %2$d mastered</string>
     <string name="stats_capitals_count">Capitals: %1$d</string>
 
     <!-- Progress: the quiz log -->
-    <string name="stats_log_heading">Recent Quiz Log</string>
+    <string name="stats_log_heading">Recent quizzes</string>
     <string name="stats_log_empty">No quizzes yet. Finish a quiz or a study session and it shows up here.</string>
-    <string name="stats_log_entry">%1$s • %2$s</string>
+    <string name="stats_log_entry">%1$s · %2$s</string>
+    <string name="stats_log_result">%1$d/%2$d · %3$d pts</string>
     <string name="stats_log_blitz">%1$d correct · %2$d pts</string>
+    <string name="stats_log_show_all">Show all</string>
 
     <!-- The daily reminder card -->
     <string name="reminder_title">Daily reminder</string>
-    <string name="reminder_detail">A nudge at %1$s, only on days you have not finished a quiz</string>
+    <string name="reminder_detail">A nudge at %1$s, only on days without a quiz or study session</string>
     <string name="reminder_time">Remind me at %1$s</string>
     <string name="reminder_blocked">Allow notifications for %1$s in system settings to get the reminder.</string>
     <string name="reminder_open_settings">Open settings</string>

@@ -145,8 +145,11 @@ fun MainAppScreen(
     fun isSelected(screen: Screen) = currentRoute == screen.route ||
         (screen == Screen.Stats && (currentRoute == Screen.SETTINGS || currentRoute == Screen.ABOUT))
     fun open(screen: Screen) {
-        if (currentRoute != screen.route) {
-            navController.navigate(screen.route) {
+        when {
+            currentRoute == screen.route -> Unit
+            // The tab is selected but a screen sits over its root (Settings or About over Progress): back to the root.
+            isSelected(screen) -> navController.popBackStack(screen.route, inclusive = false)
+            else -> navController.navigate(screen.route) {
                 popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                 launchSingleTop = true
                 restoreState = true
@@ -225,20 +228,19 @@ fun MainAppScreen(
                         viewModel = viewModel,
                         onOpenSettings = { navController.navigate(Screen.SETTINGS) { launchSingleTop = true } },
                         onOpenExplore = { continent ->
-                            viewModel.showInExplore(continent, Standing.WEAK)
-                            navController.navigate(Screen.Explore.route) {
-                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        }
+                            viewModel.showInExplore(continent, Standing.STILL_TO_LEARN)
+                            open(Screen.Explore)
+                        },
+                        onOpenFlashcards = { open(Screen.Flashcards) }
                     )
                 }
                 composable(Screen.SETTINGS) {
                     SettingsScreen(
                         viewModel = viewModel,
                         onBack = { navController.popBackStack() },
-                        onAbout = { navController.navigate(Screen.ABOUT) { launchSingleTop = true } }
+                        onAbout = { navController.navigate(Screen.ABOUT) { launchSingleTop = true } },
+                        speechState = viewModel.speechState,
+                        onInstallVoiceData = viewModel::installVoiceData
                     )
                 }
                 composable(Screen.ABOUT) {

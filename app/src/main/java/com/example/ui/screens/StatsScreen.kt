@@ -1,7 +1,6 @@
 package com.example.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,10 +34,14 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,7 +53,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -76,7 +79,9 @@ fun StatsScreen(
     modifier: Modifier = Modifier,
     onOpenSettings: () -> Unit = {},
     /** Opens Explore with the continent (and the countries still to learn) filtered in. */
-    onOpenExplore: (continent: String) -> Unit = {}
+    onOpenExplore: (continent: String) -> Unit = {},
+    /** Opens the Flashcards tab, where the study session the Due tile starts is shown. */
+    onOpenFlashcards: () -> Unit = {}
 ) {
     val progressMap by viewModel.userProgressMap.collectAsStateWithLifecycle()
     val mastered by viewModel.mastered.collectAsStateWithLifecycle()
@@ -106,6 +111,11 @@ fun StatsScreen(
     val totalQuizzes = remember(quizHistory) { quizHistory.count { it.mode != StudySession.MODE } }
     // A blitz runs as long as the clock allows, so its points would swamp the 190-point maximum of the others.
     val maxScore = remember(quizHistory) { quizHistory.filter { it.mode != QuizMode.BLITZ.name }.maxOfOrNull { it.score } ?: 0 }
+    // The blitz is measured in flags named, not points; rows saved before the count was recorded hold none.
+    val blitzBest = remember(quizHistory) { quizHistory.filter { it.mode == QuizMode.BLITZ.name }.maxOfOrNull { it.correct ?: 0 } ?: 0 }
+    // The log opens on its latest rows; Show all brings the rest in.
+    var showAllLog by rememberSaveable { mutableStateOf(false) }
+    val shownLog = if (showAllLog) quizHistory else quizHistory.take(LOG_PREVIEW)
 
     val continents = listOf("Africa", "Americas", "Asia", "Europe", "Oceania")
 
@@ -169,12 +179,23 @@ fun StatsScreen(
 
         item {
             TileRow { tile ->
+                // A tap starts a study session over the cards due; with none due the tile is plain.
+                val dueCodes = plan.due(Skill.FLAG)
                 StatBadge(
                     title = stringResource(R.string.stats_due_today),
                     value = "$dueCount",
                     icon = Icons.Default.Today,
                     iconColor = Color(0xFF16A085),
-                    modifier = tile.testTag("stats_due")
+                    modifier = tile.testTag("stats_due"),
+                    onClick = if (dueCount > 0) {
+                        {
+                            viewModel.startStudy(StudySession.DUE, dueCodes.map { it.code })
+                            onOpenFlashcards()
+                        }
+                    } else {
+                        null
+                    },
+                    onClickLabel = stringResource(R.string.stats_due_open)
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 StatBadge(
@@ -202,7 +223,8 @@ fun StatsScreen(
                     value = stringResource(R.string.stats_points, maxScore),
                     icon = Icons.Default.EmojiEvents,
                     iconColor = Color(0xFFE67E22),
-                    modifier = tile
+                    modifier = tile.testTag("stats_highest"),
+                    detail = if (blitzBest > 0) stringResource(R.string.stats_blitz_best, blitzBest) else null
                 )
             }
         }
@@ -226,10 +248,12 @@ fun StatsScreen(
             val continentColor = getContinentColor(continent)
             val continentName = continentLabel(continent)
 
+            val openLabel = stringResource(R.string.stats_continent_open, continentName)
             Card(
+                onClick = { onOpenExplore(continent) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable(role = Role.Button, onClickLabel = stringResource(R.string.stats_continent_open, continentName)) { onOpenExplore(continent) }
+                    .semantics { onClick(label = openLabel, action = null) }
                     .testTag("stats_continent_${continent.lowercase()}"),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -308,13 +332,13 @@ fun StatsScreen(
                         Text(
                             text = stringResource(R.string.stats_log_empty),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.outline
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
             }
         } else {
-            items(quizHistory, key = { it.id }) { entry ->
+            items(shownLog, key = { it.id }) { entry ->
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(14.dp),
@@ -336,7 +360,7 @@ fun StatsScreen(
                             Text(
                                 text = dateFormat.format(Date(entry.timestamp)),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.outline
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
 
@@ -344,10 +368,14 @@ fun StatsScreen(
                             shape = RoundedCornerShape(12.dp),
                             color = MaterialTheme.colorScheme.primaryContainer
                         ) {
+                            val correct = entry.correct
+                            val asked = entry.questionCount
                             Text(
-                                text = when (entry.mode) {
-                                    StudySession.MODE -> stringResource(R.string.study_summary_remembered, entry.correct ?: 0, entry.questionCount ?: 0)
-                                    QuizMode.BLITZ.name -> stringResource(R.string.stats_log_blitz, entry.correct ?: entry.total, entry.score)
+                                text = when {
+                                    entry.mode == StudySession.MODE -> stringResource(R.string.study_summary_remembered, correct ?: 0, asked ?: 0)
+                                    entry.mode == QuizMode.BLITZ.name -> stringResource(R.string.stats_log_blitz, correct ?: entry.total, entry.score)
+                                    // "8/10 · 150 pts"; rows saved before the counts were recorded show the points alone.
+                                    correct != null && asked != null -> stringResource(R.string.stats_log_result, correct, asked, entry.score)
                                     else -> stringResource(R.string.stats_points, entry.score)
                                 },
                                 fontWeight = FontWeight.Bold,
@@ -358,10 +386,25 @@ fun StatsScreen(
                     }
                 }
             }
+            if (!showAllLog && quizHistory.size > LOG_PREVIEW) {
+                item {
+                    TextButton(
+                        onClick = { showAllLog = true },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("stats_log_show_all")
+                    ) {
+                        Text(stringResource(R.string.stats_log_show_all))
+                    }
+                }
+            }
         }
     }
     }
 }
+
+/** How many rows the quiz log shows before Show all. */
+private const val LOG_PREVIEW = 20
 
 /**
  * Two tiles side by side, or one under the other once the font is 1.5 times its size or more: a half-width tile

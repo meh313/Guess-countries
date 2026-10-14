@@ -55,7 +55,7 @@ object EuropeCatalog {
             languages = listOf("German"),
             currency = "Euro (€)",
             landmarks = listOf("Schönbrunn Palace (Vienna)", "Hallstatt", "Hohensalzburg Fortress (Salzburg)"),
-            funFact = "The Alps cover about 62 percent of Austria, so most of the country is mountainous, and the landlocked nation has no coastline at all."
+            funFact = "The Alps cover about 62% of Austria, so most of the country is mountainous, and the landlocked nation has no coastline at all."
         ),
         Country(
             code = "BY",
@@ -145,7 +145,7 @@ object EuropeCatalog {
         Country(
             code = "CZ",
             name = "Czech Republic",
-            officialName = "Czech Republic (Czechia)",
+            officialName = "Czech Republic",
             capital = "Prague",
             continent = "Europe",
             subregion = "Eastern Europe",
@@ -251,7 +251,7 @@ object EuropeCatalog {
             capital = "Athens",
             continent = "Europe",
             subregion = "Southern Europe",
-            population = 10050000L,
+            population = 10000000L,
             areaSqKm = 131957.0,
             flagEmoji = "🇬🇷",
             flagColors = listOf("Blue", "White"),
@@ -429,7 +429,7 @@ object EuropeCatalog {
             flagDescription = "Malta's flag is white by the pole and red outside, as its 1964 constitution requires. A legend credits Count Roger of Sicily with the colors in 1091, but it is unproven and often called a myth; they more likely come from the Knights of St John's white cross on red. The George Cross, edged in red, in the upper left corner was given by King George VI in 1942 for Malta's bravery under heavy bombing in World War II; it joined the flag in 1943.",
             languages = listOf("Maltese", "English", "Maltese Sign Language"),
             currency = "Euro (€)",
-            landmarks = listOf("St. John's Co-Cathedral (Valletta)", "Mdina", "Ġgantija Temples (Gozo)"),
+            landmarks = listOf("St John's Co-Cathedral (Valletta)", "Mdina", "Ġgantija Temples (Gozo)"),
             funFact = "The Ġgantija temples on Gozo were built around 3600 BC, making them older than Stonehenge and Egypt's pyramids.",
             driveSide = "Left"
         ),
@@ -543,7 +543,7 @@ object EuropeCatalog {
             capital = "Warsaw",
             continent = "Europe",
             subregion = "Eastern Europe",
-            population = 38540000L,
+            population = 38500000L,
             areaSqKm = 312685.0,
             flagEmoji = "🇵🇱",
             flagColors = listOf("White", "Red"),
@@ -594,7 +594,7 @@ object EuropeCatalog {
             capital = "Moscow",
             continent = "Europe",
             subregion = "Eastern Europe",
-            population = 144800000L,
+            population = 145000000L,
             areaSqKm = 17098246.0,
             flagEmoji = "🇷🇺",
             flagColors = listOf("White", "Blue", "Red"),
@@ -670,7 +670,7 @@ object EuropeCatalog {
             languages = listOf("Slovene"),
             currency = "Euro (€)",
             landmarks = listOf("Lake Bled", "Postojna Cave", "Ljubljana Castle"),
-            funFact = "Slovenes first raised their white, blue and red flag in Ljubljana in 1848, as an answer to a German flag flying over Ljubljana Castle."
+            funFact = "Postojna Cave in Slovenia, 24 kilometers long, has carried visitors by train since 1872 and is home to the olm, the world's largest cave-dwelling amphibian."
         ),
         Country(
             code = "ES",
@@ -772,7 +772,7 @@ object EuropeCatalog {
             flagDescription = "Adopted in 1929, when the Lateran Treaty created the state. Yellow and white date from 1808, when Pope Pius VII had papal guards swap red for white to set them apart from Napoleon's troops; they also match the gold and silver of the keys. The crossed keys recall the keys of heaven promised to Saint Peter in the Bible and stand for the pope's authority. A red cord ties them; no meaning is given. The triple crown above is the papal tiara.",
             languages = listOf("Italian"),
             currency = "Euro (€)",
-            landmarks = listOf("St. Peter's Basilica", "Sistine Chapel", "Vatican Museums"),
+            landmarks = listOf("St Peter's Basilica", "Sistine Chapel", "Vatican Museums"),
             funFact = "Vatican City is the world's smallest independent state by both area and population, and it lies entirely inside the city of Rome."
         )
     )

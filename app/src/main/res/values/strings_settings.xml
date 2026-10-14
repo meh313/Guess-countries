@@ -15,6 +15,15 @@
     <string name="settings_timer_hint_relaxed">Speed Round: 20 seconds per question. Blitz: a new flag a moment after each answer.</string>
     <string name="settings_timer_hint_off">Speed Round: no time limit. Blitz: the minute still runs, but the next flag waits for Next.</string>
 
+    <!-- Settings: Read aloud (the speech engine's state; the detail sheet's speaker reuses the install action) -->
+    <string name="settings_section_speech">Read aloud</string>
+    <string name="settings_speech_loading">Starting the speech engine…</string>
+    <string name="settings_speech_ready">Ready. The speaker on a country\'s detail sheet and on the flashcards reads the country aloud.</string>
+    <string name="settings_speech_missing_data">The speech engine has no English voice data, so nothing can be read aloud yet.</string>
+    <string name="settings_speech_unavailable">This device has no speech engine, so nothing can be read aloud.</string>
+    <string name="settings_speech_install">Install voice data</string>
+    <string name="settings_speech_no_installer">This device has no voice data installer.</string>
+
     <!-- Settings: Data (export, import, reset) -->
     <string name="settings_section_data">Data</string>
     <string name="settings_data_local">Everything stays on this device: there is no account and the app has no network access. Progress is included in Android\'s own backup of the app.</string>
@@ -86,6 +95,6 @@
 
     <!-- About: licences -->
     <string name="about_licences_title">Licences</string>
-    <string name="about_licences_text">The flag artwork is rendered from the flag-icons project (MIT licence). The app is built with Android Jetpack and Kotlin libraries under the Apache License 2.0. The full notice text:</string>
+    <string name="about_licences_text">The flag artwork is rendered from the flag-icons project (MIT licence). The app is built with Android Jetpack and Kotlin libraries under the Apache License 2.0. The notices in full:</string>
     <string name="about_notices_loading">Loading…</string>
 </resources>

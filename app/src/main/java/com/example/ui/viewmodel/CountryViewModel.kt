@@ -89,8 +89,8 @@ class CountryViewModel(
     val searchQuery = MutableStateFlow("")
     val selectedContinent = MutableStateFlow("All")
 
-    /** Explore's standing chip: only the countries the player stands on so in the flag skill; null for all. */
-    val standingFilter = MutableStateFlow<Standing?>(null)
+    /** Explore's standing chips: only the countries whose flag the player stands on in one of these ways; empty for all. */
+    val standingFilter = MutableStateFlow<Set<Standing>>(emptySet())
     val sortBy = MutableStateFlow(SortOption.NAME)
     val showOnlyBookmarks = MutableStateFlow(false)
     val selectedCountry = MutableStateFlow<Country?>(null)
@@ -323,7 +323,7 @@ class CountryViewModel(
 
     // --- Explore ----------------------------------------------------------------------------------------------------
 
-    private data class ExploreFilters(val query: String, val continent: String, val sort: SortOption, val bookmarksOnly: Boolean, val standing: Standing?)
+    private data class ExploreFilters(val query: String, val continent: String, val sort: SortOption, val bookmarksOnly: Boolean, val standings: Set<Standing>)
 
     private val exploreFilters = combine(searchQuery, selectedContinent, sortBy, showOnlyBookmarks, standingFilter, ::ExploreFilters)
 
@@ -334,9 +334,9 @@ class CountryViewModel(
     ) { filters, progressMap, skills ->
         var filtered = repository.filterCountries(filters.query, filters.continent, filters.sort)
         if (filters.bookmarksOnly) filtered = filtered.filter { progressMap[it.code]?.isFavorite == true }
-        filters.standing?.let { wanted ->
+        if (filters.standings.isNotEmpty()) {
             val now = repository.now()
-            filtered = filtered.filter { it.isSovereign && skills.standing(it.code, Skill.FLAG, now) == wanted }
+            filtered = filtered.filter { it.isSovereign && skills.standing(it.code, Skill.FLAG, now) in filters.standings }
         }
         filtered
     }
@@ -347,6 +347,12 @@ class CountryViewModel(
 
     /** True once speech is ready; the UI disables its speak buttons until then. */
     val speechAvailable: StateFlow<Boolean> = speech.isAvailable
+
+    /** Where the speech engine stands: loading, ready, short of voice data or unavailable. */
+    val speechState: StateFlow<Speech.State> = speech.state
+
+    /** Opens the system's voice-data installer; false when the device has none. */
+    fun installVoiceData(): Boolean = speech.installVoiceData()
 
     /** Starts the speech engine. Called when a screen that can speak first appears. */
     fun prepareSpeech() = speech.prepare()
@@ -366,16 +372,21 @@ class CountryViewModel(
         selectedContinent.value = continent
     }
 
-    fun onStandingSelect(standing: Standing?) {
-        standingFilter.value = standing
+    /** A tap on a standing chip: the standing joins the filter, or leaves it when it was already in. */
+    fun toggleStanding(standing: Standing) {
+        standingFilter.update { if (standing in it) it - standing else it + standing }
     }
 
-    /** Explore filtered to [continent] and [standing]: what a tap on a Progress continent card opens. */
-    fun showInExplore(continent: String, standing: Standing?) {
+    fun onStandingSelect(standings: Set<Standing>) {
+        standingFilter.value = standings
+    }
+
+    /** Explore filtered to [continent] and [standings]: what a tap on a Progress continent card opens. */
+    fun showInExplore(continent: String, standings: Set<Standing>) {
         searchQuery.value = ""
         showOnlyBookmarks.value = false
         selectedContinent.value = continent
-        standingFilter.value = standing
+        standingFilter.value = standings
     }
 
     fun onSortSelect(sort: SortOption) {
@@ -391,7 +402,7 @@ class CountryViewModel(
         searchQuery.value = ""
         selectedContinent.value = "All"
         showOnlyBookmarks.value = false
-        standingFilter.value = null
+        standingFilter.value = emptySet()
         sortBy.value = SortOption.NAME
     }
 

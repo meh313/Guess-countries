@@ -121,6 +121,33 @@ val Standing.chipLabelRes: Int
         Standing.MASTERED -> R.string.standing_chip_mastered
     }
 
+/** "unseen", "learning", "mastered": a standing after a skill name ("Flag: learning"). */
+val Standing.shortLabelRes: Int
+    @StringRes get() = when (this) {
+        Standing.UNSEEN -> R.string.standing_short_unseen
+        Standing.WEAK -> R.string.standing_short_weak
+        Standing.MASTERED -> R.string.standing_short_mastered
+    }
+
+/**
+ * The standing filter as a label: "Still to learn" for the pair a Progress continent card sets, otherwise the chip
+ * labels joined ("Unseen or Mastered"); null when nothing is filtered.
+ */
+@Composable
+fun standingFilterLabel(standings: Set<Standing>): String? = when {
+    standings.isEmpty() -> null
+    standings == Standing.STILL_TO_LEARN -> stringResource(R.string.standing_still_to_learn)
+    else -> Standing.entries.filter { it in standings }.map { stringResource(it.chipLabelRes) }.reduce { a, b -> stringResource(R.string.standing_either, a, b) }
+}
+
+/** [standingFilterLabel] inside a sentence: "still to learn", "mastered", "not reviewed yet or still learning". */
+@Composable
+fun standingFilterPhrase(standings: Set<Standing>): String? = when {
+    standings.isEmpty() -> null
+    standings == Standing.STILL_TO_LEARN -> stringResource(R.string.standing_phrase_still_to_learn)
+    else -> Standing.entries.filter { it in standings }.map { stringResource(it.labelRes) }.reduce { a, b -> stringResource(R.string.standing_either, a, b) }
+}
+
 val Skill.labelRes: Int
     @StringRes get() = when (this) {
         Skill.FLAG -> R.string.skill_flag

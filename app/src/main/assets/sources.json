@@ -258,7 +258,8 @@
 "https://en.wikipedia.org/wiki/Tourism_in_Botswana",
 "https://en.wikipedia.org/wiki/Tsodilo",
 "https://botswanamission.ch/national-symbols/",
-"https://www.britannica.com/topic/flag-of-Botswana"
+"https://www.britannica.com/topic/flag-of-Botswana",
+"https://en.wikipedia.org/wiki/Okavango_Delta"
 ],
 "BY":[
 "https://en.wikipedia.org/wiki/Belarus",
@@ -583,6 +584,10 @@
 "https://www.ebsco.com/research-starters/geography-and-cartography/malabo-equatorial-guinea/",
 "https://en.wikipedia.org/wiki/Left-_and_right-hand_traffic"
 ],
+"GR":[
+"https://www.worldometers.info/world-population/greece-population/",
+"https://population.un.org/wpp/assets/Excel%20Files/1_Indicator%20(Standard)/CSV_FILES/WPP2024_TotalPopulationBySex.csv.gz"
+],
 "GT":[
 "https://en.wikipedia.org/wiki/Guatemala",
 "https://www.worldometers.info/world-population/guatemala-population/",
@@ -671,6 +676,10 @@
 "https://assets.gov.ie/static/documents/9d76c655/The_National_Flag_-_Guidelines_September_2025.pdf",
 "https://en.wikipedia.org/wiki/Flag_of_Ireland",
 "https://www.britannica.com/topic/flag-of-Ireland"
+],
+"IN":[
+"https://www.worldometers.info/world-population/india-population/",
+"https://population.un.org/wpp/assets/Excel%20Files/1_Indicator%20(Standard)/CSV_FILES/WPP2024_TotalPopulationBySex.csv.gz"
 ],
 "IQ":[
 "https://en.wikipedia.org/wiki/Iraq",
@@ -1255,7 +1264,8 @@
 "https://en.wikipedia.org/wiki/Tourism_in_Qatar",
 "https://en.wikipedia.org/wiki/Flag_of_Qatar",
 "https://www.britannica.com/topic/flag-of-Qatar",
-"https://qnl.qa/en/about/news/qatari-flag-symbol-pride-and-dignity"
+"https://qnl.qa/en/about/news/qatari-flag-symbol-pride-and-dignity",
+"https://en.wikipedia.org/wiki/2022_FIFA_World_Cup"
 ],
 "RO":[
 "https://en.wikipedia.org/wiki/Romania",
@@ -1348,7 +1358,8 @@
 "https://en.wikipedia.org/wiki/List_of_countries_and_dependencies_by_population_(United_Nations)",
 "https://en.wikipedia.org/w/index.php?title=List_of_countries_and_dependencies_by_area&action=raw",
 "https://en.wikipedia.org/wiki/Flag_of_Slovenia",
-"https://en.wikipedia.org/wiki/Left-_and_right-hand_traffic"
+"https://en.wikipedia.org/wiki/Left-_and_right-hand_traffic",
+"https://en.wikipedia.org/wiki/Postojna_Cave"
 ],
 "SK":[
 "https://en.wikipedia.org/wiki/Slovakia",
@@ -1463,7 +1474,8 @@
 "https://en.wikipedia.org/wiki/Tourism_in_Eswatini",
 "https://en.wikipedia.org/wiki/Sibebe",
 "https://en.wikipedia.org/wiki/Left-_and_right-hand_traffic",
-"https://www.britannica.com/topic/flag-of-Swaziland"
+"https://www.britannica.com/topic/flag-of-Swaziland",
+"https://www.crwflags.com/fotw/flags/sz.html"
 ],
 "TD":[
 "https://en.wikipedia.org/wiki/Chad",
@@ -1509,7 +1521,9 @@
 "https://www.worldometers.info/world-population/turkmenistan-population/",
 "https://en.wikipedia.org/wiki/List_of_countries_by_population_(United_Nations)",
 "https://en.wikipedia.org/wiki/List_of_countries_and_dependencies_by_area",
-"https://en.wikipedia.org/wiki/Flag_of_Turkmenistan"
+"https://en.wikipedia.org/wiki/Flag_of_Turkmenistan",
+"https://en.wikipedia.org/wiki/Ashgabat",
+"https://www.guinnessworldrecords.com/world-records/highest-density-of-white-marble-clad-buildings"
 ],
 "TN":[
 "https://en.wikipedia.org/wiki/Tunisia",
@@ -1573,6 +1587,9 @@
 "https://english.president.gov.tw/Page/96",
 "https://en.wikipedia.org/wiki/Flag_of_the_Republic_of_China"
 ],
+"TZ":[
+"https://en.wikipedia.org/wiki/Mount_Kilimanjaro"
+],
 "UA":[
 "https://en.wikipedia.org/wiki/List_of_countries_by_population_(United_Nations)"
 ],
@@ -1587,6 +1604,10 @@
 "https://en.wikipedia.org/wiki/Jinja,_Uganda",
 "https://www.worldstandards.eu/cars/list-of-left-driving-countries/",
 "https://en.wikipedia.org/wiki/Left-_and_right-hand_traffic"
+],
+"US":[
+"https://www.worldometers.info/world-population/us-population/",
+"https://population.un.org/wpp/assets/Excel%20Files/1_Indicator%20(Standard)/CSV_FILES/WPP2024_TotalPopulationBySex.csv.gz"
 ],
 "UY":[
 "https://en.wikipedia.org/wiki/Uruguay",
