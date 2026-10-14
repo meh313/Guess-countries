@@ -629,7 +629,8 @@ class QuizAndFlashcardUiTest {
     fun aWrongCapital_comparesTheTwoCapitalsWithTheirCountries() {
         startQuizIn(QuizMode.CAPITAL)
         val q = viewModel.quizSession.value!!.current
-        val wrong = (q.correctAnswerIndex + 1) % q.options.size
+        // A capital question may carry a decoy city (no country behind it): pick a wrong option that is a country.
+        val wrong = q.options.indices.first { it != q.correctAnswerIndex && q.optionCodes[it] != null }
         val picked = allCountries.single { it.code == q.optionCodes[wrong] }
 
         rule.onNodeWithTag("quiz_option_$wrong").performScrollTo().performClick()
