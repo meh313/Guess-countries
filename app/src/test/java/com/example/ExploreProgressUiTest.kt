@@ -272,6 +272,36 @@ class ExploreProgressUiTest {
     }
 
     @Test
+    fun theSheetListsTheCountriesItBorders_aTapOpensThatOne_andAnIslandSaysItHasNone() {
+        rule.onNodeWithTag("explore_grid").performScrollToNode(hasTestTag(card("FR")))
+        rule.onNodeWithTag(card("FR")).performClick()
+        rule.waitForIdle()
+
+        rule.onNode(hasScrollAction() and hasTestTag("country_detail_sheet_fr")).performScrollToNode(hasTestTag("sheet_neighbour_de"))
+        rule.onNodeWithText("Borders").assertIsDisplayed()
+        for (code in com.example.data.model.Neighbours.of("FR")) {
+            rule.onNode(hasScrollAction() and hasTestTag("country_detail_sheet_fr")).performScrollToNode(hasTestTag("sheet_neighbour_${code.lowercase()}"))
+            rule.onNodeWithTag("sheet_neighbour_${code.lowercase()}").assertIsDisplayed()
+        }
+        rule.onNodeWithTag("sheet_neighbour_de").assert(hasText("Germany")).assert(hasContentDescription("Open Germany")).performClick()
+        rule.waitForIdle()
+
+        // Germany's sheet took France's place.
+        rule.onAllNodesWithTag("country_detail_sheet_fr").assertCountEquals(0)
+        rule.onNode(hasScrollAction() and hasTestTag("country_detail_sheet_de")).performScrollToNode(hasTestTag("sheet_neighbour_fr"))
+        rule.onNodeWithTag("sheet_neighbour_fr").assert(hasText("France"))
+        assertEquals("DE", viewModel.selectedCountry.value?.code)
+        viewModel.selectCountry(null)
+        rule.waitForIdle()
+
+        viewModel.selectCountry(viewModel.repository.allCountries.first { it.code == "JP" })
+        rule.waitForIdle()
+        rule.onNode(hasScrollAction() and hasTestTag("country_detail_sheet_jp")).performScrollToNode(hasTestTag("sheet_no_borders"))
+        rule.onNodeWithTag("sheet_no_borders").assert(hasText("No land borders"))
+        rule.onAllNodesWithTag("sheet_neighbour_fr").assertCountEquals(0)
+    }
+
+    @Test
     fun aContinentOnProgress_opensExploreOnItsCountriesStillToLearn() {
         learning("FR")
         learning("DE")

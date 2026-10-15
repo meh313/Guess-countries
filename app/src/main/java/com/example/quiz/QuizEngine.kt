@@ -4,6 +4,7 @@ import com.example.data.model.Country
 import com.example.data.model.DecoyCities
 import com.example.data.model.FlagLookAlikes
 import com.example.data.model.Geo
+import com.example.data.model.Neighbours
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sqrt
@@ -336,21 +337,24 @@ object QuizEngine {
 
     /**
      * Wrong answers for a map question about [target], the countries a player is likeliest to mix it up with on the
-     * map: the rest of its subregion first (in random order), then every other country by [frameDistance] from the
-     * target, nearest first (so Portugal in a pool with one other Southern European country still gets France and
-     * Morocco, not Fiji); a country without a place on the map comes last. [count] of them, with names that differ
-     * from the target's and from each other; Antarctica, not being a country, never.
+     * map: the countries it shares a land border with first ([Neighbours], in random order), then the rest of its
+     * subregion (in random order), then every other country by [frameDistance] from the target, nearest first (so
+     * Portugal in a pool with one other Southern European country still gets France and Morocco, not Fiji); a
+     * country without a place on the map comes last. [count] of them, with names that differ from the target's and
+     * from each other; Antarctica, not being a country, never.
      */
     private fun nearestWrongCountries(pool: List<Country>, target: Country, random: Random, count: Int): List<Country> {
         val candidates = pool.filter { it != target && it.isSovereign && it.code != ANTARCTICA && it.name != target.name }
-        val (sameSubregion, elsewhere) = candidates.partition { it.subregion.equals(target.subregion, ignoreCase = true) }
+        val borderCodes = Neighbours.of(target.code).toSet()
+        val (bordering, others) = candidates.partition { it.code in borderCodes }
+        val (sameSubregion, elsewhere) = others.partition { it.subregion.equals(target.subregion, ignoreCase = true) }
         val here = Geo.of(target.code)
         // Each candidate with its distance from the target; one without a place (or every one, for a target without) is unplaced.
         val placed = if (here == null) emptyList() else elsewhere.mapNotNull { country -> Geo.of(country.code)?.let { country to frameDistance(here, it) } }
         val placedCodes = placed.mapTo(HashSet()) { it.first.code }
         val byDistance = placed.sortedWith(compareBy<Pair<Country, Double>> { it.second }.thenBy { it.first.code }).map { it.first }
         val unplaced = elsewhere.filter { it.code !in placedCodes }
-        return (sameSubregion.shuffled(random) + byDistance + unplaced.shuffled(random))
+        return (bordering.shuffled(random) + sameSubregion.shuffled(random) + byDistance + unplaced.shuffled(random))
             .distinctBy { it.name }
             .take(count)
     }

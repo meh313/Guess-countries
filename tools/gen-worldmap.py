@@ -38,9 +38,18 @@ Format of world.json (compact, countries sorted by code):
 Geo.kt carries the same bbox, frame, label, capital and point flag per code, for the screens that need them without
 reading the asset. When the asset comes out over MAX_ASSET_BYTES the tolerance is raised to FALLBACK_TOLERANCE.
 
+Land borders: each record also carries "neighbours", the codes of the catalog countries it shares a land border
+with, sorted. Two countries border each other when their Natural Earth outlines (before simplification) share at
+least MIN_SHARED_VERTICES points (holes included, so an enclave meets its host): the 50m countries are cut from one
+set of boundary lines, so a shared border has the same points on both sides, while two countries that only touch
+at a corner (Namibia and Zimbabwe at the Kazungula quadripoint) share one. HAND_NEIGHBOURS adds the borders the data
+cannot show (the microstates drawn as point squares, the 150 m Botswana–Zambia border, Ceuta and Melilla, Saint
+Martin); DENY_NEIGHBOURS removes any false positive. Neighbours.kt carries the
+same lists, generated from the asset like Geo.kt.
+
 --check needs no download (CI runs it): it fails when the asset does not parse, is not format 1, misses a catalog
-code or lacks polygons for one, or when Geo.kt is not what this script writes from the asset. Whether the asset
-itself is current is checked by regenerating it and looking at `git diff`.
+code or lacks polygons for one, or when Geo.kt or Neighbours.kt is not what this script writes from the asset.
+Whether the asset itself is current is checked by regenerating it and looking at `git diff`.
 """
 import argparse
 import json
@@ -56,6 +65,7 @@ from catalog_codes import REPO, entries, fold  # noqa: E402
 
 OUT_JSON = REPO / 'app/src/main/assets/world.json'
 OUT_KT = REPO / 'app/src/main/java/com/example/data/model/Geo.kt'
+OUT_NEIGHBOURS_KT = REPO / 'app/src/main/java/com/example/data/model/Neighbours.kt'
 DEFAULT_CACHE = Path.home() / '.cache' / 'natural-earth'   # outside the repository: the files are data, never run
 MIRROR = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/'
 COUNTRIES_FILE = 'ne_50m_admin_0_countries.geojson'
@@ -83,6 +93,12 @@ HAND_A3 = {
 # Populated places use other ADM0_A3 values than the countries file for a few states.
 CAPITAL_A3 = {'SS': ['SSD', 'SDS'], 'PS': ['PSX'], 'XK': ['KOS']}
 ANTARCTICA = 'AQ'
+
+MIN_SHARED_VERTICES = 2     # outline points two countries must share to count as bordering
+# Borders the outlines cannot show (see the module docstring): the point-square microstates; Botswana–Zambia's 150 m
+# at Kazungula; Spain–Morocco at Ceuta and Melilla and France–Netherlands on Saint Martin (not in the 50m outlines).
+HAND_NEIGHBOURS = ['VA IT', 'MC FR', 'SM IT', 'BW ZM', 'ES MA', 'FR NL']
+DENY_NEIGHBOURS = []        # pairs the outlines wrongly join, as 'XX YY'
 ANTARCTICA_LABEL = (0.0, -80.0)
 
 
@@ -308,6 +324,45 @@ def pick_capital(entry, candidates):
     return None
 
 
+def adjacency(raw, report):
+    """code -> sorted codes it shares a land border with, from the raw outlines (see the module docstring)."""
+    owners = {}   # vertex -> codes whose outline has it
+    for code, entry in raw.items():
+        if code == ANTARCTICA:
+            continue
+        seen = set()
+        for ring in entry['rings'] + entry.get('holes', []):
+            for point in ring:
+                vertex = (round(point[0], 6), round(point[1], 6))
+                if vertex in seen:
+                    continue
+                seen.add(vertex)
+                owners.setdefault(vertex, set()).add(code)
+    shared = {}   # (a, b) -> vertices in common
+    for codes in owners.values():
+        if len(codes) < 2:
+            continue
+        for a in codes:
+            for b in codes:
+                if a < b:
+                    shared[(a, b)] = shared.get((a, b), 0) + 1
+    pairs = {pair for pair, count in shared.items() if count >= MIN_SHARED_VERTICES}
+    touching = sorted(f'{a}-{b}' for (a, b), count in shared.items() if count < MIN_SHARED_VERTICES)
+    for line in HAND_NEIGHBOURS:
+        a, b = line.split()
+        pairs.add((min(a, b), max(a, b)))
+    for line in DENY_NEIGHBOURS:
+        a, b = line.split()
+        pairs.discard((min(a, b), max(a, b)))
+    neighbours = {code: set() for code in raw}
+    for a, b in pairs:
+        neighbours[a].add(b)
+        neighbours[b].add(a)
+    report.append(f'land borders: {len(pairs)} pairs ({len(HAND_NEIGHBOURS)} by hand, {len(DENY_NEIGHBOURS)} denied); '
+                  f'touching at one point only, not counted: {", ".join(touching) or "none"}')
+    return {code: sorted(codes) for code, codes in neighbours.items()}
+
+
 def build(cache, tolerance, report):
     """The countries dict of the asset. `report` collects the summary lines."""
     catalog = {e['code']: e for e in entries()}
@@ -329,8 +384,10 @@ def build(cache, tolerance, report):
         geometry = feature['geometry']
         polygons = [geometry['coordinates']] if geometry['type'] == 'Polygon' else geometry['coordinates']
         rings = [polygon[0] for polygon in polygons if polygon]
-        entry = raw.setdefault(code, {'rings': [], 'labels': [], 'a3': set()})
+        entry = raw.setdefault(code, {'rings': [], 'holes': [], 'labels': [], 'a3': set()})
         entry['rings'].extend(rings)
+        # The holes are kept for the borders only: an enclave (Lesotho) shares its outline with its host's hole.
+        entry['holes'].extend(hole for polygon in polygons for hole in polygon[1:])
         entry['a3'].add(props['ADM0_A3'])
         if props.get('LABEL_X') is not None and props.get('LABEL_Y') is not None:
             entry['labels'].append((max((ring_area(r) for r in rings), default=0), (props['LABEL_X'], props['LABEL_Y'])))
@@ -348,6 +405,7 @@ def build(cache, tolerance, report):
                 })
                 break
 
+    neighbours = adjacency(raw, report)
     countries = {}
     point_codes, fallback_capitals, inexact, relabelled = [], [], [], []
     for code in sorted(codes):
@@ -356,6 +414,7 @@ def build(cache, tolerance, report):
             polys = simplify_country(rings, tolerance)
             # Its ring goes round the pole, so the plain box (the whole band) is the right one.
             countries[code] = record(polys, list(ANTARCTICA_LABEL), None, False, wrap=False)
+            countries[code]['neighbours'] = []
             continue
         if code not in raw:
             raise SystemExit(f'{code} ({catalog[code]["name"]}) has no feature in {COUNTRIES_FILE}')
@@ -385,6 +444,7 @@ def build(cache, tolerance, report):
             fallback_capitals.append(f'{code} {catalog[code]["quizCapital"]}')
             capital = list(label)
         countries[code] = record(polys, label, capital, point)
+        countries[code]['neighbours'] = neighbours.get(code, [])
 
     report.append(f'hand map used: {", ".join(sorted(set(hand_used))) or "none"}')
     report.append(f'dropped {len(dropped)} non-catalog features: {", ".join(dropped)}')
@@ -478,6 +538,31 @@ def kotlin_text(countries):
     return '\n'.join(lines)
 
 
+def neighbours_text(countries):
+    lines = [
+        'package com.example.data.model',
+        '',
+        '// Generated by tools/gen-worldmap.py from Natural Earth (public domain); do not edit. The same lists as the',
+        '// asset world.json: the catalog countries each one shares a land border with.',
+        '',
+        '/** Which catalog countries border which: a symmetric map, each list sorted by code; islands and Antarctica have none. */',
+        'object Neighbours {',
+        '    val byCode: Map<String, List<String>> = mapOf(',
+    ]
+    for code in sorted(countries):
+        codes = ', '.join(f'"{c}"' for c in countries[code].get('neighbours', []))
+        lines.append(f'        "{code}" to listOf({codes}),')
+    lines += [
+        '    )',
+        '',
+        '    /** The codes of the countries [code] shares a land border with, sorted; empty for an island, an unknown code or Antarctica. */',
+        '    fun of(code: String): List<String> = byCode[code].orEmpty()',
+        '}',
+        '',
+    ]
+    return '\n'.join(lines)
+
+
 def check():
     """Offline: the asset parses and covers the catalog, and Geo.kt is what the asset says."""
     problems = []
@@ -498,6 +583,14 @@ def check():
             problems.append(f'{code} has no usable polygon')
         elif len(c.get('bbox', [])) != 4 or len(c.get('frame', [])) != 4:
             problems.append(f'{code} has no bbox or frame')
+        elif not isinstance(c.get('neighbours'), list):
+            problems.append(f'{code} has no neighbours list')
+    for code in codes:
+        for other in countries.get(code, {}).get('neighbours', []):
+            if other not in countries:
+                problems.append(f'{code} borders {other}, which is not in the catalog')
+            elif code not in countries[other].get('neighbours', []):
+                problems.append(f'{code} borders {other} but not the other way round')
     extra = sorted(set(countries) - set(codes))
     if extra:
         problems.append(f'not in the catalog: {", ".join(extra)}')
@@ -506,10 +599,12 @@ def check():
         problems.append(f'asset is {size} bytes, over {MAX_ASSET_BYTES}')
     if not OUT_KT.exists() or OUT_KT.read_text(encoding='utf-8') != kotlin_text(countries):
         problems.append(f'{OUT_KT.relative_to(REPO)} does not match the asset; run tools/gen-worldmap.py')
+    if not OUT_NEIGHBOURS_KT.exists() or OUT_NEIGHBOURS_KT.read_text(encoding='utf-8') != neighbours_text(countries):
+        problems.append(f'{OUT_NEIGHBOURS_KT.relative_to(REPO)} does not match the asset; run tools/gen-worldmap.py')
     for p in problems:
         print(f'{OUT_JSON.relative_to(REPO)}: {p}', file=sys.stderr)
     if not problems:
-        print(f'{OUT_JSON.relative_to(REPO)} is current ({len(countries)} countries, {size} bytes); Geo.kt matches')
+        print(f'{OUT_JSON.relative_to(REPO)} is current ({len(countries)} countries, {size} bytes); Geo.kt and Neighbours.kt match')
     return 1 if problems else 0
 
 
@@ -536,12 +631,13 @@ def main():
     OUT_JSON.parent.mkdir(parents=True, exist_ok=True)
     OUT_JSON.write_text(text, encoding='utf-8')
     OUT_KT.write_text(kotlin_text(countries), encoding='utf-8')
+    OUT_NEIGHBOURS_KT.write_text(neighbours_text(countries), encoding='utf-8')
     for line in report:
         print(line)
     points = sum(len(ring) for c in countries.values() for ring in c['polys'])
     rings = sum(len(c['polys']) for c in countries.values())
     print(f'tolerance {tolerance} degrees: {rings} rings, {points} points')
-    print(f'wrote {OUT_JSON.relative_to(REPO)}: {OUT_JSON.stat().st_size} bytes; {OUT_KT.relative_to(REPO)}')
+    print(f'wrote {OUT_JSON.relative_to(REPO)}: {OUT_JSON.stat().st_size} bytes; {OUT_KT.relative_to(REPO)}; {OUT_NEIGHBOURS_KT.relative_to(REPO)}')
     return 0
 
 

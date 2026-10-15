@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.R
 import com.example.data.model.Country
+import com.example.data.model.Neighbours
 import com.example.data.model.TellApart
 import com.example.learn.LearnSession
 import com.example.ui.components.FlagView
@@ -116,6 +117,7 @@ fun LearnScreen(
                     LearnCardView(
                         country = country,
                         lookAlike = lookAlike,
+                        neighbours = remember(country.code) { Neighbours.of(country.code).mapNotNull { countriesByCode[it] }.sortedBy { it.name } },
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f)
@@ -170,7 +172,7 @@ fun LearnScreen(
  * when there is one, the flag most often confused with it (and how to tell the two apart, where a tip exists).
  */
 @Composable
-private fun LearnCardView(country: Country, lookAlike: Country?, modifier: Modifier = Modifier) {
+private fun LearnCardView(country: Country, lookAlike: Country?, neighbours: List<Country>, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.testTag("learn_card"),
         shape = RoundedCornerShape(24.dp),
@@ -217,6 +219,17 @@ private fun LearnCardView(country: Country, lookAlike: Country?, modifier: Modif
                     .padding(top = 12.dp),
                 aspectRatio = 16f / 9f,
                 testTag = "learn_map"
+            )
+            // Who is next door, in one line under the map; an island says so.
+            Text(
+                text = if (neighbours.isEmpty()) stringResource(R.string.learn_no_borders)
+                else stringResource(R.string.learn_borders, neighbours.joinToString(", ") { it.name }),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .padding(top = 6.dp)
+                    .testTag("learn_borders")
             )
             if (country.spotIt.isNotBlank()) {
                 Spacer(modifier = Modifier.height(12.dp))

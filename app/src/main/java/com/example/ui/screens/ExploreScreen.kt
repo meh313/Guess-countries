@@ -73,6 +73,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
+import com.example.data.model.Neighbours
 import com.example.data.model.SortOption
 import com.example.ui.CountrySummary
 import com.example.ui.chipLabelRes
@@ -416,6 +417,7 @@ fun ExploreScreen(
         // Bind the speech engine only once the user can actually ask for it.
         LaunchedEffect(Unit) { viewModel.prepareSpeech() }
         val sources by viewModel.sources.collectAsStateWithLifecycle()
+        val allByCode = remember(viewModel) { viewModel.repository.allCountries.associateBy { it.code } }
         CountryDetailSheet(
             country = country,
             progress = userProgressMap[country.code],
@@ -427,7 +429,9 @@ fun ExploreScreen(
             speechAvailable = speechAvailable,
             speechState = speechState,
             onInstallVoiceData = { viewModel.installVoiceData() },
-            onToggleFavorite = { viewModel.toggleFavorite(country.code) }
+            onToggleFavorite = { viewModel.toggleFavorite(country.code) },
+            neighbours = remember(country.code) { Neighbours.of(country.code).mapNotNull { code -> allByCode[code] }.sortedBy { it.name } },
+            onOpenCountry = { viewModel.selectCountry(it) }
         )
     }
 }
