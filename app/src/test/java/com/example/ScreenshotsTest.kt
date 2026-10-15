@@ -216,6 +216,10 @@ class ScreenshotsTest {
             rule.onNode(hasScrollAction() and hasTestTag("country_detail_sheet_fr")).performScrollToNode(hasTestTag("sheet_map"))
             rule.waitForIdle()
             saveBitmap("sheet_map", drawLatestDialog())
+            // The land borders under the map, a chip per neighbour.
+            rule.onNode(hasScrollAction() and hasTestTag("country_detail_sheet_fr")).performScrollToNode(hasTestTag("sheet_neighbour_lu"))
+            rule.waitForIdle()
+            saveBitmap("sheet_borders", drawLatestDialog())
         }
         rule.onNodeWithContentDescription("Close").performClick()
         rule.waitForIdle()

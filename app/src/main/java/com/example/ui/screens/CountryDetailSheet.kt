@@ -38,6 +38,7 @@ import androidx.compose.material.icons.filled.MonetizationOn
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -110,7 +111,11 @@ fun CountryDetailSheet(
     sources: List<String> = emptyList(),
     /** The player's state per skill (null where never reviewed); empty hides the progress row (Antarctica). */
     skillStates: Map<Skill, SkillState?> = emptyMap(),
-    now: Long = System.currentTimeMillis()
+    now: Long = System.currentTimeMillis(),
+    /** The countries this one shares a land border with (see [com.example.data.model.Neighbours]), as chips under the map. */
+    neighbours: List<Country> = emptyList(),
+    /** Opens a bordering country's sheet in place of this one; null leaves the chips inert. */
+    onOpenCountry: ((Country) -> Unit)? = null
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val context = LocalContext.current
@@ -405,6 +410,41 @@ fun CountryDetailSheet(
                         aspectRatio = 16f / 10f,
                         testTag = "sheet_map"
                     )
+                }
+                // Land borders, under the map: a chip per neighbour opens its sheet; an island says so.
+                if (country.isSovereign) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = stringResource(R.string.sheet_borders_title),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    if (neighbours.isEmpty()) {
+                        Text(
+                            text = stringResource(R.string.sheet_no_borders),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.testTag("sheet_no_borders")
+                        )
+                    } else {
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                            neighbours.forEach { neighbour ->
+                                val opens = stringResource(R.string.sheet_open_country, neighbour.name)
+                                AssistChip(
+                                    onClick = { onOpenCountry?.invoke(neighbour) },
+                                    enabled = onOpenCountry != null,
+                                    label = { Text(neighbour.name) },
+                                    leadingIcon = {
+                                        FlagView(country = neighbour, modifier = Modifier.width(24.dp), contentDescription = null, thumbnail = true)
+                                    },
+                                    modifier = Modifier
+                                        .semantics { if (onOpenCountry != null) contentDescription = opens }
+                                        .testTag("sheet_neighbour_${neighbour.code.lowercase()}")
+                                )
+                            }
+                        }
+                    }
                 }
             }
 

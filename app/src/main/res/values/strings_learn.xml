@@ -25,4 +25,6 @@
 
     <!-- The scope of the quiz after the cards, in the quiz log -->
     <string name="scope_learn">Learn</string>
+    <string name="learn_borders">Borders: %1$s</string>
+    <string name="learn_no_borders">No land borders</string>
 </resources>

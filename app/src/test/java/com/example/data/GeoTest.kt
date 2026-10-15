@@ -202,6 +202,15 @@ class GeoTest {
     }
 
     @Test
+    fun theAssetsNeighboursAreWhatNeighboursKtSays() {
+        for (code in catalog) {
+            val listed = countries.getJSONObject(code).getJSONArray("neighbours")
+            val fromAsset = List(listed.length()) { listed.getString(it) }
+            assertEquals(code, fromAsset, com.example.data.model.Neighbours.of(code))
+        }
+    }
+
+    @Test
     fun geoKtCarriesTheSameNumbersAsTheAsset() {
         catalog.forEach { code ->
             val place = Geo.of(code)!!

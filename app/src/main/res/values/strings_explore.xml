@@ -91,6 +91,9 @@
     <string name="sheet_flag_title">Flag symbolism &amp; history</string>
     <!-- The map card, and what TalkBack hears for any map: "Map: France, in Europe · Western Europe" -->
     <string name="sheet_where_title">Where it is</string>
+    <string name="sheet_borders_title">Borders</string>
+    <string name="sheet_no_borders">No land borders</string>
+    <string name="sheet_open_country">Open %1$s</string>
     <string name="map_description">Map: %1$s, in %2$s</string>
     <!-- The Map → Country question's map: the country's name is the answer, so TalkBack hears this instead -->
     <string name="map_to_identify">Map with a country highlighted</string>

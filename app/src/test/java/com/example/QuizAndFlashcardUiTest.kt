@@ -1500,6 +1500,10 @@ class QuizAndFlashcardUiTest {
             } else {
                 rule.onAllNodesWithTag("learn_look_alike").assertCountEquals(0)
             }
+            // Who is next door, under the map.
+            val borders = com.example.data.model.Neighbours.of(country.code).map { code -> allCountries.single { it.code == code }.name }.sorted()
+            rule.onNodeWithTag("learn_borders", useUnmergedTree = true)
+                .assert(hasText(if (borders.isEmpty()) "No land borders" else "Borders: ${borders.joinToString(", ")}"))
             if (n == 1) rule.onNodeWithTag("learn_prev_btn").assertIsNotEnabled() else rule.onNodeWithTag("learn_prev_btn").assertIsEnabled()
             if (n < 5) {
                 rule.onNodeWithTag("learn_next_btn").assert(hasText("Next")).performClick()

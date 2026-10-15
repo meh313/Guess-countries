@@ -31,14 +31,25 @@ jobs:
           SDKMANAGER=$(ls "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager | head -1)
           yes | "$SDKMANAGER" --licenses > /dev/null || true
 
+      # The look-alike check decodes the flag WebPs with Pillow, and the distances follow the decoder, so the exact
+      # Pillow build that wrote FlagLookAlikes.kt is pinned in tools/requirements.txt.
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: tools/requirements.txt
+      - run: pip install -r tools/requirements.txt
+
       # The generated assets must match their sources, or the app ships stale data: the per-country source pages
-      # (export-sources.py) and the third-party notices the About screen shows (export-notices.py). The world map
-      # comes from a download, so its check only verifies the committed asset (format, every catalog code, Geo.kt).
+      # (export-sources.py), the third-party notices the About screen shows (export-notices.py) and the look-alike
+      # flags (gen-lookalikes.py, from the flag images). The world map comes from a download, so its check only
+      # verifies the committed asset (format, every catalog code, Geo.kt, Neighbours.kt).
       - name: Check the generated assets
         run: |
           python3 tools/export-sources.py --check
           python3 tools/export-notices.py --check
           python3 tools/gen-worldmap.py --check
+          python3 tools/gen-lookalikes.py --check
 
       - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6
 

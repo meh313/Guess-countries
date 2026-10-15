@@ -463,14 +463,48 @@ class QuizEngineTest {
     }
 
     @Test
-    fun locateQuestions_takeTheirWrongAnswersFromTheTargetsSubregionFirst() {
+    fun locateQuestions_takeTheirWrongAnswersFromTheCountriesItBordersFirst() {
         val france = country("FR")
-        val westernEurope = sovereign.filter { it.subregion == france.subregion && it.code != "FR" }.map { it.name }.toSet()
-        assertTrue("Western Europe needs at least three other countries", westernEurope.size >= 3)
+        val borders = com.example.data.model.Neighbours.of("FR").toSet()
         for (seed in 1..40) {
             val q = locateQuestionAbout("FR", seed)
+            val wrong = q.optionCodes.filterIndexed { i, _ -> i != q.correctAnswerIndex }.map { it!! }
+            assertTrue("seed=$seed: $wrong", wrong.all { it in borders })
+        }
+        // An island takes them from its subregion: the first rule has nothing to give.
+        assertTrue(com.example.data.model.Neighbours.of("JP").isEmpty())
+        val eastAsia = sovereign.filter { it.subregion == country("JP").subregion && it.code != "JP" }.map { it.code }.toSet()
+        for (seed in 1..20) {
+            val q = locateQuestionAbout("JP", seed)
+            val wrong = q.optionCodes.filterIndexed { i, _ -> i != q.correctAnswerIndex }.map { it!! }
+            assertTrue("seed=$seed: $wrong", wrong.all { it in eastAsia })
+        }
+        // A pool without the neighbours falls through to the next rules.
+        val farAway = sovereign.filter { it.code !in borders && it.continent != france.continent } + france
+        for (seed in 1..10) {
+            val q = locateQuestionAbout("FR", seed, answerPool = farAway)
+            assertEquals(4, q.options.size)
+        }
+    }
+
+    @Test
+    fun locateQuestions_takeTheirWrongAnswersFromTheTargetsSubregion_onceItsNeighboursAreUsedUp() {
+        // Portugal borders Spain alone: with Spain out of the pool, the rest of Southern Europe comes next.
+        val portugal = country("PT")
+        assertEquals(listOf("ES"), com.example.data.model.Neighbours.of("PT"))
+        val southernEurope = sovereign.filter { it.subregion == portugal.subregion && it.code !in setOf("PT", "ES") }.map { it.name }.toSet()
+        assertTrue("Southern Europe needs at least three other countries: $southernEurope", southernEurope.size >= 3)
+        val pool = sovereign.filter { it.code != "ES" }
+        for (seed in 1..40) {
+            val q = locateQuestionAbout("PT", seed, answerPool = pool)
             assertEquals("seed=$seed ${q.options}", 3, wrongNames(q).size)
-            assertTrue("seed=$seed ${q.options}", westernEurope.containsAll(wrongNames(q)))
+            assertTrue("seed=$seed ${q.options}", southernEurope.containsAll(wrongNames(q)))
+        }
+        // With Spain in the pool it comes first, and the other two are still Southern European.
+        for (seed in 1..40) {
+            val q = locateQuestionAbout("PT", seed)
+            assertTrue("seed=$seed ${q.options}", "Spain" in wrongNames(q))
+            assertTrue("seed=$seed ${q.options}", southernEurope.containsAll(wrongNames(q) - "Spain"))
         }
     }
 

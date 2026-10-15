@@ -94,12 +94,20 @@ Requires JDK 21 and the Android SDK (compileSdk 37, targetSdk 36). The Gradle wr
 ```sh
 ./gradlew assembleDebug        # debug APK
 ./gradlew build                # lint, unit tests and both APKs, as CI runs it
+./gradlew connectedDebugAndroidTest   # the smoke test on a connected device or emulator (see Emulator tests)
 ./gradlew testDebugUnitTest    # unit and Robolectric UI tests only
 ```
 
 The unit tests include Compose UI tests that drive the real activity under Robolectric, so no emulator is
 needed. They run the screens at phone, landscape and tablet sizes and at twice the font size; a window 600dp or
 wider gets a navigation rail and columns held to a reading width.
+
+### Emulator tests
+
+`app/src/androidTest` holds one instrumented test, `SmokeTest`: the app starts on a real Android, shows its tabs,
+opens a country sheet and plays a quiz question. `.github/workflows/emulator.yml` runs it on an API 34 emulator on
+every push to `main`, once a week and on request (*Run workflow*); it is too slow to gate pull requests. Locally,
+`./gradlew connectedDebugAndroidTest` runs it on whatever device or emulator `adb` sees.
 
 ### Release builds
 
@@ -165,7 +173,7 @@ What a Play Store listing needs is in the repository:
 | `data/model/` | The country catalog, one file per continent (`EuropeCatalog.kt`…, alphabetical), `CountryRepository`, `CountrySources` (the per-country source pages, read from the asset `sources.json`) and the generated `Geo` (each country's bounding box, label and capital on the map). |
 | `data/local/` | Room database (version 2): bookmarks, skill states, quiz history with every answer. Schemas are exported to `app/schemas/`; `AppDatabase.MIGRATION_1_2` is tested against the committed version 1 schema. |
 | `ui/` | Compose screens, components, theme, `Labels.kt` (the words for the stored keys) and `CountryViewModel`, which hands progress, the quiz and the study session to the holders in `ui/viewmodel/`. |
-| `tools/` | Content pipeline: flag rendering (`render-flags.mjs`, `to-webp.py`, `contact-sheet.py`), catalog generation (`validate-research.py`, `gen-entries.py`, `apply-edits.py`, `gen-flag-art.py`, `flag-checksums.py`), audit input (`export-entries.py`), quiz data (`gen-lookalikes.py` writes `FlagLookAlikes.kt`), the sources asset (`export-sources.py` writes `app/src/main/assets/sources.json` from the research and audit files; `--check` verifies it), the notices asset (`export-notices.py` writes `app/src/main/assets/NOTICES.txt` from `licenses/THIRD_PARTY_NOTICES.md`; `--check` verifies it), the map (`gen-worldmap.py` downloads Natural Earth and writes `app/src/main/assets/world.json` and `Geo.kt`; `--check` verifies the committed files offline). CI runs the three checks. |
+| `tools/` | Content pipeline: flag rendering (`render-flags.mjs`, `to-webp.py`, `contact-sheet.py`), catalog generation (`validate-research.py`, `gen-entries.py`, `apply-edits.py`, `gen-flag-art.py`, `flag-checksums.py`), audit input (`export-entries.py`), quiz data (`gen-lookalikes.py` writes `FlagLookAlikes.kt`), the sources asset (`export-sources.py` writes `app/src/main/assets/sources.json` from the research and audit files; `--check` verifies it), the notices asset (`export-notices.py` writes `app/src/main/assets/NOTICES.txt` from `licenses/THIRD_PARTY_NOTICES.md`; `--check` verifies it), the map and the land borders (`gen-worldmap.py` downloads Natural Earth and writes `app/src/main/assets/world.json`, `Geo.kt` and `Neighbours.kt`; `--check` verifies the committed files offline). CI runs the four checks, with the Pillow of `requirements.txt`. |
 | `content/` | Provenance for the catalog: `seed/` (country lists and owner rules), `research/` (first-pass entries with sources), `audit/` (second-pass fixes, doubts and owner decisions per continent). |
 
 `CountryViewModel` receives its repository, speech engine and clock through the constructor, which is how

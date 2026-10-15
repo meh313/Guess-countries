@@ -10,12 +10,13 @@ list is: the curated classics first (CURATED, expanded in both directions), then
 that are not in DENY, at most MAX_GENERATED generated and MAX_TOTAL in all. Deterministic: no randomness, ties broken
 by code.
 
---check exits 1 when FlagLookAlikes.kt is not what this run would write. Run it locally after changing CURATED, DENY or a
-flag; CI does not run it, because the distances depend on the WebP decoder of the Pillow build at hand, and
-FlagLookAlikesTest pins the curated groups and the deny list instead.
+--check exits 1 when FlagLookAlikes.kt is not what this run would write, so CI can tell a stale file. The distances
+depend on the WebP decoder of the Pillow build at hand, so CI installs the exact Pillow of tools/requirements.txt;
+run the script with that version (pip install -r tools/requirements.txt) after changing CURATED, DENY or a flag, and
+bump the pin and regenerate together when moving to a newer Pillow. FlagLookAlikesTest pins the curated groups and
+the deny list besides.
 
 --sheet DIR writes review strips (country, then its look-alikes) as PNGs so the result can be looked at by eye.
---check exits 1 when FlagLookAlikes.kt differs from what the script would write, so CI can tell a stale file.
 """
 import argparse
 import math
