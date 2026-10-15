@@ -707,6 +707,52 @@ class CountryViewModelQuizTest {
     }
 
     @Test
+    fun typedQuiz_anAcceptedNameScoresAndCountsAsAFlagReview_aWrongOneKeepsItsText() {
+        val handle = SavedStateHandle()
+        val vm = newViewModel(random = Random(5), savedState = handle)
+        vm.startQuiz(QuizMode.TYPE_NAME, "Global")
+        val session = vm.quizSession.value!!
+        assertTrue(session.questions.all { q -> q.options == listOf(q.targetCountry.name) && q.optionCodes == listOf(q.targetCountry.code) })
+        val first = session.current.targetCountry
+
+        vm.answerQuizTyped("  " + first.name.lowercase() + " ")
+
+        val answered = vm.quizSession.value!!
+        assertTrue(answered.hasAnswered)
+        assertEquals(0, answered.selectedAnswerIndex)
+        assertEquals(10, answered.score)
+        assertEquals(1, answered.streak)
+        awaitCondition("the flag review to be saved") { skillRow(first.code) != null }
+        val rows = runBlocking { db.userProgressDao().getAllSkills().first() }.filter { it.countryCode == first.code }
+        assertEquals(listOf(Skill.FLAG.name), rows.map { it.skill })
+        assertEquals(1, rows.single().correct)
+
+        vm.nextQuizQuestion()
+        val second = vm.quizSession.value!!.current.targetCountry
+        vm.answerQuizTyped("Narnia")
+
+        val missed = vm.quizSession.value!!
+        assertTrue(missed.hasAnswered)
+        assertEquals(QuizSession.WRONG_TYPED, missed.selectedAnswerIndex)
+        assertEquals(0, missed.streak)
+        assertEquals(10, missed.score)
+        val miss = missed.misses.single()
+        assertEquals(second.code, miss.question.targetCountry.code)
+        assertEquals("Narnia", miss.pickedText)
+        assertNull(miss.pickedCode)
+        awaitCondition("the miss to be saved") { skillRow(second.code)?.reviews == 1 }
+        assertEquals(0, skillRow(second.code)!!.correct)
+
+        // A blank answer changes nothing; the typed answer survives the trip through the saved state.
+        vm.nextQuizQuestion()
+        vm.answerQuizTyped("   ")
+        assertFalse(vm.quizSession.value!!.hasAnswered)
+        val restored = newViewModel(savedState = handle.saved()).quizSession.value!!
+        assertEquals(missed.answers.map { it.typed }, restored.answers.map { it.typed })
+        assertEquals(missed.answers.map { it.correct }, restored.answers.map { it.correct })
+    }
+
+    @Test
     fun startQuiz_dueToday_inTheMapQuiz_usesTheLocationDueList() {
         listOf("FR", "DE", "JP").forEach { reviewedRow(it, Skill.FLAG) }
         listOf("PT", "MA").forEach { reviewedRow(it, Skill.LOCATION) }

@@ -36,6 +36,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material.icons.filled.LocationCity
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Public
@@ -52,6 +53,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -73,6 +76,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
@@ -85,7 +89,11 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -101,6 +109,7 @@ import com.example.progress.SkillMastery
 import com.example.quiz.QuizDifficulty
 import com.example.quiz.QuizEngine
 import com.example.quiz.QuizMode
+import com.example.quiz.TypedAnswer
 import com.example.ui.components.FlagOptionGrid
 import com.example.ui.components.FlagView
 import com.example.ui.components.readingWidth
@@ -135,6 +144,7 @@ private val QuizMode.icon: ImageVector
         QuizMode.CAPITAL -> Icons.Default.LocationCity
         QuizMode.CONTINENT -> Icons.Default.Public
         QuizMode.LOCATE -> Icons.Default.Map
+        QuizMode.TYPE_NAME -> Icons.Default.Keyboard
         QuizMode.SPEED_MATCH -> Icons.Default.Speed
         QuizMode.BLITZ -> Icons.Default.Timer
     }
@@ -519,6 +529,8 @@ fun QuizScreen(
     } else {
         // ACTIVE QUIZ SCREEN
         val q = active.current
+        // The kind of this question: the quiz's mode, except a Learn quiz's closing map question.
+        val mode = active.currentMode
 
         // The quiz now outlives the screen, so offer a way out (Back asks first).
         BackHandler { showQuitConfirm = true }
@@ -544,7 +556,7 @@ fun QuizScreen(
 
         val view = LocalView.current
         // The settings may stretch or lift the per-question limit; the blitz keeps its minute.
-        val limitMs = timerPace.limit(active.mode.timeLimitSeconds)?.let { it * 1000L }
+        val limitMs = timerPace.limit(mode.timeLimitSeconds)?.let { it * 1000L }
         var remainingMs by remember(active.currentIndex, active.questionStartedAt) { mutableLongStateOf(limitMs ?: 0L) }
         if (limitMs != null) {
             // Time is measured from when the question was shown, so rotating or switching tabs neither
@@ -566,7 +578,7 @@ fun QuizScreen(
             }
         }
         // An endless quiz (the blitz) runs against one clock from its start; answering never stops it.
-        val totalMs = active.mode.totalTimeSeconds?.let { it * 1000L }
+        val totalMs = mode.totalTimeSeconds?.let { it * 1000L }
         var totalRemainingMs by remember(active.startedAt) { mutableLongStateOf(totalMs ?: 0L) }
         if (totalMs != null) {
             LaunchedEffect(active.startedAt, active.isFinished, active.isPaused) {
@@ -608,7 +620,7 @@ fun QuizScreen(
             ) {
                 Column {
                     Text(
-                        text = if (active.mode.isEndless) stringResource(R.string.quiz_progress_blitz, active.currentIndex + 1, active.correct)
+                        text = if (mode.isEndless) stringResource(R.string.quiz_progress_blitz, active.currentIndex + 1, active.correct)
                         else stringResource(R.string.quiz_progress, active.currentIndex + 1, questionCount),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
@@ -709,7 +721,7 @@ fun QuizScreen(
                     modifier = Modifier.padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    if (active.mode.showsMap) {
+                    if (mode.showsMap) {
                         // Map → Country: the country is highlighted on a zoomed map, no capital dot and no flag (its
                         // name is the answer, and the flag would give it away). TalkBack hears a neutral text, as it
                         // does for the flag, instead of the map's usual "Map: France, in Europe".
@@ -723,7 +735,7 @@ fun QuizScreen(
                             contentDescription = stringResource(R.string.map_to_identify)
                         )
                         Spacer(modifier = Modifier.height(12.dp))
-                    } else if (active.mode.showsFlag) {
+                    } else if (mode.showsFlag) {
                         FlagView(
                             country = q.targetCountry,
                             modifier = Modifier
@@ -735,7 +747,7 @@ fun QuizScreen(
                     }
 
                     Text(
-                        text = active.mode.questionText(q.targetCountry),
+                        text = mode.questionText(q.targetCountry),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
@@ -751,7 +763,18 @@ fun QuizScreen(
 
         // 4 Options Grid. [tileMaxWidth] caps the flag tiles where the answers have a pane of their own.
         val answers: @Composable (tileMaxWidth: Dp) -> Unit = { tileMaxWidth ->
-            if (active.mode.answersAreFlags) {
+            if (mode.isTyped) {
+                TypedAnswerField(
+                    questionKey = active.currentIndex,
+                    answered = active.hasAnswered,
+                    correct = active.selectedAnswerIndex == q.correctAnswerIndex,
+                    typedAnswer = active.answers.lastOrNull()?.takeIf { it.question === q }?.typed,
+                    onSubmit = { text ->
+                        viewModel.answerQuizTyped(text)
+                        view.performAnswerHaptic(correct = TypedAnswer.matches(text, q.targetCountry))
+                    }
+                )
+            } else if (mode.answersAreFlags) {
                 FlagOptionGrid(
                     optionCodes = q.options,
                     countriesByCode = countriesByCode,
@@ -832,7 +855,7 @@ fun QuizScreen(
         val afterAnswer: @Composable () -> Unit = {
             if (active.hasAnswered) {
                 // For "pick the flag" the options are country codes, so say the country instead.
-                val answerText = if (active.mode.answersAreFlags) q.targetCountry.name else q.options[q.correctAnswerIndex]
+                val answerText = if (mode.answersAreFlags) q.targetCountry.name else q.options[q.correctAnswerIndex]
                 val picked = active.selectedAnswerIndex
                 val result = when {
                     active.timedOut -> stringResource(R.string.quiz_result_timeout, answerText)
@@ -857,7 +880,7 @@ fun QuizScreen(
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 6.dp)) {
                             // Map → Country: the question showed no flag, so the right country's flag comes with the
                             // outcome, small, and the player links the shape on the map to the flag.
-                            if (active.mode.showsMap) {
+                            if (mode.showsMap) {
                                 FlagView(
                                     country = q.targetCountry,
                                     modifier = Modifier
@@ -881,15 +904,15 @@ fun QuizScreen(
                         }
                         // A wrong flag in the grid: the two flags are already side by side there, so one line under
                         // the result says how to tell them apart next time (or how to spot the right one).
-                        if (pickedCountry != null && !active.mode.isEndless && active.mode.answersAreFlags) {
+                        if (pickedCountry != null && !mode.isEndless && mode.answersAreFlags) {
                             tellApartLine(q.targetCountry, TellApart.tip(pickedCountry.code, q.targetCountry.code))?.let { cue ->
                                 TellApartLine(text = cue, modifier = Modifier.padding(bottom = 10.dp).testTag("quiz_tell_apart"))
                             }
                         }
                         // A wrong text answer shows the flag that was picked beside the right one, the one time the two
                         // are seen together. The flag grid names its flags itself, and a blitz has no time.
-                        if (pickedCountry != null && !active.mode.isEndless && !active.mode.answersAreFlags) {
-                            val capitals = active.mode == QuizMode.CAPITAL
+                        if (pickedCountry != null && !mode.isEndless && !mode.answersAreFlags) {
+                            val capitals = mode == QuizMode.CAPITAL
                             MissComparison(
                                 picked = pickedCountry,
                                 correct = q.targetCountry,
@@ -900,7 +923,7 @@ fun QuizScreen(
                             )
                         }
                         // A blitz moves on in under a second: no time for the capital and the fun fact.
-                        if (!active.mode.isEndless) {
+                        if (!mode.isEndless) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 // Decorative: the sentence after it is what TalkBack reads.
                                 Icon(
@@ -948,7 +971,7 @@ fun QuizScreen(
             // After answering, bring the explanation and Next button into view on small screens.
             val answerScrollState = if (twoPanes) optionsScrollState else quizScrollState
             LaunchedEffect(active.hasAnswered, answerScrollState) {
-                if (active.hasAnswered && !active.mode.isEndless) {
+                if (active.hasAnswered && !mode.isEndless) {
                     withFrameNanos { } // wait one frame so the explanation card has been measured
                     answerScrollState.animateScrollTo(answerScrollState.maxValue)
                 }
@@ -1033,6 +1056,86 @@ fun QuizScreen(
         )
     }
 
+}
+
+/**
+ * The answer area of a typed-name question: a field, a line on what counts, and a Check button (the keyboard's Done
+ * does the same). Once answered the field is read-only and shows the verdict with a tick or a cross; what was typed
+ * stays in it. The text is keyed on the question, so it is cleared for the next one and kept across rotation.
+ */
+@Composable
+private fun TypedAnswerField(
+    questionKey: Int,
+    answered: Boolean,
+    correct: Boolean,
+    /** What the session recorded for this question, shown once answered (the field's own text is lost to process death). */
+    typedAnswer: String?,
+    onSubmit: (String) -> Unit
+) {
+    var text by rememberSaveable(questionKey) { mutableStateOf("") }
+    val focusManager = LocalFocusManager.current
+    val submit = {
+        if (text.isNotBlank() && !answered) {
+            focusManager.clearFocus()
+            onSubmit(text)
+        }
+    }
+    val correctDescription = stringResource(R.string.quiz_option_correct)
+    val wrongDescription = stringResource(R.string.quiz_option_incorrect)
+    val verdictColor = if (correct) Color(0xFF2E7D32) else Color(0xFFC62828)
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        OutlinedTextField(
+            value = if (answered) typedAnswer ?: text else text,
+            onValueChange = { if (!answered) text = it },
+            // A placeholder, not a floating label: the label's animation mixes the theme's em and sp text units.
+            placeholder = { Text(stringResource(R.string.quiz_typed_label)) },
+            singleLine = true,
+            readOnly = answered,
+            keyboardOptions = KeyboardOptions(
+                capitalization = KeyboardCapitalization.Words,
+                autoCorrectEnabled = false,
+                imeAction = ImeAction.Done
+            ),
+            keyboardActions = KeyboardActions(onDone = { submit() }),
+            trailingIcon = if (!answered) null else {
+                {
+                    Icon(
+                        imageVector = if (correct) Icons.Default.CheckCircle else Icons.Default.Cancel,
+                        contentDescription = null,
+                        tint = verdictColor
+                    )
+                }
+            },
+            colors = if (!answered) OutlinedTextFieldDefaults.colors() else OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = verdictColor,
+                unfocusedBorderColor = verdictColor
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .semantics {
+                    // Not only colour: say whether what was typed was right.
+                    if (answered) stateDescription = if (correct) correctDescription else wrongDescription
+                }
+                .testTag("quiz_typed_field")
+        )
+        if (!answered) {
+            Text(
+                text = stringResource(R.string.quiz_typed_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Button(
+                onClick = submit,
+                enabled = text.isNotBlank(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 48.dp)
+                    .testTag("quiz_typed_submit")
+            ) {
+                Text(stringResource(R.string.quiz_typed_submit))
+            }
+        }
+    }
 }
 
 /** A short confirm or reject buzz for an answer (a plain key tap before Android 11). */

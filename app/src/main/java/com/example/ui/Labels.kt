@@ -30,6 +30,7 @@ val QuizMode.titleRes: Int
         QuizMode.CAPITAL -> R.string.mode_capital
         QuizMode.CONTINENT -> R.string.mode_continent
         QuizMode.LOCATE -> R.string.mode_locate
+        QuizMode.TYPE_NAME -> R.string.mode_type_name
         QuizMode.SPEED_MATCH -> R.string.mode_speed_round
         QuizMode.BLITZ -> R.string.mode_blitz
     }
@@ -40,6 +41,7 @@ val QuizMode.hintRes: Int?
         QuizMode.PICK_FLAG -> R.string.mode_pick_flag_hint
         QuizMode.CONTINENT -> R.string.mode_continent_hint
         QuizMode.LOCATE -> R.string.mode_locate_hint
+        QuizMode.TYPE_NAME -> R.string.mode_type_name_hint
         QuizMode.SPEED_MATCH -> R.string.mode_speed_round_hint
         QuizMode.BLITZ -> R.string.mode_blitz_hint
         QuizMode.FLAG_NAME, QuizMode.CAPITAL -> null
@@ -53,6 +55,7 @@ fun QuizMode.questionText(target: Country): String = when (this) {
     QuizMode.CAPITAL -> stringResource(R.string.question_capital, target.name)
     QuizMode.CONTINENT -> stringResource(R.string.question_continent)
     QuizMode.LOCATE -> stringResource(R.string.question_locate)
+    QuizMode.TYPE_NAME -> stringResource(R.string.question_type_name)
     QuizMode.BLITZ -> stringResource(R.string.question_blitz)
     QuizMode.SPEED_MATCH -> stringResource(R.string.question_speed_round)
 }

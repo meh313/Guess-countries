@@ -19,11 +19,12 @@ has no network permission.
   a time with the flag, the name, the region, the cue to spot it and, where one exists, the flag it is most often
   confused with (and how to tell the two apart). The focus continent's flags come first. Seeing a card counts as
   light evidence, so the next session moves on to five others; *Quiz me* then runs a ten-question flag quiz over the
-  five (each asked twice, wrong answers from the whole world), logged under *Learn*; it does not count against the
-  day's allowance of new countries.
+  five (each asked twice, wrong answers from the whole world) plus one map question about one of them, logged under
+  *Learn*; it does not count against the day's allowance of new countries.
 - **Quiz** – flag → country, country → flag (pick the right flag out of four), country → capital,
   flag → continent (always the whole world), map → country (the country is highlighted on the map, pick its name;
-  the wrong answers are its neighbours), a 10-second-per-question speed round and a 60-second blitz
+  the wrong answers are its neighbours), flag → typed name (no options: type the name; short forms such as UK or
+  DRC count and one typo is forgiven), a 10-second-per-question speed round and a 60-second blitz
   (as many flags as you can). Ten questions or fewer, with a streak bonus; the questions favour countries you have
   not seen or that are due for review, and avoid the targets of the last few quizzes. *Answers: Normal* puts one
   look-alike flag among the wrong answers, *Hard* as many as exist (the choice is remembered). The *Due today* scope

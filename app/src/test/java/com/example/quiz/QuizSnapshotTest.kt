@@ -90,6 +90,42 @@ class QuizSnapshotTest {
     }
 
     @Test
+    fun typedAnswers_roundTrip_withTheirTextAndVerdict() {
+        val fresh = session(QuizMode.TYPE_NAME)
+        val right = fresh.current.targetCountry.name
+        val before = fresh
+            .answerTyped(right, now = 1_300L)
+            .next(now = 2_000L)
+            .answerTyped("Narnia", now = 2_500L)
+            .next(now = 3_000L)
+        assertEquals(listOf(true, false), before.answers.map { it.correct })
+        assertEquals(listOf(right, "Narnia"), before.answers.map { it.typed })
+
+        val after = QuizSnapshot.of(before, now = 3_400L).restore(allCountries, now = 9_000L)!!
+
+        assertEquals(before.questions, after.questions)
+        assertEquals(before.answers, after.answers)
+        assertEquals(listOf(right, "Narnia"), after.answers.map { it.pickedText })
+        assertEquals(listOf<Int?>(0, null), after.answers.map { it.pickedIndex })
+        assertEquals(before.score, after.score)
+    }
+
+    @Test
+    fun aQuestionOfItsOwnKind_keepsItAcrossTheRoundTrip() {
+        val flags = QuizEngine.generate(sovereign.take(6), QuizMode.FLAG_NAME, Random(2))
+        val place = QuizEngine.generate(sovereign.take(1), QuizMode.LOCATE, Random(2), answerPool = sovereign).single().copy(mode = QuizMode.LOCATE)
+        val before = QuizSession(QuizMode.FLAG_NAME, QuizEngine.LEARN, flags + place, questionStartedAt = 1_000L, startedAt = 1_000L)
+
+        val after = QuizSnapshot.of(before, now = 1_400L).restore(allCountries, now = 9_000L)!!
+
+        assertEquals(before.questions, after.questions)
+        assertEquals(QuizMode.LOCATE, after.questions.last().mode)
+        assertEquals(QuizMode.LOCATE, after.modeOf(after.questions.last()))
+        assertEquals(QuizEngine.questionText(QuizMode.LOCATE, place.targetCountry), after.questions.last().questionText)
+        assertTrue(after.questions.dropLast(1).all { it.mode == null && after.modeOf(it) == QuizMode.FLAG_NAME })
+    }
+
+    @Test
     fun aFinishedSession_roundTrips() {
         var s = session()
         while (!s.isFinished) s = s.answer(s.current.correctAnswerIndex, now = 1_100L).next(now = 1_200L)

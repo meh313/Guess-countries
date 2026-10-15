@@ -90,11 +90,13 @@ class QuizEngineTest {
                             QuizMode.PICK_FLAG -> q.targetCountry.code
                             QuizMode.FLAG_NAME,
                             QuizMode.LOCATE,
+                            QuizMode.TYPE_NAME,
                             QuizMode.BLITZ,
                             QuizMode.SPEED_MATCH -> q.targetCountry.name
                         }
                     val where = "pool=$size mode=$mode target=${q.targetCountry.code}"
-                    assertEquals(where, 4, q.options.size)
+                    // A typed name has nothing to pick: its one option is the name it is checked against.
+                    assertEquals(where, if (mode.isTyped) 1 else 4, q.options.size)
                     assertEquals(where, q.options.distinct(), q.options)
                     assertEquals(where, expected, q.correctOption())
                     assertTrue(where, q.correctAnswerIndex in q.options.indices)

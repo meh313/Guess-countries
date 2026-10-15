@@ -72,6 +72,9 @@
     <string name="quiz_result_wrong">Not quite. The answer is %1$s</string>
     <string name="quiz_result_also_counted">Right: %1$s counts too, though the catalogue lists it under %2$s</string>
     <string name="quiz_capital_and_country">%1$s, %2$s</string>
+    <string name="quiz_typed_label">Country name</string>
+    <string name="quiz_typed_submit">Check</string>
+    <string name="quiz_typed_hint">Short forms count: UK, USA, DRC. One typo is forgiven.</string>
     <string name="quiz_fact_capital">Capital: %1$s</string>
     <string name="quiz_finish">Finish &amp; view score</string>
     <string name="quiz_next_question">Next question</string>
