@@ -194,8 +194,14 @@ class LearnStateHolderTest {
 
         holder.start()
 
-        assertTrue("the holder reads the states before it plans", holder.planning.value)
-        assertNull("nothing is planned until the states are in", holder.session.value)
+        // The database may answer between the check above and the start: then the holder planned at once from the
+        // real states. Otherwise it is reading them first, with nothing planned yet. Either way the five seen
+        // countries are never picked.
+        if (holder.planning.value) {
+            assertNull("nothing is planned until the states are in", holder.session.value)
+        } else {
+            assertTrue("planned at once only once the states were in", world.progress.skillsLoaded.value)
+        }
         holder.settle()
         val codes = holder.session.value!!.codes
         assertEquals(sovereign.drop(5).take(5).map { it.code }, codes)
