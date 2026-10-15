@@ -17,6 +17,8 @@ import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.assertIsOff
+import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.lifecycle.ViewModelProvider
@@ -73,6 +75,29 @@ class SettingsAndAboutUiTest {
     /** The night mode the app told the system about (Android 12 and newer), so the splash and system dialogs follow. */
     private val applicationNightMode: Int
         get() = shadowOf(ApplicationProvider.getApplicationContext<android.content.Context>().getSystemService(UiModeManager::class.java)).applicationNightMode
+
+    @Test
+    fun theFeedbackSwitches_startOn_andStickInTheSettings() {
+        openSettings()
+
+        rule.onNodeWithTag("settings_sound").performScrollTo().assertIsOn()
+        rule.onNodeWithTag("settings_haptics").performScrollTo().assertIsOn()
+        rule.onNodeWithText("Sound effects").assertIsDisplayed()
+        rule.onNodeWithText("Vibration").assertIsDisplayed()
+
+        rule.onNodeWithTag("settings_sound").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithTag("settings_sound").assertIsOff()
+        rule.onNodeWithTag("settings_haptics").assertIsOn()
+        val prefs = PrefsUserSettings(ApplicationProvider.getApplicationContext())
+        assertEquals(false, prefs.soundEffects)
+        assertEquals(true, prefs.haptics)
+
+        rule.onNodeWithTag("settings_haptics").performClick()
+        rule.waitForIdle()
+        assertEquals(false, prefs.haptics)
+        assertEquals(com.example.data.settings.Feedback(sound = false, haptics = false), viewModel.feedback.value)
+    }
 
     @Test
     fun theGearOnProgress_opensSettings_andBackReturns() {

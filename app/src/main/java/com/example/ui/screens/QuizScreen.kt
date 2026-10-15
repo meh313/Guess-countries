@@ -110,6 +110,8 @@ import com.example.quiz.QuizDifficulty
 import com.example.quiz.QuizEngine
 import com.example.quiz.QuizMode
 import com.example.quiz.TypedAnswer
+import com.example.ui.sound.Sound
+import com.example.ui.sound.rememberSoundPlayer
 import com.example.ui.components.FlagOptionGrid
 import com.example.ui.components.FlagView
 import com.example.ui.components.readingWidth
@@ -167,6 +169,14 @@ fun QuizScreen(
     var selectedContinentScope by rememberSaveable { mutableStateOf(QuizEngine.GLOBAL) }
     val selectedDifficulty by viewModel.quizDifficulty.collectAsStateWithLifecycle()
     val timerPace by viewModel.timerPace.collectAsStateWithLifecycle()
+    val feedback by viewModel.feedback.collectAsStateWithLifecycle()
+    val sounds = rememberSoundPlayer(feedback.sound)
+    val feedbackView = LocalView.current
+    // What an answer gets: a buzz and a chime, each only while its setting is on.
+    val answerFeedback: (Boolean) -> Unit = { correct ->
+        if (feedback.haptics) feedbackView.performAnswerHaptic(correct)
+        sounds?.play(if (correct) Sound.CORRECT else Sound.WRONG)
+    }
     // The weak and due countries of the skill the chosen mode exercises: capitals for the capital quiz, else flags.
     val plan by viewModel.quizPlan.collectAsStateWithLifecycle()
     val skill = SkillMastery.skillOf(selectedMode)
@@ -514,6 +524,8 @@ fun QuizScreen(
         }
     } else if (active.isFinished) {
         // SCORE SCREEN, in the window: the misses with both flags, and the ways on.
+        // One chime as the score comes up (once per quiz: the key is the quiz's start).
+        LaunchedEffect(active.startedAt) { sounds?.play(Sound.FINISHED) }
         val streakOutcome by viewModel.finishOutcome.collectAsStateWithLifecycle()
         val streak by viewModel.streak.collectAsStateWithLifecycle()
         QuizResultScreen(
@@ -569,7 +581,7 @@ fun QuizScreen(
                     val left = limitMs - (viewModel.clockMillis() - active.questionStartedAt)
                     remainingMs = left.coerceIn(0L, limitMs)
                     if (left <= 0L) {
-                        view.performAnswerHaptic(correct = false)
+                        answerFeedback(false)
                         viewModel.timeOutQuiz()
                         break
                     }
@@ -771,7 +783,7 @@ fun QuizScreen(
                     typedAnswer = active.answers.lastOrNull()?.takeIf { it.question === q }?.typed,
                     onSubmit = { text ->
                         viewModel.answerQuizTyped(text)
-                        view.performAnswerHaptic(correct = TypedAnswer.matches(text, q.targetCountry))
+                        answerFeedback(TypedAnswer.matches(text, q.targetCountry))
                     }
                 )
             } else if (mode.answersAreFlags) {
@@ -783,7 +795,7 @@ fun QuizScreen(
                     answered = active.hasAnswered,
                     onPick = { index ->
                         viewModel.answerQuiz(index)
-                        view.performAnswerHaptic(correct = index in q.acceptedIndices)
+                        answerFeedback(index in q.acceptedIndices)
                     },
                     tileMaxWidth = tileMaxWidth
                 )
@@ -810,7 +822,7 @@ fun QuizScreen(
                             .heightIn(min = 48.dp)
                             .clickable(enabled = !active.hasAnswered, role = Role.Button) {
                                 viewModel.answerQuiz(index)
-                                view.performAnswerHaptic(correct = isCorrect)
+                                answerFeedback(isCorrect)
                             }
                             .semantics {
                                 // Not only colour: say which option was right and which one was picked.

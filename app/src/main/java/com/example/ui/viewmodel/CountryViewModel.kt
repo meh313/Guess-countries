@@ -19,6 +19,7 @@ import com.example.data.model.CountryRepository
 import com.example.data.model.CountrySources
 import com.example.data.model.SortOption
 import com.example.data.settings.Appearance
+import com.example.data.settings.Feedback
 import com.example.data.settings.InMemoryUserSettings
 import com.example.data.settings.PrefsUserSettings
 import com.example.data.settings.ReminderPrefs
@@ -56,6 +57,11 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
+import com.example.widget.WidgetRefresher
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 
 /**
@@ -79,7 +85,9 @@ class CountryViewModel(
     /** Where the quiz in progress is kept across process death; the app passes the activity's, tests may pass none. */
     savedStateHandle: SavedStateHandle? = null,
     /** Reads the per-country sources (an asset); null when the app has none to show, as in most tests. */
-    private val sourcesLoader: (suspend () -> CountrySources)? = null
+    private val sourcesLoader: (suspend () -> CountrySources)? = null,
+    /** Redraws the home-screen widget once a session is saved; the app passes the Glance one, tests none. */
+    private val widgets: WidgetRefresher = WidgetRefresher.NONE
 ) : ViewModel() {
 
     private val _sources = MutableStateFlow<CountrySources?>(null)
@@ -123,6 +131,21 @@ class CountryViewModel(
     fun setDynamicColor(enabled: Boolean) {
         settings.dynamicColor = enabled
         _appearance.update { it.copy(dynamicColor = enabled) }
+    }
+
+    private val _feedback = MutableStateFlow(Feedback(settings.soundEffects, settings.haptics))
+
+    /** Whether the quiz chimes and buzzes on an answer. */
+    val feedback: StateFlow<Feedback> = _feedback
+
+    fun setSoundEffects(enabled: Boolean) {
+        settings.soundEffects = enabled
+        _feedback.update { it.copy(sound = enabled) }
+    }
+
+    fun setHaptics(enabled: Boolean) {
+        settings.haptics = enabled
+        _feedback.update { it.copy(haptics = enabled) }
     }
 
     private val _timerPace = MutableStateFlow(settings.timerPace)
@@ -290,7 +313,9 @@ class CountryViewModel(
             "timerPace" to settings.timerPace.name,
             "dailyGoal" to settings.dailyGoal.toString(),
             "focusContinent" to settings.focusContinent,
-            "onboarded" to settings.onboarded.toString()
+            "onboarded" to settings.onboarded.toString(),
+            "soundEffects" to settings.soundEffects.toString(),
+            "haptics" to settings.haptics.toString()
         )
         return withContext(Dispatchers.Default) { ProgressTransfer.toJson(snapshot.copy(settings = settingsMap)) }
     }
@@ -332,6 +357,8 @@ class CountryViewModel(
             snapshot.settings["dailyGoal"]?.toIntOrNull()?.let(::setDailyGoal)
             snapshot.settings["focusContinent"]?.takeIf { it in FOCUS_CHOICES }?.let(::setFocusContinent)
             snapshot.settings["onboarded"]?.toBooleanStrictOrNull()?.let(::setOnboarded)
+            snapshot.settings["soundEffects"]?.toBooleanStrictOrNull()?.let(::setSoundEffects)
+            snapshot.settings["haptics"]?.toBooleanStrictOrNull()?.let(::setHaptics)
             snapshot
         }
     }
@@ -351,6 +378,17 @@ class CountryViewModel(
     // --- Quiz -------------------------------------------------------------------------------------------------------
 
     private val quiz = QuizStateHolder(repository, progress, settings, viewModelScope, clock, zone, random, savedStateHandle)
+
+    init {
+        // The home-screen widget follows the saved sessions and the skill rows: a redraw once they settle after a
+        // change, not on the first values (nothing changed yet) and not on every answer of a blitz.
+        @OptIn(FlowPreview::class)
+        viewModelScope.launch {
+            merge(progress.quizHistory.drop(1), progress.skills.drop(1)).debounce(WIDGET_DEBOUNCE_MILLIS).collect {
+                runCatching { widgets.refresh() }
+            }
+        }
+    }
 
     /** The quiz in progress, or null on the setup screen. Lives here so it survives rotation and tab switches. */
     val quizSession: StateFlow<QuizSession?> get() = quiz.session
@@ -540,6 +578,9 @@ class CountryViewModel(
     }
 
     companion object {
+        /** How long after the last change to the log or the skills the widget is redrawn. */
+        const val WIDGET_DEBOUNCE_MILLIS = 1_500L
+
         /** Builds the real database-backed repository and speech engine for the app. */
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
@@ -550,7 +591,8 @@ class CountryViewModel(
                     settings = PrefsUserSettings(app),
                     reminderScheduler = WorkManagerReminderScheduler(app),
                     savedStateHandle = createSavedStateHandle(),
-                    sourcesLoader = { CountrySources.load(app) }
+                    sourcesLoader = { CountrySources.load(app) },
+                    widgets = WidgetRefresher.glance(app)
                 )
             }
         }

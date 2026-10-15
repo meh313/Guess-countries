@@ -19,7 +19,7 @@ Then it reviews what you learnt at the right time:
 • Flashcards with Again / Good / Easy, decks for what is due, the weak spots, the capitals, or your own filter.
 
 And it shows you how you are doing:
-• A Today card with your daily goal, a streak that follows it, and an optional reminder.
+• A Today card with your daily goal, a streak that follows it, an optional reminder, and a home-screen widget with what is due.
 • Progress by continent, what is coming up this week, the pairs you confuse most, and every past quiz you can open again.
 
 Private by design: no network permission, no account, no ads. Your progress stays on your phone; export it as a file whenever you like.

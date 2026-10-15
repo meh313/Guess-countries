@@ -25,6 +25,11 @@
     <string name="settings_focus_hint">Quizzes introduce the never-seen flags of this continent first</string>
 
     <!-- Settings: Read aloud (the speech engine's state; the detail sheet's speaker reuses the install action) -->
+    <string name="settings_section_feedback">Feedback</string>
+    <string name="settings_sound_title">Sound effects</string>
+    <string name="settings_sound_detail">A short chime for a right or wrong answer and at the end of a quiz</string>
+    <string name="settings_haptics_title">Vibration</string>
+    <string name="settings_haptics_detail">A short buzz for a right or wrong answer</string>
     <string name="settings_section_speech">Read aloud</string>
     <string name="settings_speech_loading">Starting the speech engine…</string>
     <string name="settings_speech_ready">Ready. The speaker on a country\'s detail sheet and on the flashcards reads the country aloud.</string>
