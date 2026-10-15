@@ -65,7 +65,9 @@ object ProgressTransfer {
     /** The settings carried in a file, by name. */
     val SETTINGS = listOf(
         "quizDifficulty", "reminderEnabled", "reminderMinuteOfDay", "themeMode", "dynamicColor", "timerPace",
-        "dailyGoal", "focusContinent", "onboarded"
+        "dailyGoal", "focusContinent", "onboarded",
+        "soundEffects",
+        "haptics"
     )
 
     private val catalogCodes: Set<String> by lazy { CountryCatalog.all.map { it.code }.toSet() }

@@ -112,6 +112,7 @@ fun SettingsScreen(
     onInstallVoiceData: () -> Boolean = { false }
 ) {
     val appearance by viewModel.appearance.collectAsStateWithLifecycle()
+    val feedback by viewModel.feedback.collectAsStateWithLifecycle()
     val pace by viewModel.timerPace.collectAsStateWithLifecycle()
     val goal by viewModel.dailyGoal.collectAsStateWithLifecycle()
     val focus by viewModel.focusContinent.collectAsStateWithLifecycle()
@@ -314,7 +315,25 @@ fun SettingsScreen(
             // say, and again on every return to the screen, as from the voice-data installer (prepare is a no-op
             // while the engine is up).
             LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.prepareSpeech() }
-            SettingsSection(stringResource(R.string.settings_section_speech)) {
+            SettingsSection(stringResource(R.string.settings_section_feedback)) {
+            SwitchRow(
+                title = stringResource(R.string.settings_sound_title),
+                detail = stringResource(R.string.settings_sound_detail),
+                checked = feedback.sound,
+                onCheckedChange = { viewModel.setSoundEffects(it) },
+                tag = "settings_sound"
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            SwitchRow(
+                title = stringResource(R.string.settings_haptics_title),
+                detail = stringResource(R.string.settings_haptics_detail),
+                checked = feedback.haptics,
+                onCheckedChange = { viewModel.setHaptics(it) },
+                tag = "settings_haptics"
+            )
+        }
+
+        SettingsSection(stringResource(R.string.settings_section_speech)) {
                 SpeechStatus(
                     state = state,
                     onInstall = {

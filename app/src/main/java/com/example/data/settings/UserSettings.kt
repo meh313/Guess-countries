@@ -52,7 +52,16 @@ interface UserSettings {
 
     /** True once the first-run choice (a focus continent, or All) was made; the Today card asks for it until then. */
     var onboarded: Boolean
+
+    /** A short chime for a right or wrong quiz answer and at the end of a quiz; on until switched off. */
+    var soundEffects: Boolean
+
+    /** A short buzz for a right or wrong quiz answer; on until switched off. */
+    var haptics: Boolean
 }
+
+/** The feedback settings as the screens see them. */
+data class Feedback(val sound: Boolean, val haptics: Boolean)
 
 /** Which colour scheme the app uses. */
 enum class ThemeMode {
@@ -103,7 +112,9 @@ class InMemoryUserSettings(
     override var dailyGoal: Int = PracticeStreak.DEFAULT_GOAL,
     override var focusContinent: String = ALL_CONTINENTS,
     override var todayCardDismissedDay: String = "",
-    override var onboarded: Boolean = false
+    override var onboarded: Boolean = false,
+    override var soundEffects: Boolean = true,
+    override var haptics: Boolean = true
 ) : UserSettings
 
 class PrefsUserSettings(context: Context) : UserSettings {
@@ -164,6 +175,14 @@ class PrefsUserSettings(context: Context) : UserSettings {
         get() = prefs.getBoolean(KEY_ONBOARDED, false)
         set(value) = prefs.edit { putBoolean(KEY_ONBOARDED, value) }
 
+    override var soundEffects: Boolean
+        get() = prefs.getBoolean(KEY_SOUND_EFFECTS, true)
+        set(value) = prefs.edit { putBoolean(KEY_SOUND_EFFECTS, value) }
+
+    override var haptics: Boolean
+        get() = prefs.getBoolean(KEY_HAPTICS, true)
+        set(value) = prefs.edit { putBoolean(KEY_HAPTICS, value) }
+
     companion object {
         const val FILE = "settings"
         private const val KEY_DIFFICULTY = "quiz_difficulty"
@@ -179,5 +198,7 @@ class PrefsUserSettings(context: Context) : UserSettings {
         private const val KEY_FOCUS_CONTINENT = "focus_continent"
         private const val KEY_TODAY_CARD_DISMISSED_DAY = "today_card_dismissed_day"
         private const val KEY_ONBOARDED = "onboarded"
+        private const val KEY_SOUND_EFFECTS = "sound_effects"
+        private const val KEY_HAPTICS = "haptics"
     }
 }

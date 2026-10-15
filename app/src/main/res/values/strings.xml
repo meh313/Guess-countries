@@ -146,4 +146,15 @@
     <string name="speech_name">%1$s.</string>
     <string name="speech_capital_and_continent">Capital is %1$s, located in %2$s.</string>
     <string name="speech_continent">Located in %1$s.</string>
+
+    <!-- The home-screen widget. -->
+    <string name="widget_label">Today\'s reviews</string>
+    <string name="widget_description">How many reviews are due, your streak and a Practise button</string>
+    <plurals name="widget_due">
+        <item quantity="one">%1$d review due</item>
+        <item quantity="other">%1$d reviews due</item>
+    </plurals>
+    <string name="widget_nothing_due">Nothing due</string>
+    <string name="widget_streak_today">Streak %1$d · today %2$d/%3$d</string>
+    <string name="widget_practise">Practise</string>
 </resources>

@@ -27,6 +27,20 @@ class UserSettingsTest {
     }
 
     @Test
+    fun soundAndVibrationStartOn_andAreKeptForTheNextInstance() {
+        assertEquals(true, PrefsUserSettings(context).soundEffects)
+        assertEquals(true, PrefsUserSettings(context).haptics)
+        assertEquals(true, InMemoryUserSettings().soundEffects)
+        assertEquals(true, InMemoryUserSettings().haptics)
+
+        PrefsUserSettings(context).soundEffects = false
+        PrefsUserSettings(context).haptics = false
+
+        assertEquals(false, PrefsUserSettings(context).soundEffects)
+        assertEquals(false, PrefsUserSettings(context).haptics)
+    }
+
+    @Test
     fun theDifficultyIsKeptForTheNextInstance() {
         PrefsUserSettings(context).quizDifficulty = QuizDifficulty.HARD
 

@@ -7,6 +7,7 @@ import androidx.work.WorkerParameters
 import com.example.data.local.AppDatabase
 import com.example.data.settings.PrefsUserSettings
 import com.example.progress.PracticeStreak
+import com.example.widget.TodayWidget
 import java.util.TimeZone
 
 /**
@@ -38,6 +39,12 @@ class ReminderWorker(
         } finally {
             // From the later of "now" and the planned moment, so a run a second early cannot plan today's time again.
             WorkManagerReminderScheduler(applicationContext, now, zone).scheduleAfter(maxOf(at, dueAt), settings.reminderMinuteOfDay)
+        }
+        // A new day means new reviews due: the home-screen widget is redrawn once a day even when the app is not opened.
+        try {
+            TodayWidget.refresh(applicationContext)
+        } catch (e: Exception) {
+            Log.w(TAG, "The widget could not be refreshed", e)
         }
         return Result.success()
     }

@@ -32,8 +32,11 @@ has no network permission.
   capitals for the capital quiz). The score screen lists every miss with the flag you picked beside the right one,
   and offers *Retry* and *Practise mistakes*; a wrong text answer shows the two flags side by side at once. A quiz
   survives the app being killed in the background.
+- **Home-screen widget** – how many reviews are due, the streak and today's items against the goal, with a
+  *Practise* button that opens the Quiz tab; redrawn after each saved session and by the reminder's daily run.
 - **Settings and About** – theme (system, light, dark) and wallpaper colours on Android 12+, the pace of the timed
-  quizzes (normal, relaxed, no limit), *Export* and *Import* of all progress and settings as a JSON file, a reset of
+  quizzes (normal, relaxed, no limit), sound effects and vibration for quiz answers (both on until switched off),
+  *Export* and *Import* of all progress and settings as a JSON file, a reset of
   all progress, and an About page with where the facts come from, the catalog's rules, the licences and the privacy
   terms. A country's detail sheet lists the pages its facts were checked against (`Sources`), for the countries that
   went through the research pass, and a *Your progress* row per skill; every country card carries two pips (flag,
@@ -167,6 +170,8 @@ What a Play Store listing needs is in the repository:
 | `reminder/` | The daily reminder: pure schedule rules, the alarm scheduler, the receiver that turns the alarm (and a reboot or time-zone change) into a run, the worker, the notification. |
 | `data/settings/` | `UserSettings`: the preferences kept in SharedPreferences (answers difficulty, reminder, theme, timer pace, daily goal, focus continent, the day's new-item count, the first-run and Today-card state). |
 | `data/transfer/` | `ProgressTransfer`: the export file format (JSON, format 1) and its reader. |
+| `widget/` | The home-screen widget (Glance): `WidgetState` (pure numbers from the skill rows and the log) and `TodayWidget`. |
+| `ui/sound/` | The quiz's three chimes through a `SoundPool`; the files are written by `tools/gen-sounds.py`. |
 | `learn/` | The pure `LearnSession`: five never-seen flags as cards with their closest look-alike, then the quiz over them. |
 | `flashcards/` | Deck ordering for the flashcard screen and the immutable `StudySession` (queue, grades, Again re-insertion, undo). |
 | `speech/` | Text-to-speech behind a small `Speech` interface. |

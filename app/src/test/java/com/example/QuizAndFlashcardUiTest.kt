@@ -57,6 +57,8 @@ import com.example.support.awaitQuizPlan
 import com.example.support.awaitWeakSpots
 import com.example.support.boundsOf
 import com.example.support.eventually
+import com.example.ui.sound.Sound
+import com.example.ui.sound.SoundPlayer
 import com.example.ui.components.FlagAspectRatio
 import com.example.support.stateDescriptionIs
 import org.junit.Rule
@@ -951,6 +953,41 @@ class QuizAndFlashcardUiTest {
     }
 
     // --- Map → Country --------------------------------------------------------------------------------------------------
+
+    @Test
+    fun answers_chimeRightOrWrong_andTheScoreScreenChimesOnce_unlessSoundIsOff() {
+        startQuizIn(QuizMode.FLAG_NAME, "Oceania")
+        val player = SoundPlayer.latest
+        assertTrue("a player while the setting is on", player != null)
+        val q = viewModel.quizSession.value!!.current
+
+        rule.onNodeWithTag("quiz_option_${q.correctAnswerIndex}").performScrollTo().performClick()
+        rule.waitForIdle()
+        assertEquals(listOf(Sound.CORRECT), player!!.played)
+        goNext()
+        val wrong = (0..3).first { it != viewModel.quizSession.value!!.current.correctAnswerIndex }
+        rule.onNodeWithTag("quiz_option_$wrong").performScrollTo().performClick()
+        rule.waitForIdle()
+        assertEquals(listOf(Sound.CORRECT, Sound.WRONG), player.played)
+
+        playOutWithFirstOption()
+        rule.onNodeWithText("Quiz complete!").assertIsDisplayed()
+        assertEquals("one chime for the score", 1, player.played.count { it == Sound.FINISHED })
+        rotate()
+        rule.onNodeWithText("Quiz complete!").assertIsDisplayed()
+        assertEquals("not again after a rotation", 1, (SoundPlayer.latest ?: player).played.count { it == Sound.FINISHED })
+
+        // Sound off: no player at all.
+        viewModel.setSoundEffects(false)
+        rule.waitForIdle()
+        assertNull(SoundPlayer.latest)
+        viewModel.endQuiz()
+        rule.waitForIdle()
+        startQuizIn(QuizMode.FLAG_NAME, "Oceania")
+        rule.onNodeWithTag("quiz_option_0").performScrollTo().performClick()
+        rule.waitForIdle()
+        assertNull(SoundPlayer.latest)
+    }
 
     @Test
     fun typedQuiz_showsTheFlagAndAField_noOptions_andAcceptsAnAliasTypedInAnyCase() {
