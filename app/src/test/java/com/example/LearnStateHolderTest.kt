@@ -280,7 +280,7 @@ class LearnStateHolderTest {
     }
 
     @Test
-    fun startQuiz_runsATenQuestionFlagQuizOverTheFiveCodesTwiceEach_underLearn_withoutSpendingTheDailyAllowance() {
+    fun startQuiz_runsAFlagQuizOverTheFiveCodesTwiceEach_thenOneMapQuestion_underLearn_withoutSpendingTheDailyAllowance() {
         val world = World()
         val holder = world.learn()
         holder.startNow()
@@ -292,11 +292,19 @@ class LearnStateHolderTest {
         val quiz = world.quiz.session.value!!
         assertEquals(QuizMode.FLAG_NAME, quiz.mode)
         assertEquals(QuizEngine.LEARN, quiz.scope)
-        assertEquals(10, quiz.questions.size)
-        val targets = quiz.questions.map { it.targetCountry.code }
+        assertEquals(11, quiz.questions.size)
+        val flagQuestions = quiz.questions.take(10)
+        val targets = flagQuestions.map { it.targetCountry.code }
         assertEquals(firstFive.toSet(), targets.take(5).toSet())
         assertEquals(firstFive.toSet(), targets.drop(5).toSet())
         assertEquals(firstFive.associateWith { 2 }, targets.groupingBy { it }.eachCount())
+        assertTrue("the flag questions are the quiz's own kind", flagQuestions.all { it.mode == null && quiz.modeOf(it) == QuizMode.FLAG_NAME })
+        // The closing question is a map one about one of the five: the place is learnt alongside the flag.
+        val closing = quiz.questions.last()
+        assertEquals(QuizMode.LOCATE, closing.mode)
+        assertEquals(QuizMode.LOCATE, quiz.modeOf(closing))
+        assertTrue(closing.targetCountry.code in firstFive)
+        assertEquals(QuizEngine.questionText(QuizMode.LOCATE, closing.targetCountry), closing.questionText)
         assertFalse("the answers are full evidence, not light", quiz.questions.any { it.light })
         assertEquals("a hand-picked scope spends no new-item allowance", 0, world.settings.newItemsToday)
         assertTrue(quiz.questions.all { it.options.size == 4 })
@@ -324,6 +332,11 @@ class LearnStateHolderTest {
         assertEquals(listOf(QuizEngine.LEARN), logged.map { it.continentFilter })
         assertEquals(QuizMode.FLAG_NAME.name, logged.single().mode)
         assertEquals("two quiz reviews per card on top of the card itself", List(5) { 3 }, firstFive.map { reviews(it) })
+        // The closing map question was answered under the location skill, for one of the five.
+        val located = runBlocking { db.userProgressDao().getAllSkills().first() }.filter { it.skill == Skill.LOCATION.name }
+        assertEquals(1, located.size)
+        assertTrue(located.single().countryCode in firstFive)
+        assertEquals(1, located.single().reviews)
 
         world.quiz.end()
         idle()

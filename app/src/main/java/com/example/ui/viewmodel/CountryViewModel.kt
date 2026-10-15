@@ -380,6 +380,8 @@ class CountryViewModel(
 
     fun answerQuiz(index: Int) = quiz.answer(index)
 
+    fun answerQuizTyped(text: String) = quiz.answerTyped(text)
+
     fun nextQuizQuestion() = quiz.next()
 
     /** The clock of an endless quiz ran out: end it where it stands and keep the score. */

@@ -33,14 +33,24 @@ data class QuizSession(
         require(currentIndex in questions.indices) { "currentIndex $currentIndex is outside 0..${questions.lastIndex}" }
     }
 
-    /** One answered question: what was picked (null for a time-out) and how long it took. */
-    data class AnswerRecord(val question: QuizQuestion, val pickedIndex: Int?, val timeMs: Long) {
+    /**
+     * One answered question: what was picked (null for a time-out, or for a typed name that was wrong) and how long
+     * it took. A typed answer keeps its text in [typed]: the text is what the player wrote, the index is 0 (the
+     * question's one option, the right name) when it was accepted and null when it was not.
+     */
+    data class AnswerRecord(val question: QuizQuestion, val pickedIndex: Int?, val timeMs: Long, val typed: String? = null) {
         val correct: Boolean get() = pickedIndex != null && pickedIndex in question.acceptedIndices
         val pickedCode: String? get() = pickedIndex?.let { question.optionCodes.getOrNull(it) }
-        val pickedText: String? get() = pickedIndex?.let { question.options[it] }
+        val pickedText: String? get() = typed ?: pickedIndex?.let { question.options[it] }
     }
 
     val current: QuizQuestion get() = questions[currentIndex]
+
+    /** The kind of [question]: its own, where it has one, else the quiz's. */
+    fun modeOf(question: QuizQuestion): QuizMode = question.mode ?: mode
+
+    /** The kind of the current question (see [modeOf]). */
+    val currentMode: QuizMode get() = modeOf(current)
     val hasAnswered: Boolean get() = selectedAnswerIndex != null
     val timedOut: Boolean get() = selectedAnswerIndex == TIMED_OUT
     val isLastQuestion: Boolean get() = currentIndex == questions.lastIndex
@@ -62,6 +72,25 @@ data class QuizSession(
             streak = if (correct) streak + 1 else 0,
             correct = if (correct) this.correct + 1 else this.correct,
             answers = answers + AnswerRecord(current, index, (now - questionStartedAt).coerceAtLeast(0L))
+        )
+    }
+
+    /**
+     * Records a typed [text] at [now] for a question whose name is typed (see [QuizMode.isTyped]): accepted when
+     * [TypedAnswer.matches] the target, which counts as picking the one option; otherwise a wrong answer with the
+     * text kept for the score screen. Ignored once this question is answered, when the quiz is over, when the
+     * question is not a typed one, or for a blank text.
+     */
+    fun answerTyped(text: String, now: Long = questionStartedAt): QuizSession {
+        val typed = text.trim()
+        if (hasAnswered || isFinished || !currentMode.isTyped || typed.isEmpty()) return this
+        val correct = TypedAnswer.matches(typed, current.targetCountry)
+        return copy(
+            selectedAnswerIndex = if (correct) current.correctAnswerIndex else WRONG_TYPED,
+            score = if (correct) score + QuizEngine.pointsForCorrectAnswer(streak) else score,
+            streak = if (correct) streak + 1 else 0,
+            correct = if (correct) this.correct + 1 else this.correct,
+            answers = answers + AnswerRecord(current, if (correct) current.correctAnswerIndex else null, (now - questionStartedAt).coerceAtLeast(0L), typed)
         )
     }
 
@@ -117,5 +146,8 @@ data class QuizSession(
     companion object {
         /** [selectedAnswerIndex] for a question the time ran out on; no real option has this index. */
         const val TIMED_OUT = -1
+
+        /** [selectedAnswerIndex] for a typed name that was not accepted; no real option has this index. */
+        const val WRONG_TYPED = -2
     }
 }

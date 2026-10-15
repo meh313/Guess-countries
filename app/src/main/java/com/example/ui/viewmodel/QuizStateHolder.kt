@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.lifecycle.SavedStateHandle
 import com.example.data.model.Country
 import com.example.data.model.CountryRepository
+import com.example.data.model.Geo
 import com.example.data.settings.ALL_CONTINENTS
 import com.example.data.settings.UserSettings
 import com.example.progress.Evidence
@@ -188,6 +189,15 @@ class QuizStateHolder(
         record(session, correct = index in session.current.acceptedIndices)
     }
 
+    /** A typed name for the current question (see [QuizSession.answerTyped]); nothing happens for a blank text. */
+    fun answerTyped(text: String) {
+        val session = _session.value ?: return
+        val updated = session.answerTyped(text, clock())
+        if (updated === session) return
+        _session.value = updated
+        record(session, correct = updated.answers.last().correct)
+    }
+
     /**
      * Moves on. When the last question of a fixed-length quiz was just answered and something was missed, the first
      * two missed countries are asked once more at the end (light evidence, points as usual) before the quiz ends;
@@ -278,9 +288,10 @@ class QuizStateHolder(
      * its cards are read. Each pass is a shuffle of the codes, so no flag comes up twice before every other has, and
      * the same flag never opens a pass that the one before closed. The answers are full evidence (the cards were
      * only light); the scope is hand-picked, so nothing here counts against the day's allowance of new countries.
-     * Nothing happens with no known codes or no repeats.
+     * With [locateOne], one map question (see [QuizMode.LOCATE]) about one of the codes closes the quiz, after the
+     * ten: the place is learnt alongside the flag. Nothing happens with no known codes or no repeats.
      */
-    fun startOver(codes: List<String>, mode: QuizMode, repeats: Int) {
+    fun startOver(codes: List<String>, mode: QuizMode, repeats: Int, locateOne: Boolean = false) {
         val byCode = repository.allCountries.associateBy { it.code }
         val targets = codes.distinct().mapNotNull { byCode[it] }.filter { it.isSovereign }
         if (targets.isEmpty() || repeats <= 0) return
@@ -293,11 +304,16 @@ class QuizStateHolder(
             questions += QuizEngine.generate(round, mode, random, difficulty, world, order = { it })
         }
         if (questions.isEmpty()) return
+        val locate = if (!locateOne) emptyList() else {
+            val place = targets.filter { Geo.of(it.code) != null }.randomOrNull(random)
+            if (place == null) emptyList()
+            else QuizEngine.generate(listOf(place), QuizMode.LOCATE, random, difficulty, world, order = { it }).map { it.copy(mode = QuizMode.LOCATE) }
+        }
         _finishOutcome.value = null
         _session.value = QuizSession(
             mode = mode,
             scope = QuizEngine.LEARN,
-            questions = questions.take(QuizEngine.MAX_QUESTIONS),
+            questions = questions.take(QuizEngine.MAX_QUESTIONS) + locate,
             difficulty = difficulty,
             questionStartedAt = clock(),
             startedAt = clock()
@@ -307,11 +323,12 @@ class QuizStateHolder(
     /**
      * A quiz answer: the evidence the mode gives (full for a flag, a capital or a place on the map among four, timed
      * for the modes on a clock, light for a continent pick), except a question asked again, whose answer was just
-     * shown and is light. The skill is the mode's ([SkillMastery.skillOf]): a map quiz writes location rows only.
+     * shown and is light. The skill is the question's kind's ([SkillMastery.skillOf]): a map quiz writes location
+     * rows only, and so does the map question at the end of a Learn quiz.
      */
     private fun record(session: QuizSession, correct: Boolean) {
-        val mode = session.mode
         val question: QuizQuestion = session.current
+        val mode = session.modeOf(question)
         val evidence = if (question.light) Evidence.LIGHT else SkillMastery.evidenceOf(mode)
         progress.recordAnswer(question.targetCountry.code, SkillMastery.skillOf(mode), correct, evidence)
     }
@@ -357,6 +374,7 @@ internal object QuizSnapshotBundle {
         putIntArray("correctIndices", snapshot.questions.map { it.correctAnswerIndex }.toIntArray())
         putStringArrayList("accepted", ArrayList(snapshot.questions.map { q -> q.acceptedIndices.sorted().joinToString(",") }))
         putBooleanArray("light", snapshot.questions.map { it.light }.toBooleanArray())
+        putStringArrayList("modes", ArrayList(snapshot.questions.map { it.mode?.name ?: "" }))
         putInt("currentIndex", snapshot.currentIndex)
         putInt("score", snapshot.score)
         putInt("streak", snapshot.streak)
@@ -365,6 +383,7 @@ internal object QuizSnapshotBundle {
         putInt("correct", snapshot.correct)
         putIntArray("picks", snapshot.picks.map { it ?: NONE }.toIntArray())
         putLongArray("times", snapshot.times.toLongArray())
+        putStringArrayList("typed", ArrayList(snapshot.typed.map { it ?: "" }))
         putLong("questionElapsed", snapshot.questionElapsedMs)
         putLong("totalElapsed", snapshot.totalElapsedMs)
         putBoolean("reasked", snapshot.reasked)
@@ -372,7 +391,8 @@ internal object QuizSnapshotBundle {
 
     /**
      * The snapshot in [bundle], or null when it holds none or is not one this version wrote. A bundle from before
-     * the accepted alternatives, the light marks and the re-ask reads as having none of them.
+     * the accepted alternatives, the light marks, the re-ask, the per-question kinds and the typed answers reads as
+     * having none of them.
      */
     fun read(bundle: Bundle): QuizSnapshot? {
         val mode = bundle.getString("mode")?.let { name -> QuizMode.entries.firstOrNull { it.name == name } } ?: return null
@@ -384,6 +404,7 @@ internal object QuizSnapshotBundle {
         if (listOf(options.size, optionCodes.size, correctIndices.size).any { it != targets.size }) return null
         val accepted = bundle.getStringArrayList("accepted")?.takeIf { it.size == targets.size }
         val light = bundle.getBooleanArray("light")?.takeIf { it.size == targets.size }
+        val modes = bundle.getStringArrayList("modes")?.takeIf { it.size == targets.size }
         val questions = targets.indices.map { i ->
             QuizSnapshot.Question(
                 targetCode = targets[i],
@@ -392,9 +413,12 @@ internal object QuizSnapshotBundle {
                 correctAnswerIndex = correctIndices[i],
                 acceptedIndices = accepted?.get(i)?.split(",")?.mapNotNull { it.toIntOrNull() }?.toSet()?.plus(correctIndices[i])
                     ?: setOf(correctIndices[i]),
-                light = light?.get(i) ?: false
+                light = light?.get(i) ?: false,
+                mode = modes?.get(i)?.let { name -> QuizMode.entries.firstOrNull { it.name == name } }
             )
         }
+        val picks = (bundle.getIntArray("picks") ?: return null).map { it.takeIf { it != NONE } }
+        val typed = bundle.getStringArrayList("typed")?.takeIf { it.size == picks.size }?.map { it.ifEmpty { null } } ?: List(picks.size) { null }
         return QuizSnapshot(
             mode = mode,
             scope = bundle.getString("scope") ?: return null,
@@ -406,8 +430,9 @@ internal object QuizSnapshotBundle {
             selectedAnswerIndex = bundle.getInt("selected", NONE).takeIf { it != NONE },
             isFinished = bundle.getBoolean("finished"),
             correct = bundle.getInt("correct"),
-            picks = (bundle.getIntArray("picks") ?: return null).map { it.takeIf { it != NONE } },
+            picks = picks,
             times = (bundle.getLongArray("times") ?: return null).toList(),
+            typed = typed,
             questionElapsedMs = bundle.getLong("questionElapsed"),
             totalElapsedMs = bundle.getLong("totalElapsed"),
             reasked = bundle.getBoolean("reasked", false)

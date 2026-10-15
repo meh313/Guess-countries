@@ -47,6 +47,8 @@
     <string name="mode_continent_hint">Covers the whole world</string>
     <string name="mode_locate">Map → Country</string>
     <string name="mode_locate_hint">Where in the world is it?</string>
+    <string name="mode_type_name">Flag → Typed name</string>
+    <string name="mode_type_name_hint">No options: type the country\'s name</string>
     <string name="mode_speed_round">Speed round</string>
     <string name="mode_speed_round_hint">10 seconds per question</string>
     <string name="mode_blitz">60-second blitz</string>
@@ -59,6 +61,7 @@
     <string name="question_capital">What is the capital city of %1$s?</string>
     <string name="question_continent">Which continent does this flag belong to?</string>
     <string name="question_locate">Which country is highlighted on the map?</string>
+    <string name="question_type_name">Type the name of this country</string>
     <string name="question_blitz">Which country is this?</string>
     <string name="question_speed_round">Identify the country for this flag:</string>
 

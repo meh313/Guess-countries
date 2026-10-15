@@ -953,6 +953,57 @@ class QuizAndFlashcardUiTest {
     // --- Map → Country --------------------------------------------------------------------------------------------------
 
     @Test
+    fun typedQuiz_showsTheFlagAndAField_noOptions_andAcceptsAnAliasTypedInAnyCase() {
+        startQuizIn(QuizMode.TYPE_NAME)
+        val q = viewModel.quizSession.value!!.current
+
+        rule.onNodeWithText("Type the name of this country").assertIsDisplayed()
+        rule.onNodeWithTag("quiz_flag").assertIsDisplayed()
+        rule.onAllNodesWithTag("quiz_option_0").assertCountEquals(0)
+        rule.onNodeWithTag("quiz_typed_field").performScrollTo().assertIsDisplayed()
+        rule.onNodeWithText("Short forms count: UK, USA, DRC. One typo is forgiven.").assertIsDisplayed()
+        rule.onNodeWithTag("quiz_typed_submit").assertIsNotEnabled()
+        // Nothing on screen names the answer before it is typed.
+        rule.onAllNodesWithText(q.targetCountry.name).assertCountEquals(0)
+
+        val alias = com.example.data.model.CountryAliases.of(q.targetCountry.code).firstOrNull() ?: q.targetCountry.name
+        rule.onNodeWithTag("quiz_typed_field").performTextInput(alias.lowercase())
+        rule.onNodeWithTag("quiz_typed_submit").assertIsEnabled().performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithTag("quiz_result").assert(hasText("Correct! +10 points"))
+        rule.onNodeWithTag("quiz_typed_field").assert(stateDescriptionIs("Correct answer"))
+        rule.onAllNodesWithTag("quiz_typed_submit").assertCountEquals(0)
+        rule.onNodeWithTag("next_question_btn").performScrollTo().assertIsDisplayed()
+        assertEquals(1, viewModel.quizSession.value!!.correct)
+    }
+
+    @Test
+    fun typedQuiz_aWrongNameNamesTheAnswer_keepsWhatWasTyped_andSurvivesRotation() {
+        startQuizIn(QuizMode.TYPE_NAME)
+        val q = viewModel.quizSession.value!!.current
+
+        rule.onNodeWithTag("quiz_typed_field").performScrollTo().performTextInput("Narnia")
+        rule.onNodeWithTag("quiz_typed_submit").performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithTag("quiz_result").assert(hasText("Not quite. The answer is ${q.targetCountry.name}"))
+        rule.onNodeWithTag("quiz_typed_field").assert(stateDescriptionIs("Your answer, incorrect"))
+        rule.onNodeWithTag("quiz_typed_field").assert(hasText("Narnia"))
+        // A typed miss has no flag to compare: no picked country.
+        rule.onAllNodesWithTag("quiz_miss_comparison").assertCountEquals(0)
+
+        rotate()
+
+        rule.onNodeWithTag("quiz_typed_field").assert(hasText("Narnia"))
+        rule.onNodeWithTag("quiz_result").assert(hasText("Not quite. The answer is ${q.targetCountry.name}"))
+        goNext()
+        // The next question starts with an empty field.
+        rule.onNodeWithTag("quiz_typed_field").performScrollTo().assert(hasText(""))
+        rule.onNodeWithTag("quiz_typed_submit").assertIsNotEnabled()
+    }
+
+    @Test
     fun locateQuiz_showsTheMapInsteadOfTheFlag_andFourCountryNames() {
         startQuizIn(QuizMode.LOCATE)
         val q = viewModel.quizSession.value!!.current
@@ -1465,12 +1516,15 @@ class QuizAndFlashcardUiTest {
         rule.onNodeWithTag("learn_next_btn").assert(hasText("Quiz me")).performClick()
         rule.waitForIdle()
 
-        rule.onNodeWithText("Question 1 of 10").assertIsDisplayed()
+        rule.onNodeWithText("Question 1 of 11").assertIsDisplayed()
         rule.onNodeWithTag("nav_tab_quiz").assertIsSelected()
         val quiz = viewModel.quizSession.value!!
         assertEquals(QuizMode.FLAG_NAME, quiz.mode)
         assertEquals(QuizEngine.LEARN, quiz.scope)
-        assertEquals(codes.associateWith { 2 }, quiz.questions.groupingBy { it.targetCountry.code }.eachCount())
+        assertEquals(codes.associateWith { 2 }, quiz.questions.take(10).groupingBy { it.targetCountry.code }.eachCount())
+        // The eleventh question is a map one about one of the five.
+        assertEquals(QuizMode.LOCATE, quiz.questions.last().mode)
+        assertTrue(quiz.questions.last().targetCountry.code in codes)
         // Each card was light evidence once; the quiz has not been answered yet.
         rule.eventually("the five cards seen once") {
             val flags = viewModel.skills.value[Skill.FLAG].orEmpty()

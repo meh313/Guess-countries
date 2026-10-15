@@ -144,12 +144,13 @@ class LearnStateHolder(
     }
 
     /**
-     * The cards are read: a flag quiz over the five, each asked [QUIZ_REPEATS] times, through the quiz holder (see
-     * [QuizStateHolder.startOver]); the session moves to its quiz stage and ends when the quiz does.
+     * The cards are read: a flag quiz over the five, each asked [QUIZ_REPEATS] times, plus one map question about
+     * one of them at the end, through the quiz holder (see [QuizStateHolder.startOver]); the session moves to its
+     * quiz stage and ends when the quiz does.
      */
     fun startQuiz() {
         val session = _session.value?.takeIf { it.stage == LearnSession.Stage.CARDS } ?: return
-        quiz.startOver(session.codes, QuizMode.FLAG_NAME, QUIZ_REPEATS)
+        quiz.startOver(session.codes, QuizMode.FLAG_NAME, QUIZ_REPEATS, locateOne = true)
         val started = quiz.session.value ?: return
         if (started.scope != QuizEngine.LEARN) return
         _session.value = session.toQuiz()

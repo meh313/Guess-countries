@@ -21,6 +21,8 @@ enum class QuizMode(
     CAPITAL,
     CONTINENT,
     LOCATE,
+    /** The flag is shown and the name is typed, not picked: no options, so no guessing among four. */
+    TYPE_NAME,
     SPEED_MATCH(timeLimitSeconds = 10),
     BLITZ(totalTimeSeconds = 60);
 
@@ -36,8 +38,11 @@ enum class QuizMode(
     /** The four options are flags (their text is the country code) instead of words. */
     val answersAreFlags: Boolean get() = this == PICK_FLAG
 
-    /** Wrong answers can be flags that look like the right one; capitals, continents and places on the map have no such thing. */
-    val usesLookAlikes: Boolean get() = this != CAPITAL && this != CONTINENT && this != LOCATE
+    /** The answer is typed into a field; the question's one "option" is the name it is checked against (see [TypedAnswer]). */
+    val isTyped: Boolean get() = this == TYPE_NAME
+
+    /** Wrong answers can be flags that look like the right one; capitals, continents, places on the map and typed names have no such thing. */
+    val usesLookAlikes: Boolean get() = this != CAPITAL && this != CONTINENT && this != LOCATE && this != TYPE_NAME
 
     /**
      * Continent questions always draw from every country. Under a single-continent scope every answer
@@ -65,7 +70,12 @@ data class QuizQuestion(
      */
     val acceptedIndices: Set<Int> = setOf(correctAnswerIndex),
     /** A question asked again (a miss re-asked at the end, a retried quiz): its answer is light evidence only. */
-    val light: Boolean = false
+    val light: Boolean = false,
+    /**
+     * The kind of question, where it differs from the quiz's mode (a Learn quiz ends with one map question among
+     * its flag questions); null means the quiz's mode. Read it through [QuizSession.modeOf].
+     */
+    val mode: QuizMode? = null
 )
 
 /** Pure quiz rules: which countries are eligible, how questions are built and how answers score. */
@@ -211,6 +221,7 @@ object QuizEngine {
         QuizMode.CAPITAL -> "What is the capital city of ${target.name}?"
         QuizMode.CONTINENT -> "Which continent does this flag belong to?"
         QuizMode.LOCATE -> "Which country is highlighted on the map?"
+        QuizMode.TYPE_NAME -> "Type the name of this country"
         QuizMode.BLITZ -> "Which country is this?"
         QuizMode.SPEED_MATCH -> "Identify the country for this flag:"
     }
@@ -225,6 +236,9 @@ object QuizEngine {
             QuizMode.LOCATE ->
                 // The names of the target's neighbours: the rest of its subregion, then the nearest on the map.
                 countryChoice(target, text, nearestWrongCountries(pool, target, random, DISTRACTORS), random) { it.name }
+            QuizMode.TYPE_NAME ->
+                // Nothing to pick: the one option is the name the typed answer is checked against.
+                QuizQuestion(target, text, listOf(target.name), 0, listOf(target.code))
             QuizMode.CAPITAL -> {
                 // One famous non-capital of the target first, where it has one; the other wrong answers are the
                 // capitals of its neighbours (same subregion, then continent, then the world), never look-alikes.

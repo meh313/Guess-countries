@@ -148,6 +148,23 @@ class QuizSetupScreenTest {
     }
 
     @Test
+    fun theTypedMode_isOfferedWithItsTitleAndHint_withoutTheAnswersRow() {
+        val vm = newViewModel(countries = CountryCatalog.all)
+        rule.setContent { WorldFlagsTheme { QuizScreen(vm) } }
+        rule.waitForIdle()
+
+        clickSetup("quiz_mode_type_name")
+
+        rule.onNodeWithTag("quiz_mode_type_name").assertIsSelected()
+        rule.onNodeWithText("Flag → Typed name").assertIsDisplayed()
+        rule.onNodeWithText("No options: type the country's name").assertIsDisplayed()
+        // No wrong answers to make harder.
+        rule.setupNode("quiz_difficulty_hard").assertIsNotEnabled()
+        rule.onNodeWithTag("start_quiz_btn").assertIsEnabled()
+        rule.onNodeWithText("Start 10-question quiz").assertIsDisplayed()
+    }
+
+    @Test
     fun theMapMode_isOfferedWithItsTitleAndHint_andStartsATenQuestionQuizOverTheWorld() {
         val vm = newViewModel(countries = CountryCatalog.all)
         rule.setContent { WorldFlagsTheme { QuizScreen(vm) } }

@@ -276,6 +276,16 @@ class ScreenshotsTest {
         viewModel.endQuiz()
         rule.waitForIdle()
 
+        // Flag → Typed name: a field under the flag, then a wrong name typed, the answer named.
+        viewModel.startQuiz(QuizMode.TYPE_NAME, "Europe")
+        rule.waitForIdle()
+        save("quiz_typed")
+        viewModel.answerQuizTyped("Narnia")
+        rule.waitForIdle()
+        save("quiz_typed_answered")
+        viewModel.endQuiz()
+        rule.waitForIdle()
+
         // Map → Country: a highlighted country to name, then the same question answered, the flag beside the outcome.
         viewModel.startQuiz(QuizMode.LOCATE, "Europe")
         rule.waitForIdle()
