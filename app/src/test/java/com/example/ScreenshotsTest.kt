@@ -505,6 +505,34 @@ class ScreenshotsTest {
         rule.waitForIdle()
     }
 
+    /** The screens in French: Explore and the quiz setup. */
+    @Test
+    @Config(qualifiers = "fr-rFR-w360dp-h800dp-xxhdpi")
+    fun french() {
+        rule.waitForIdle()
+        save("explore_fr")
+        rule.openTab("quiz")
+        rule.waitForIdle()
+        save("quiz_setup_fr")
+    }
+
+    /** The screens in Arabic, mirrored: Explore, the quiz setup and a question. */
+    @Test
+    @Config(qualifiers = "ar-rEG-w360dp-h800dp-xxhdpi")
+    fun arabic() {
+        rule.waitForIdle()
+        save("explore_ar")
+        rule.openTab("quiz")
+        rule.waitForIdle()
+        save("quiz_setup_ar")
+        val viewModel = ViewModelProvider(rule.activity)[CountryViewModel::class.java]
+        viewModel.startQuiz(QuizMode.FLAG_NAME, "Europe")
+        rule.waitForIdle()
+        save("quiz_ar")
+        viewModel.endQuiz()
+        rule.waitForIdle()
+    }
+
     /** The Today card: the first-run choice of a continent, then the normal card with a due review to do. */
     @Test
     @Config(qualifiers = "w360dp-h800dp-xxhdpi")

@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Settings screen and the About screen it leads to. The theme and timer labels are shared enum labels in strings.xml. -->
+<resources>
+    <!-- Settings: header and Appearance -->
+    <string name="settings_title">Ajustes</string>
+    <string name="settings_section_appearance">Apariencia</string>
+    <string name="settings_language_label">Idioma</string>
+    <string name="settings_language_system">Sistema</string>
+    <string name="settings_language_detail">Para las pantallas; los nombres de países, capitales y datos siguen en inglés</string>
+    <string name="settings_theme_label">Tema</string>
+    <string name="settings_dynamic_color_title">Colores del fondo de pantalla</string>
+    <string name="settings_dynamic_color_detail">Colores tomados del fondo de pantalla en lugar del azul de la app</string>
+
+    <!-- Settings: Quiz -->
+    <string name="settings_section_quiz">Quiz</string>
+    <string name="settings_timer_label">Temporizador</string>
+    <string name="settings_timer_hint_normal">Ronda rápida: 10 segundos por pregunta. Blitz: una bandera nueva justo después de cada respuesta.</string>
+    <string name="settings_timer_hint_relaxed">Ronda rápida: 20 segundos por pregunta. Blitz: una bandera nueva justo después de cada respuesta.</string>
+    <string name="settings_timer_hint_off">Ronda rápida: sin límite de tiempo. Blitz: el minuto sigue corriendo, pero la siguiente bandera espera a Siguiente.</string>
+    <!-- The daily goal: "Daily goal: 5 · 10 · 20 items" as a label and a segmented row -->
+    <string name="settings_goal_label">Meta diaria</string>
+    <plurals name="settings_goal_option">
+        <item quantity="one">%d elemento</item>
+        <item quantity="other">%d elementos</item>
+        <item quantity="many">%d elementos</item>
+    </plurals>
+    <string name="settings_goal_hint">Cuentan los repasos pendientes y los países nuevos; un día con la meta cumplida mantiene tu racha</string>
+    <string name="settings_focus_label">Continente prioritario</string>
+    <string name="settings_focus_hint">Los quizzes presentan primero las banderas sin ver de este continente</string>
+
+    <!-- Settings: Read aloud (the speech engine's state; the detail sheet's speaker reuses the install action) -->
+    <string name="settings_section_feedback">Respuesta</string>
+    <string name="settings_sound_title">Efectos de sonido</string>
+    <string name="settings_sound_detail">Un tono breve al acertar o fallar y al final de un quiz</string>
+    <string name="settings_haptics_title">Vibración</string>
+    <string name="settings_haptics_detail">Una vibración breve al acertar o fallar</string>
+    <string name="settings_section_speech">Leer en voz alta</string>
+    <string name="settings_speech_loading">Iniciando el motor de voz…</string>
+    <string name="settings_speech_ready">Listo. El altavoz en la ficha de un país y en las tarjetas lee el país en voz alta.</string>
+    <string name="settings_speech_missing_data">El motor de voz no tiene datos de voz en inglés, así que aún no se puede leer nada en voz alta.</string>
+    <string name="settings_speech_unavailable">Este dispositivo no tiene motor de voz, así que no se puede leer nada en voz alta.</string>
+    <string name="settings_speech_install">Instalar datos de voz</string>
+    <string name="settings_speech_no_installer">Este dispositivo no tiene instalador de datos de voz.</string>
+
+    <!-- Settings: Data (export, import, reset) -->
+    <string name="settings_section_data">Datos</string>
+    <string name="settings_data_local">Todo se queda en este dispositivo: no hay cuenta y la app no tiene acceso a la red. El progreso se incluye en la copia de seguridad de Android de la app.</string>
+    <string name="settings_export">Exportar</string>
+    <string name="settings_import">Importar</string>
+    <string name="settings_transfer_hint">Exportar escribe un archivo con tu progreso y ajustes; Importar reemplaza todo con un archivo así.</string>
+    <string name="settings_export_done">Exportado a %1$s.</string>
+    <string name="settings_export_fallback_name">el archivo elegido</string>
+    <string name="settings_export_write_error">No se pudo abrir el archivo para escribir.</string>
+    <string name="settings_export_failed">Error al exportar: %1$s</string>
+    <string name="settings_import_read_error">No se pudo abrir el archivo.</string>
+    <string name="settings_import_failed">Error al importar: %1$s</string>
+    <string name="settings_import_not_ours">Este archivo no es una exportación de World Flags.</string>
+    <string name="settings_import_newer">Este archivo se creó con una versión más nueva de World Flags (formato %1$d). Actualiza la app e inténtalo de nuevo.</string>
+    <string name="settings_import_damaged">Este archivo no es una exportación completa de World Flags (%1$s).</string>
+    <string name="settings_import_too_large">Este archivo es demasiado grande para ser una exportación de World Flags.</string>
+    <string name="settings_import_write_failed">No se pudo guardar el archivo. No se cambió nada.</string>
+    <string name="settings_reset_done">Progreso restablecido.</string>
+    <string name="settings_import_done">Importados %1$s, %2$s y %3$s.</string>
+    <plurals name="settings_import_quizzes">
+        <item quantity="one">%d quiz</item>
+        <item quantity="other">%d quizzes</item>
+        <item quantity="many">%d quizzes</item>
+    </plurals>
+    <plurals name="settings_import_skills">
+        <item quantity="one">%d registro de habilidad</item>
+        <item quantity="other">%d registros de habilidad</item>
+        <item quantity="many">%d registros de habilidad</item>
+    </plurals>
+    <plurals name="settings_import_countries">
+        <item quantity="one">%d país</item>
+        <item quantity="other">%d países</item>
+        <item quantity="many">%d países</item>
+    </plurals>
+    <string name="settings_reset">Restablecer el progreso</string>
+
+    <!-- Settings: About row -->
+    <string name="settings_section_about">Acerca de</string>
+    <string name="settings_about_title">Acerca de World Flags</string>
+    <string name="settings_about_detail">Versión %1$s · de dónde salen los datos, licencias, privacidad</string>
+
+    <!-- Settings: the import dialog -->
+    <string name="settings_import_dialog_title">¿Importar este archivo?</string>
+    <string name="settings_import_dialog_text">El archivo contiene %1$s, %2$s y %3$s. Todo lo de aquí se reemplaza con él: marcadores, el estado de cada país, el registro de quizzes y los ajustes. Esto no se puede deshacer.</string>
+    <string name="settings_import_dialog_empty">El archivo no contiene ningún progreso. Importarlo vacía todo lo de aquí: marcadores, el estado de cada país y el registro de quizzes. Esto no se puede deshacer.</string>
+    <string name="settings_import_confirm">Reemplazar</string>
+    <string name="settings_import_cancel">Conservar lo mío</string>
+
+    <!-- Settings: the reset dialog -->
+    <string name="settings_reset_dialog_title">¿Restablecer todo el progreso?</string>
+    <string name="settings_reset_dialog_text">Se borran los marcadores, el estado de cada país, el registro de quizzes y la racha. Los ajustes se conservan. Esto no se puede deshacer.</string>
+    <string name="settings_reset_confirm">Restablecer</string>
+    <string name="settings_reset_cancel">Conservar</string>
+
+    <!-- About: header and tagline -->
+    <string name="about_title">Acerca de</string>
+    <string name="about_version">World Flags, versión %1$s</string>
+    <string name="about_tagline">Una app sin conexión para aprender las banderas, capitales y datos de los 196 países del mundo, y la Antártida.</string>
+
+    <!-- About: where the facts come from -->
+    <string name="about_sources_title">De dónde salen los datos</string>
+    <string name="about_sources_text">Cada entrada de país se investigó en fuentes públicas, sobre todo Wikipedia, constituciones nacionales y sitios oficiales, y luego la comprobaron por segunda vez dos revisores independientes que solo podían cambiar un dato si ambos lo podían documentar. Las cifras de población son las estimaciones de World Population Prospects 2024 de las Naciones Unidas, redondeadas a tres cifras significativas; los demás datos se comprobaron en 2026. Las notas de investigación, la auditoría y las decisiones del responsable están en el repositorio, y la ficha de cada país lista las páginas con las que se comprobaron sus datos.</string>
+    <string name="about_open_repository">Abrir el repositorio</string>
+
+    <!-- About: what is in the catalogue -->
+    <string name="about_catalog_title">Qué contiene el catálogo</string>
+    <string name="about_catalog_text">Los 196 estados soberanos de reconocimiento amplio, más la Antártida para explorar. Las banderas se dibujan con las proporciones propias de cada país. Cuando el significado de una bandera es discutido o legendario, el texto lo dice en lugar de tomar partido; un dato que no se pudo confirmar se omitió en vez de adivinarlo.</string>
+
+    <!-- About: privacy -->
+    <string name="about_translations_title">Traducciones</string>
+    <string name="about_translations_text">El francés, el español, el alemán y el árabe se tradujeron con ayuda automática y se revisaron por coherencia, no por hablantes nativos. Las correcciones son bienvenidas en GitHub.</string>
+    <string name="about_privacy_title">Privacidad</string>
+    <string name="about_privacy_text">La app no tiene permiso de red: nada de lo que haces sale del dispositivo y no hay cuenta. Tu progreso se guarda en la base de datos de la app y se incluye en la copia de seguridad de Android de la app, así que pasa contigo a un teléfono nuevo cuando la copia está activada. Ajustes &gt; Restablecer el progreso lo borra todo.</string>
+    <!-- A link row under the text: opens PRIVACY.md in the repository in the browser -->
+    <string name="about_privacy_link">Declaración de privacidad completa</string>
+
+    <!-- About: licences -->
+    <string name="about_licences_title">Licencias</string>
+    <string name="about_licences_text">Las banderas se generan a partir del proyecto flag-icons (licencia MIT). La app está hecha con bibliotecas de Android Jetpack y Kotlin bajo la Apache License 2.0. Los avisos completos:</string>
+    <string name="about_notices_loading">Cargando…</string>
+</resources>

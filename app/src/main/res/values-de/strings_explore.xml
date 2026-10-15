@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The Explore tab: the banner, the search and filter controls, the empty state, the country cards, the country
+  detail sheet, and the two quiz components that live next to the cards (the flag answer grid and the miss
+  comparison). The continent chips, the standing chips, the sort menu and the skill labels use the shared enum
+  labels in strings.xml.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Numbers on cards and in the sheet. The number after the figure is the year of the estimate, not a count. -->
+    <string name="population_estimate" tools:ignore="PluralsCandidate">%1$s (Schätzung %2$d)</string>
+    <string name="population_winter">%1$s überwintern auf den Stationen</string>
+    <string name="card_no_capital">Keine Hauptstadt</string>
+
+    <!-- Explore: the banner -->
+    <string name="explore_title">Weltentdecker</string>
+    <string name="explore_subtitle">Entdecke Länder, Flaggen &amp; Kontinente rund um den Globus</string>
+
+    <!-- The Today card (also at the top of Progress): today's items against the daily goal and the one next thing to do -->
+    <string name="today_title">Heute</string>
+    <string name="today_goal_met">Ziel erreicht</string>
+    <!-- "3 / 10": items done today of the daily goal -->
+    <string name="today_progress">%1$d / %2$d</string>
+    <!-- "2 due · 4 new today · goal 10" -->
+    <string name="today_line">%1$s · %2$s · %3$s</string>
+    <plurals name="today_due">
+        <item quantity="one">%d fällig</item>
+        <item quantity="other">%d fällig</item>
+    </plurals>
+    <plurals name="today_new">
+        <item quantity="one">%d neu heute</item>
+        <item quantity="other">%d neu heute</item>
+    </plurals>
+    <string name="today_goal">Ziel %1$d</string>
+    <!-- The card as one sentence for a screen reader: "Today: 3 of 10 items done, 2 due, 4 new today." -->
+    <!-- "items" and "due" are not nouns the number inflects here: "1 of 10 items done", "Review 1 due". -->
+    <string name="today_description" tools:ignore="PluralsCandidate">Heute: %1$d von %2$d Aufgaben erledigt, %3$s, %4$s.</string>
+    <string name="today_review_due" tools:ignore="PluralsCandidate">%1$d zur Wiederholung fällig</string>
+    <string name="today_learn_new">5 neue lernen</string>
+    <string name="today_learn_more">5 weitere lernen</string>
+    <string name="today_dismiss">Für heute ausblenden</string>
+    <!-- The first run: the card asks for a focus continent before anything else -->
+    <string name="today_start_title">Hier starten</string>
+    <string name="today_start_text">Wähle einen Kontinent zum Anfangen; die Quizze zeigen zuerst seine Flaggen.</string>
+
+    <!-- Explore: search, the Saved chip and the sort button -->
+    <string name="explore_search_hint">Land, Hauptstadt oder amtlichen Namen suchen…</string>
+    <string name="explore_clear_search">Suche löschen</string>
+    <string name="explore_saved_chip">Gemerkt</string>
+    <string name="explore_sort_options">Sortieroptionen</string>
+
+    <!-- Explore: the empty state -->
+    <string name="explore_empty_saved_title">Noch keine gemerkten Länder</string>
+    <string name="explore_empty_saved_hint">Tippe auf das Lesezeichen eines Landes, um es hier zu merken</string>
+    <string name="explore_empty_title">Keine Länder gefunden</string>
+    <string name="explore_empty_hint">Passe deine Suche oder den Kontinentfilter an</string>
+    <!-- With filters on, the hint names them: "No countries still to learn in Europe. Clear the filters?" -->
+    <string name="explore_empty_hint_filtered">Keine Länder %1$s. Filter löschen?</string>
+    <string name="explore_empty_scope_continent">auf dem Kontinent %1$s</string>
+    <string name="explore_empty_scope_search">passend zu \"%1$s\"</string>
+    <string name="explore_empty_scope_saved">unter deinen gemerkten Ländern</string>
+
+    <!-- Explore: the legend under the chips for the two pips on each card -->
+
+    <!-- Detail sheet: the facts grid -->
+    <string name="sheet_facts_title">Länderfakten</string>
+    <string name="sheet_fact_capital">Hauptstadt</string>
+    <string name="sheet_fact_population">Einwohner</string>
+    <string name="sheet_fact_area">Gesamtfläche</string>
+    <string name="sheet_fact_currency">Währung</string>
+    <string name="sheet_fact_languages">Sprachen</string>
+    <string name="sheet_fact_driving_side">Fahrseite</string>
+    <string name="sheet_drive_side">%1$s</string>
+    <string name="sheet_no_public_roads">Keine öffentlichen Straßen</string>
+
+    <!-- Detail sheet: the progress card ("Flag: Mastered · step 4 of 5 · next review in 12 days · last answer right") -->
+    <string name="sheet_progress_title">Dein Fortschritt</string>
+    <string name="sheet_skill_standing">%1$s: %2$s</string>
+    <string name="sheet_standing_not_reviewed">Noch nicht wiederholt</string>
+    <string name="sheet_standing_line">%1$s · %2$s · %3$s · %4$s</string>
+    <string name="sheet_standing_step">Stufe %1$d von %2$d</string>
+    <string name="sheet_due_now">jetzt fällig</string>
+    <string name="sheet_next_review_tomorrow">nächste Wiederholung morgen</string>
+    <plurals name="sheet_next_review_days">
+        <item quantity="one">nächste Wiederholung in %1$d Tag</item>
+        <item quantity="other">nächste Wiederholung in %1$d Tagen</item>
+    </plurals>
+    <string name="sheet_last_answer_right">letzte Antwort richtig</string>
+    <string name="sheet_last_answer_wrong">letzte Antwort falsch</string>
+
+    <!-- Detail sheet: the flag, the landmarks and the fun fact -->
+    <string name="sheet_flag_title">Flaggensymbolik &amp; Geschichte</string>
+    <!-- The map card, and what TalkBack hears for any map: "Map: France, in Europe · Western Europe" -->
+    <string name="sheet_where_title">Wo es liegt</string>
+    <string name="sheet_borders_title">Grenzen</string>
+    <string name="sheet_no_borders">Keine Landgrenzen</string>
+    <string name="sheet_open_country">%1$s öffnen</string>
+    <string name="map_description">Karte: %1$s, in %2$s</string>
+    <!-- The Map → Country question's map: the country's name is the answer, so TalkBack hears this instead -->
+    <string name="map_to_identify">Karte mit einem markierten Land</string>
+    <string name="sheet_landmarks_title">Bekannte Sehenswürdigkeiten</string>
+    <string name="sheet_landmark">📍 %1$s</string>
+    <string name="sheet_fun_fact_title">Schon gewusst?</string>
+
+    <!-- Detail sheet: the sources -->
+    <string name="sheet_sources">Quellen (%1$d)</string>
+    <string name="sheet_show_sources">Quellen anzeigen</string>
+    <string name="sheet_hide_sources">Quellen ausblenden</string>
+    <string name="sheet_sources_note">Die Seiten, gegen die die Fakten oben beim Erstellen des Katalogs geprüft wurden.</string>
+    <string name="sheet_open_in_browser">Im Browser öffnen</string>
+
+    <!-- The flag answer grid of a "pick the flag" question -->
+    <string name="option_correct_answer">Richtige Antwort</string>
+    <string name="option_your_answer_incorrect">Deine Antwort, falsch</string>
+    <string name="option_of">Option %1$d von %2$d</string>
+    <string name="option_flag_of">Option %1$d, die Flagge von %2$s</string>
+
+    <!-- The miss comparison after a wrong answer -->
+    <string name="miss_description">Du hast %1$s gewählt, die Antwort ist %2$s</string>
+    <string name="miss_you_picked">Deine Wahl</string>
+    <string name="miss_correct">Richtig</string>
+    <string name="miss_description_with_cue">%1$s. %2$s</string>
+
+    <!-- How to recognise a flag, and how to tell two look-alikes apart -->
+    <string name="spot_it_label">So erkennst du sie</string>
+    <string name="spot_it_line">%1$s: %2$s</string>
+    <string name="drive_side_left">Linksverkehr</string>
+    <string name="drive_side_right">Rechtsverkehr</string>
+</resources>

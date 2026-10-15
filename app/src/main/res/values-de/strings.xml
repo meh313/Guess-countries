@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Words shared by more than one screen, and the labels of the enums (quiz modes, scopes, sort orders, standings…),
+  which `ui/Labels.kt` maps to. Each screen keeps its own words in `strings_<screen>.xml`. Stored values (quiz mode
+  names, scope keys, continent names, study sources) are never these strings: they stay the English keys and are
+  translated on display only.
+-->
+<resources>
+    <string name="app_name">World Flags</string>
+    <plurals name="countries_count">
+        <item quantity="one">%d Land</item>
+        <item quantity="other">%d Länder</item>
+    </plurals>
+
+    <!-- Tabs -->
+    <string name="nav_explore">Entdecken</string>
+    <string name="nav_flashcards">Lernkarten</string>
+    <string name="nav_quiz">Quiz</string>
+    <string name="nav_progress">Fortschritt</string>
+
+    <!-- Shared actions and lines -->
+    <string name="action_done">Fertig</string>
+    <string name="action_back">Zurück</string>
+    <string name="action_cancel">Abbrechen</string>
+    <string name="action_close">Schließen</string>
+    <string name="action_clear_filters">Filter löschen</string>
+    <string name="action_read_aloud">Länderinfo vorlesen</string>
+    <string name="read_aloud_unavailable">Vorlesen ist auf diesem Gerät nicht verfügbar</string>
+    <string name="read_aloud_loading">Vorlesen wird vorbereitet</string>
+    <string name="flag_to_identify">Zu erkennende Flagge</string>
+    <string name="flag_of">Flagge von %1$s</string>
+    <string name="bookmark_country">%1$s merken</string>
+    <string name="streak_started">Serie gestartet: Tag 1</string>
+    <!-- The finished session was too small for the daily goal (see Settings); the day counts once the goal is met. -->
+    <string name="streak_goal_short">Reicht noch nicht für das heutige Ziel</string>
+    <plurals name="streak_kept">
+        <item quantity="one">Serie gehalten: %d Tag</item>
+        <item quantity="other">Serie gehalten: %d Tage</item>
+    </plurals>
+
+    <!-- Quiz modes (display titles; the stored value is the enum name) -->
+    <string name="mode_flag_name">Flagge → Land</string>
+    <string name="mode_pick_flag">Land → Flagge</string>
+    <string name="mode_pick_flag_hint">Wähle die richtige Flagge aus vier</string>
+    <string name="mode_capital">Land → Hauptstadt</string>
+    <string name="mode_continent">Flagge → Kontinent</string>
+    <string name="mode_continent_hint">Umfasst die ganze Welt</string>
+    <string name="mode_locate">Karte → Land</string>
+    <string name="mode_locate_hint">Wo auf der Welt liegt es?</string>
+    <string name="mode_type_name">Flagge → Name eintippen</string>
+    <string name="mode_type_name_hint">Keine Auswahl: tippe den Ländernamen ein</string>
+    <string name="mode_speed_round">Schnellrunde</string>
+    <string name="mode_speed_round_hint">10 Sekunden pro Frage</string>
+    <string name="mode_blitz">60-Sekunden-Blitz</string>
+    <string name="mode_blitz_hint">So viele Flaggen wie möglich in einer Minute</string>
+    <string name="mode_flashcards">Lernkarten</string>
+
+    <!-- What a question asks, per mode -->
+    <string name="question_flag_name">Zu welchem Land gehört diese Flagge?</string>
+    <string name="question_pick_flag">Welche davon ist die Flagge von %1$s?</string>
+    <string name="question_capital">Wie heißt die Hauptstadt von %1$s?</string>
+    <string name="question_continent">Zu welchem Kontinent gehört diese Flagge?</string>
+    <string name="question_locate">Welches Land ist auf der Karte markiert?</string>
+    <string name="question_type_name">Tippe den Namen dieses Landes ein</string>
+    <string name="question_blitz">Welches Land ist das?</string>
+    <string name="question_speed_round">Erkenne das Land zu dieser Flagge:</string>
+
+    <!-- Answers difficulty -->
+    <string name="difficulty_normal">Normal</string>
+    <string name="difficulty_normal_hint">Eine ähnliche Flagge unter den Antworten</string>
+    <string name="difficulty_hard">Schwer</string>
+    <string name="difficulty_hard_hint">Ähnliche Flaggen, wo immer es sie gibt</string>
+
+    <!-- Quiz scopes and study sources (display labels; the stored keys are in QuizEngine and StudySession) -->
+    <string name="scope_global">Weltweit</string>
+    <string name="scope_weak_spots">Schwachstellen</string>
+    <string name="scope_due_today">Heute fällig</string>
+    <string name="scope_mistakes">Fehler</string>
+    <string name="study_source_deck">Dieser Stapel</string>
+
+    <!-- Continents (display labels; the catalog keeps the English names as keys) -->
+    <string name="continent_all">Alle</string>
+    <string name="continent_africa">Afrika</string>
+    <string name="continent_americas">Amerika</string>
+    <string name="continent_asia">Asien</string>
+    <string name="continent_europe">Europa</string>
+    <string name="continent_oceania">Ozeanien</string>
+    <string name="continent_antarctica">Antarktis</string>
+
+    <!-- Sort orders -->
+    <string name="sort_by_name">Nach Name sortieren</string>
+    <string name="sort_by_population">Nach Einwohnerzahl sortieren</string>
+    <string name="sort_by_area">Nach Fläche sortieren</string>
+    <string name="sort_by_continent">Nach Kontinent sortieren</string>
+    <string name="sort_noun_name">Name</string>
+    <string name="sort_noun_population">Einwohnerzahl</string>
+    <string name="sort_noun_area">Fläche</string>
+    <string name="sort_noun_continent">Kontinent</string>
+
+    <!-- Standing of a skill (pips, chips, the detail sheet) -->
+    <string name="standing_unseen">noch nicht wiederholt</string>
+    <string name="standing_weak">noch in Arbeit</string>
+    <string name="standing_mastered">gemeistert</string>
+    <string name="standing_chip_unseen">Ungesehen</string>
+    <string name="standing_chip_weak">In Arbeit</string>
+    <string name="standing_chip_mastered">Gemeistert</string>
+    <string name="standing_short_unseen">ungesehen</string>
+    <string name="standing_short_weak">in Arbeit</string>
+    <string name="standing_short_mastered">gemeistert</string>
+    <!-- The Unseen + Learning pair a Progress continent card sets (Explore's hint, the Flashcards deck notice) -->
+    <string name="standing_still_to_learn">Noch zu lernen</string>
+    <string name="standing_phrase_still_to_learn">noch zu lernen</string>
+    <string name="standing_either">%1$s oder %2$s</string>
+    <!-- The two pips on a card: skill label, standing, skill label, standing ("Flag: learning, Capital: mastered") -->
+    <string name="pips_description">%1$s: %2$s, %3$s: %4$s</string>
+
+    <!-- Skills -->
+    <string name="skill_flag">Flagge</string>
+    <string name="skill_capital">Hauptstadt</string>
+    <string name="skill_continent">Kontinent</string>
+    <string name="skill_location">Karte</string>
+
+    <!-- Settings enums -->
+    <string name="theme_system">System</string>
+    <string name="theme_light">Hell</string>
+    <string name="theme_dark">Dunkel</string>
+    <string name="timer_normal">Normal</string>
+    <string name="timer_relaxed">Entspannt</string>
+    <string name="timer_off">Kein Limit</string>
+
+    <!-- The daily reminder (notification channel and the two messages) -->
+    <string name="reminder_channel_name">Tägliche Erinnerung</string>
+    <string name="reminder_channel_description">Ein Anstoß zu einem Quiz, wenn du heute noch nicht geübt hast</string>
+    <string name="reminder_keep_title">Halte deine Serie</string>
+    <plurals name="reminder_keep_text">
+        <item quantity="one">Ein Quiz hält deine Serie von %d Tag</item>
+        <item quantity="other">Ein Quiz hält deine Serie von %d Tagen</item>
+    </plurals>
+    <string name="reminder_start_title">Zeit für ein kurzes Quiz</string>
+    <string name="reminder_start_text">Ein kurzes Quiz startet eine neue Serie</string>
+
+    <!-- Shown once when a database write failed (see WriteErrors) -->
+    <string name="write_error">Deine letzte Änderung konnte nicht gespeichert werden. Exportiere deinen Fortschritt in den Einstellungen und versuche es später noch einmal.</string>
+
+    <!-- The spoken country summary -->
+    <string name="speech_name">%1$s.</string>
+    <string name="speech_capital_and_continent">Die Hauptstadt ist %1$s, es liegt in %2$s.</string>
+    <string name="speech_continent">Liegt in %1$s.</string>
+
+    <!-- The home-screen widget. -->
+    <string name="widget_label">Heutige Wiederholungen</string>
+    <string name="widget_description">Wie viele Wiederholungen fällig sind, deine Serie und ein Üben-Button</string>
+    <plurals name="widget_due">
+        <item quantity="one">%1$d Wiederholung fällig</item>
+        <item quantity="other">%1$d Wiederholungen fällig</item>
+    </plurals>
+    <string name="widget_nothing_due">Nichts fällig</string>
+    <string name="widget_streak_today">Serie %1$d · heute %2$d/%3$d</string>
+    <string name="widget_practise">Üben</string>
+</resources>

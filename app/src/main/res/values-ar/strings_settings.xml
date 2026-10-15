@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Settings screen and the About screen it leads to. The theme and timer labels are shared enum labels in strings.xml. -->
+<resources>
+    <!-- Settings: header and Appearance -->
+    <string name="settings_title">الإعدادات</string>
+    <string name="settings_section_appearance">المظهر</string>
+    <string name="settings_language_label">اللغة</string>
+    <string name="settings_language_system">النظام</string>
+    <string name="settings_language_detail">للشاشات؛ تبقى أسماء الدول والعواصم والحقائق بالإنجليزية</string>
+    <string name="settings_theme_label">السمة</string>
+    <string name="settings_dynamic_color_title">ألوان الخلفية</string>
+    <string name="settings_dynamic_color_detail">ألوان مستمدة من خلفية الشاشة بدلًا من أزرق التطبيق</string>
+
+    <!-- Settings: Quiz -->
+    <string name="settings_section_quiz">الاختبار</string>
+    <string name="settings_timer_label">المؤقت</string>
+    <string name="settings_timer_hint_normal">الجولة السريعة: 10 ثوانٍ لكل سؤال. بليتز: علم جديد بعد لحظة من كل إجابة.</string>
+    <string name="settings_timer_hint_relaxed">الجولة السريعة: 20 ثانية لكل سؤال. بليتز: علم جديد بعد لحظة من كل إجابة.</string>
+    <string name="settings_timer_hint_off">الجولة السريعة: بلا حد زمني. بليتز: تستمر الدقيقة، لكن العلم التالي ينتظر الضغط على التالي.</string>
+    <!-- The daily goal: "Daily goal: 5 · 10 · 20 items" as a label and a segmented row -->
+    <string name="settings_goal_label">الهدف اليومي</string>
+    <plurals name="settings_goal_option">
+        <item quantity="zero">لا عناصر</item>
+        <item quantity="one">عنصر واحد</item>
+        <item quantity="two">عنصران</item>
+        <item quantity="few">%d عناصر</item>
+        <item quantity="many">%d عنصرًا</item>
+        <item quantity="other">%d عنصر</item>
+    </plurals>
+    <string name="settings_goal_hint">تُحتسب فيه المراجعات المستحقة والدول الجديدة؛ واليوم الذي يتحقق فيه الهدف يحافظ على سلسلتك</string>
+    <string name="settings_focus_label">قارة التركيز</string>
+    <string name="settings_focus_hint">تقدّم الاختبارات أعلام هذه القارة التي لم تُشاهد بعد أولًا</string>
+
+    <!-- Settings: Read aloud (the speech engine's state; the detail sheet's speaker reuses the install action) -->
+    <string name="settings_section_feedback">التنبيهات</string>
+    <string name="settings_sound_title">المؤثرات الصوتية</string>
+    <string name="settings_sound_detail">نغمة قصيرة عند الإجابة الصحيحة أو الخاطئة وعند نهاية الاختبار</string>
+    <string name="settings_haptics_title">الاهتزاز</string>
+    <string name="settings_haptics_detail">اهتزازة قصيرة عند الإجابة الصحيحة أو الخاطئة</string>
+    <string name="settings_section_speech">القراءة بصوت عالٍ</string>
+    <string name="settings_speech_loading">جارٍ تشغيل محرك النطق…</string>
+    <string name="settings_speech_ready">جاهز. زر السماعة في ورقة تفاصيل الدولة وفي البطاقات يقرأ الدولة بصوت عالٍ.</string>
+    <string name="settings_speech_missing_data">لا يملك محرك النطق بيانات صوت إنجليزية، لذا لا يمكن قراءة شيء بعد.</string>
+    <string name="settings_speech_unavailable">لا يوجد محرك نطق على هذا الجهاز، لذا لا يمكن قراءة شيء بصوت عالٍ.</string>
+    <string name="settings_speech_install">تثبيت بيانات الصوت</string>
+    <string name="settings_speech_no_installer">لا يوجد مثبّت لبيانات الصوت على هذا الجهاز.</string>
+
+    <!-- Settings: Data (export, import, reset) -->
+    <string name="settings_section_data">البيانات</string>
+    <string name="settings_data_local">كل شيء يبقى على هذا الجهاز: لا حساب، ولا يملك التطبيق صلاحية الوصول إلى الشبكة. يُضمَّن التقدم في نسخة أندرويد الاحتياطية للتطبيق.</string>
+    <string name="settings_export">تصدير</string>
+    <string name="settings_import">استيراد</string>
+    <string name="settings_transfer_hint">يكتب التصدير ملفًا يحوي تقدمك وإعداداتك؛ ويستبدل الاستيراد كل شيء بملف كهذا.</string>
+    <string name="settings_export_done">تم التصدير إلى %1$s.</string>
+    <string name="settings_export_fallback_name">الملف المختار</string>
+    <string name="settings_export_write_error">تعذّر فتح الملف للكتابة.</string>
+    <string name="settings_export_failed">فشل التصدير: %1$s</string>
+    <string name="settings_import_read_error">تعذّر فتح الملف.</string>
+    <string name="settings_import_failed">فشل الاستيراد: %1$s</string>
+    <string name="settings_import_not_ours">هذا الملف ليس ملف تصدير من World Flags.</string>
+    <string name="settings_import_newer">أُنشئ هذا الملف بإصدار أحدث من World Flags (التنسيق %1$d). حدّث التطبيق وحاول مرة أخرى.</string>
+    <string name="settings_import_damaged">هذا الملف ليس ملف تصدير كاملًا من World Flags (%1$s).</string>
+    <string name="settings_import_too_large">هذا الملف أكبر من أن يكون ملف تصدير من World Flags.</string>
+    <string name="settings_import_write_failed">تعذّر تخزين الملف. لم يتغير شيء.</string>
+    <string name="settings_reset_done">أُعيد ضبط التقدم.</string>
+    <string name="settings_import_done">تم استيراد %1$s و%2$s و%3$s.</string>
+    <plurals name="settings_import_quizzes">
+        <item quantity="zero">لا اختبارات</item>
+        <item quantity="one">اختبار واحد</item>
+        <item quantity="two">اختباران</item>
+        <item quantity="few">%d اختبارات</item>
+        <item quantity="many">%d اختبارًا</item>
+        <item quantity="other">%d اختبار</item>
+    </plurals>
+    <plurals name="settings_import_skills">
+        <item quantity="zero">لا سجلات مهارات</item>
+        <item quantity="one">سجل مهارة واحد</item>
+        <item quantity="two">سجلّا مهارات</item>
+        <item quantity="few">%d سجلات مهارات</item>
+        <item quantity="many">%d سجل مهارات</item>
+        <item quantity="other">%d سجل مهارات</item>
+    </plurals>
+    <plurals name="settings_import_countries">
+        <item quantity="zero">لا دول</item>
+        <item quantity="one">دولة واحدة</item>
+        <item quantity="two">دولتان</item>
+        <item quantity="few">%d دول</item>
+        <item quantity="many">%d دولة</item>
+        <item quantity="other">%d دولة</item>
+    </plurals>
+    <string name="settings_reset">إعادة ضبط التقدم</string>
+
+    <!-- Settings: About row -->
+    <string name="settings_section_about">حول</string>
+    <string name="settings_about_title">حول World Flags</string>
+    <string name="settings_about_detail">الإصدار %1$s · مصادر الحقائق، التراخيص، الخصوصية</string>
+
+    <!-- Settings: the import dialog -->
+    <string name="settings_import_dialog_title">هل تريد استيراد هذا الملف؟</string>
+    <string name="settings_import_dialog_text">يحوي الملف %1$s و%2$s و%3$s. سيحل محل كل ما هنا: الإشارات المرجعية، وحالة كل دولة، وسجل الاختبارات، والإعدادات. لا يمكن التراجع عن ذلك.</string>
+    <string name="settings_import_dialog_empty">لا يحوي الملف أي تقدم. استيراده يفرغ كل ما هنا: الإشارات المرجعية، وحالة كل دولة، وسجل الاختبارات. لا يمكن التراجع عن ذلك.</string>
+    <string name="settings_import_confirm">استبدال</string>
+    <string name="settings_import_cancel">الإبقاء على بياناتي</string>
+
+    <!-- Settings: the reset dialog -->
+    <string name="settings_reset_dialog_title">هل تريد إعادة ضبط كل التقدم؟</string>
+    <string name="settings_reset_dialog_text">ستُحذف الإشارات المرجعية، وحالة كل دولة، وسجل الاختبارات، والسلسلة. تبقى الإعدادات. لا يمكن التراجع عن ذلك.</string>
+    <string name="settings_reset_confirm">إعادة ضبط</string>
+    <string name="settings_reset_cancel">إبقاء</string>
+
+    <!-- About: header and tagline -->
+    <string name="about_title">حول</string>
+    <string name="about_version">‏World Flags %1$s</string>
+    <string name="about_tagline">تطبيق يعمل دون اتصال لتعلّم أعلام دول العالم الـ196 وعواصمها وحقائقها، والقارة القطبية الجنوبية.</string>
+
+    <!-- About: where the facts come from -->
+    <string name="about_sources_title">من أين تأتي الحقائق</string>
+    <string name="about_sources_text">بُحثت بيانات كل دولة بالاستناد إلى مصادر عامة، معظمها ويكيبيديا والدساتير الوطنية والمواقع الرسمية، ثم رُوجعت مرة ثانية على يد مراجعين مستقلين لا يغيّران حقيقة إلا إذا استطاع كلاهما توثيقها. أرقام السكان هي تقديرات «آفاق سكان العالم 2024» للأمم المتحدة، مقرّبة إلى ثلاثة أرقام معنوية؛ أما الحقائق الأخرى فرُوجعت في 2026. ملاحظات البحث والتدقيق وقرارات المالك موجودة في المستودع، وتعرض ورقة تفاصيل كل دولة الصفحات التي رُوجعت حقائقها بالاستناد إليها.</string>
+    <string name="about_open_repository">فتح المستودع</string>
+
+    <!-- About: what is in the catalogue -->
+    <string name="about_catalog_title">ما الذي يحويه الفهرس</string>
+    <string name="about_catalog_text">الدول الـ196 ذات السيادة المعترف بها على نطاق واسع، بالإضافة إلى القارة القطبية الجنوبية للتصفح. تُرسم الأعلام بنسب كل دولة الخاصة. وحيثما كان معنى العلم محل خلاف أو من قبيل الأساطير، يذكر النص ذلك بدلًا من الانحياز لجهة؛ والحقيقة التي تعذّر حسمها تُركت بدلًا من تخمينها.</string>
+
+    <!-- About: privacy -->
+    <string name="about_translations_title">الترجمات</string>
+    <string name="about_translations_text">تُرجمت الفرنسية والإسبانية والألمانية والعربية بمساعدة آلية ورُوجعت للاتساق، لا على يد متحدثين أصليين. التصحيحات مرحّب بها على GitHub.</string>
+    <string name="about_privacy_title">الخصوصية</string>
+    <string name="about_privacy_text">لا يملك التطبيق صلاحية الشبكة: لا شيء مما تفعله يغادر الجهاز، ولا يوجد حساب. يُخزَّن تقدمك في قاعدة بيانات التطبيق الخاصة ويُضمَّن في نسخة أندرويد الاحتياطية للتطبيق، فينتقل معك إلى هاتف جديد عندما يكون النسخ الاحتياطي مفعّلًا. الإعدادات &gt; إعادة ضبط التقدم يحذف كل ذلك.</string>
+    <!-- A link row under the text: opens PRIVACY.md in the repository in the browser -->
+    <string name="about_privacy_link">بيان الخصوصية الكامل</string>
+
+    <!-- About: licences -->
+    <string name="about_licences_title">التراخيص</string>
+    <string name="about_licences_text">رسوم الأعلام مأخوذة من مشروع flag-icons (ترخيص MIT). بُني التطبيق بمكتبات Android Jetpack وKotlin بموجب ترخيص Apache License 2.0. الإشعارات كاملة:</string>
+    <string name="about_notices_loading">جارٍ التحميل…</string>
+</resources>

@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- L'écran Paramètres et l'écran À propos auquel il mène. Les libellés de thème et de minuteur sont des libellés d'enum partagés dans strings.xml. -->
+<resources>
+    <!-- Paramètres : en-tête et Apparence -->
+    <string name="settings_title">Paramètres</string>
+    <string name="settings_section_appearance">Apparence</string>
+    <string name="settings_language_label">Langue</string>
+    <string name="settings_language_system">Système</string>
+    <string name="settings_language_detail">Pour les écrans ; les noms de pays, les capitales et les faits restent en anglais</string>
+    <string name="settings_theme_label">Thème</string>
+    <string name="settings_dynamic_color_title">Couleurs du fond d\'écran</string>
+    <string name="settings_dynamic_color_detail">Les couleurs du fond d\'écran à la place du bleu de l\'appli</string>
+
+    <!-- Paramètres : Quiz -->
+    <string name="settings_section_quiz">Quiz</string>
+    <string name="settings_timer_label">Minuteur</string>
+    <string name="settings_timer_hint_normal">Manche rapide : 10 secondes par question. Blitz : un nouveau drapeau juste après chaque réponse.</string>
+    <string name="settings_timer_hint_relaxed">Manche rapide : 20 secondes par question. Blitz : un nouveau drapeau juste après chaque réponse.</string>
+    <string name="settings_timer_hint_off">Manche rapide : sans limite de temps. Blitz : la minute s\'écoule toujours, mais le drapeau suivant attend Suivant.</string>
+    <!-- L'objectif du jour : « Objectif du jour : 5 · 10 · 20 éléments » en libellé et en rangée segmentée -->
+    <string name="settings_goal_label">Objectif du jour</string>
+    <plurals name="settings_goal_option">
+        <item quantity="one">%d élément</item>
+        <item quantity="other">%d éléments</item>
+        <item quantity="many">%d éléments</item>
+    </plurals>
+    <string name="settings_goal_hint">Les révisions à faire et les nouveaux pays y comptent ; une journée avec l\'objectif atteint maintient votre série</string>
+    <string name="settings_focus_label">Continent prioritaire</string>
+    <string name="settings_focus_hint">Les quiz présentent d\'abord les drapeaux jamais vus de ce continent</string>
+
+    <!-- Paramètres : Lecture à voix haute (l'état du moteur vocal ; le haut-parleur de la fiche détail réutilise l'action d'installation) -->
+    <string name="settings_section_feedback">Retour</string>
+    <string name="settings_sound_title">Effets sonores</string>
+    <string name="settings_sound_detail">Un bref son pour une bonne ou mauvaise réponse et à la fin d\'un quiz</string>
+    <string name="settings_haptics_title">Vibration</string>
+    <string name="settings_haptics_detail">Une brève vibration pour une bonne ou mauvaise réponse</string>
+    <string name="settings_section_speech">Lecture à voix haute</string>
+    <string name="settings_speech_loading">Démarrage du moteur vocal…</string>
+    <string name="settings_speech_ready">Prêt. Le haut-parleur sur la fiche d\'un pays et sur les cartes mémoire lit le pays à voix haute.</string>
+    <string name="settings_speech_missing_data">Le moteur vocal n\'a pas de données vocales en anglais, rien ne peut donc être lu pour l\'instant.</string>
+    <string name="settings_speech_unavailable">Cet appareil n\'a pas de moteur vocal, rien ne peut donc être lu à voix haute.</string>
+    <string name="settings_speech_install">Installer des données vocales</string>
+    <string name="settings_speech_no_installer">Cet appareil n\'a pas d\'installateur de données vocales.</string>
+
+    <!-- Paramètres : Données (export, import, réinitialisation) -->
+    <string name="settings_section_data">Données</string>
+    <string name="settings_data_local">Tout reste sur cet appareil : il n\'y a pas de compte et l\'appli n\'a pas d\'accès réseau. La progression est incluse dans la sauvegarde Android de l\'appli.</string>
+    <string name="settings_export">Exporter</string>
+    <string name="settings_import">Importer</string>
+    <string name="settings_transfer_hint">Exporter écrit un fichier avec votre progression et vos paramètres ; Importer remplace tout par un tel fichier.</string>
+    <string name="settings_export_done">Exporté vers %1$s.</string>
+    <string name="settings_export_fallback_name">le fichier choisi</string>
+    <string name="settings_export_write_error">Le fichier n\'a pas pu être ouvert en écriture.</string>
+    <string name="settings_export_failed">Échec de l\'export : %1$s</string>
+    <string name="settings_import_read_error">Le fichier n\'a pas pu être ouvert.</string>
+    <string name="settings_import_failed">Échec de l\'import : %1$s</string>
+    <string name="settings_import_not_ours">Ce fichier n\'est pas un export World Flags.</string>
+    <string name="settings_import_newer">Ce fichier vient d\'une version plus récente de World Flags (format %1$d). Mettez l\'appli à jour et réessayez.</string>
+    <string name="settings_import_damaged">Ce fichier n\'est pas un export World Flags complet (%1$s).</string>
+    <string name="settings_import_too_large">Ce fichier est trop volumineux pour être un export World Flags.</string>
+    <string name="settings_import_write_failed">Le fichier n\'a pas pu être enregistré. Rien n\'a été modifié.</string>
+    <string name="settings_reset_done">Progression réinitialisée.</string>
+    <string name="settings_import_done">Importé : %1$s, %2$s et %3$s.</string>
+    <plurals name="settings_import_quizzes">
+        <item quantity="one">%d quiz</item>
+        <item quantity="other">%d quiz</item>
+        <item quantity="many">%d quiz</item>
+    </plurals>
+    <plurals name="settings_import_skills">
+        <item quantity="one">%d fiche de compétence</item>
+        <item quantity="other">%d fiches de compétence</item>
+        <item quantity="many">%d fiches de compétence</item>
+    </plurals>
+    <plurals name="settings_import_countries">
+        <item quantity="one">%d pays</item>
+        <item quantity="other">%d pays</item>
+        <item quantity="many">%d pays</item>
+    </plurals>
+    <string name="settings_reset">Réinitialiser la progression</string>
+
+    <!-- Paramètres : la ligne À propos -->
+    <string name="settings_section_about">À propos</string>
+    <string name="settings_about_title">À propos de World Flags</string>
+    <string name="settings_about_detail">Version %1$s · origine des faits, licences, confidentialité</string>
+
+    <!-- Paramètres : le dialogue d'import -->
+    <string name="settings_import_dialog_title">Importer ce fichier ?</string>
+    <string name="settings_import_dialog_text">Le fichier contient %1$s, %2$s et %3$s. Tout ce qui est ici est remplacé : les pays enregistrés, l\'état de chaque pays, le journal des quiz et les paramètres. Cette action est irréversible.</string>
+    <string name="settings_import_dialog_empty">Le fichier ne contient aucune progression. L\'importer vide tout ici : les pays enregistrés, l\'état de chaque pays et le journal des quiz. Cette action est irréversible.</string>
+    <string name="settings_import_confirm">Remplacer</string>
+    <string name="settings_import_cancel">Garder le mien</string>
+
+    <!-- Paramètres : le dialogue de réinitialisation -->
+    <string name="settings_reset_dialog_title">Réinitialiser toute la progression ?</string>
+    <string name="settings_reset_dialog_text">Les pays enregistrés, l\'état de chaque pays, le journal des quiz et la série sont supprimés. Les paramètres restent. Cette action est irréversible.</string>
+    <string name="settings_reset_confirm">Réinitialiser</string>
+    <string name="settings_reset_cancel">Garder</string>
+
+    <!-- À propos : en-tête et slogan -->
+    <string name="about_title">À propos</string>
+    <string name="about_version">World Flags, version %1$s</string>
+    <string name="about_tagline">Une appli hors ligne pour apprendre les drapeaux, les capitales et les faits des 196 pays du monde, et de l\'Antarctique.</string>
+
+    <!-- À propos : d'où viennent les faits -->
+    <string name="about_sources_title">D\'où viennent les faits</string>
+    <string name="about_sources_text">Chaque fiche de pays a été établie à partir de sources publiques, surtout Wikipédia, les constitutions nationales et les sites officiels, puis vérifiée une seconde fois par deux relecteurs indépendants qui ne pouvaient modifier un fait que s\'ils pouvaient tous deux le sourcer. Les chiffres de population sont les estimations 2024 des Perspectives de la population mondiale des Nations unies, arrondies à trois chiffres significatifs ; les autres faits ont été vérifiés en 2026. Les notes de recherche, l\'audit et les décisions du propriétaire sont dans le dépôt, et la fiche de chaque pays liste les pages avec lesquelles ses faits ont été vérifiés.</string>
+    <string name="about_open_repository">Ouvrir le dépôt</string>
+
+    <!-- À propos : ce que contient le catalogue -->
+    <string name="about_catalog_title">Ce que contient le catalogue</string>
+    <string name="about_catalog_text">Les 196 États souverains largement reconnus, plus l\'Antarctique à parcourir. Les drapeaux sont dessinés aux proportions propres à chaque pays. Quand la signification d\'un drapeau est contestée ou légendaire, le texte le dit au lieu de trancher ; un fait impossible à établir a été laissé de côté plutôt que deviné.</string>
+
+    <!-- À propos : confidentialité -->
+    <string name="about_translations_title">Traductions</string>
+    <string name="about_translations_text">Le français, l\'espagnol, l\'allemand et l\'arabe ont été traduits avec une aide automatique et vérifiés pour leur cohérence, pas par des locuteurs natifs. Les corrections sont les bienvenues sur GitHub.</string>
+    <string name="about_privacy_title">Confidentialité</string>
+    <string name="about_privacy_text">L\'appli n\'a pas d\'autorisation réseau : rien de ce que vous faites ne quitte l\'appareil, et il n\'y a pas de compte. Votre progression est stockée dans la base de données de l\'appli et incluse dans la sauvegarde Android de l\'appli, elle vous suit donc sur un nouveau téléphone quand la sauvegarde est activée. Paramètres &gt; Réinitialiser la progression supprime tout.</string>
+    <!-- Une ligne de lien sous le texte : ouvre PRIVACY.md du dépôt dans le navigateur -->
+    <string name="about_privacy_link">Déclaration de confidentialité complète</string>
+
+    <!-- À propos : licences -->
+    <string name="about_licences_title">Licences</string>
+    <string name="about_licences_text">Les drapeaux sont rendus à partir du projet flag-icons (licence MIT). L\'appli est construite avec les bibliothèques Android Jetpack et Kotlin sous licence Apache 2.0. Les mentions complètes :</string>
+    <string name="about_notices_loading">Chargement…</string>
+</resources>

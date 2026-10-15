@@ -58,6 +58,9 @@ interface UserSettings {
 
     /** A short buzz for a right or wrong quiz answer; on until switched off. */
     var haptics: Boolean
+
+    /** The language of the screens as a BCP 47 tag from [AppLanguage.CHOICES]; empty ([AppLanguage.SYSTEM]) follows the phone. */
+    var language: String
 }
 
 /** The feedback settings as the screens see them. */
@@ -114,7 +117,8 @@ class InMemoryUserSettings(
     override var todayCardDismissedDay: String = "",
     override var onboarded: Boolean = false,
     override var soundEffects: Boolean = true,
-    override var haptics: Boolean = true
+    override var haptics: Boolean = true,
+    override var language: String = AppLanguage.SYSTEM
 ) : UserSettings
 
 class PrefsUserSettings(context: Context) : UserSettings {
@@ -183,6 +187,10 @@ class PrefsUserSettings(context: Context) : UserSettings {
         get() = prefs.getBoolean(KEY_HAPTICS, true)
         set(value) = prefs.edit { putBoolean(KEY_HAPTICS, value) }
 
+    override var language: String
+        get() = AppLanguage.sanitize(prefs.getString(KEY_LANGUAGE, null))
+        set(value) = prefs.edit { putString(KEY_LANGUAGE, AppLanguage.sanitize(value)) }
+
     companion object {
         const val FILE = "settings"
         private const val KEY_DIFFICULTY = "quiz_difficulty"
@@ -200,5 +208,6 @@ class PrefsUserSettings(context: Context) : UserSettings {
         private const val KEY_ONBOARDED = "onboarded"
         private const val KEY_SOUND_EFFECTS = "sound_effects"
         private const val KEY_HAPTICS = "haptics"
+        private const val KEY_LANGUAGE = "language"
     }
 }

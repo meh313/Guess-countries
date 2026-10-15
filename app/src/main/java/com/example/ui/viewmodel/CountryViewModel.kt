@@ -18,6 +18,7 @@ import com.example.data.model.Country
 import com.example.data.model.CountryRepository
 import com.example.data.model.CountrySources
 import com.example.data.model.SortOption
+import com.example.data.settings.AppLanguage
 import com.example.data.settings.Appearance
 import com.example.data.settings.Feedback
 import com.example.data.settings.InMemoryUserSettings
@@ -146,6 +147,17 @@ class CountryViewModel(
     fun setHaptics(enabled: Boolean) {
         settings.haptics = enabled
         _feedback.update { it.copy(haptics = enabled) }
+    }
+
+    private val _language = MutableStateFlow(settings.language)
+
+    /** The language of the screens (see [AppLanguage]); the Settings screen applies it to the system or recreates the activity. */
+    val language: StateFlow<String> = _language
+
+    fun setLanguage(tag: String) {
+        val clean = AppLanguage.sanitize(tag)
+        settings.language = clean
+        _language.value = clean
     }
 
     private val _timerPace = MutableStateFlow(settings.timerPace)
@@ -315,7 +327,8 @@ class CountryViewModel(
             "focusContinent" to settings.focusContinent,
             "onboarded" to settings.onboarded.toString(),
             "soundEffects" to settings.soundEffects.toString(),
-            "haptics" to settings.haptics.toString()
+            "haptics" to settings.haptics.toString(),
+            "language" to settings.language
         )
         return withContext(Dispatchers.Default) { ProgressTransfer.toJson(snapshot.copy(settings = settingsMap)) }
     }
@@ -359,6 +372,7 @@ class CountryViewModel(
             snapshot.settings["onboarded"]?.toBooleanStrictOrNull()?.let(::setOnboarded)
             snapshot.settings["soundEffects"]?.toBooleanStrictOrNull()?.let(::setSoundEffects)
             snapshot.settings["haptics"]?.toBooleanStrictOrNull()?.let(::setHaptics)
+            snapshot.settings["language"]?.let(::setLanguage)
             snapshot
         }
     }

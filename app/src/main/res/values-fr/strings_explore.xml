@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  L’onglet Explorer : la bannière, la recherche et les filtres, l’état vide, les cartes de pays, la fiche détail
+  d’un pays, et les deux composants de quiz placés à côté des cartes (la grille de drapeaux et la comparaison après
+  une erreur). Les puces de continent, les puces d’état, le menu de tri et les libellés de compétence utilisent les
+  libellés d’enum partagés de strings.xml.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Chiffres sur les cartes et dans la fiche. Le nombre après le chiffre est l'année de l'estimation, pas un compte. -->
+    <string name="population_estimate" tools:ignore="PluralsCandidate">%1$s (est. %2$d)</string>
+    <string name="population_winter">%1$s en hivernage dans les stations</string>
+    <string name="card_no_capital">Pas de capitale</string>
+
+    <!-- Explorer : la bannière -->
+    <string name="explore_title">Explorateur du monde</string>
+    <string name="explore_subtitle">Découvrez les pays, drapeaux &amp; continents du globe</string>
+
+    <!-- La carte Aujourd'hui (aussi en haut de Progrès) : les éléments du jour face à l'objectif et la prochaine chose à faire -->
+    <string name="today_title">Aujourd\'hui</string>
+    <string name="today_goal_met">Objectif atteint</string>
+    <!-- « 3 / 10 » : éléments faits aujourd'hui sur l'objectif du jour -->
+    <string name="today_progress">%1$d / %2$d</string>
+    <!-- « 2 à réviser · 4 nouveaux aujourd'hui · objectif 10 » -->
+    <string name="today_line">%1$s · %2$s · %3$s</string>
+    <plurals name="today_due">
+        <item quantity="one">%d à réviser</item>
+        <item quantity="other">%d à réviser</item>
+        <item quantity="many">%d à réviser</item>
+    </plurals>
+    <plurals name="today_new">
+        <item quantity="one">%d nouveau aujourd\'hui</item>
+        <item quantity="other">%d nouveaux aujourd\'hui</item>
+        <item quantity="many">%d nouveaux aujourd\'hui</item>
+    </plurals>
+    <string name="today_goal">objectif %1$d</string>
+    <!-- La carte en une phrase pour un lecteur d'écran : « Aujourd'hui : 3 sur 10 éléments faits, 2 à réviser, 4 nouveaux aujourd'hui. » -->
+    <!-- Le nombre n'accorde pas « éléments » ni « révision » ici : « 1 sur 10 éléments faits », « Révision 1 à faire ». -->
+    <string name="today_description" tools:ignore="PluralsCandidate">Aujourd\'hui : %1$d sur %2$d éléments faits, %3$s, %4$s.</string>
+    <string name="today_review_due" tools:ignore="PluralsCandidate">Révision %1$d à faire</string>
+    <string name="today_learn_new">Apprendre 5 nouveaux</string>
+    <string name="today_learn_more">Apprendre 5 de plus</string>
+    <string name="today_dismiss">Masquer pour aujourd\'hui</string>
+    <!-- Le premier lancement : la carte demande un continent prioritaire avant tout -->
+    <string name="today_start_title">Commencez ici</string>
+    <string name="today_start_text">Choisissez un continent pour commencer ; les quiz présentent ses drapeaux en premier.</string>
+
+    <!-- Explorer : la recherche, la puce Enregistrés et le bouton de tri -->
+    <string name="explore_search_hint">Pays, capitale ou nom officiel…</string>
+    <string name="explore_clear_search">Effacer la recherche</string>
+    <string name="explore_saved_chip">Enregistrés</string>
+    <string name="explore_sort_options">Options de tri</string>
+
+    <!-- Explorer : l'état vide -->
+    <string name="explore_empty_saved_title">Aucun pays enregistré pour l\'instant</string>
+    <string name="explore_empty_saved_hint">Touchez le marque-page d\'un pays pour l\'enregistrer ici</string>
+    <string name="explore_empty_title">Aucun pays trouvé</string>
+    <string name="explore_empty_hint">Essayez de modifier votre recherche ou le filtre de continent</string>
+    <!-- Avec des filtres actifs, l'indice les nomme : « Aucun pays encore à apprendre sur le continent Europe. Effacer les filtres ? » -->
+    <string name="explore_empty_hint_filtered">Aucun pays %1$s. Effacer les filtres ?</string>
+    <string name="explore_empty_scope_continent">sur le continent %1$s</string>
+    <string name="explore_empty_scope_search">correspondant à « %1$s »</string>
+    <string name="explore_empty_scope_saved">parmi vos pays enregistrés</string>
+
+    <!-- Explorer : la légende sous les puces pour les deux pastilles de chaque carte -->
+
+    <!-- Fiche détail : la grille des faits -->
+    <string name="sheet_facts_title">Fiche du pays</string>
+    <string name="sheet_fact_capital">Capitale</string>
+    <string name="sheet_fact_population">Population</string>
+    <string name="sheet_fact_area">Superficie totale</string>
+    <string name="sheet_fact_currency">Monnaie</string>
+    <string name="sheet_fact_languages">Langues</string>
+    <string name="sheet_fact_driving_side">Sens de circulation</string>
+    <string name="sheet_drive_side">Côté %1$s</string>
+    <string name="sheet_no_public_roads">Pas de routes publiques</string>
+
+    <!-- Fiche détail : la carte de progression (« Drapeau : Maîtrisé · étape 4 sur 5 · prochaine révision dans 12 jours · dernière réponse juste ») -->
+    <string name="sheet_progress_title">Votre progression</string>
+    <string name="sheet_skill_standing">%1$s: %2$s</string>
+    <string name="sheet_standing_not_reviewed">Pas encore révisé</string>
+    <string name="sheet_standing_line">%1$s · %2$s · %3$s · %4$s</string>
+    <string name="sheet_standing_step">étape %1$d sur %2$d</string>
+    <string name="sheet_due_now">à réviser maintenant</string>
+    <string name="sheet_next_review_tomorrow">prochaine révision demain</string>
+    <plurals name="sheet_next_review_days">
+        <item quantity="one">prochaine révision dans %1$d jour</item>
+        <item quantity="other">prochaine révision dans %1$d jours</item>
+        <item quantity="many">prochaine révision dans %1$d jours</item>
+    </plurals>
+    <string name="sheet_last_answer_right">dernière réponse juste</string>
+    <string name="sheet_last_answer_wrong">dernière réponse fausse</string>
+
+    <!-- Fiche détail : le drapeau, les lieux célèbres et l'anecdote -->
+    <string name="sheet_flag_title">Symbolique &amp; histoire du drapeau</string>
+    <!-- La carte géographique, et ce que TalkBack entend pour toute carte : « Carte : France (Europe · Europe de l'Ouest) » -->
+    <string name="sheet_where_title">Où c\'est</string>
+    <string name="sheet_borders_title">Frontières</string>
+    <string name="sheet_no_borders">Pas de frontière terrestre</string>
+    <string name="sheet_open_country">Ouvrir %1$s</string>
+    <string name="map_description">Carte : %1$s (%2$s)</string>
+    <!-- La carte de la question Carte → Pays : le nom du pays est la réponse, TalkBack entend donc ceci à la place -->
+    <string name="map_to_identify">Carte avec un pays surligné</string>
+    <string name="sheet_landmarks_title">Lieux célèbres</string>
+    <string name="sheet_landmark">📍 %1$s</string>
+    <string name="sheet_fun_fact_title">Le saviez-vous ?</string>
+
+    <!-- Fiche détail : les sources -->
+    <string name="sheet_sources">Sources (%1$d)</string>
+    <string name="sheet_show_sources">Afficher les sources</string>
+    <string name="sheet_hide_sources">Masquer les sources</string>
+    <string name="sheet_sources_note">Les pages avec lesquelles les faits ci-dessus ont été vérifiés lors de la rédaction du catalogue.</string>
+    <string name="sheet_open_in_browser">Ouvrir dans le navigateur</string>
+
+    <!-- La grille de drapeaux d'une question « choisissez le drapeau » -->
+    <string name="option_correct_answer">Bonne réponse</string>
+    <string name="option_your_answer_incorrect">Votre réponse, incorrecte</string>
+    <string name="option_of">Option %1$d sur %2$d</string>
+    <string name="option_flag_of">Option %1$d, le drapeau de %2$s</string>
+
+    <!-- La comparaison après une mauvaise réponse -->
+    <string name="miss_description">Vous avez choisi %1$s, la réponse est %2$s</string>
+    <string name="miss_you_picked">Vous avez choisi</string>
+    <string name="miss_correct">Correct</string>
+    <string name="miss_description_with_cue">%1$s. %2$s</string>
+
+    <!-- Comment reconnaître un drapeau, et comment distinguer deux drapeaux ressemblants -->
+    <string name="spot_it_label">Le reconnaître</string>
+    <string name="spot_it_line">%1$s: %2$s</string>
+    <string name="drive_side_left">gauche</string>
+    <string name="drive_side_right">droit</string>
+</resources>

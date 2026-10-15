@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Words shared by more than one screen, and the labels of the enums (quiz modes, scopes, sort orders, standings…),
+  which `ui/Labels.kt` maps to. Each screen keeps its own words in `strings_<screen>.xml`. Stored values (quiz mode
+  names, scope keys, continent names, study sources) are never these strings: they stay the English keys and are
+  translated on display only.
+-->
+<resources>
+    <string name="app_name">World Flags</string>
+    <plurals name="countries_count">
+        <item quantity="zero">لا دول</item>
+        <item quantity="one">دولة واحدة</item>
+        <item quantity="two">دولتان</item>
+        <item quantity="few">%d دول</item>
+        <item quantity="many">%d دولة</item>
+        <item quantity="other">%d دولة</item>
+    </plurals>
+
+    <!-- Tabs -->
+    <string name="nav_explore">استكشاف</string>
+    <string name="nav_flashcards">بطاقات</string>
+    <string name="nav_quiz">اختبار</string>
+    <string name="nav_progress">التقدم</string>
+
+    <!-- Shared actions and lines -->
+    <string name="action_done">تم</string>
+    <string name="action_back">رجوع</string>
+    <string name="action_cancel">إلغاء</string>
+    <string name="action_close">إغلاق</string>
+    <string name="action_clear_filters">مسح عوامل التصفية</string>
+    <string name="action_read_aloud">قراءة ملخص الدولة بصوت عالٍ</string>
+    <string name="read_aloud_unavailable">القراءة بصوت عالٍ غير متاحة على هذا الجهاز</string>
+    <string name="read_aloud_loading">جارٍ التحضير للقراءة بصوت عالٍ</string>
+    <string name="flag_to_identify">علم عليك تحديده</string>
+    <string name="flag_of">علم %1$s</string>
+    <string name="bookmark_country">حفظ %1$s</string>
+    <string name="streak_started">بدأت السلسلة: اليوم 1</string>
+    <!-- The finished session was too small for the daily goal (see Settings); the day counts once the goal is met. -->
+    <string name="streak_goal_short">لا يكفي بعد لهدف اليوم</string>
+    <plurals name="streak_kept">
+        <item quantity="zero">السلسلة مستمرة: لا أيام</item>
+        <item quantity="one">السلسلة مستمرة: يوم واحد</item>
+        <item quantity="two">السلسلة مستمرة: يومان</item>
+        <item quantity="few">السلسلة مستمرة: %d أيام</item>
+        <item quantity="many">السلسلة مستمرة: %d يومًا</item>
+        <item quantity="other">السلسلة مستمرة: %d يوم</item>
+    </plurals>
+
+    <!-- Quiz modes (display titles; the stored value is the enum name) -->
+    <string name="mode_flag_name">علم → دولة</string>
+    <string name="mode_pick_flag">دولة → علم</string>
+    <string name="mode_pick_flag_hint">اختر العلم الصحيح من بين أربعة</string>
+    <string name="mode_capital">دولة → عاصمة</string>
+    <string name="mode_continent">علم → قارة</string>
+    <string name="mode_continent_hint">يغطي العالم كله</string>
+    <string name="mode_locate">خريطة → دولة</string>
+    <string name="mode_locate_hint">أين تقع في العالم؟</string>
+    <string name="mode_type_name">علم → اكتب الاسم</string>
+    <string name="mode_type_name_hint">بلا خيارات: اكتب اسم الدولة</string>
+    <string name="mode_speed_round">جولة سريعة</string>
+    <string name="mode_speed_round_hint">10 ثوانٍ لكل سؤال</string>
+    <string name="mode_blitz">بليتز 60 ثانية</string>
+    <string name="mode_blitz_hint">أكبر عدد من الأعلام في دقيقة واحدة</string>
+    <string name="mode_flashcards">بطاقات</string>
+
+    <!-- What a question asks, per mode -->
+    <string name="question_flag_name">لأي دولة هذا العلم؟</string>
+    <string name="question_pick_flag">أي من هذه الأعلام هو علم %1$s؟</string>
+    <string name="question_capital">ما عاصمة %1$s؟</string>
+    <string name="question_continent">لأي قارة ينتمي هذا العلم؟</string>
+    <string name="question_locate">ما الدولة المميّزة على الخريطة؟</string>
+    <string name="question_type_name">اكتب اسم هذه الدولة</string>
+    <string name="question_blitz">ما هذه الدولة؟</string>
+    <string name="question_speed_round">حدّد دولة هذا العلم:</string>
+
+    <!-- Answers difficulty -->
+    <string name="difficulty_normal">عادي</string>
+    <string name="difficulty_normal_hint">علم واحد متشابه بين الإجابات</string>
+    <string name="difficulty_hard">صعب</string>
+    <string name="difficulty_hard_hint">أعلام متشابهة حيثما وُجدت</string>
+
+    <!-- Quiz scopes and study sources (display labels; the stored keys are in QuizEngine and StudySession) -->
+    <string name="scope_global">العالم</string>
+    <string name="scope_weak_spots">نقاط الضعف</string>
+    <string name="scope_due_today">مستحق اليوم</string>
+    <string name="scope_mistakes">الأخطاء</string>
+    <string name="study_source_deck">هذه المجموعة</string>
+
+    <!-- Continents (display labels; the catalog keeps the English names as keys) -->
+    <string name="continent_all">الكل</string>
+    <string name="continent_africa">أفريقيا</string>
+    <string name="continent_americas">الأمريكتان</string>
+    <string name="continent_asia">آسيا</string>
+    <string name="continent_europe">أوروبا</string>
+    <string name="continent_oceania">أوقيانوسيا</string>
+    <string name="continent_antarctica">القارة القطبية الجنوبية</string>
+
+    <!-- Sort orders -->
+    <string name="sort_by_name">ترتيب حسب الاسم</string>
+    <string name="sort_by_population">ترتيب حسب عدد السكان</string>
+    <string name="sort_by_area">ترتيب حسب المساحة</string>
+    <string name="sort_by_continent">ترتيب حسب القارة</string>
+    <string name="sort_noun_name">الاسم</string>
+    <string name="sort_noun_population">عدد السكان</string>
+    <string name="sort_noun_area">المساحة</string>
+    <string name="sort_noun_continent">القارة</string>
+
+    <!-- Standing of a skill (pips, chips, the detail sheet) -->
+    <string name="standing_unseen">لم يُراجع بعد</string>
+    <string name="standing_weak">قيد التعلم</string>
+    <string name="standing_mastered">متقَن</string>
+    <string name="standing_chip_unseen">لم يُشاهد بعد</string>
+    <string name="standing_chip_weak">قيد التعلم</string>
+    <string name="standing_chip_mastered">متقَن</string>
+    <string name="standing_short_unseen">لم يُشاهد بعد</string>
+    <string name="standing_short_weak">قيد التعلم</string>
+    <string name="standing_short_mastered">متقَن</string>
+    <!-- The Unseen + Learning pair a Progress continent card sets (Explore's hint, the Flashcards deck notice) -->
+    <string name="standing_still_to_learn">ما زال للتعلم</string>
+    <string name="standing_phrase_still_to_learn">ما زالت للتعلم</string>
+    <string name="standing_either">%1$s أو %2$s</string>
+    <!-- The two pips on a card: skill label, standing, skill label, standing ("Flag: learning, Capital: mastered") -->
+    <string name="pips_description">‏%1$s: %2$s، %3$s: %4$s</string>
+
+    <!-- Skills -->
+    <string name="skill_flag">العلم</string>
+    <string name="skill_capital">العاصمة</string>
+    <string name="skill_continent">القارة</string>
+    <string name="skill_location">الخريطة</string>
+
+    <!-- Settings enums -->
+    <string name="theme_system">النظام</string>
+    <string name="theme_light">فاتح</string>
+    <string name="theme_dark">داكن</string>
+    <string name="timer_normal">عادي</string>
+    <string name="timer_relaxed">مريح</string>
+    <string name="timer_off">بلا حد</string>
+
+    <!-- The daily reminder (notification channel and the two messages) -->
+    <string name="reminder_channel_name">التذكير اليومي</string>
+    <string name="reminder_channel_description">تنبيه لإنهاء اختبار عندما لا تتدرّب اليوم</string>
+    <string name="reminder_keep_title">حافظ على سلسلتك</string>
+    <plurals name="reminder_keep_text">
+        <item quantity="zero">اختبار واحد يحافظ على سلسلتك</item>
+        <item quantity="one">اختبار واحد يحافظ على سلسلتك ذات اليوم الواحد</item>
+        <item quantity="two">اختبار واحد يحافظ على سلسلتك ذات اليومين</item>
+        <item quantity="few">اختبار واحد يحافظ على سلسلتك ذات %d أيام</item>
+        <item quantity="many">اختبار واحد يحافظ على سلسلتك ذات %d يومًا</item>
+        <item quantity="other">اختبار واحد يحافظ على سلسلتك ذات %d يوم</item>
+    </plurals>
+    <string name="reminder_start_title">حان وقت اختبار سريع</string>
+    <string name="reminder_start_text">اختبار سريع يبدأ سلسلة جديدة</string>
+
+    <!-- Shown once when a database write failed (see WriteErrors) -->
+    <string name="write_error">تعذّر حفظ تغييرك الأخير. صدّر تقدمك من الإعدادات وحاول مرة أخرى لاحقًا.</string>
+
+    <!-- The spoken country summary -->
+    <string name="speech_name">%1$s.</string>
+    <string name="speech_capital_and_continent">العاصمة %1$s، وتقع في %2$s.</string>
+    <string name="speech_continent">تقع في %1$s.</string>
+
+    <!-- The home-screen widget. -->
+    <string name="widget_label">مراجعات اليوم</string>
+    <string name="widget_description">عدد المراجعات المستحقة وسلسلتك وزر تدرّب</string>
+    <plurals name="widget_due">
+        <item quantity="zero">لا مراجعات مستحقة</item>
+        <item quantity="one">مراجعة واحدة مستحقة</item>
+        <item quantity="two">مراجعتان مستحقتان</item>
+        <item quantity="few">%1$d مراجعات مستحقة</item>
+        <item quantity="many">%1$d مراجعة مستحقة</item>
+        <item quantity="other">%1$d مراجعة مستحقة</item>
+    </plurals>
+    <string name="widget_nothing_due">لا شيء مستحق</string>
+    <string name="widget_streak_today">السلسلة %1$d · اليوم %2$d/%3$d</string>
+    <string name="widget_practise">تدرّب</string>
+</resources>

@@ -70,6 +70,8 @@
     <string name="sheet_fact_languages">Languages</string>
     <string name="sheet_fact_driving_side">Driving side</string>
     <string name="sheet_drive_side">%1$s side</string>
+    <string name="drive_side_left">Left</string>
+    <string name="drive_side_right">Right</string>
     <string name="sheet_no_public_roads">No public roads</string>
 
     <!-- Detail sheet: the progress card ("Flag: Mastered · step 4 of 5 · next review in 12 days · last answer right") -->

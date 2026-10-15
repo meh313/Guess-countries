@@ -1,10 +1,13 @@
 package com.example
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import com.example.data.settings.AppLanguage
+import com.example.data.settings.PrefsUserSettings
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -85,6 +88,11 @@ sealed class Screen(val route: String, @StringRes val titleRes: Int, val icon: I
 class MainActivity : ComponentActivity() {
     /** The tab a launching intent asks for (the reminder notification opens the quiz); cleared once shown. */
     private val requestedTab = mutableStateOf<String?>(null)
+
+    /** Before Android 13 the chosen language is applied here; from 13 on the system applies it to every context. */
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(AppLanguage.wrap(newBase, PrefsUserSettings(newBase).language))
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

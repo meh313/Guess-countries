@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The Flashcards screen (browsing the deck and study sessions) and the Progress screen (stats, the streak, the quiz
+  log and the daily reminder card). Shared words (Done, Clear filters, scopes, continents, standings…) live in
+  strings.xml.
+-->
+<!-- Counts whose wording does not change with the number, or that are never 1, stay plain strings. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="PluralsCandidate">
+    <!-- Flashcards: the deck header, the filter notice and the empty deck -->
+    <string name="flashcards_title">Tarjetas</string>
+    <string name="flashcards_card_position">Tarjeta %1$d de %2$d</string>
+    <string name="flashcards_shuffle">Barajar tarjetas</string>
+    <string name="flashcards_reset">Reiniciar mazo</string>
+    <string name="flashcards_filter_saved_only">Solo guardados</string>
+    <string name="flashcards_filter_search">\"%1$s\"</string>
+    <string name="flashcards_filter_sorted_by">Ordenado por %1$s</string>
+    <string name="flashcards_filter_notice">Mazo filtrado desde Explorar: %1$s</string>
+    <!-- The Study button; "Study" alone when nothing is due -->
+    <plurals name="flashcards_study_due">
+        <item quantity="one">Estudiar · %d pendiente</item>
+        <item quantity="other">Estudiar · %d pendientes</item>
+        <item quantity="many">Estudiar · %d pendientes</item>
+    </plurals>
+    <string name="flashcards_action_clear">Quitar</string>
+    <string name="flashcards_empty">No hay tarjetas para los filtros actuales.</string>
+
+    <!-- Flashcards: the flip card -->
+    <string name="flashcards_reveal">Mostrar el nombre del país y la capital</string>
+    <string name="flashcards_show_flag_again">Volver a mostrar la bandera</string>
+    <string name="flashcards_state_flag">Mostrando la bandera</string>
+    <string name="flashcards_state_details">Mostrando los datos del país</string>
+    <string name="flashcards_tap_to_reveal">Toca para ver el nombre del país y la capital</string>
+    <!-- A capital study card: the front names the country and asks; the back answers -->
+    <string name="flashcards_capital_prompt">¿Cuál es la capital?</string>
+    <string name="flashcards_tap_to_reveal_capital">Toca para ver la capital</string>
+    <string name="flashcards_reveal_capital">Mostrar la capital</string>
+    <string name="flashcards_state_capital">Mostrando la capital</string>
+    <string name="flashcards_population">Población</string>
+    <string name="flashcards_flag_meaning">Significado de la bandera</string>
+    <string name="flashcards_trivia">Dato curioso</string>
+
+    <!-- Flashcards: Previous and Next -->
+    <string name="flashcards_previous">Anterior</string>
+    <string name="flashcards_next">Siguiente</string>
+
+    <!-- Study: the chooser dialog (the Study icon shares its title) -->
+    <string name="study_title">Estudiar</string>
+    <string name="study_chooser_intro">Hasta %1$d tarjetas; califica cada una tras girarla. Diez o más cuentan como práctica.</string>
+    <plurals name="study_due_detail">
+        <item quantity="one">%1$d tarjeta pendiente de repaso</item>
+        <item quantity="other">%1$d tarjetas pendientes de repaso</item>
+        <item quantity="many">%1$d tarjetas pendientes de repaso</item>
+    </plurals>
+    <!-- The capitals due for review: a study source, stored as StudySession.CAPITALS_DUE -->
+    <string name="study_source_capitals_due">Capitales pendientes</string>
+    <plurals name="study_capitals_due_detail">
+        <item quantity="one">%1$d capital pendiente de repaso</item>
+        <item quantity="other">%1$d capitales pendientes de repaso</item>
+        <item quantity="many">%1$d capitales pendientes de repaso</item>
+    </plurals>
+    <string name="study_weak_detail">%1$d repasadas, no dominadas</string>
+    <plurals name="study_deck_detail">
+        <item quantity="one">la siguiente %1$d tarjeta desde aquí</item>
+        <item quantity="other">las siguientes %1$d tarjetas desde aquí</item>
+        <item quantity="many">las siguientes %1$d tarjetas desde aquí</item>
+    </plurals>
+
+    <!-- Study: the session -->
+    <string name="study_header">Estudiar · %1$s</string>
+    <string name="study_position_rehearsal">Tarjeta %1$d de %2$d · otra vez</string>
+    <string name="study_undo">Deshacer la última calificación</string>
+    <string name="study_end">Terminar</string>
+    <string name="study_grade_prompt">¿Qué tan bien la sabías?</string>
+    <string name="study_flip_to_grade">Gira la tarjeta para calificarla</string>
+    <string name="study_grade_again">Otra vez</string>
+    <string name="study_grade_good">Bien</string>
+    <string name="study_grade_easy">Fácil</string>
+
+    <!-- Study: the summary (the quiz log reuses study_summary_remembered) -->
+    <string name="study_summary_title">Sesión completada</string>
+    <string name="study_summary_remembered">%1$d de %2$d recordadas</string>
+    <string name="study_summary_grades">Otra vez %1$d · Bien %2$d · Fácil %3$d</string>
+    <string name="study_streak_already_counted">Racha de %1$d días, ya contada hoy</string>
+    <string name="study_streak_short">Califica al menos %1$d tarjetas para que cuente para tu meta (calificaste %2$d)</string>
+    <string name="study_again">Estudiar de nuevo</string>
+
+    <!-- Progress: the header -->
+    <string name="stats_title">Progreso</string>
+    <string name="stats_subtitle">Sigue tu dominio de banderas y tus logros en los quizzes</string>
+    <string name="stats_settings">Ajustes</string>
+
+    <!-- Progress: the streak card -->
+    <string name="stats_no_streak">Aún sin racha</string>
+    <plurals name="stats_streak_title">
+        <item quantity="one">Racha de %d día</item>
+        <item quantity="other">Racha de %d días</item>
+        <item quantity="many">Racha de %d días</item>
+    </plurals>
+    <string name="stats_streak_start">Cumple la meta de hoy para empezar una</string>
+    <string name="stats_streak_detail">%1$s · %2$s</string>
+    <plurals name="stats_streak_best">
+        <item quantity="one">Mejor: %d día</item>
+        <item quantity="other">Mejor: %d días</item>
+        <item quantity="many">Mejor: %d días</item>
+    </plurals>
+    <string name="stats_practiced_today">Practicado hoy</string>
+    <string name="stats_not_yet_today">Hoy todavía no</string>
+
+    <!-- Progress: the metric tiles -->
+    <string name="stats_mastered_flags">Banderas dominadas</string>
+    <string name="stats_capitals_known">Capitales sabidas</string>
+    <string name="stats_ratio">%1$d / %2$d</string>
+    <string name="stats_due_today">Pendiente hoy</string>
+    <!-- The Due tile's value when capitals are due too: "flags 4 · capitals 2"; with map reviews due as well: "flags 4 · capitals 2 · map 1" -->
+    <string name="stats_due_both">banderas %1$d · capitales %2$d</string>
+    <string name="stats_due_three">banderas %1$d · capitales %2$d · mapa %3$d</string>
+    <string name="stats_learning">En curso</string>
+    <!-- Countries placed on the map and remembered (the map skill): "On the map 12 / 196" -->
+    <string name="stats_located">En el mapa</string>
+    <string name="stats_due_open">Iniciar una sesión de estudio con las tarjetas pendientes</string>
+    <string name="stats_saved">Guardados</string>
+    <string name="stats_quizzes_finished">Quizzes terminados</string>
+    <string name="stats_highest_score">Mejor puntuación</string>
+    <string name="stats_points">%1$d ptos</string>
+    <string name="stats_blitz_best">Mejor Blitz: %1$d</string>
+    <!-- What TalkBack reads for a tile: title, value and (when there is one) the detail line -->
+    <string name="stat_badge_description">%1$s: %2$s</string>
+    <string name="stat_badge_description_detail">%1$s: %2$s · %3$s</string>
+
+    <!-- Progress: the week ahead, under the tiles ("Coming up: 4 due tomorrow · 12 this week"); hidden when nothing is coming -->
+    <string name="stats_forecast">Próximamente: %1$s · %2$s</string>
+    <string name="stats_forecast_tomorrow">%1$d mañana</string>
+    <string name="stats_forecast_week">%1$d esta semana</string>
+
+    <!-- Progress: the pairs of countries mixed up most often, each row opening how to tell them apart -->
+    <string name="stats_confused_heading">Más confundidos</string>
+    <string name="stats_confused_pair">%1$s ↔ %2$s</string>
+    <string name="stats_confused_times">× %1$d</string>
+    <plurals name="stats_confused_description">
+        <item quantity="one">%1$s, confundidos %2$d vez</item>
+        <item quantity="other">%1$s, confundidos %2$d veces</item>
+        <item quantity="many">%1$s, confundidos %2$d veces</item>
+    </plurals>
+    <string name="stats_confused_open">Mostrar cómo distinguirlos</string>
+
+    <!-- Progress: continent mastery -->
+    <string name="stats_continent_heading">Dominio por continente</string>
+    <string name="stats_continent_open">Mostrar los países de %1$s por aprender</string>
+    <string name="stats_mastered_of">%1$d de %2$d dominados</string>
+    <string name="stats_capitals_count">Capitales: %1$d de %2$d</string>
+
+    <!-- Progress: the quiz log -->
+    <string name="stats_log_heading">Quizzes recientes</string>
+    <string name="stats_log_empty">Aún no hay quizzes. Termina un quiz o una sesión de estudio y aparecerá aquí.</string>
+    <string name="stats_log_entry">%1$s · %2$s</string>
+    <string name="stats_log_result">%1$d/%2$d · %3$d ptos</string>
+    <string name="stats_log_blitz">%1$d correctas · %2$d ptos</string>
+    <string name="stats_log_show_all">Mostrar todo</string>
+    <!-- A log row with stored answers is a button that opens its result screen again -->
+    <string name="stats_log_open">Abrir el resultado de este quiz</string>
+
+    <!-- The daily reminder card -->
+    <string name="reminder_title">Recordatorio diario</string>
+    <string name="reminder_detail">Un aviso a las %1$s, solo los días en que no llegues a tu meta</string>
+    <string name="reminder_time">Recordarme a las %1$s</string>
+    <string name="reminder_blocked">Permite las notificaciones de %1$s en los ajustes del sistema para recibir el recordatorio.</string>
+    <string name="reminder_open_settings">Abrir ajustes</string>
+    <string name="reminder_ok">OK</string>
+</resources>

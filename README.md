@@ -77,10 +77,16 @@ continent, whose never-seen flags the quizzes then introduce before the rest of 
 
 ## Languages
 
-Every word the screens show is a string resource (`app/src/main/res/values/strings*.xml`, one file per screen plus
-the shared one); `ui/Labels.kt` maps the stored keys (quiz modes, scopes, continents, sort orders, standings) to
-them, so a translation is a `values-xx/` folder and touches no Kotlin. The layout mirrors in right-to-left locales.
-The catalog itself (names, capitals, flag texts, facts) is English; translating it is a content decision for later.
+The screens come in English, French, Spanish, German and Arabic: pick one under *Settings › Language* (it goes to
+the system's per-app language setting on Android 13 and newer, and the activity applies it itself before that), or
+leave *System* to follow the phone. Every word the screens show is a string resource (`app/src/main/res/values/
+strings*.xml`, one file per screen plus the shared one, translated in `values-fr`, `values-es`, `values-de` and
+`values-ar`); `ui/Labels.kt` maps the stored keys (quiz modes, scopes, continents, sort orders, standings) to them.
+`tools/strings-audit.py --check` (run by CI, mirrored by `StringsAuditTest`) keeps every translation complete: the
+same keys, the same placeholders, every plural quantity the language needs. The layout mirrors in Arabic. The
+translations were made with machine help and checked for consistency, not by native speakers; corrections are
+welcome. The catalog itself (names, capitals, flag texts, facts) is English, and typed answers are matched against
+English names and short forms.
 
 ## Privacy
 

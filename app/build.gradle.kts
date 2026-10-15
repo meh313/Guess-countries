@@ -28,12 +28,16 @@ android {
   namespace = "com.example"
   compileSdk { version = release(37) }
 
+  // The app changes its own language (Settings › Language), so every language ships in the bundle: no per-language
+  // splits that would need Play Core to fetch the missing one.
+  bundle { language { enableSplit = false } }
+
   defaultConfig {
     applicationId = "com.aistudio.worldexplorer.flags"
     minSdk = 24
     targetSdk = 36
     versionCode = versionCodeFromEnv ?: 1
-    versionName = "3.0"
+    versionName = "3.1"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }

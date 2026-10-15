@@ -4,6 +4,10 @@ import android.app.UiModeManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
+import com.example.data.settings.AppLanguage
+import androidx.compose.material3.FilterChip
+import androidx.compose.foundation.layout.FlowRow
+import android.app.Activity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -113,6 +117,7 @@ fun SettingsScreen(
 ) {
     val appearance by viewModel.appearance.collectAsStateWithLifecycle()
     val feedback by viewModel.feedback.collectAsStateWithLifecycle()
+    val language by viewModel.language.collectAsStateWithLifecycle()
     val pace by viewModel.timerPace.collectAsStateWithLifecycle()
     val goal by viewModel.dailyGoal.collectAsStateWithLifecycle()
     val focus by viewModel.focusContinent.collectAsStateWithLifecycle()
@@ -180,6 +185,31 @@ fun SettingsScreen(
         ScreenHeader(title = stringResource(R.string.settings_title), onBack = onBack, backTag = "settings_back_btn")
 
         SettingsSection(stringResource(R.string.settings_section_appearance)) {
+            SettingLabel(stringResource(R.string.settings_language_label))
+            // One chip per language, each in its own language; "System" follows the phone. Applying the choice
+            // recreates the screen (the system does it from Android 13, the activity itself before).
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth().testTag("settings_language")) {
+                AppLanguage.CHOICES.forEach { tag ->
+                    val selected = language == tag
+                    FilterChip(
+                        selected = selected,
+                        onClick = {
+                            if (selected) return@FilterChip
+                            viewModel.setLanguage(tag)
+                            AppLanguage.apply(context, tag)
+                            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) (context as? Activity)?.recreate()
+                        },
+                        label = { Text(AppLanguage.label(tag) ?: stringResource(R.string.settings_language_system)) },
+                        modifier = Modifier.testTag("settings_language_${tag.ifEmpty { "system" }}")
+                    )
+                }
+            }
+            Text(
+                text = stringResource(R.string.settings_language_detail),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(12.dp))
             SettingLabel(stringResource(R.string.settings_theme_label))
             SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth().testTag("settings_theme")) {
                 ThemeMode.entries.forEachIndexed { index, mode ->

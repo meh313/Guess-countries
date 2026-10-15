@@ -107,6 +107,14 @@ fun AboutScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
             )
         }
 
+        AboutSection(stringResource(R.string.about_translations_title)) {
+            Text(
+                text = stringResource(R.string.about_translations_text),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.testTag("about_translations")
+            )
+        }
+
         AboutSection(stringResource(R.string.about_privacy_title)) {
             Text(
                 text = stringResource(R.string.about_privacy_text),

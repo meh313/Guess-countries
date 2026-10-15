@@ -38,6 +38,7 @@ import com.example.MainActivity
 import com.example.R
 import com.example.data.local.AppDatabase
 import com.example.data.model.CountryCatalog
+import com.example.data.settings.AppLanguage
 import com.example.data.settings.PrefsUserSettings
 import java.util.TimeZone
 import kotlinx.coroutines.flow.first
@@ -51,7 +52,9 @@ class TodayWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val state = load(context)
-        provideContent { GlanceTheme { Content(state) } }
+        // The texts in the language the screens use (before Android 13 the widget's context is the phone's).
+        val texts = AppLanguage.wrap(context, PrefsUserSettings(context).language)
+        provideContent { GlanceTheme { Content(state, texts) } }
     }
 
     companion object {
@@ -75,7 +78,7 @@ class TodayWidgetReceiver : GlanceAppWidgetReceiver() {
 }
 
 @Composable
-internal fun Content(state: WidgetState) {
+internal fun Content(state: WidgetState, texts: Context = LocalContext.current) {
     val context = LocalContext.current
     val open = Intent(context, MainActivity::class.java).apply {
         flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
@@ -99,23 +102,23 @@ internal fun Content(state: WidgetState) {
             )
             Spacer(modifier = GlanceModifier.width(6.dp))
             Text(
-                text = context.getString(R.string.app_name),
+                text = texts.getString(R.string.app_name),
                 style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 12.sp)
             )
         }
         Spacer(modifier = GlanceModifier.height(6.dp))
         Text(
-            text = if (state.due == 0) context.getString(R.string.widget_nothing_due)
-            else context.resources.getQuantityString(R.plurals.widget_due, state.due, state.due),
+            text = if (state.due == 0) texts.getString(R.string.widget_nothing_due)
+            else texts.resources.getQuantityString(R.plurals.widget_due, state.due, state.due),
             style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 22.sp, fontWeight = FontWeight.Bold)
         )
         Text(
-            text = context.getString(R.string.widget_streak_today, state.streak, state.today, state.goal),
+            text = texts.getString(R.string.widget_streak_today, state.streak, state.today, state.goal),
             style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 13.sp)
         )
         Spacer(modifier = GlanceModifier.height(10.dp))
         Text(
-            text = context.getString(R.string.widget_practise),
+            text = texts.getString(R.string.widget_practise),
             style = TextStyle(color = GlanceTheme.colors.onPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold),
             modifier = GlanceModifier
                 .background(GlanceTheme.colors.primary)

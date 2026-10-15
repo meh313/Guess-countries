@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Learn mode ("Learn 5 new"): five flags never seen before, one card at a time, then a short quiz over them. The
+  quiz itself uses the quiz strings; its scope label is here.
+-->
+<!-- "Card 1 of 5" never changes its wording with the number: a plain string, like the flashcards' one. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="PluralsCandidate">
+    <!-- The entry on the Flashcards study chooser (the screen's title shares it) -->
+    <string name="learn_title">Aprender 5 nuevas</string>
+    <plurals name="learn_option_detail">
+        <item quantity="one">%1$d bandera que aún no has visto</item>
+        <item quantity="other">%1$d banderas que aún no has visto</item>
+        <item quantity="many">%1$d banderas que aún no has visto</item>
+    </plurals>
+
+    <!-- The cards -->
+    <string name="learn_intro">Cinco banderas que aún no has visto y luego un quiz corto.</string>
+    <string name="learn_card_position">Tarjeta %1$d de %2$d</string>
+    <string name="learn_not_to_confuse">No confundir con</string>
+    <string name="learn_previous">Anterior</string>
+    <string name="learn_next">Siguiente</string>
+    <string name="learn_quiz_me">Ponme a prueba</string>
+
+    <!-- Nothing left to introduce -->
+    <string name="learn_nothing_new">Ya has visto todas las banderas. Los quizzes siguen repasándolas.</string>
+
+    <!-- The scope of the quiz after the cards, in the quiz log -->
+    <string name="scope_learn">Aprender</string>
+    <string name="learn_borders">Fronteras: %1$s</string>
+    <string name="learn_no_borders">Sin fronteras terrestres</string>
+</resources>

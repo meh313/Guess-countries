@@ -312,7 +312,12 @@ fun CountryDetailSheet(
                 DetailMetricCard(
                     icon = Icons.Default.DirectionsCar,
                     label = stringResource(R.string.sheet_fact_driving_side),
-                    value = if (country.driveSide == "N/A") stringResource(R.string.sheet_no_public_roads) else stringResource(R.string.sheet_drive_side, country.driveSide),
+                    value = when (country.driveSide) {
+                        "N/A" -> stringResource(R.string.sheet_no_public_roads)
+                        // The catalog says Left or Right in English; the word the player reads is a resource.
+                        "Left" -> stringResource(R.string.sheet_drive_side, stringResource(R.string.drive_side_left))
+                        else -> stringResource(R.string.sheet_drive_side, stringResource(R.string.drive_side_right))
+                    },
                     modifier = Modifier.weight(1f)
                 )
             }

@@ -4,6 +4,9 @@
     <!-- Settings: header and Appearance -->
     <string name="settings_title">Settings</string>
     <string name="settings_section_appearance">Appearance</string>
+    <string name="settings_language_label">Language</string>
+    <string name="settings_language_system">System</string>
+    <string name="settings_language_detail">For the screens; country names, capitals and facts stay in English</string>
     <string name="settings_theme_label">Theme</string>
     <string name="settings_dynamic_color_title">Wallpaper colours</string>
     <string name="settings_dynamic_color_detail">Colours from the wallpaper instead of the app\'s own blue</string>
@@ -104,6 +107,8 @@
     <string name="about_catalog_text">The 196 sovereign states as widely recognised, plus Antarctica to browse. Flags are drawn to each country\'s own proportions. Where the meaning of a flag is disputed or legendary, the text says so instead of picking a side; a fact that could not be settled was left out rather than guessed.</string>
 
     <!-- About: privacy -->
+    <string name="about_translations_title">Translations</string>
+    <string name="about_translations_text">French, Spanish, German and Arabic were translated with machine help and checked for consistency, not by native speakers. Corrections are welcome on GitHub.</string>
     <string name="about_privacy_title">Privacy</string>
     <string name="about_privacy_text">The app has no network permission: nothing you do leaves the device, and there is no account. Your progress is stored in the app\'s own database and included in Android\'s backup of the app, so it moves with you to a new phone when backup is on. Settings &gt; Reset progress deletes all of it.</string>
     <!-- A link row under the text: opens PRIVACY.md in the repository in the browser -->
