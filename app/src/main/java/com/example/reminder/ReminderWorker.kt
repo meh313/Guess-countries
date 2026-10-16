@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.data.local.AppDatabase
+import com.example.data.settings.AppLanguage
 import com.example.data.settings.PrefsUserSettings
 import com.example.progress.PracticeStreak
 import com.example.widget.TodayWidget
@@ -52,10 +53,13 @@ class ReminderWorker(
     /** The sessions in the log and the goal from the settings decide whether today still needs a nudge. */
     private suspend fun notifyIfNothingPracticed(at: Long) {
         val sessions = AppDatabase.getDatabase(applicationContext).userProgressDao().practiceSessions().map { it.toPracticeSession() }
-        val goal = PrefsUserSettings(applicationContext).dailyGoal
+        val settings = PrefsUserSettings(applicationContext)
+        val goal = settings.dailyGoal
         val allowed = ReminderNotifier.areNotificationsAllowed(applicationContext)
         if (ReminderSchedule.shouldNotify(enabled = true, allowed, sessions, goal, at, zone())) {
-            ReminderNotifier.show(applicationContext, ReminderSchedule.message(PracticeStreak.summary(sessions, goal, at, zone())))
+            // In the language the screens use, not the phone's, before Android 13 (from 13 the system does it).
+            val localised = AppLanguage.wrap(applicationContext, settings.language)
+            ReminderNotifier.show(localised, ReminderSchedule.message(PracticeStreak.summary(sessions, goal, at, zone())))
         }
     }
 

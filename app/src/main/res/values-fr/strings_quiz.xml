@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  L’onglet Quiz : l’écran de réglage (`quiz_`), l’écran de question (`quiz_`) et l’écran de score (`result_`). Les
+  libellés de mode, de difficulté, de portée et de compétence sont partagés et vivent dans strings.xml.
+-->
+<!-- Les comptes dont la formulation ne change pas avec le nombre, ou qui ne valent jamais 1, restent des chaînes simples. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="PluralsCandidate">
+    <!-- Réglage : en-tête -->
+    <string name="quiz_title">Quiz de géographie &amp; de drapeaux</string>
+    <string name="quiz_subtitle">Testez vos connaissances et gardez votre série</string>
+
+    <!-- Réglage : mode -->
+    <string name="quiz_select_mode">Choisir le mode</string>
+    <plurals name="quiz_seconds_per_question">
+        <item quantity="one">%d seconde par question</item>
+        <item quantity="other">%d secondes par question</item>
+        <item quantity="many">%d secondes par question</item>
+    </plurals>
+    <string name="quiz_no_time_limit">Sans limite de temps (voir Paramètres)</string>
+
+    <!-- Réglage : portée -->
+    <string name="quiz_select_scope">Choisir la portée</string>
+    <string name="quiz_scope_whole_world">Le quiz des continents couvre toujours le monde entier</string>
+    <string name="quiz_scope_due_count">%1$s · %2$d</string>
+    <string name="quiz_due_nothing">Rien à réviser aujourd\'hui</string>
+    <plurals name="quiz_due_note_countries">
+        <item quantity="one">Le %1$d pays à réviser, avec des réponses du monde entier</item>
+        <item quantity="other">Les %1$d pays à réviser, avec des réponses du monde entier</item>
+        <item quantity="many">Les %1$d pays à réviser, avec des réponses du monde entier</item>
+    </plurals>
+    <plurals name="quiz_due_note_capitals">
+        <item quantity="one">La %1$d capitale à réviser, avec des réponses du monde entier</item>
+        <item quantity="other">Les %1$d capitales à réviser, avec des réponses du monde entier</item>
+        <item quantity="many">Les %1$d capitales à réviser, avec des réponses du monde entier</item>
+    </plurals>
+    <string name="quiz_weak_spots_locked_countries">Points faibles se débloque dès que %1$d pays révisés ne sont pas maîtrisés (vous en avez %2$d)</string>
+    <string name="quiz_weak_spots_locked_capitals">Points faibles se débloque dès que %1$d capitales révisées ne sont pas maîtrisées (vous en avez %2$d)</string>
+    <string name="quiz_weak_spots_note_countries">Vos %1$d pays les plus faibles, avec des réponses du monde entier</string>
+    <string name="quiz_weak_spots_note_capitals">Vos %1$d capitales les plus faibles, avec des réponses du monde entier</string>
+
+    <!-- Réglage : difficulté des réponses -->
+    <string name="quiz_answers">Réponses</string>
+    <string name="quiz_look_alikes_flags_only">Les réponses ressemblantes ne concernent que les questions de drapeaux</string>
+
+    <!-- Réglage : bouton de départ -->
+    <string name="quiz_start_blitz">Lancer le blitz de %1$d secondes</string>
+    <string name="quiz_start_quiz">Lancer un quiz de %1$d questions</string>
+    <string name="quiz_needs_countries">Il faut au moins %1$d pays</string>
+
+    <!-- Jeu : barre d'état -->
+    <string name="quiz_progress_blitz">Question %1$d · Justes %2$d</string>
+    <string name="quiz_progress">Question %1$d sur %2$d</string>
+    <string name="quiz_score">Score : %1$d</string>
+    <string name="quiz_streak">D\'affilée %1$d</string>
+    <string name="quiz_quit">Quitter le quiz</string>
+
+    <!-- Jeu : minuteurs -->
+    <plurals name="quiz_seconds_in_total">
+        <item quantity="one">%d seconde au total</item>
+        <item quantity="other">%d secondes au total</item>
+        <item quantity="many">%d secondes au total</item>
+    </plurals>
+    <plurals name="quiz_seconds_left">
+        <item quantity="one">%d seconde restante</item>
+        <item quantity="other">%d secondes restantes</item>
+        <item quantity="many">%d secondes restantes</item>
+    </plurals>
+    <string name="quiz_seconds_left_short">%1$d s</string>
+
+    <!-- Jeu : options -->
+    <string name="quiz_option_correct">Bonne réponse</string>
+    <string name="quiz_option_incorrect">Votre réponse, incorrecte</string>
+
+    <!-- Jeu : après la réponse -->
+    <string name="quiz_result_timeout">Temps écoulé ! La réponse est %1$s</string>
+    <string name="quiz_result_correct">Correct ! +%1$d points</string>
+    <string name="quiz_result_wrong">Pas tout à fait. La réponse est %1$s</string>
+    <string name="quiz_result_also_counted">Juste : %1$s compte aussi, même si le catalogue le classe sous %2$s</string>
+    <string name="quiz_capital_and_country">%1$s, %2$s</string>
+    <string name="quiz_typed_label">Nom du pays</string>
+    <string name="quiz_typed_submit">Vérifier</string>
+    <string name="quiz_typed_hint">Les formes courtes comptent : UK, USA, DRC. Une faute de frappe est tolérée.</string>
+    <string name="quiz_fact_capital">Capitale : %1$s</string>
+    <string name="quiz_finish">Terminer &amp; voir le score</string>
+    <string name="quiz_next_question">Question suivante</string>
+
+    <!-- Jeu : dialogue de sortie -->
+    <string name="quiz_quit_title">Quitter ce quiz ?</string>
+    <!-- Chaque réponse donnée jusqu'ici a été enregistrée telle quelle ; seuls les points du quiz inachevé, son entrée de journal et son crédit de série sont perdus. -->
+    <string name="quiz_quit_text">Les points de ce quiz seront perdus et il ne comptera pas pour votre série. Les réponses déjà données restent dans votre progression.</string>
+    <string name="quiz_quit_confirm">Quitter</string>
+    <string name="quiz_quit_cancel">Continuer</string>
+
+    <!-- Écran de score : en-tête et chiffres -->
+    <string name="result_times_up">Temps écoulé !</string>
+    <string name="result_complete">Quiz terminé !</string>
+    <string name="result_blitz_score">%1$d justes · %2$d points</string>
+    <plurals name="result_blitz_flags">
+        <item quantity="one">%1$d drapeau en %2$d secondes</item>
+        <item quantity="other">%1$d drapeaux en %2$d secondes</item>
+        <item quantity="many">%1$d drapeaux en %2$d secondes</item>
+    </plurals>
+    <string name="result_correct_ratio">%1$d / %2$d justes</string>
+    <string name="result_points">%1$d points</string>
+    <string name="result_answers">Réponses : %1$s</string>
+    <string name="result_streak_already_counted">Série de %1$d jours, déjà comptée aujourd\'hui</string>
+    <string name="result_streak_days">Série de %1$d jours</string>
+
+    <!-- Écran de score : les erreurs -->
+    <string name="result_perfect">Toutes les réponses sont justes !</string>
+    <string name="result_mistakes">Erreurs (%1$d)</string>
+    <string name="result_no_answer">Pas de réponse à temps</string>
+    <string name="result_picked_capital">Vous avez choisi %1$s, %2$s</string>
+    <string name="result_picked">Vous avez choisi %1$s</string>
+    <string name="result_picked_text">Vous avez choisi : %1$s</string>
+    <string name="result_miss_description">%1$s. %2$s</string>
+
+    <!-- Écran de score : la suite -->
+    <string name="result_practise_mistakes">S\'entraîner sur les erreurs</string>
+    <string name="result_retry">Réessayer</string>
+
+    <!-- Écran de score d'un quiz du journal, ouvert depuis Progrès : « Quiz du 12 oct. » -->
+    <string name="review_title">Quiz du %1$s</string>
+</resources>

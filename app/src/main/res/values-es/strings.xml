@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Words shared by more than one screen, and the labels of the enums (quiz modes, scopes, sort orders, standings…),
+  which `ui/Labels.kt` maps to. Each screen keeps its own words in `strings_<screen>.xml`. Stored values (quiz mode
+  names, scope keys, continent names, study sources) are never these strings: they stay the English keys and are
+  translated on display only.
+-->
+<resources>
+    <string name="app_name">World Flags</string>
+    <plurals name="countries_count">
+        <item quantity="one">%d país</item>
+        <item quantity="other">%d países</item>
+        <item quantity="many">%d países</item>
+    </plurals>
+
+    <!-- Tabs -->
+    <string name="nav_explore">Explorar</string>
+    <string name="nav_flashcards">Tarjetas</string>
+    <string name="nav_quiz">Quiz</string>
+    <string name="nav_progress">Progreso</string>
+
+    <!-- Shared actions and lines -->
+    <string name="action_done">Listo</string>
+    <string name="action_back">Atrás</string>
+    <string name="action_cancel">Cancelar</string>
+    <string name="action_close">Cerrar</string>
+    <string name="action_clear_filters">Quitar filtros</string>
+    <string name="action_read_aloud">Leer el resumen del país en voz alta</string>
+    <string name="read_aloud_unavailable">La lectura en voz alta no está disponible en este dispositivo</string>
+    <string name="read_aloud_loading">Preparando la lectura en voz alta</string>
+    <string name="flag_to_identify">Bandera por identificar</string>
+    <string name="flag_of">Bandera de %1$s</string>
+    <string name="bookmark_country">Guardar %1$s</string>
+    <string name="streak_started">Racha iniciada: día 1</string>
+    <!-- The finished session was too small for the daily goal (see Settings); the day counts once the goal is met. -->
+    <string name="streak_goal_short">Aún no basta para la meta de hoy</string>
+    <plurals name="streak_kept">
+        <item quantity="one">Racha mantenida: %d día</item>
+        <item quantity="other">Racha mantenida: %d días</item>
+        <item quantity="many">Racha mantenida: %d días</item>
+    </plurals>
+
+    <!-- Quiz modes (display titles; the stored value is the enum name) -->
+    <string name="mode_flag_name">Bandera → País</string>
+    <string name="mode_pick_flag">País → Bandera</string>
+    <string name="mode_pick_flag_hint">Elige la bandera correcta entre cuatro</string>
+    <string name="mode_capital">País → Capital</string>
+    <string name="mode_continent">Bandera → Continente</string>
+    <string name="mode_continent_hint">Abarca todo el mundo</string>
+    <string name="mode_locate">Mapa → País</string>
+    <string name="mode_locate_hint">¿En qué parte del mundo está?</string>
+    <string name="mode_type_name">Bandera → Nombre escrito</string>
+    <string name="mode_type_name_hint">Sin opciones: escribe el nombre del país</string>
+    <string name="mode_speed_round">Ronda rápida</string>
+    <string name="mode_speed_round_hint">10 segundos por pregunta</string>
+    <string name="mode_blitz">Blitz de 60 segundos</string>
+    <string name="mode_blitz_hint">Tantas banderas como puedas en un minuto</string>
+    <string name="mode_flashcards">Tarjetas</string>
+
+    <!-- What a question asks, per mode -->
+    <string name="question_flag_name">¿A qué país pertenece esta bandera?</string>
+    <string name="question_pick_flag">¿Cuál de estas es la bandera de %1$s?</string>
+    <string name="question_capital">¿Cuál es la capital de %1$s?</string>
+    <string name="question_continent">¿A qué continente pertenece esta bandera?</string>
+    <string name="question_locate">¿Qué país está resaltado en el mapa?</string>
+    <string name="question_type_name">Escribe el nombre de este país</string>
+    <string name="question_blitz">¿Qué país es este?</string>
+    <string name="question_speed_round">Identifica el país de esta bandera:</string>
+
+    <!-- Answers difficulty -->
+    <string name="difficulty_normal">Normal</string>
+    <string name="difficulty_normal_hint">Una bandera parecida entre las respuestas</string>
+    <string name="difficulty_hard">Difícil</string>
+    <string name="difficulty_hard_hint">Banderas parecidas siempre que existan</string>
+
+    <!-- Quiz scopes and study sources (display labels; the stored keys are in QuizEngine and StudySession) -->
+    <string name="scope_global">Global</string>
+    <string name="scope_weak_spots">Puntos débiles</string>
+    <string name="scope_due_today">Pendiente hoy</string>
+    <string name="scope_mistakes">Errores</string>
+    <string name="study_source_deck">Este mazo</string>
+
+    <!-- Continents (display labels; the catalog keeps the English names as keys) -->
+    <string name="continent_all">Todos</string>
+    <string name="continent_africa">África</string>
+    <string name="continent_americas">América</string>
+    <string name="continent_asia">Asia</string>
+    <string name="continent_europe">Europa</string>
+    <string name="continent_oceania">Oceanía</string>
+    <string name="continent_antarctica">Antártida</string>
+
+    <!-- Sort orders -->
+    <string name="sort_by_name">Ordenar por nombre</string>
+    <string name="sort_by_population">Ordenar por población</string>
+    <string name="sort_by_area">Ordenar por superficie</string>
+    <string name="sort_by_continent">Ordenar por continente</string>
+    <string name="sort_noun_name">nombre</string>
+    <string name="sort_noun_population">población</string>
+    <string name="sort_noun_area">superficie</string>
+    <string name="sort_noun_continent">continente</string>
+
+    <!-- Standing of a skill (pips, chips, the detail sheet) -->
+    <string name="standing_unseen">aún sin repasar</string>
+    <string name="standing_weak">todavía en curso</string>
+    <string name="standing_mastered">dominado</string>
+    <string name="standing_chip_unseen">Sin ver</string>
+    <string name="standing_chip_weak">En curso</string>
+    <string name="standing_chip_mastered">Dominado</string>
+    <string name="standing_short_unseen">sin ver</string>
+    <string name="standing_short_weak">en curso</string>
+    <string name="standing_short_mastered">dominado</string>
+    <!-- The Unseen + Learning pair a Progress continent card sets (Explore's hint, the Flashcards deck notice) -->
+    <string name="standing_still_to_learn">Por aprender</string>
+    <string name="standing_phrase_still_to_learn">por aprender</string>
+    <string name="standing_either">%1$s o %2$s</string>
+    <!-- The two pips on a card: skill label, standing, skill label, standing ("Flag: learning, Capital: mastered") -->
+    <string name="pips_description">%1$s: %2$s, %3$s: %4$s</string>
+
+    <!-- Skills -->
+    <string name="skill_flag">Bandera</string>
+    <string name="skill_capital">Capital</string>
+    <string name="skill_continent">Continente</string>
+    <string name="skill_location">Mapa</string>
+
+    <!-- Settings enums -->
+    <string name="theme_system">Sistema</string>
+    <string name="theme_light">Claro</string>
+    <string name="theme_dark">Oscuro</string>
+    <string name="timer_normal">Normal</string>
+    <string name="timer_relaxed">Relajado</string>
+    <string name="timer_off">Sin límite</string>
+
+    <!-- The daily reminder (notification channel and the two messages) -->
+    <string name="reminder_channel_name">Recordatorio diario</string>
+    <string name="reminder_channel_description">Un aviso para hacer un quiz cuando no has practicado hoy</string>
+    <string name="reminder_keep_title">Mantén tu racha</string>
+    <plurals name="reminder_keep_text">
+        <item quantity="one">Un quiz mantiene tu racha de %d día</item>
+        <item quantity="other">Un quiz mantiene tu racha de %d días</item>
+        <item quantity="many">Un quiz mantiene tu racha de %d días</item>
+    </plurals>
+    <string name="reminder_start_title">Hora de un quiz rápido</string>
+    <string name="reminder_start_text">Un quiz rápido inicia una nueva racha</string>
+
+    <!-- Shown once when a database write failed (see WriteErrors) -->
+    <string name="write_error">No se pudo guardar tu último cambio. Exporta tu progreso desde Ajustes e inténtalo más tarde.</string>
+
+    <!-- The spoken country summary -->
+    <string name="speech_name">%1$s.</string>
+    <string name="speech_capital_and_continent">Su capital es %1$s y está en %2$s.</string>
+    <string name="speech_continent">Está en %1$s.</string>
+
+    <!-- The home-screen widget. -->
+    <string name="widget_label">Repasos de hoy</string>
+    <string name="widget_description">Cuántos repasos hay pendientes, tu racha y un botón Practicar</string>
+    <plurals name="widget_due">
+        <item quantity="one">%1$d repaso pendiente</item>
+        <item quantity="other">%1$d repasos pendientes</item>
+        <item quantity="many">%1$d repasos pendientes</item>
+    </plurals>
+    <string name="widget_nothing_due">Nada pendiente</string>
+    <string name="widget_streak_today">Racha %1$d · hoy %2$d/%3$d</string>
+    <string name="widget_practise">Practicar</string>
+</resources>

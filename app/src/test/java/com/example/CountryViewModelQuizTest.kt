@@ -76,14 +76,16 @@ class CountryViewModelQuizTest {
         countries: List<Country> = CountryCatalog.all,
         random: Random = Random.Default,
         savedState: SavedStateHandle = SavedStateHandle(),
-        settings: InMemoryUserSettings = InMemoryUserSettings()
+        settings: InMemoryUserSettings = InMemoryUserSettings(),
+        widgets: com.example.widget.WidgetRefresher = com.example.widget.WidgetRefresher.NONE
     ) = CountryViewModel(
         CountryRepository(db.userProgressDao(), countries),
         FakeSpeech(),
         clock = { now },
         settings = settings,
         random = random,
-        savedStateHandle = savedState
+        savedStateHandle = savedState,
+        widgets = widgets
     ).also { created += it }
 
     // Small worlds for the paths the full catalog no longer reaches: a scope with fewer than ten
@@ -704,6 +706,22 @@ class CountryViewModelQuizTest {
         val skills = runBlocking { db.userProgressDao().getAllSkills().first() }
         assertTrue(skills.none { it.skill == Skill.FLAG.name })
         assertEquals(session.questions.map { it.targetCountry.code }.toSet(), skills.filter { it.skill == Skill.LOCATION.name }.map { it.countryCode }.toSet())
+    }
+
+    @Test
+    fun theWidgetIsRedrawnOnceAFinishedQuizIsSaved_notBefore() {
+        var redraws = 0
+        val vm = newViewModel(widgets = com.example.widget.WidgetRefresher { redraws++ })
+        vm.startQuiz(QuizMode.FLAG_NAME, "Oceania")
+        vm.answerQuiz(vm.quizSession.value!!.current.correctAnswerIndex)
+        awaitCondition("the first review to be saved") { skillRow(vm.quizSession.value!!.answers.first().question.targetCountry.code) != null }
+        assertEquals("answers alone redraw nothing", 0, redraws)
+
+        vm.playToTheEnd()
+        awaitQuizHistory { it.isNotEmpty() }
+
+        awaitCondition("one redraw after the save") { redraws == 1 }
+        assertEquals(1, redraws)
     }
 
     @Test

@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  L’écran Cartes mémoire (parcourir le paquet et les sessions d’étude) et l’écran Progrès (statistiques, la série,
+  le journal des quiz et la carte du rappel quotidien). Les mots partagés (Terminé, Effacer les filtres, portées,
+  continents, états…) vivent dans strings.xml.
+-->
+<!-- Les comptes dont la formulation ne change pas avec le nombre, ou qui ne valent jamais 1, restent des chaînes simples. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="PluralsCandidate">
+    <!-- Cartes mémoire : l'en-tête du paquet, l'avis de filtre et le paquet vide -->
+    <string name="flashcards_title">Cartes mémoire</string>
+    <string name="flashcards_card_position">Carte %1$d sur %2$d</string>
+    <string name="flashcards_shuffle">Mélanger les cartes</string>
+    <string name="flashcards_reset">Réinitialiser le paquet</string>
+    <string name="flashcards_filter_saved_only">Enregistrés seulement</string>
+    <string name="flashcards_filter_search">« %1$s »</string>
+    <string name="flashcards_filter_sorted_by">Triées par %1$s</string>
+    <string name="flashcards_filter_notice">Paquet filtré par Explorer : %1$s</string>
+    <!-- Le bouton Étudier ; « Étudier » seul quand rien n'est à réviser -->
+    <plurals name="flashcards_study_due">
+        <item quantity="one">Étudier · %d à réviser</item>
+        <item quantity="other">Étudier · %d à réviser</item>
+        <item quantity="many">Étudier · %d à réviser</item>
+    </plurals>
+    <string name="flashcards_action_clear">Effacer</string>
+    <string name="flashcards_empty">Aucune carte pour les filtres actuels.</string>
+
+    <!-- Cartes mémoire : la carte à retourner -->
+    <string name="flashcards_reveal">Révéler le nom du pays et la capitale</string>
+    <string name="flashcards_show_flag_again">Afficher le drapeau à nouveau</string>
+    <string name="flashcards_state_flag">Drapeau affiché</string>
+    <string name="flashcards_state_details">Détails du pays affichés</string>
+    <string name="flashcards_tap_to_reveal">Touchez pour révéler le nom du pays &amp; la capitale</string>
+    <!-- Une carte d'étude de capitale : le recto nomme le pays et pose la question ; le verso répond -->
+    <string name="flashcards_capital_prompt">Quelle est la capitale ?</string>
+    <string name="flashcards_tap_to_reveal_capital">Touchez pour révéler la capitale</string>
+    <string name="flashcards_reveal_capital">Révéler la capitale</string>
+    <string name="flashcards_state_capital">Capitale affichée</string>
+    <string name="flashcards_population">Population</string>
+    <string name="flashcards_flag_meaning">Signification du drapeau</string>
+    <string name="flashcards_trivia">Anecdote</string>
+
+    <!-- Cartes mémoire : Précédente et Suivante -->
+    <string name="flashcards_previous">Précédente</string>
+    <string name="flashcards_next">Suivante</string>
+
+    <!-- Étudier : le dialogue de choix (l'icône Étudier partage son titre) -->
+    <string name="study_title">Étudier</string>
+    <string name="study_chooser_intro">Jusqu\'à %1$d cartes ; notez chacune après l\'avoir retournée. À partir de dix, la session compte comme entraînement.</string>
+    <plurals name="study_due_detail">
+        <item quantity="one">%1$d carte à réviser</item>
+        <item quantity="other">%1$d cartes à réviser</item>
+        <item quantity="many">%1$d cartes à réviser</item>
+    </plurals>
+    <!-- Les capitales à réviser : une source d'étude, stockée comme StudySession.CAPITALS_DUE -->
+    <string name="study_source_capitals_due">Capitales à réviser</string>
+    <plurals name="study_capitals_due_detail">
+        <item quantity="one">%1$d capitale à réviser</item>
+        <item quantity="other">%1$d capitales à réviser</item>
+        <item quantity="many">%1$d capitales à réviser</item>
+    </plurals>
+    <string name="study_weak_detail">%1$d révisés, non maîtrisés</string>
+    <plurals name="study_deck_detail">
+        <item quantity="one">%1$d carte suivante à partir d\'ici</item>
+        <item quantity="other">%1$d cartes suivantes à partir d\'ici</item>
+        <item quantity="many">%1$d cartes suivantes à partir d\'ici</item>
+    </plurals>
+
+    <!-- Étudier : la session -->
+    <string name="study_header">Étudier · %1$s</string>
+    <string name="study_position_rehearsal">Carte %1$d sur %2$d · encore</string>
+    <string name="study_undo">Annuler la dernière note</string>
+    <string name="study_end">Terminer</string>
+    <string name="study_grade_prompt">Vous la connaissiez bien ?</string>
+    <string name="study_flip_to_grade">Retournez la carte pour la noter</string>
+    <string name="study_grade_again">Encore</string>
+    <string name="study_grade_good">Bien</string>
+    <string name="study_grade_easy">Facile</string>
+
+    <!-- Étudier : le résumé (le journal des quiz réutilise study_summary_remembered) -->
+    <string name="study_summary_title">Session terminée</string>
+    <string name="study_summary_remembered">%1$d sur %2$d retenues</string>
+    <string name="study_summary_grades">Encore %1$d · Bien %2$d · Facile %3$d</string>
+    <string name="study_streak_already_counted">Série de %1$d jours, déjà comptée aujourd\'hui</string>
+    <string name="study_streak_short">Notez au moins %1$d cartes pour que ça compte pour votre objectif (vous en avez noté %2$d)</string>
+    <string name="study_again">Étudier encore</string>
+
+    <!-- Progrès : l'en-tête -->
+    <string name="stats_title">Progrès</string>
+    <string name="stats_subtitle">Suivez la maîtrise des drapeaux &amp; vos résultats de quiz</string>
+    <string name="stats_settings">Paramètres</string>
+
+    <!-- Progrès : la carte de série -->
+    <string name="stats_no_streak">Pas encore de série</string>
+    <plurals name="stats_streak_title">
+        <item quantity="one">Série de %d jour</item>
+        <item quantity="other">Série de %d jours</item>
+        <item quantity="many">Série de %d jours</item>
+    </plurals>
+    <string name="stats_streak_start">Atteignez l\'objectif du jour pour en commencer une</string>
+    <string name="stats_streak_detail">%1$s · %2$s</string>
+    <plurals name="stats_streak_best">
+        <item quantity="one">Record : %d jour</item>
+        <item quantity="other">Record : %d jours</item>
+        <item quantity="many">Record : %d jours</item>
+    </plurals>
+    <string name="stats_practiced_today">Entraînement fait aujourd\'hui</string>
+    <string name="stats_not_yet_today">Pas encore aujourd\'hui</string>
+
+    <!-- Progrès : les tuiles de mesures -->
+    <string name="stats_mastered_flags">Drapeaux maîtrisés</string>
+    <string name="stats_capitals_known">Capitales connues</string>
+    <string name="stats_ratio">%1$d / %2$d</string>
+    <string name="stats_due_today">À réviser aujourd\'hui</string>
+    <!-- La valeur de la tuile À réviser quand des capitales sont aussi à réviser : « drapeaux 4 · capitales 2 » ; avec des révisions de carte en plus : « drapeaux 4 · capitales 2 · carte 1 » -->
+    <string name="stats_due_both">drapeaux %1$d · capitales %2$d</string>
+    <string name="stats_due_three">drapeaux %1$d · capitales %2$d · carte %3$d</string>
+    <string name="stats_learning">En cours</string>
+    <!-- Pays placés sur la carte et retenus (la compétence carte) : « Sur la carte 12 / 196 » -->
+    <string name="stats_located">Sur la carte</string>
+    <string name="stats_due_open">Lancer une session d\'étude des cartes à réviser</string>
+    <string name="stats_saved">Enregistrés</string>
+    <string name="stats_quizzes_finished">Quiz terminés</string>
+    <string name="stats_highest_score">Meilleur score</string>
+    <string name="stats_points">%1$d pts</string>
+    <string name="stats_blitz_best">Record blitz : %1$d</string>
+    <!-- Ce que TalkBack lit pour une tuile : titre, valeur et (s'il y en a une) la ligne de détail -->
+    <string name="stat_badge_description">%1$s: %2$s</string>
+    <string name="stat_badge_description_detail">%1$s: %2$s · %3$s</string>
+
+    <!-- Progrès : la semaine à venir, sous les tuiles (« À venir : 4 à réviser demain · 12 cette semaine ») ; masqué quand rien ne vient -->
+    <string name="stats_forecast">À venir : %1$s · %2$s</string>
+    <string name="stats_forecast_tomorrow">%1$d à réviser demain</string>
+    <string name="stats_forecast_week">%1$d cette semaine</string>
+
+    <!-- Progrès : les paires de pays les plus souvent confondues, chaque ligne ouvrant comment les distinguer -->
+    <string name="stats_confused_heading">Les plus confondus</string>
+    <string name="stats_confused_pair">%1$s ↔ %2$s</string>
+    <string name="stats_confused_times">× %1$d</string>
+    <plurals name="stats_confused_description">
+        <item quantity="one">%1$s, confondus %2$d fois</item>
+        <item quantity="other">%1$s, confondus %2$d fois</item>
+        <item quantity="many">%1$s, confondus %2$d fois</item>
+    </plurals>
+    <string name="stats_confused_open">Montrer comment les distinguer</string>
+
+    <!-- Progrès : maîtrise par continent -->
+    <string name="stats_continent_heading">Maîtrise par continent</string>
+    <string name="stats_continent_open">Afficher les pays encore à apprendre : %1$s</string>
+    <string name="stats_mastered_of">%1$d sur %2$d maîtrisés</string>
+    <string name="stats_capitals_count">Capitales : %1$d sur %2$d</string>
+
+    <!-- Progrès : le journal des quiz -->
+    <string name="stats_log_heading">Quiz récents</string>
+    <string name="stats_log_empty">Pas encore de quiz. Terminez un quiz ou une session d\'étude et il apparaîtra ici.</string>
+    <string name="stats_log_entry">%1$s · %2$s</string>
+    <string name="stats_log_result">%1$d/%2$d · %3$d pts</string>
+    <string name="stats_log_blitz">%1$d justes · %2$d pts</string>
+    <string name="stats_log_show_all">Tout afficher</string>
+    <!-- Une ligne du journal avec des réponses enregistrées est un bouton qui rouvre son écran de résultat -->
+    <string name="stats_log_open">Ouvrir le résultat de ce quiz</string>
+
+    <!-- La carte du rappel quotidien -->
+    <string name="reminder_title">Rappel quotidien</string>
+    <string name="reminder_detail">Un coup de pouce à %1$s, seulement les jours où l\'objectif n\'est pas atteint</string>
+    <string name="reminder_time">Me rappeler à %1$s</string>
+    <string name="reminder_blocked">Autorisez les notifications pour %1$s dans les paramètres système pour recevoir le rappel.</string>
+    <string name="reminder_open_settings">Ouvrir les paramètres</string>
+    <string name="reminder_ok">OK</string>
+</resources>

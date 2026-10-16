@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The quiz tab: the setup screen (`quiz_`), the question screen (`quiz_`) and the score screen (`result_`). The mode,
+  difficulty, scope and skill labels are shared and live in strings.xml.
+-->
+<!-- Counts whose wording does not change with the number, or that are never 1, stay plain strings. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="PluralsCandidate">
+    <!-- Setup: header -->
+    <string name="quiz_title">Geografie- &amp; Flaggenquiz</string>
+    <string name="quiz_subtitle">Teste dein Wissen und halte deine Serie</string>
+
+    <!-- Setup: mode -->
+    <string name="quiz_select_mode">Modus wählen</string>
+    <plurals name="quiz_seconds_per_question">
+        <item quantity="one">%d Sekunde pro Frage</item>
+        <item quantity="other">%d Sekunden pro Frage</item>
+    </plurals>
+    <string name="quiz_no_time_limit">Kein Zeitlimit (siehe Einstellungen)</string>
+
+    <!-- Setup: scope -->
+    <string name="quiz_select_scope">Bereich wählen</string>
+    <string name="quiz_scope_whole_world">Das Kontinent-Quiz umfasst immer die ganze Welt</string>
+    <string name="quiz_scope_due_count">%1$s · %2$d</string>
+    <string name="quiz_due_nothing">Heute ist nichts zur Wiederholung fällig</string>
+    <plurals name="quiz_due_note_countries">
+        <item quantity="one">Das %1$d fällige Land, mit Antworten aus der ganzen Welt</item>
+        <item quantity="other">Die %1$d fälligen Länder, mit Antworten aus der ganzen Welt</item>
+    </plurals>
+    <plurals name="quiz_due_note_capitals">
+        <item quantity="one">Die %1$d fällige Hauptstadt, mit Antworten aus der ganzen Welt</item>
+        <item quantity="other">Die %1$d fälligen Hauptstädte, mit Antworten aus der ganzen Welt</item>
+    </plurals>
+    <string name="quiz_weak_spots_locked_countries">Schwachstellen öffnet sich, sobald %1$d wiederholte Länder noch nicht gemeistert sind (du hast %2$d)</string>
+    <string name="quiz_weak_spots_locked_capitals">Schwachstellen öffnet sich, sobald %1$d wiederholte Hauptstädte noch nicht gemeistert sind (du hast %2$d)</string>
+    <string name="quiz_weak_spots_note_countries">Deine %1$d schwächsten Länder, mit Antworten aus der ganzen Welt</string>
+    <string name="quiz_weak_spots_note_capitals">Deine %1$d schwächsten Hauptstädte, mit Antworten aus der ganzen Welt</string>
+
+    <!-- Setup: answers difficulty -->
+    <string name="quiz_answers">Antworten</string>
+    <string name="quiz_look_alikes_flags_only">Ähnliche Antworten gelten für Flaggenfragen</string>
+
+    <!-- Setup: start button -->
+    <string name="quiz_start_blitz">%1$d-Sekunden-Blitz starten</string>
+    <string name="quiz_start_quiz">Quiz mit %1$d Fragen starten</string>
+    <string name="quiz_needs_countries">Braucht mindestens %1$d Länder</string>
+
+    <!-- Play: status bar -->
+    <string name="quiz_progress_blitz">Frage %1$d · Richtig %2$d</string>
+    <string name="quiz_progress">Frage %1$d von %2$d</string>
+    <string name="quiz_score">Punkte: %1$d</string>
+    <string tools:ignore="Typos" name="quiz_streak">In Folge %1$d</string>
+    <string name="quiz_quit">Quiz beenden</string>
+
+    <!-- Play: timers -->
+    <plurals name="quiz_seconds_in_total">
+        <item quantity="one">%d Sekunde insgesamt</item>
+        <item quantity="other">%d Sekunden insgesamt</item>
+    </plurals>
+    <plurals name="quiz_seconds_left">
+        <item quantity="one">Noch %d Sekunde</item>
+        <item quantity="other">Noch %d Sekunden</item>
+    </plurals>
+    <string name="quiz_seconds_left_short">Noch %1$ds</string>
+
+    <!-- Play: options -->
+    <string name="quiz_option_correct">Richtige Antwort</string>
+    <string name="quiz_option_incorrect">Deine Antwort, falsch</string>
+
+    <!-- Play: after the answer -->
+    <string name="quiz_result_timeout">Zeit ist um! Die Antwort ist %1$s</string>
+    <string name="quiz_result_correct">Richtig! +%1$d Punkte</string>
+    <string name="quiz_result_wrong">Nicht ganz. Die Antwort ist %1$s</string>
+    <string name="quiz_result_also_counted">Richtig: %1$s zählt auch, der Katalog führt es aber unter %2$s</string>
+    <string name="quiz_capital_and_country">%1$s, %2$s</string>
+    <string name="quiz_typed_label">Ländername</string>
+    <string name="quiz_typed_submit">Prüfen</string>
+    <string name="quiz_typed_hint">Kurzformen zählen: UK, USA, DRC. Ein Tippfehler wird verziehen.</string>
+    <string name="quiz_fact_capital">Hauptstadt: %1$s</string>
+    <string name="quiz_finish">Beenden &amp; Ergebnis ansehen</string>
+    <string name="quiz_next_question">Nächste Frage</string>
+
+    <!-- Play: quit dialog -->
+    <string name="quiz_quit_title">Dieses Quiz beenden?</string>
+    <!-- Every answer given so far was recorded as it was given; only the unfinished quiz's points, its log entry and its streak credit go. -->
+    <string name="quiz_quit_text">Die Punkte dieses Quiz gehen verloren und es zählt nicht für deine Serie. Deine bisherigen Antworten bleiben in deinem Fortschritt.</string>
+    <string name="quiz_quit_confirm">Beenden</string>
+    <string name="quiz_quit_cancel">Weiterspielen</string>
+
+    <!-- Score screen: header and numbers -->
+    <string name="result_times_up">Zeit ist um!</string>
+    <string name="result_complete">Quiz geschafft!</string>
+    <string name="result_blitz_score">%1$d richtig · %2$d Punkte</string>
+    <plurals name="result_blitz_flags">
+        <item quantity="one">%1$d Flagge in %2$d Sekunden</item>
+        <item quantity="other">%1$d Flaggen in %2$d Sekunden</item>
+    </plurals>
+    <string name="result_correct_ratio">%1$d / %2$d richtig</string>
+    <string name="result_points">%1$d Punkte</string>
+    <string name="result_answers">Antworten: %1$s</string>
+    <string name="result_streak_already_counted">Serie von %1$d Tagen, heute schon gezählt</string>
+    <string name="result_streak_days">Serie von %1$d Tagen</string>
+
+    <!-- Score screen: the misses -->
+    <string name="result_perfect">Alles richtig!</string>
+    <string name="result_mistakes">Fehler (%1$d)</string>
+    <string name="result_no_answer">Keine Antwort rechtzeitig</string>
+    <string name="result_picked_capital">Du hast %1$s, %2$s gewählt</string>
+    <string name="result_picked">Du hast %1$s gewählt</string>
+    <string name="result_picked_text">Deine Eingabe: %1$s</string>
+    <string name="result_miss_description">%1$s. %2$s</string>
+
+    <!-- Score screen: the ways on -->
+    <string name="result_practise_mistakes">Fehler üben</string>
+    <string name="result_retry">Nochmal</string>
+
+    <!-- Score screen of a logged quiz, opened from the Progress log: "Quiz from 12 Oct" -->
+    <string name="review_title">Quiz vom %1$s</string>
+</resources>

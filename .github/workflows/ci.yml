@@ -50,6 +50,8 @@ jobs:
           python3 tools/export-notices.py --check
           python3 tools/gen-worldmap.py --check
           python3 tools/gen-lookalikes.py --check
+          python3 tools/gen-sounds.py --check
+          python3 tools/strings-audit.py --check
 
       - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6
 

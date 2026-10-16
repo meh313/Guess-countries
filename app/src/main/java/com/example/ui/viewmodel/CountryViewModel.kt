@@ -18,6 +18,7 @@ import com.example.data.model.Country
 import com.example.data.model.CountryRepository
 import com.example.data.model.CountrySources
 import com.example.data.model.SortOption
+import com.example.data.settings.AppLanguage
 import com.example.data.settings.Appearance
 import com.example.data.settings.Feedback
 import com.example.data.settings.InMemoryUserSettings
@@ -58,10 +59,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import com.example.widget.WidgetRefresher
-import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.drop
-import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 
 /**
@@ -146,6 +143,17 @@ class CountryViewModel(
     fun setHaptics(enabled: Boolean) {
         settings.haptics = enabled
         _feedback.update { it.copy(haptics = enabled) }
+    }
+
+    private val _language = MutableStateFlow(settings.language)
+
+    /** The language of the screens (see [AppLanguage]); the Settings screen applies it to the system or recreates the activity. */
+    val language: StateFlow<String> = _language
+
+    fun setLanguage(tag: String) {
+        val clean = AppLanguage.sanitize(tag)
+        settings.language = clean
+        _language.value = clean
     }
 
     private val _timerPace = MutableStateFlow(settings.timerPace)
@@ -315,7 +323,8 @@ class CountryViewModel(
             "focusContinent" to settings.focusContinent,
             "onboarded" to settings.onboarded.toString(),
             "soundEffects" to settings.soundEffects.toString(),
-            "haptics" to settings.haptics.toString()
+            "haptics" to settings.haptics.toString(),
+            "language" to settings.language
         )
         return withContext(Dispatchers.Default) { ProgressTransfer.toJson(snapshot.copy(settings = settingsMap)) }
     }
@@ -359,6 +368,7 @@ class CountryViewModel(
             snapshot.settings["onboarded"]?.toBooleanStrictOrNull()?.let(::setOnboarded)
             snapshot.settings["soundEffects"]?.toBooleanStrictOrNull()?.let(::setSoundEffects)
             snapshot.settings["haptics"]?.toBooleanStrictOrNull()?.let(::setHaptics)
+            snapshot.settings["language"]?.let(::setLanguage)
             snapshot
         }
     }
@@ -377,18 +387,10 @@ class CountryViewModel(
 
     // --- Quiz -------------------------------------------------------------------------------------------------------
 
-    private val quiz = QuizStateHolder(repository, progress, settings, viewModelScope, clock, zone, random, savedStateHandle)
+    /** The home-screen widget is redrawn once a session is saved (a quiz, a study session): its numbers changed. */
+    private val refreshWidget: suspend () -> Unit = { runCatching { widgets.refresh() } }
 
-    init {
-        // The home-screen widget follows the saved sessions and the skill rows: a redraw once they settle after a
-        // change, not on the first values (nothing changed yet) and not on every answer of a blitz.
-        @OptIn(FlowPreview::class)
-        viewModelScope.launch {
-            merge(progress.quizHistory.drop(1), progress.skills.drop(1)).debounce(WIDGET_DEBOUNCE_MILLIS).collect {
-                runCatching { widgets.refresh() }
-            }
-        }
-    }
+    private val quiz = QuizStateHolder(repository, progress, settings, viewModelScope, clock, zone, random, savedStateHandle, afterSave = refreshWidget)
 
     /** The quiz in progress, or null on the setup screen. Lives here so it survives rotation and tab switches. */
     val quizSession: StateFlow<QuizSession?> get() = quiz.session
@@ -435,7 +437,7 @@ class CountryViewModel(
 
     // --- Study ------------------------------------------------------------------------------------------------------
 
-    private val study = StudyStateHolder(repository, viewModelScope, zone, random, progress.writeErrors, savedStateHandle, dailyGoal = { settings.dailyGoal })
+    private val study = StudyStateHolder(repository, viewModelScope, zone, random, progress.writeErrors, savedStateHandle, dailyGoal = { settings.dailyGoal }, afterSave = refreshWidget)
 
     /** The flashcard study session in progress, or null outside one. */
     val studySession: StateFlow<StudySession?> get() = study.session
@@ -578,9 +580,6 @@ class CountryViewModel(
     }
 
     companion object {
-        /** How long after the last change to the log or the skills the widget is redrawn. */
-        const val WIDGET_DEBOUNCE_MILLIS = 1_500L
-
         /** Builds the real database-backed repository and speech engine for the app. */
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {

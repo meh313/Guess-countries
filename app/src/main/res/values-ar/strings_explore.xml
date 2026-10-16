@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The Explore tab: the banner, the search and filter controls, the empty state, the country cards, the country
+  detail sheet, and the two quiz components that live next to the cards (the flag answer grid and the miss
+  comparison). The continent chips, the standing chips, the sort menu and the skill labels use the shared enum
+  labels in strings.xml.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Numbers on cards and in the sheet. The number after the figure is the year of the estimate, not a count. -->
+    <string name="population_estimate" tools:ignore="PluralsCandidate">%1$s (تقدير %2$d)</string>
+    <string name="population_winter">%1$s يقضون الشتاء في المحطات</string>
+    <string name="card_no_capital">لا عاصمة</string>
+
+    <!-- Explore: the banner -->
+    <string name="explore_title">مستكشف العالم</string>
+    <string name="explore_subtitle">اكتشف الدول والأعلام والقارات حول العالم</string>
+
+    <!-- The Today card (also at the top of Progress): today's items against the daily goal and the one next thing to do -->
+    <string name="today_title">اليوم</string>
+    <string name="today_goal_met">تحقق الهدف</string>
+    <!-- "3 / 10": items done today of the daily goal -->
+    <string name="today_progress">%1$d من %2$d</string>
+    <!-- "2 due · 4 new today · goal 10" -->
+    <string name="today_line">‏%1$s · %2$s · %3$s</string>
+    <plurals name="today_due">
+        <item quantity="zero">لا شيء مستحق</item>
+        <item quantity="one">واحدة مستحقة</item>
+        <item quantity="two">اثنتان مستحقتان</item>
+        <item quantity="few">%d مستحقة</item>
+        <item quantity="many">%d مستحقة</item>
+        <item quantity="other">%d مستحقة</item>
+    </plurals>
+    <plurals name="today_new">
+        <item quantity="zero">لا جديد اليوم</item>
+        <item quantity="one">واحدة جديدة اليوم</item>
+        <item quantity="two">اثنتان جديدتان اليوم</item>
+        <item quantity="few">%d جديدة اليوم</item>
+        <item quantity="many">%d جديدة اليوم</item>
+        <item quantity="other">%d جديدة اليوم</item>
+    </plurals>
+    <string name="today_goal">الهدف %1$d</string>
+    <!-- The card as one sentence for a screen reader: "Today: 3 of 10 items done, 2 due, 4 new today." -->
+    <!-- "items" and "due" are not nouns the number inflects here: "1 of 10 items done", "Review 1 due". -->
+    <string name="today_description" tools:ignore="PluralsCandidate">اليوم: أُنجز %1$d من %2$d عنصرًا، %3$s، %4$s.</string>
+    <string name="today_review_due" tools:ignore="PluralsCandidate">راجع %1$d مستحقة</string>
+    <string name="today_learn_new">تعلّم 5 جديدة</string>
+    <string name="today_learn_more">تعلّم 5 أخرى</string>
+    <string name="today_dismiss">إخفاء لليوم</string>
+    <!-- The first run: the card asks for a focus continent before anything else -->
+    <string name="today_start_title">ابدأ من هنا</string>
+    <string name="today_start_text">اختر قارة للبدء بها؛ تقدّم الاختبارات أعلامها أولًا.</string>
+
+    <!-- Explore: search, the Saved chip and the sort button -->
+    <string name="explore_search_hint">ابحث عن دولة أو عاصمة أو اسم رسمي…</string>
+    <string name="explore_clear_search">مسح البحث</string>
+    <string name="explore_saved_chip">المحفوظة</string>
+    <string name="explore_sort_options">خيارات الترتيب</string>
+
+    <!-- Explore: the empty state -->
+    <string name="explore_empty_saved_title">لا دول محفوظة بعد</string>
+    <string name="explore_empty_saved_hint">اضغط على علامة الحفظ عند أي دولة لحفظها هنا</string>
+    <string name="explore_empty_title">لم يُعثر على دول</string>
+    <string name="explore_empty_hint">جرّب تعديل كلمات البحث أو تصفية القارة</string>
+    <!-- With filters on, the hint names them: "No countries still to learn in Europe. Clear the filters?" -->
+    <string name="explore_empty_hint_filtered">لا دول %1$s. هل تريد مسح عوامل التصفية؟</string>
+    <string name="explore_empty_scope_continent">في %1$s</string>
+    <string name="explore_empty_scope_search">تطابق \"%1$s\"</string>
+    <string name="explore_empty_scope_saved">بين دولك المحفوظة</string>
+
+    <!-- Explore: the legend under the chips for the two pips on each card -->
+
+    <!-- Detail sheet: the facts grid -->
+    <string name="sheet_facts_title">حقائق عن الدولة</string>
+    <string name="sheet_fact_capital">العاصمة</string>
+    <string name="sheet_fact_population">عدد السكان</string>
+    <string name="sheet_fact_area">المساحة الكلية</string>
+    <string name="sheet_fact_currency">العملة</string>
+    <string name="sheet_fact_languages">اللغات</string>
+    <string name="sheet_fact_driving_side">جهة القيادة</string>
+    <string name="sheet_drive_side">الجهة %1$s</string>
+    <string name="sheet_no_public_roads">لا طرق عامة</string>
+
+    <!-- Detail sheet: the progress card ("Flag: Mastered · step 4 of 5 · next review in 12 days · last answer right") -->
+    <string name="sheet_progress_title">تقدمك</string>
+    <string name="sheet_skill_standing">‏%1$s: %2$s</string>
+    <string name="sheet_standing_not_reviewed">لم يُراجع بعد</string>
+    <string name="sheet_standing_line">‏%1$s · %2$s · %3$s · %4$s</string>
+    <string name="sheet_standing_step">الخطوة %1$d من %2$d</string>
+    <string name="sheet_due_now">مستحق الآن</string>
+    <string name="sheet_next_review_tomorrow">المراجعة التالية غدًا</string>
+    <plurals name="sheet_next_review_days">
+        <item quantity="zero">المراجعة التالية اليوم</item>
+        <item quantity="one">المراجعة التالية بعد يوم واحد</item>
+        <item quantity="two">المراجعة التالية بعد يومين</item>
+        <item quantity="few">المراجعة التالية بعد %1$d أيام</item>
+        <item quantity="many">المراجعة التالية بعد %1$d يومًا</item>
+        <item quantity="other">المراجعة التالية بعد %1$d يوم</item>
+    </plurals>
+    <string name="sheet_last_answer_right">آخر إجابة صحيحة</string>
+    <string name="sheet_last_answer_wrong">آخر إجابة خاطئة</string>
+
+    <!-- Detail sheet: the flag, the landmarks and the fun fact -->
+    <string name="sheet_flag_title">رمزية العلم وتاريخه</string>
+    <!-- The map card, and what TalkBack hears for any map: "Map: France, in Europe · Western Europe" -->
+    <string name="sheet_where_title">أين تقع</string>
+    <string name="sheet_borders_title">الحدود</string>
+    <string name="sheet_no_borders">لا حدود برية</string>
+    <string name="sheet_open_country">فتح %1$s</string>
+    <string name="map_description">خريطة: %1$s، في %2$s</string>
+    <!-- The Map → Country question's map: the country's name is the answer, so TalkBack hears this instead -->
+    <string name="map_to_identify">خريطة عليها دولة مميّزة</string>
+    <string name="sheet_landmarks_title">معالم شهيرة</string>
+    <string name="sheet_landmark">‏📍 %1$s</string>
+    <string name="sheet_fun_fact_title">هل تعلم؟</string>
+
+    <!-- Detail sheet: the sources -->
+    <string name="sheet_sources">المصادر (%1$d)</string>
+    <string name="sheet_show_sources">عرض المصادر</string>
+    <string name="sheet_hide_sources">إخفاء المصادر</string>
+    <string name="sheet_sources_note">الصفحات التي رُوجعت الحقائق أعلاه بالاستناد إليها عند إعداد الفهرس.</string>
+    <string name="sheet_open_in_browser">فتح في المتصفح</string>
+
+    <!-- The flag answer grid of a "pick the flag" question -->
+    <string name="option_correct_answer">الإجابة الصحيحة</string>
+    <string name="option_your_answer_incorrect">إجابتك، خاطئة</string>
+    <string name="option_of">الخيار %1$d من %2$d</string>
+    <string name="option_flag_of">الخيار %1$d، علم %2$s</string>
+
+    <!-- The miss comparison after a wrong answer -->
+    <string name="miss_description">اخترت %1$s، والإجابة هي %2$s</string>
+    <string name="miss_you_picked">اخترت</string>
+    <string name="miss_correct">الصحيح</string>
+    <string name="miss_description_with_cue">‏%1$s. %2$s</string>
+
+    <!-- How to recognise a flag, and how to tell two look-alikes apart -->
+    <string name="spot_it_label">كيف تميّزه</string>
+    <string name="spot_it_line">‏%1$s: %2$s</string>
+    <string name="drive_side_left">اليسرى</string>
+    <string name="drive_side_right">اليمنى</string>
+</resources>

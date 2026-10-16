@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The Flashcards screen (browsing the deck and study sessions) and the Progress screen (stats, the streak, the quiz
+  log and the daily reminder card). Shared words (Done, Clear filters, scopes, continents, standings…) live in
+  strings.xml.
+-->
+<!-- Counts whose wording does not change with the number, or that are never 1, stay plain strings. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="PluralsCandidate">
+    <!-- Flashcards: the deck header, the filter notice and the empty deck -->
+    <string name="flashcards_title">بطاقات</string>
+    <string name="flashcards_card_position">البطاقة %1$d من %2$d</string>
+    <string name="flashcards_shuffle">خلط البطاقات</string>
+    <string name="flashcards_reset">إعادة ضبط المجموعة</string>
+    <string name="flashcards_filter_saved_only">المحفوظة فقط</string>
+    <string name="flashcards_filter_search">\"%1$s\"</string>
+    <string name="flashcards_filter_sorted_by">مرتبة حسب %1$s</string>
+    <string name="flashcards_filter_notice">المجموعة مصفّاة من استكشاف: %1$s</string>
+    <!-- The Study button; "Study" alone when nothing is due -->
+    <plurals name="flashcards_study_due">
+        <item quantity="zero">ادرس · لا مستحق</item>
+        <item quantity="one">ادرس · 1 مستحقة</item>
+        <item quantity="two">ادرس · 2 مستحقتان</item>
+        <item quantity="few">ادرس · %d مستحقة</item>
+        <item quantity="many">ادرس · %d مستحقة</item>
+        <item quantity="other">ادرس · %d مستحقة</item>
+    </plurals>
+    <string name="flashcards_action_clear">مسح</string>
+    <string name="flashcards_empty">لا بطاقات متاحة لعوامل التصفية الحالية.</string>
+
+    <!-- Flashcards: the flip card -->
+    <string name="flashcards_reveal">كشف اسم الدولة وعاصمتها</string>
+    <string name="flashcards_show_flag_again">عرض العلم مرة أخرى</string>
+    <string name="flashcards_state_flag">يُعرض العلم</string>
+    <string name="flashcards_state_details">تُعرض تفاصيل الدولة</string>
+    <string name="flashcards_tap_to_reveal">اضغط لكشف اسم الدولة وعاصمتها</string>
+    <!-- A capital study card: the front names the country and asks; the back answers -->
+    <string name="flashcards_capital_prompt">ما العاصمة؟</string>
+    <string name="flashcards_tap_to_reveal_capital">اضغط لكشف العاصمة</string>
+    <string name="flashcards_reveal_capital">كشف العاصمة</string>
+    <string name="flashcards_state_capital">تُعرض العاصمة</string>
+    <string name="flashcards_population">عدد السكان</string>
+    <string name="flashcards_flag_meaning">معنى العلم</string>
+    <string name="flashcards_trivia">معلومة طريفة</string>
+
+    <!-- Flashcards: Previous and Next -->
+    <string name="flashcards_previous">السابق</string>
+    <string name="flashcards_next">التالي</string>
+
+    <!-- Study: the chooser dialog (the Study icon shares its title) -->
+    <string name="study_title">ادرس</string>
+    <string name="study_chooser_intro">حتى %1$d بطاقة؛ قيّم كل واحدة بعد قلبها. عشر بطاقات أو أكثر تُحتسب تدريبًا.</string>
+    <plurals name="study_due_detail">
+        <item quantity="zero">لا بطاقات مستحقة للمراجعة</item>
+        <item quantity="one">بطاقة واحدة مستحقة للمراجعة</item>
+        <item quantity="two">بطاقتان مستحقتان للمراجعة</item>
+        <item quantity="few">%1$d بطاقات مستحقة للمراجعة</item>
+        <item quantity="many">%1$d بطاقة مستحقة للمراجعة</item>
+        <item quantity="other">%1$d بطاقة مستحقة للمراجعة</item>
+    </plurals>
+    <!-- The capitals due for review: a study source, stored as StudySession.CAPITALS_DUE -->
+    <string name="study_source_capitals_due">العواصم المستحقة</string>
+    <plurals name="study_capitals_due_detail">
+        <item quantity="zero">لا عواصم مستحقة للمراجعة</item>
+        <item quantity="one">عاصمة واحدة مستحقة للمراجعة</item>
+        <item quantity="two">عاصمتان مستحقتان للمراجعة</item>
+        <item quantity="few">%1$d عواصم مستحقة للمراجعة</item>
+        <item quantity="many">%1$d عاصمة مستحقة للمراجعة</item>
+        <item quantity="other">%1$d عاصمة مستحقة للمراجعة</item>
+    </plurals>
+    <string name="study_weak_detail">%1$d مراجَعة وغير متقَنة</string>
+    <plurals name="study_deck_detail">
+        <item quantity="zero">لا بطاقات تالية من هنا</item>
+        <item quantity="one">البطاقة التالية من هنا</item>
+        <item quantity="two">البطاقتان التاليتان من هنا</item>
+        <item quantity="few">البطاقات الـ%1$d التالية من هنا</item>
+        <item quantity="many">البطاقات الـ%1$d التالية من هنا</item>
+        <item quantity="other">البطاقات الـ%1$d التالية من هنا</item>
+    </plurals>
+
+    <!-- Study: the session -->
+    <string name="study_header">دراسة · %1$s</string>
+    <string name="study_position_rehearsal">البطاقة %1$d من %2$d · مرة أخرى</string>
+    <string name="study_undo">التراجع عن آخر تقييم</string>
+    <string name="study_end">إنهاء</string>
+    <string name="study_grade_prompt">ما مدى معرفتك بها؟</string>
+    <string name="study_flip_to_grade">اقلب البطاقة لتقييمها</string>
+    <string name="study_grade_again">مرة أخرى</string>
+    <string name="study_grade_good">جيد</string>
+    <string name="study_grade_easy">سهل</string>
+
+    <!-- Study: the summary (the quiz log reuses study_summary_remembered) -->
+    <string name="study_summary_title">اكتملت الجلسة</string>
+    <string name="study_summary_remembered">تذكّرت %1$d من %2$d</string>
+    <string name="study_summary_grades">مرة أخرى %1$d · جيد %2$d · سهل %3$d</string>
+    <string name="study_streak_already_counted">سلسلة %1$d يوم، احتُسبت اليوم بالفعل</string>
+    <string name="study_streak_short">قيّم %1$d بطاقات على الأقل لتُحتسب في هدفك (قيّمت %2$d)</string>
+    <string name="study_again">ادرس مرة أخرى</string>
+
+    <!-- Progress: the header -->
+    <string name="stats_title">التقدم</string>
+    <string name="stats_subtitle">تابع إتقان الأعلام وإنجازات الاختبارات</string>
+    <string name="stats_settings">الإعدادات</string>
+
+    <!-- Progress: the streak card -->
+    <string name="stats_no_streak">لا سلسلة بعد</string>
+    <plurals name="stats_streak_title">
+        <item quantity="zero">لا سلسلة</item>
+        <item quantity="one">سلسلة يوم واحد</item>
+        <item quantity="two">سلسلة يومين</item>
+        <item quantity="few">سلسلة %d أيام</item>
+        <item quantity="many">سلسلة %d يومًا</item>
+        <item quantity="other">سلسلة %d يوم</item>
+    </plurals>
+    <string name="stats_streak_start">حقق هدف اليوم لتبدأ واحدة</string>
+    <string name="stats_streak_detail">%1$s · %2$s</string>
+    <plurals name="stats_streak_best">
+        <item quantity="zero">الأفضل: لا أيام</item>
+        <item quantity="one">الأفضل: يوم واحد</item>
+        <item quantity="two">الأفضل: يومان</item>
+        <item quantity="few">الأفضل: %d أيام</item>
+        <item quantity="many">الأفضل: %d يومًا</item>
+        <item quantity="other">الأفضل: %d يوم</item>
+    </plurals>
+    <string name="stats_practiced_today">تدرّبت اليوم</string>
+    <string name="stats_not_yet_today">ليس بعد اليوم</string>
+
+    <!-- Progress: the metric tiles -->
+    <string name="stats_mastered_flags">الأعلام المتقَنة</string>
+    <string name="stats_capitals_known">العواصم المعروفة</string>
+    <string name="stats_ratio">%1$d من %2$d</string>
+    <string name="stats_due_today">مستحق اليوم</string>
+    <!-- The Due tile's value when capitals are due too: "flags 4 · capitals 2"; with map reviews due as well: "flags 4 · capitals 2 · map 1" -->
+    <string name="stats_due_both">أعلام %1$d · عواصم %2$d</string>
+    <string name="stats_due_three">أعلام %1$d · عواصم %2$d · خريطة %3$d</string>
+    <string name="stats_learning">قيد التعلم</string>
+    <!-- Countries placed on the map and remembered (the map skill): "On the map 12 / 196" -->
+    <string name="stats_located">على الخريطة</string>
+    <string name="stats_due_open">بدء جلسة دراسة للبطاقات المستحقة</string>
+    <string name="stats_saved">المحفوظة</string>
+    <string name="stats_quizzes_finished">الاختبارات المنتهية</string>
+    <string name="stats_highest_score">أعلى نتيجة</string>
+    <string name="stats_points">%1$d نقطة</string>
+    <string name="stats_blitz_best">أفضل بليتز: %1$d</string>
+    <!-- What TalkBack reads for a tile: title, value and (when there is one) the detail line -->
+    <string name="stat_badge_description">‏%1$s: %2$s</string>
+    <string name="stat_badge_description_detail">‏%1$s: %2$s · %3$s</string>
+
+    <!-- Progress: the week ahead, under the tiles ("Coming up: 4 due tomorrow · 12 this week"); hidden when nothing is coming -->
+    <string name="stats_forecast">قادم: %1$s · %2$s</string>
+    <string name="stats_forecast_tomorrow">%1$d مستحقة غدًا</string>
+    <string name="stats_forecast_week">%1$d هذا الأسبوع</string>
+
+    <!-- Progress: the pairs of countries mixed up most often, each row opening how to tell them apart -->
+    <string name="stats_confused_heading">الأكثر خلطًا</string>
+    <string name="stats_confused_pair">‏%1$s ↔ %2$s</string>
+    <string name="stats_confused_times">‏× %1$d</string>
+    <plurals name="stats_confused_description">
+        <item quantity="zero">%1$s، لم يُخلط بينهما</item>
+        <item quantity="one">%1$s، خُلط بينهما مرة واحدة</item>
+        <item quantity="two">%1$s، خُلط بينهما مرتين</item>
+        <item quantity="few">%1$s، خُلط بينهما %2$d مرات</item>
+        <item quantity="many">%1$s، خُلط بينهما %2$d مرة</item>
+        <item quantity="other">%1$s، خُلط بينهما %2$d مرة</item>
+    </plurals>
+    <string name="stats_confused_open">عرض كيفية التمييز بينهما</string>
+
+    <!-- Progress: continent mastery -->
+    <string name="stats_continent_heading">الإتقان حسب القارة</string>
+    <string name="stats_continent_open">عرض دول %1$s التي ما زالت للتعلم</string>
+    <string name="stats_mastered_of">%1$d من %2$d متقَنة</string>
+    <string name="stats_capitals_count">العواصم: %1$d من %2$d</string>
+
+    <!-- Progress: the quiz log -->
+    <string name="stats_log_heading">آخر الاختبارات</string>
+    <string name="stats_log_empty">لا اختبارات بعد. أنهِ اختبارًا أو جلسة دراسة وسيظهر هنا.</string>
+    <string name="stats_log_entry">%1$s · %2$s</string>
+    <string name="stats_log_result">%1$d/%2$d · %3$d نقطة</string>
+    <string name="stats_log_blitz">%1$d صحيحة · %2$d نقطة</string>
+    <string name="stats_log_show_all">عرض الكل</string>
+    <!-- A log row with stored answers is a button that opens its result screen again -->
+    <string name="stats_log_open">فتح نتيجة هذا الاختبار</string>
+
+    <!-- The daily reminder card -->
+    <string name="reminder_title">التذكير اليومي</string>
+    <string name="reminder_detail">تنبيه في %1$s، فقط في الأيام التي لم تحقق فيها هدفك</string>
+    <string name="reminder_time">ذكّرني في %1$s</string>
+    <string name="reminder_blocked">اسمح بالإشعارات لتطبيق %1$s في إعدادات النظام لتلقي التذكير.</string>
+    <string name="reminder_open_settings">فتح الإعدادات</string>
+    <string name="reminder_ok">حسنًا</string>
+</resources>

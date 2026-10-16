@@ -189,19 +189,27 @@ class CountryViewModelImportTest {
     fun theFeedbackSettings_travelWithTheExport_andAnImportAppliesThem() = runBlocking {
         settings.soundEffects = false
         settings.haptics = true
+        settings.language = "fr"
         val vm = viewModel()
 
         val json = vm.exportJson()
         val back = ProgressTransfer.fromJson(json).getOrThrow()
         assertEquals("false", back.settings["soundEffects"])
         assertEquals("true", back.settings["haptics"])
+        assertEquals("fr", back.settings["language"])
 
         // Switched back on, then the file comes in: its values win.
         vm.setSoundEffects(true)
         vm.setHaptics(true)
+        vm.setLanguage("")
         vm.importJson(json).getOrThrow()
         assertEquals(false, settings.soundEffects)
         assertEquals(true, settings.haptics)
+        assertEquals("fr", settings.language)
+        assertEquals("fr", vm.language.value)
+        // A file naming a language the app lacks falls back to the system's.
+        vm.importJson(json.replace("\"language\":\"fr\"", "\"language\":\"xx\"")).getOrThrow()
+        assertEquals("", settings.language)
         assertEquals(com.example.data.settings.Feedback(sound = false, haptics = true), vm.feedback.value)
     }
 

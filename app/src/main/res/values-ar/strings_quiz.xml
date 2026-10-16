@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The quiz tab: the setup screen (`quiz_`), the question screen (`quiz_`) and the score screen (`result_`). The mode,
+  difficulty, scope and skill labels are shared and live in strings.xml.
+-->
+<!-- Counts whose wording does not change with the number, or that are never 1, stay plain strings. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="PluralsCandidate">
+    <!-- Setup: header -->
+    <string name="quiz_title">اختبار الجغرافيا والأعلام</string>
+    <string name="quiz_subtitle">اختبر معلوماتك وحافظ على سلسلتك</string>
+
+    <!-- Setup: mode -->
+    <string name="quiz_select_mode">اختر الوضع</string>
+    <plurals name="quiz_seconds_per_question">
+        <item quantity="zero">لا ثوانٍ لكل سؤال</item>
+        <item quantity="one">ثانية واحدة لكل سؤال</item>
+        <item quantity="two">ثانيتان لكل سؤال</item>
+        <item quantity="few">%d ثوانٍ لكل سؤال</item>
+        <item quantity="many">%d ثانية لكل سؤال</item>
+        <item quantity="other">%d ثانية لكل سؤال</item>
+    </plurals>
+    <string name="quiz_no_time_limit">بلا حد زمني (انظر الإعدادات)</string>
+
+    <!-- Setup: scope -->
+    <string name="quiz_select_scope">اختر النطاق</string>
+    <string name="quiz_scope_whole_world">اختبار القارات يغطي العالم كله دائمًا</string>
+    <string name="quiz_scope_due_count">‏%1$s · %2$d</string>
+    <string name="quiz_due_nothing">لا شيء مستحق للمراجعة اليوم</string>
+    <plurals name="quiz_due_note_countries">
+        <item quantity="zero">لا دول مستحقة للمراجعة، بإجابات من العالم كله</item>
+        <item quantity="one">الدولة الواحدة المستحقة للمراجعة، بإجابات من العالم كله</item>
+        <item quantity="two">الدولتان المستحقتان للمراجعة، بإجابات من العالم كله</item>
+        <item quantity="few">الدول الـ%1$d المستحقة للمراجعة، بإجابات من العالم كله</item>
+        <item quantity="many">الدول الـ%1$d المستحقة للمراجعة، بإجابات من العالم كله</item>
+        <item quantity="other">الدول الـ%1$d المستحقة للمراجعة، بإجابات من العالم كله</item>
+    </plurals>
+    <plurals name="quiz_due_note_capitals">
+        <item quantity="zero">لا عواصم مستحقة للمراجعة، بإجابات من العالم كله</item>
+        <item quantity="one">العاصمة الواحدة المستحقة للمراجعة، بإجابات من العالم كله</item>
+        <item quantity="two">العاصمتان المستحقتان للمراجعة، بإجابات من العالم كله</item>
+        <item quantity="few">العواصم الـ%1$d المستحقة للمراجعة، بإجابات من العالم كله</item>
+        <item quantity="many">العواصم الـ%1$d المستحقة للمراجعة، بإجابات من العالم كله</item>
+        <item quantity="other">العواصم الـ%1$d المستحقة للمراجعة، بإجابات من العالم كله</item>
+    </plurals>
+    <string name="quiz_weak_spots_locked_countries">تُفتح نقاط الضعف عندما تكون %1$d من الدول المراجَعة دون الإتقان (لديك %2$d)</string>
+    <string name="quiz_weak_spots_locked_capitals">تُفتح نقاط الضعف عندما تكون %1$d من العواصم المراجَعة دون الإتقان (لديك %2$d)</string>
+    <string name="quiz_weak_spots_note_countries">أضعف %1$d دول لديك، بإجابات من العالم كله</string>
+    <string name="quiz_weak_spots_note_capitals">أضعف %1$d عواصم لديك، بإجابات من العالم كله</string>
+
+    <!-- Setup: answers difficulty -->
+    <string name="quiz_answers">الإجابات</string>
+    <string name="quiz_look_alikes_flags_only">الإجابات المتشابهة تنطبق على أسئلة الأعلام</string>
+
+    <!-- Setup: start button -->
+    <string name="quiz_start_blitz">ابدأ بليتز %1$d ثانية</string>
+    <string name="quiz_start_quiz">ابدأ اختبارًا من %1$d أسئلة</string>
+    <string name="quiz_needs_countries">يتطلب %1$d دول على الأقل</string>
+
+    <!-- Play: status bar -->
+    <string name="quiz_progress_blitz">السؤال %1$d · الصحيحة %2$d</string>
+    <string name="quiz_progress">السؤال %1$d من %2$d</string>
+    <string name="quiz_score">النقاط: %1$d</string>
+    <string name="quiz_streak">على التوالي %1$d</string>
+    <string name="quiz_quit">إنهاء الاختبار</string>
+
+    <!-- Play: timers -->
+    <plurals name="quiz_seconds_in_total">
+        <item quantity="zero">لا ثوانٍ في المجموع</item>
+        <item quantity="one">ثانية واحدة في المجموع</item>
+        <item quantity="two">ثانيتان في المجموع</item>
+        <item quantity="few">%d ثوانٍ في المجموع</item>
+        <item quantity="many">%d ثانية في المجموع</item>
+        <item quantity="other">%d ثانية في المجموع</item>
+    </plurals>
+    <plurals name="quiz_seconds_left">
+        <item quantity="zero">لم يتبقَّ وقت</item>
+        <item quantity="one">بقيت ثانية واحدة</item>
+        <item quantity="two">بقيت ثانيتان</item>
+        <item quantity="few">بقيت %d ثوانٍ</item>
+        <item quantity="many">بقيت %d ثانية</item>
+        <item quantity="other">بقيت %d ثانية</item>
+    </plurals>
+    <string name="quiz_seconds_left_short">بقي %1$d ث</string>
+
+    <!-- Play: options -->
+    <string name="quiz_option_correct">الإجابة الصحيحة</string>
+    <string name="quiz_option_incorrect">إجابتك، خاطئة</string>
+
+    <!-- Play: after the answer -->
+    <string name="quiz_result_timeout">انتهى الوقت! الإجابة هي %1$s</string>
+    <string name="quiz_result_correct">صحيح! +%1$d نقاط</string>
+    <string name="quiz_result_wrong">ليس تمامًا. الإجابة هي %1$s</string>
+    <string name="quiz_result_also_counted">صحيح: %1$s مقبولة أيضًا، وإن كان الفهرس يدرجها تحت %2$s</string>
+    <string name="quiz_capital_and_country">%1$s, %2$s</string>
+    <string name="quiz_typed_label">اسم الدولة</string>
+    <string name="quiz_typed_submit">تحقق</string>
+    <string name="quiz_typed_hint">الاختصارات مقبولة: UK, USA, DRC. يُغتفر خطأ إملائي واحد.</string>
+    <string name="quiz_fact_capital">العاصمة: %1$s</string>
+    <string name="quiz_finish">إنهاء وعرض النتيجة</string>
+    <string name="quiz_next_question">السؤال التالي</string>
+
+    <!-- Play: quit dialog -->
+    <string name="quiz_quit_title">هل تريد إنهاء هذا الاختبار؟</string>
+    <!-- Every answer given so far was recorded as it was given; only the unfinished quiz's points, its log entry and its streak credit go. -->
+    <string name="quiz_quit_text">ستضيع نقاط هذا الاختبار ولن يُحتسب في سلسلتك. الإجابات التي قدّمتها حتى الآن تبقى في تقدمك.</string>
+    <string name="quiz_quit_confirm">إنهاء</string>
+    <string name="quiz_quit_cancel">متابعة اللعب</string>
+
+    <!-- Score screen: header and numbers -->
+    <string name="result_times_up">انتهى الوقت!</string>
+    <string name="result_complete">اكتمل الاختبار!</string>
+    <string name="result_blitz_score">%1$d صحيحة · %2$d نقطة</string>
+    <plurals name="result_blitz_flags">
+        <item quantity="zero">لا أعلام في %2$d ثانية</item>
+        <item quantity="one">علم واحد في %2$d ثانية</item>
+        <item quantity="two">علمان في %2$d ثانية</item>
+        <item quantity="few">%1$d أعلام في %2$d ثانية</item>
+        <item quantity="many">%1$d علمًا في %2$d ثانية</item>
+        <item quantity="other">%1$d علم في %2$d ثانية</item>
+    </plurals>
+    <string name="result_correct_ratio">%1$d من %2$d صحيحة</string>
+    <string name="result_points">%1$d نقطة</string>
+    <string name="result_answers">الإجابات: %1$s</string>
+    <string name="result_streak_already_counted">سلسلة %1$d يوم، احتُسبت اليوم بالفعل</string>
+    <string name="result_streak_days">سلسلة %1$d يوم</string>
+
+    <!-- Score screen: the misses -->
+    <string name="result_perfect">كل الإجابات صحيحة!</string>
+    <string name="result_mistakes">الأخطاء (%1$d)</string>
+    <string name="result_no_answer">لا إجابة في الوقت المحدد</string>
+    <string name="result_picked_capital">اخترت %1$s، %2$s</string>
+    <string name="result_picked">اخترت %1$s</string>
+    <string name="result_picked_text">اخترت: %1$s</string>
+    <string name="result_miss_description">‏%1$s. %2$s</string>
+
+    <!-- Score screen: the ways on -->
+    <string name="result_practise_mistakes">تدرّب على الأخطاء</string>
+    <string name="result_retry">إعادة المحاولة</string>
+
+    <!-- Score screen of a logged quiz, opened from the Progress log: "Quiz from 12 Oct" -->
+    <string name="review_title">اختبار بتاريخ %1$s</string>
+</resources>

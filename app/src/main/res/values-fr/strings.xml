@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Mots partagés par plusieurs écrans, et les libellés des enums (modes de quiz, portées, ordres de tri, états…),
+  vers lesquels `ui/Labels.kt` pointe. Chaque écran garde ses propres mots dans `strings_<écran>.xml`. Les valeurs
+  stockées (noms de modes, clés de portée, noms de continents, sources d’étude) ne sont jamais ces chaînes : elles
+  restent les clés anglaises et ne sont traduites qu’à l’affichage.
+-->
+<resources>
+    <string name="app_name">World Flags</string>
+    <plurals name="countries_count">
+        <item quantity="one">%d pays</item>
+        <item quantity="other">%d pays</item>
+        <item quantity="many">%d pays</item>
+    </plurals>
+
+    <!-- Onglets -->
+    <string name="nav_explore">Explorer</string>
+    <string name="nav_flashcards">Cartes mémoire</string>
+    <string name="nav_quiz">Quiz</string>
+    <string name="nav_progress">Progrès</string>
+
+    <!-- Actions et lignes partagées -->
+    <string name="action_done">Terminé</string>
+    <string name="action_back">Retour</string>
+    <string name="action_cancel">Annuler</string>
+    <string name="action_close">Fermer</string>
+    <string name="action_clear_filters">Effacer les filtres</string>
+    <string name="action_read_aloud">Lire le résumé du pays à voix haute</string>
+    <string name="read_aloud_unavailable">La lecture à voix haute n\'est pas disponible sur cet appareil</string>
+    <string name="read_aloud_loading">Préparation de la lecture à voix haute</string>
+    <string name="flag_to_identify">Drapeau à identifier</string>
+    <string name="flag_of">Drapeau : %1$s</string>
+    <string name="bookmark_country">Enregistrer %1$s</string>
+    <string name="streak_started">Série commencée : jour 1</string>
+    <!-- La session terminée était trop courte pour l'objectif du jour (voir Paramètres) ; la journée compte une fois l'objectif atteint. -->
+    <string name="streak_goal_short">Pas encore assez pour l\'objectif du jour</string>
+    <plurals name="streak_kept">
+        <item quantity="one">Série maintenue : %d jour</item>
+        <item quantity="other">Série maintenue : %d jours</item>
+        <item quantity="many">Série maintenue : %d jours</item>
+    </plurals>
+
+    <!-- Modes de quiz (titres affichés ; la valeur stockée est le nom de l'enum) -->
+    <string name="mode_flag_name">Drapeau → Pays</string>
+    <string name="mode_pick_flag">Pays → Drapeau</string>
+    <string name="mode_pick_flag_hint">Choisissez le bon drapeau parmi quatre</string>
+    <string name="mode_capital">Pays → Capitale</string>
+    <string name="mode_continent">Drapeau → Continent</string>
+    <string name="mode_continent_hint">Couvre le monde entier</string>
+    <string name="mode_locate">Carte → Pays</string>
+    <string name="mode_locate_hint">Où est-ce dans le monde ?</string>
+    <string name="mode_type_name">Drapeau → Nom saisi</string>
+    <string name="mode_type_name_hint">Sans options : saisissez le nom du pays</string>
+    <string name="mode_speed_round">Manche rapide</string>
+    <string name="mode_speed_round_hint">10 secondes par question</string>
+    <string name="mode_blitz">Blitz de 60 secondes</string>
+    <string name="mode_blitz_hint">Autant de drapeaux que possible en une minute</string>
+    <string name="mode_flashcards">Cartes mémoire</string>
+
+    <!-- Ce que demande une question, par mode -->
+    <string name="question_flag_name">À quel pays appartient ce drapeau ?</string>
+    <string name="question_pick_flag">Lequel de ces drapeaux est celui de %1$s ?</string>
+    <string name="question_capital">Quelle est la capitale de %1$s ?</string>
+    <string name="question_continent">À quel continent appartient ce drapeau ?</string>
+    <string name="question_locate">Quel pays est surligné sur la carte ?</string>
+    <string name="question_type_name">Saisissez le nom de ce pays</string>
+    <string name="question_blitz">Quel est ce pays ?</string>
+    <string name="question_speed_round">Identifiez le pays de ce drapeau :</string>
+
+    <!-- Difficulté des réponses -->
+    <string name="difficulty_normal">Normal</string>
+    <string name="difficulty_normal_hint">Un drapeau ressemblant parmi les réponses</string>
+    <string name="difficulty_hard">Difficile</string>
+    <string name="difficulty_hard_hint">Des drapeaux ressemblants partout où il en existe</string>
+
+    <!-- Portées des quiz et sources d'étude (libellés affichés ; les clés stockées sont dans QuizEngine et StudySession) -->
+    <string name="scope_global">Mondial</string>
+    <string name="scope_weak_spots">Points faibles</string>
+    <string name="scope_due_today">À réviser aujourd\'hui</string>
+    <string name="scope_mistakes">Erreurs</string>
+    <string name="study_source_deck">Ce paquet</string>
+
+    <!-- Continents (libellés affichés ; le catalogue garde les noms anglais comme clés) -->
+    <string name="continent_all">Tous</string>
+    <string name="continent_africa">Afrique</string>
+    <string name="continent_americas">Amériques</string>
+    <string name="continent_asia">Asie</string>
+    <string name="continent_europe">Europe</string>
+    <string name="continent_oceania">Océanie</string>
+    <string name="continent_antarctica">Antarctique</string>
+
+    <!-- Ordres de tri -->
+    <string name="sort_by_name">Trier par nom</string>
+    <string name="sort_by_population">Trier par population</string>
+    <string name="sort_by_area">Trier par superficie</string>
+    <string name="sort_by_continent">Trier par continent</string>
+    <string name="sort_noun_name">nom</string>
+    <string name="sort_noun_population">population</string>
+    <string name="sort_noun_area">superficie</string>
+    <string name="sort_noun_continent">continent</string>
+
+    <!-- État d'une compétence (pastilles, puces, la fiche détail) -->
+    <string name="standing_unseen">pas encore révisé</string>
+    <string name="standing_weak">en cours d\'apprentissage</string>
+    <string name="standing_mastered">maîtrisé</string>
+    <string name="standing_chip_unseen">Pas encore vu</string>
+    <string name="standing_chip_weak">En cours</string>
+    <string name="standing_chip_mastered">Maîtrisé</string>
+    <string name="standing_short_unseen">pas encore vu</string>
+    <string name="standing_short_weak">en cours</string>
+    <string name="standing_short_mastered">maîtrisé</string>
+    <!-- La paire Pas encore vu + En cours qu'une carte continent de Progrès applique (l'indice d'Explorer, l'avis de paquet des cartes mémoire) -->
+    <string name="standing_still_to_learn">Encore à apprendre</string>
+    <string name="standing_phrase_still_to_learn">encore à apprendre</string>
+    <string name="standing_either">%1$s ou %2$s</string>
+    <!-- Les deux pastilles d'une carte : compétence, état, compétence, état (« Drapeau : en cours, Capitale : maîtrisé ») -->
+    <string name="pips_description">%1$s: %2$s, %3$s: %4$s</string>
+
+    <!-- Compétences -->
+    <string name="skill_flag">Drapeau</string>
+    <string name="skill_capital">Capitale</string>
+    <string name="skill_continent">Continent</string>
+    <string name="skill_location">Carte</string>
+
+    <!-- Enums des paramètres -->
+    <string name="theme_system">Système</string>
+    <string name="theme_light">Clair</string>
+    <string name="theme_dark">Sombre</string>
+    <string name="timer_normal">Normal</string>
+    <string name="timer_relaxed">Détendu</string>
+    <string name="timer_off">Sans limite</string>
+
+    <!-- Le rappel quotidien (canal de notification et les deux messages) -->
+    <string name="reminder_channel_name">Rappel quotidien</string>
+    <string name="reminder_channel_description">Un coup de pouce pour faire un quiz quand vous ne vous êtes pas entraîné aujourd\'hui</string>
+    <string name="reminder_keep_title">Gardez votre série</string>
+    <plurals name="reminder_keep_text">
+        <item quantity="one">Un quiz maintient votre série de %d jour</item>
+        <item quantity="other">Un quiz maintient votre série de %d jours</item>
+        <item quantity="many">Un quiz maintient votre série de %d jours</item>
+    </plurals>
+    <string name="reminder_start_title">C\'est l\'heure d\'un petit quiz</string>
+    <string name="reminder_start_text">Un petit quiz lance une nouvelle série</string>
+
+    <!-- Affiché une fois quand une écriture en base a échoué (voir WriteErrors) -->
+    <string name="write_error">Votre dernière modification n\'a pas pu être enregistrée. Exportez votre progression depuis les Paramètres et réessayez plus tard.</string>
+
+    <!-- Le résumé du pays lu à voix haute -->
+    <string name="speech_name">%1$s.</string>
+    <string name="speech_capital_and_continent">La capitale est %1$s. Continent : %2$s.</string>
+    <string name="speech_continent">Continent : %1$s.</string>
+
+    <!-- Le widget d'écran d'accueil. -->
+    <string name="widget_label">Révisions du jour</string>
+    <string name="widget_description">Le nombre de révisions à faire, votre série et un bouton S\'entraîner</string>
+    <plurals name="widget_due">
+        <item quantity="one">%1$d révision à faire</item>
+        <item quantity="other">%1$d révisions à faire</item>
+        <item quantity="many">%1$d révisions à faire</item>
+    </plurals>
+    <string name="widget_nothing_due">Rien à réviser</string>
+    <string name="widget_streak_today">Série %1$d · aujourd\'hui %2$d/%3$d</string>
+    <string name="widget_practise">S\'entraîner</string>
+</resources>

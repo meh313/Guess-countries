@@ -77,6 +77,40 @@ class SettingsAndAboutUiTest {
         get() = shadowOf(ApplicationProvider.getApplicationContext<android.content.Context>().getSystemService(UiModeManager::class.java)).applicationNightMode
 
     @Test
+    fun theLanguageRow_offersSystemAndFiveLanguages_andHandsTheChoiceToTheSystem() {
+        openSettings()
+
+        rule.onNodeWithTag("settings_language_system").performScrollTo().assertIsSelected()
+        for ((tag, label) in listOf("en" to "English", "fr" to "Français", "es" to "Español", "de" to "Deutsch", "ar" to "العربية")) {
+            rule.onNodeWithTag("settings_language_$tag").assert(hasText(label)).assertIsNotSelected()
+        }
+        rule.onNodeWithText("For the screens; country names, capitals and facts stay in English").assertIsDisplayed()
+
+        rule.onNodeWithTag("settings_language_fr").performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithTag("settings_language_fr").assertIsSelected()
+        assertEquals("fr", viewModel.language.value)
+        assertEquals("fr", PrefsUserSettings(ApplicationProvider.getApplicationContext()).language)
+        val manager = ApplicationProvider.getApplicationContext<android.content.Context>().getSystemService(android.app.LocaleManager::class.java)
+        assertEquals("fr", manager.applicationLocales.toLanguageTags())
+
+        rule.onNodeWithTag("settings_language_system").performClick()
+        rule.waitForIdle()
+        assertEquals("", viewModel.language.value)
+        assertTrue(manager.applicationLocales.isEmpty)
+    }
+
+    @Test
+    fun theAboutScreen_saysHowTheTranslationsWereMade() {
+        openSettings()
+        rule.onNodeWithTag("settings_about_btn").performScrollTo().performClick()
+        rule.waitForIdle()
+        rule.onNodeWithTag("about_translations").performScrollTo().assertIsDisplayed()
+        rule.onNodeWithText("Translations").assertIsDisplayed()
+    }
+
+    @Test
     fun theFeedbackSwitches_startOn_andStickInTheSettings() {
         openSettings()
 

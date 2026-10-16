@@ -31,7 +31,9 @@ class StudyStateHolder(
     /** Null when nothing keeps the session across process death (tests). */
     private val savedState: SavedStateHandle? = null,
     /** How many items make a day count for the streak, read when a session is logged. */
-    private val dailyGoal: () -> Int = { PracticeStreak.DEFAULT_GOAL }
+    private val dailyGoal: () -> Int = { PracticeStreak.DEFAULT_GOAL },
+    /** Runs once a settled session is saved (the app redraws its widget); nothing by default. */
+    private val afterSave: suspend () -> Unit = {}
 ) {
     private val _session = MutableStateFlow(restored())
 
@@ -101,6 +103,7 @@ class StudyStateHolder(
                 val earlier = repository.saveStudySession(settled.source, settled.remembered, settled.gradedCards)
                 val now = repository.now()
                 _outcome.value = PracticeStreak.outcome(earlier, PracticeStreak.Session(now, settled.gradedCards), dailyGoal(), now, zone())
+                afterSave()
             }
         }
     }

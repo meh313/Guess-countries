@@ -67,7 +67,8 @@ object ProgressTransfer {
         "quizDifficulty", "reminderEnabled", "reminderMinuteOfDay", "themeMode", "dynamicColor", "timerPace",
         "dailyGoal", "focusContinent", "onboarded",
         "soundEffects",
-        "haptics"
+        "haptics",
+        "language"
     )
 
     private val catalogCodes: Set<String> by lazy { CountryCatalog.all.map { it.code }.toSet() }

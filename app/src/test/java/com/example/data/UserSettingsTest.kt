@@ -27,6 +27,13 @@ class UserSettingsTest {
     }
 
     @Test
+    fun theLanguageFollowsTheSystemUntilChosen() {
+        assertEquals("", PrefsUserSettings(context).language)
+        PrefsUserSettings(context).language = "ar"
+        assertEquals("ar", PrefsUserSettings(context).language)
+    }
+
+    @Test
     fun soundAndVibrationStartOn_andAreKeptForTheNextInstance() {
         assertEquals(true, PrefsUserSettings(context).soundEffects)
         assertEquals(true, PrefsUserSettings(context).haptics)

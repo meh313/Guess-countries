@@ -4,6 +4,12 @@
 
 **Short description (80):** Learn every flag, capital and location with spaced reviews that stick.
 
+**Short description in the other store languages (80):**
+- fr: Tous les drapeaux, capitales et cartes, avec des révisions espacées qui restent.
+- es: Aprende banderas, capitales y mapas con repasos espaciados que se quedan.
+- de: Alle Flaggen, Hauptstädte und Karten lernen, mit Wiederholungen, die sitzen.
+- ar: تعلّم كل الأعلام والعواصم والمواقع مع مراجعات متباعدة تبقى في الذاكرة.
+
 **Full description**
 
 Learn the flags, capitals and locations of all 196 states and Antarctica, and keep them.
@@ -15,7 +21,7 @@ World Flags does not just test you. It teaches first:
 
 Then it reviews what you learnt at the right time:
 • Spaced repetition per skill: flag, capital, location. What is due comes first; new countries arrive a few at a time.
-• Seven quiz modes: flag → country, pick the flag, capital, continent, map → country, a 10-second speed round and a 60-second blitz. Misses come back at the end of the quiz.
+• Eight quiz modes: flag → country, pick the flag, capital, continent, map → country, a typed name, a 10-second speed round and a 60-second blitz. Misses come back at the end of the quiz.
 • Flashcards with Again / Good / Easy, decks for what is due, the weak spots, the capitals, or your own filter.
 
 And it shows you how you are doing:
@@ -26,10 +32,11 @@ Private by design: no network permission, no account, no ads. Your progress stay
 
 Works offline, in light and dark, with TalkBack, on phones and tablets.
 
-**What's new (3.0)**
-• A map for every country: in the detail sheet, on the flashcard back, on Learn cards and after a miss.
-• New quiz mode: Map → Country, with its own review schedule.
-• Progress shows how many countries you can place on the map.
+**What's new (3.1)**
+• The app speaks French, Spanish, German and Arabic (Settings › Language).
+• New quiz mode: Flag → Typed name. No options: type the name; short forms count and one typo is forgiven.
+• Every Learn quiz ends with a map question; every country sheet lists its land borders.
+• Sound effects and vibration for answers, each with a switch; a home-screen widget with what is due.
 
 **Category:** Education. **Content rating:** Everyone. **Contains ads:** No. **In-app purchases:** No.
 

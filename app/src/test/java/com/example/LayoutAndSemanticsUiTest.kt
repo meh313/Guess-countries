@@ -95,6 +95,49 @@ class LayoutAndSemanticsUiTest {
     }
 
     @Test
+    @Config(sdk = [36], qualifiers = "fr-rFR-w360dp-h800dp-xxhdpi")
+    fun french_theScreensComeInFrench_andTheQuizStillStarts() {
+        val context = rule.activity
+        val explore = context.getString(R.string.nav_explore)
+        assertTrue("French, not English: $explore", explore != "Explore")
+        rule.onNodeWithTag("nav_tab_explore").assert(hasText(explore))
+        rule.openTab("quiz")
+        rule.onNodeWithTag("start_quiz_btn").assertIsDisplayed().assert(hasText(context.getString(R.string.quiz_start_quiz, 10)))
+        rule.onNodeWithTag("start_quiz_btn").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithText(context.getString(R.string.quiz_progress, 1, 10)).assertIsDisplayed()
+        // The catalog stays English: the options are English country names.
+        val q = androidx.lifecycle.ViewModelProvider(rule.activity)[com.example.ui.viewmodel.CountryViewModel::class.java].quizSession.value!!.current
+        rule.onNodeWithTag("quiz_option_${q.correctAnswerIndex}").assert(hasText(q.targetCountry.name))
+    }
+
+    @Test
+    @Config(sdk = [36], qualifiers = "ar-rEG-w360dp-h800dp-xxhdpi")
+    fun arabic_theLayoutMirrors_andNothingFallsOffTheScreen() {
+        val context = rule.activity
+        assertEquals(android.view.View.LAYOUT_DIRECTION_RTL, context.resources.configuration.layoutDirection)
+        val width = context.resources.displayMetrics.widthPixels.toFloat()
+        // The first card sits on the right in a mirrored grid.
+        val (first, second) = cardsByName.take(2).map { rule.boundsOf(it) }
+        assertTrue("first at ${first.left}, second at ${second.left}", first.left > second.left)
+        for (tag in listOf("nav_tab_explore", "nav_tab_quiz", "nav_tab_stats")) {
+            val b = rule.boundsOf(tag)
+            assertTrue(tag, b.left >= 0f && b.right <= width + 1f)
+        }
+        rule.openTab("quiz")
+        val start = rule.boundsOf("start_quiz_btn")
+        assertTrue("start button within the window", start.left >= 0f && start.right <= width + 1f)
+        rule.onNodeWithTag("start_quiz_btn").assert(hasText(context.getString(R.string.quiz_start_quiz, 10)))
+        rule.onNodeWithTag("start_quiz_btn").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithText(context.getString(R.string.quiz_progress, 1, 10)).assertIsDisplayed()
+        for (i in 0..3) {
+            val b = rule.boundsOf("quiz_option_$i")
+            assertTrue("option $i within the window", b.left >= 0f && b.right <= width + 1f)
+        }
+    }
+
+    @Test
     @Config(sdk = [36], qualifiers = "w840dp-h1180dp-xhdpi")
     fun tablet_exploreUsesMoreThanTwoColumns() {
         val firstRowTop = rule.boundsOf(cardsByName.first()).top
