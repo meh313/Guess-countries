@@ -45,7 +45,9 @@ class QuizStateHolder(
     /** Shuffles questions and answers; tests pass a seeded one. */
     private val random: Random,
     /** Null when nothing keeps the quiz across process death (tests). */
-    private val savedState: SavedStateHandle?
+    private val savedState: SavedStateHandle?,
+    /** Runs once a finished quiz is saved (the app redraws its widget); nothing by default. */
+    private val afterSave: suspend () -> Unit = {}
 ) {
     private val _session = MutableStateFlow(restored())
 
@@ -340,6 +342,7 @@ class QuizStateHolder(
             val now = repository.now()
             val finished = PracticeStreak.Session(now, session.answers.size)
             _finishOutcome.value = PracticeStreak.outcome(earlier, finished, settings.dailyGoal, now, zone())
+            afterSave()
         }
     }
 

@@ -59,10 +59,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import com.example.widget.WidgetRefresher
-import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.drop
-import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 
 /**
@@ -391,18 +387,10 @@ class CountryViewModel(
 
     // --- Quiz -------------------------------------------------------------------------------------------------------
 
-    private val quiz = QuizStateHolder(repository, progress, settings, viewModelScope, clock, zone, random, savedStateHandle)
+    /** The home-screen widget is redrawn once a session is saved (a quiz, a study session): its numbers changed. */
+    private val refreshWidget: suspend () -> Unit = { runCatching { widgets.refresh() } }
 
-    init {
-        // The home-screen widget follows the saved sessions and the skill rows: a redraw once they settle after a
-        // change, not on the first values (nothing changed yet) and not on every answer of a blitz.
-        @OptIn(FlowPreview::class)
-        viewModelScope.launch {
-            merge(progress.quizHistory.drop(1), progress.skills.drop(1)).debounce(WIDGET_DEBOUNCE_MILLIS).collect {
-                runCatching { widgets.refresh() }
-            }
-        }
-    }
+    private val quiz = QuizStateHolder(repository, progress, settings, viewModelScope, clock, zone, random, savedStateHandle, afterSave = refreshWidget)
 
     /** The quiz in progress, or null on the setup screen. Lives here so it survives rotation and tab switches. */
     val quizSession: StateFlow<QuizSession?> get() = quiz.session
@@ -449,7 +437,7 @@ class CountryViewModel(
 
     // --- Study ------------------------------------------------------------------------------------------------------
 
-    private val study = StudyStateHolder(repository, viewModelScope, zone, random, progress.writeErrors, savedStateHandle, dailyGoal = { settings.dailyGoal })
+    private val study = StudyStateHolder(repository, viewModelScope, zone, random, progress.writeErrors, savedStateHandle, dailyGoal = { settings.dailyGoal }, afterSave = refreshWidget)
 
     /** The flashcard study session in progress, or null outside one. */
     val studySession: StateFlow<StudySession?> get() = study.session
@@ -592,9 +580,6 @@ class CountryViewModel(
     }
 
     companion object {
-        /** How long after the last change to the log or the skills the widget is redrawn. */
-        const val WIDGET_DEBOUNCE_MILLIS = 1_500L
-
         /** Builds the real database-backed repository and speech engine for the app. */
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
