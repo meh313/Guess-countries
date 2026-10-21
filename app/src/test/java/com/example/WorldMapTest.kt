@@ -63,6 +63,7 @@ class WorldMapTest {
 
     private var primary = 0
     private var sea = 0
+    private var land = 0
 
     /** What is on screen; content is set once per test and follows these. */
     private var shownCountry by mutableStateOf<Country?>(null)
@@ -84,6 +85,7 @@ class WorldMapTest {
                 WorldFlagsTheme {
                     primary = MaterialTheme.colorScheme.primary.toArgb()
                     sea = MaterialTheme.colorScheme.surfaceContainerLow.toArgb()
+                    land = MaterialTheme.colorScheme.surfaceVariant.toArgb()
                     CompositionLocalProvider(LocalWorldMapData provides shownData) {
                         Box(Modifier.size(340.dp, 420.dp)) {
                             shownCountry?.let { WorldMap(it, Modifier.width(300.dp), aspectRatio = aspect, zoom = shownZoom, showCapital = shownCapital) }
@@ -196,6 +198,35 @@ class WorldMapTest {
     }
 
     @Test
+    fun aHostsHole_leavesItsEnclaveInTheLandColour_andTheEnclaveIsHighlightedOnItsOwn() {
+        val viewport = mapViewport(WorldMapFixture.data["HH"]!!, zoom = true, aspect = aspect)
+        show(mapped("HH"))
+        var map = mapPixels()
+        // EE fills HH's hole, 26..34 × -34..-26; HH's own band runs from 20 to 26 on the west.
+        val hole = listOf(viewport.fx(28f), viewport.fy(-28f), viewport.fx(32f), viewport.fy(-32f))
+        assertTrue("the enclave is land", map.share(land, hole[0], hole[1], hole[2], hole[3]) > 0.95f)
+        assertTrue("the enclave is not the host's", map.share(primary, hole[0], hole[1], hole[2], hole[3]) < 0.01f)
+        assertTrue("the host round it", map.share(primary, viewport.fx(21f), viewport.fy(-28f), viewport.fx(25f), viewport.fy(-32f)) > 0.95f)
+
+        show(mapped("EE"))
+        map = mapPixels()
+        val own = mapViewport(WorldMapFixture.data["EE"]!!, zoom = true, aspect = aspect)
+        assertTrue("the enclave highlighted", map.share(primary, own.fx(28f), own.fy(-28f), own.fx(32f), own.fy(-32f)) > 0.95f)
+    }
+
+    @Test
+    fun theBackgroundLand_isLandNotSea_andNoCountry() {
+        // The fixture's background ring, -170..-150 × 30..50, on the whole-world map: land colour, never highlighted.
+        show(mapped("AA"), zoom = false)
+        val map = mapPixels()
+        val viewport = mapViewport(WorldMapFixture.data["AA"]!!, zoom = false, aspect = aspect)
+        val (l, t, r, b) = listOf(viewport.fx(-167f), viewport.fy(47f), viewport.fx(-153f), viewport.fy(33f))
+        assertTrue("land", map.share(land, l, t, r, b) > 0.95f)
+        assertTrue("not sea", map.share(sea, l, t, r, b) < 0.01f)
+        assertTrue("not a country", WorldMapFixture.data.countries.values.none { it.bbox.west <= -167f && it.bbox.east >= -153f && it.bbox.north >= 47f })
+    }
+
+    @Test
     fun theMapIsAnImageDescribedByTheCountryAndItsRegion() {
         show(france.copy(code = "AA"))
 
@@ -268,5 +299,29 @@ class WorldMapTest {
         assertTrue("left", map.share(primary, 0f, 0f, l - m, 0.8f) < 0.003f)
         assertTrue("right", map.share(primary, r + m, 0f, 1f, 0.8f) < 0.003f)
         assertTrue("below", map.share(primary, 0f, b + m, 0.65f, 1f) < 0.003f)
+    }
+
+    @Test
+    fun theBundledAsset_leavesLesothoOutOfSouthAfrica_andDrawsGreenlandAsLand() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        assertTrue("world.json must be bundled", WorldMapData.isBundled(context))
+        val data = WorldMapData.load(context)
+
+        // South Africa highlighted: Lesotho, its enclave, stays land; the Karoo round it is South Africa's colour.
+        val za = mapViewport(data["ZA"]!!, zoom = true, aspect = aspect)
+        show(mapped("ZA"), data = data)
+        var map = mapPixels()
+        val lesotho = listOf(za.fx(28.0f), za.fy(-29.3f), za.fx(28.6f), za.fy(-29.8f))
+        assertTrue("Lesotho is land", map.share(land, lesotho[0], lesotho[1], lesotho[2], lesotho[3]) > 0.9f)
+        assertTrue("Lesotho is not South Africa", map.share(primary, lesotho[0], lesotho[1], lesotho[2], lesotho[3]) < 0.02f)
+        assertTrue("the Karoo is", map.share(primary, za.fx(22.5f), za.fy(-31.5f), za.fx(23.5f), za.fy(-32.5f)) > 0.9f)
+
+        // The whole world: Greenland, which is no catalog country, is land and not sea.
+        val world = mapViewport(data["BR"]!!, zoom = false, aspect = aspect)
+        show(mapped("BR"), zoom = false, data = data)
+        map = mapPixels()
+        val greenland = listOf(world.fx(-45f), world.fy(75f), world.fx(-38f), world.fy(70f))
+        assertTrue("Greenland is land", map.share(land, greenland[0], greenland[1], greenland[2], greenland[3]) > 0.9f)
+        assertTrue("Greenland is not sea", map.share(sea, greenland[0], greenland[1], greenland[2], greenland[3]) < 0.02f)
     }
 }

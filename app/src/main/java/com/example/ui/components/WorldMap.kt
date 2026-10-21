@@ -18,6 +18,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -113,11 +114,19 @@ private fun MapViewport.worldOffsets(): List<Float> =
     listOf(-360f, 0f, 360f).filter { off -> -180f + off < east && 180f + off > west }
 
 /**
- * Every country's rings as Compose paths in degree space (x = longitude, y = −latitude), built once per data set and
- * drawn through a canvas transform, so a new viewport costs no new geometry. [land] holds all rings in one path for
- * the two draw calls that paint the land; [byCode] the one country that is highlighted.
+ * One country's highlight: [fill] is its rings with its holes cut out (even-odd, so an enclave such as Lesotho keeps
+ * the land colour), [outline] its rings alone, for the stroke round its edge (a stroke round a hole would cover a
+ * small enclave). The same path when the country has no holes.
  */
-internal class MapPaths(val land: Path, val byCode: Map<String, Path>) {
+internal class CountryPaths(val fill: Path, val outline: Path)
+
+/**
+ * Every country's rings as Compose paths in degree space (x = longitude, y = −latitude), built once per data set and
+ * drawn through a canvas transform, so a new viewport costs no new geometry. [land] holds all rings, the countries'
+ * and the background land's, in one path for the two draw calls that paint the land (non-zero, so an enclave's ring
+ * over its host's stays land); [byCode] the one country that is highlighted.
+ */
+internal class MapPaths(val land: Path, val byCode: Map<String, CountryPaths>) {
     companion object {
         @Volatile
         private var cached: Pair<WorldMapData, MapPaths>? = null
@@ -129,14 +138,20 @@ internal class MapPaths(val land: Path, val byCode: Map<String, Path>) {
 
         private fun build(data: WorldMapData): MapPaths {
             val land = Path()
-            val byCode = HashMap<String, Path>(data.countries.size * 2)
+            data.background.forEach { ring -> addRing(land, ring) }
+            val byCode = HashMap<String, CountryPaths>(data.countries.size * 2)
             data.countries.values.forEach { country ->
-                val own = Path()
+                val outline = Path()
                 country.polys.forEach { ring ->
-                    addRing(own, ring)
+                    addRing(outline, ring)
                     addRing(land, ring)
                 }
-                byCode[country.code] = own
+                val fill = if (country.holes.isEmpty()) outline else Path().apply {
+                    fillType = PathFillType.EvenOdd
+                    country.polys.forEach { ring -> addRing(this, ring) }
+                    country.holes.forEach { ring -> addRing(this, ring) }
+                }
+                byCode[country.code] = CountryPaths(fill, outline)
             }
             return MapPaths(land, byCode)
         }
@@ -154,8 +169,9 @@ internal class MapPaths(val land: Path, val byCode: Map<String, Path>) {
 }
 
 /**
- * Where a country is: an equirectangular map with every country's outline in a muted land colour on a sea
- * background, [country] filled in the primary colour and its capital marked, in a rounded box of [aspectRatio].
+ * Where a country is: an equirectangular map with every country's outline, and the land outside the catalog, in a
+ * muted land colour on a sea background, [country] filled in the primary colour (an enclave inside it left in the
+ * land colour) and its capital marked, in a rounded box of [aspectRatio].
  *
  * [zoom] frames the country ([mapViewport]); off, the whole world is shown. A zoomed box narrower than 60° of
  * longitude and at least 160dp wide carries a small world inset in its bottom-end corner with the framed area marked,
@@ -229,8 +245,9 @@ fun WorldMap(
 
 /**
  * Paints the land into [area]: all rings in [land] with a [coast] stroke, then [highlightCode]'s rings in
- * [highlight] with a stroke of the same colour (so an atoll too small to fill still shows, and the seam where a
- * country's rings meet at the antimeridian does not). [band] clips what is drawn to that part of the globe.
+ * [highlight], its holes left in the land colour, with a stroke of the same colour round its rings (so an atoll too
+ * small to fill still shows, and the seam where a country's rings meet at the antimeridian does not). The background
+ * land is only ever land. [band] clips what is drawn to that part of the globe.
  */
 private fun DrawScope.drawWorld(
     paths: MapPaths,
@@ -258,8 +275,8 @@ private fun DrawScope.drawWorld(
                     drawPath(paths.land, land)
                     drawPath(paths.land, coast, style = Stroke(width = coastWidthPx / sx))
                     if (own != null) {
-                        drawPath(own, highlight)
-                        drawPath(own, highlight, style = Stroke(width = highlightWidthPx / sx, join = StrokeJoin.Round))
+                        drawPath(own.fill, highlight)
+                        drawPath(own.outline, highlight, style = Stroke(width = highlightWidthPx / sx, join = StrokeJoin.Round))
                     }
                 }
                 if (band != null) clipRect(band.west, -band.north, band.east, -band.south) { paint() } else paint()

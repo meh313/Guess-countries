@@ -7,12 +7,15 @@ Source: Natural Earth (public domain), the 1:50m admin-0 countries and the 1:10m
 the GitHub mirror into --cache (default ~/.cache/natural-earth, outside the repository: the files are data, never run).
 Every entry of the catalog (tools/catalog_codes.py: 196 states plus Antarctica) gets one country record, and nothing
 else does: features are matched by ISO_A2_EH, then ISO_A2, then HAND_A3 for the rest (Somaliland and Northern
-Cyprus are merged into Somalia and Cyprus; Western Sahara, the dependencies and the other non-catalog features are
-dropped). Each outer ring (holes are dropped) is simplified with Douglas-Peucker at --tolerance degrees, keeps at
-least four points, and is dropped when its simplified area is under MIN_RING_AREA square degrees unless it is the
-country's largest; coordinates are rounded to two decimals. A country whose largest ring is under POINT_AREA square
-degrees (Monaco, the Vatican, the atoll states) is instead a square of POINT_SIDE degrees around its capital, marked
-"point": true, so every code has a polygon. The label is Natural Earth's LABEL_X/LABEL_Y; the capital is the
+Cyprus are merged into Somalia and Cyprus). Western Sahara, the dependencies and the other non-catalog features get
+no record: their rings go into "background", land drawn in the land colour that is no country (so Greenland or
+Puerto Rico is not shown as sea), simplified like a country's. Each outer ring is simplified with Douglas-Peucker at
+--tolerance degrees, keeps at least four points, and is dropped when its simplified area is under MIN_RING_AREA
+square degrees unless it is the country's largest; coordinates are rounded to two decimals. A hole (an enclave:
+Lesotho in South Africa) is kept as the enclave's own drawn ring, so both outlines are one line and a renderer that
+fills with the even-odd rule leaves the enclave out of its host; a hole whose enclave is not drawn is dropped. A
+country whose largest ring is under POINT_AREA square degrees (Monaco, the Vatican, the atoll states) is instead a
+square of POINT_SIDE degrees around its capital, marked "point": true, so every code has a polygon. The label is Natural Earth's LABEL_X/LABEL_Y; the capital is the
 populated-places "Admin-0 capital" whose name matches the catalog's quizCapital (accents, case and punctuation
 folded; "Admin-0 capital alt" or any other place of the country when only that matches), else the first "Admin-0
 capital", else the label point. A point square is labelled at its centre; a Natural Earth label that falls outside
@@ -29,11 +32,11 @@ out; at 10 degrees the chain would pull in Alaska and Hawaii through the panhand
 Madeira. It uses the same shifted frame as the bbox when the country spans the antimeridian, and comes back to
 -180..180 when the rings it kept all lie west of it. For a point square and Antarctica the frame is the bbox.
 
-Format of world.json (compact, countries sorted by code):
+Format of world.json (compact, countries sorted by code; format 1 had no holes and no background):
 
-    {"format":1,"source":"Natural Earth 50m (public domain)","countries":{"FR":{"polys":[[[lon,lat],...],...],
-     "bbox":[west,south,east,north],"frame":[west,south,east,north],"label":[lon,lat],"capital":[lon,lat] or null,
-     "point":false},...}}
+    {"format":2,"source":"Natural Earth 50m (public domain)","countries":{"FR":{"polys":[[[lon,lat],...],...],
+     "holes":[[[lon,lat],...],...],"bbox":[west,south,east,north],"frame":[west,south,east,north],"label":[lon,lat],
+     "capital":[lon,lat] or null,"point":false,"neighbours":["AD",...]},...},"background":[[[lon,lat],...],...]}
 
 Geo.kt carries the same bbox, frame, label, capital and point flag per code, for the screens that need them without
 reading the asset. When the asset comes out over MAX_ASSET_BYTES the tolerance is raised to FALLBACK_TOLERANCE.
@@ -47,9 +50,10 @@ cannot show (the microstates drawn as point squares, the 150 m Botswana–Zambia
 Martin); DENY_NEIGHBOURS removes any false positive. Neighbours.kt carries the
 same lists, generated from the asset like Geo.kt.
 
---check needs no download (CI runs it): it fails when the asset does not parse, is not format 1, misses a catalog
-code or lacks polygons for one, or when Geo.kt or Neighbours.kt is not what this script writes from the asset.
-Whether the asset itself is current is checked by regenerating it and looking at `git diff`.
+--check needs no download (CI runs it): it fails when the asset does not parse, is not format 2, misses a catalog
+code or lacks polygons or a holes list for one, has no background land, or when Geo.kt or Neighbours.kt is not what
+this script writes from the asset. Whether the asset itself is current is checked by regenerating it and looking at
+`git diff`.
 """
 import argparse
 import json
@@ -71,7 +75,7 @@ MIRROR = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/
 COUNTRIES_FILE = 'ne_50m_admin_0_countries.geojson'
 PLACES_FILE = 'ne_10m_populated_places_simple.geojson'
 SOURCE = 'Natural Earth 50m (public domain)'
-FORMAT = 1
+FORMAT = 2
 
 TOLERANCE = 0.05            # Douglas-Peucker tolerance in degrees
 FALLBACK_TOLERANCE = 0.08   # used when the asset comes out over MAX_ASSET_BYTES
@@ -370,23 +374,26 @@ def build(cache, tolerance, report):
     countries_fc = fetch(cache, COUNTRIES_FILE)
     places_fc = fetch(cache, PLACES_FILE)
 
-    raw = {}        # code -> {'rings': [...], 'labels': [(area, (x, y))], 'a3': set()}
+    raw = {}        # code -> {'rings': [...], 'holes': [...], 'labels': [(area, (x, y))], 'a3': set()}
+    other_land = {}  # ADM0_A3 -> outer rings of a feature that is no catalog country: the background land
     hand_used = []
     dropped = []
     for feature in countries_fc['features']:
         props = feature['properties']
         code, field = catalog_code(props, codes)
-        if code is None:
-            dropped.append(f"{props.get('ADM0_A3')} {props.get('NAME')}")
-            continue
-        if field == 'ADM0_A3':
-            hand_used.append(f"{props['ADM0_A3']} -> {code}")
         geometry = feature['geometry']
         polygons = [geometry['coordinates']] if geometry['type'] == 'Polygon' else geometry['coordinates']
         rings = [polygon[0] for polygon in polygons if polygon]
+        if code is None:
+            dropped.append(f"{props.get('ADM0_A3')} {props.get('NAME')}")
+            other_land.setdefault(props['ADM0_A3'], []).extend(rings)
+            continue
+        if field == 'ADM0_A3':
+            hand_used.append(f"{props['ADM0_A3']} -> {code}")
         entry = raw.setdefault(code, {'rings': [], 'holes': [], 'labels': [], 'a3': set()})
         entry['rings'].extend(rings)
-        # The holes are kept for the borders only: an enclave (Lesotho) shares its outline with its host's hole.
+        # An enclave (Lesotho) shares its outline with its host's hole: the holes count for the borders, and the
+        # ones whose enclave is drawn are cut out of the host (see holes_of).
         entry['holes'].extend(hole for polygon in polygons for hole in polygon[1:])
         entry['a3'].add(props['ADM0_A3'])
         if props.get('LABEL_X') is not None and props.get('LABEL_Y') is not None:
@@ -407,13 +414,13 @@ def build(cache, tolerance, report):
 
     neighbours = adjacency(raw, report)
     countries = {}
+    drawn = {}      # code -> {index of a raw ring: the ring drawn for it}
     point_codes, fallback_capitals, inexact, relabelled = [], [], [], []
     for code in sorted(codes):
         if code == ANTARCTICA:
-            rings = raw[code]['rings']
-            polys = simplify_country(rings, tolerance)
+            drawn[code] = simplify_rings(raw[code]['rings'], tolerance)
             # Its ring goes round the pole, so the plain box (the whole band) is the right one.
-            countries[code] = record(polys, list(ANTARCTICA_LABEL), None, False, wrap=False)
+            countries[code] = record(list(drawn[code].values()), list(ANTARCTICA_LABEL), None, False, wrap=False)
             countries[code]['neighbours'] = []
             continue
         if code not in raw:
@@ -426,11 +433,14 @@ def build(cache, tolerance, report):
         largest = max(ring_area(r) for r in data['rings'])
         if largest < POINT_AREA:
             centre = picked[:2] if picked else label
-            polys = [point_square(*centre)]
+            square = point_square(*centre)
+            drawn[code] = {i: square for i in range(len(data['rings']))}   # every ring of it is the square
+            polys = [square]
             point = True
             point_codes.append(code)
         else:
-            polys = simplify_country(data['rings'], tolerance)
+            drawn[code] = simplify_rings(data['rings'], tolerance)
+            polys = list(drawn[code].values())
             point = False
         if point:
             label = list(centre)
@@ -446,21 +456,61 @@ def build(cache, tolerance, report):
         countries[code] = record(polys, label, capital, point)
         countries[code]['neighbours'] = neighbours.get(code, [])
 
+    holes_of(raw, drawn, countries, report)
+    background = []
+    for a3 in sorted(other_land):
+        background.extend(simplify_country(other_land[a3], tolerance))
+
     report.append(f'hand map used: {", ".join(sorted(set(hand_used))) or "none"}')
-    report.append(f'dropped {len(dropped)} non-catalog features: {", ".join(dropped)}')
+    report.append(f'dropped {len(dropped)} non-catalog features, drawn as background land in {len(background)} rings: '
+                  f'{", ".join(dropped)}')
     report.append(f'countries: {len(countries)} ({len(countries) - len(point_codes)} from 50m outlines, '
                   f'{len(point_codes)} point squares: {", ".join(point_codes)})')
     report.append(f'capitals matched inexactly: {"; ".join(inexact) or "none"}')
     report.append(f'label point outside the outline, centroid used: {", ".join(relabelled) or "none"}')
     report.append(f'capitals missing, label used: {", ".join(fallback_capitals) or "none"}')
-    return countries
+    return countries, background
 
 
-def simplify_country(rings, tolerance):
+def holes_of(raw, drawn, countries, report):
+    """Gives each record its "holes": for each Natural Earth hole, the drawn ring of the enclave that fills it (the
+    outer ring of another country that has most of the hole's points), so the two outlines are one line. A hole whose
+    enclave is not drawn (too small, like Malawi's islands in Mozambique's part of the lake) is left out."""
+    owners = {}     # raw outline vertex -> {(code, ring index)}
+    for code, entry in raw.items():
+        for i, ring in enumerate(entry['rings']):
+            for point in ring:
+                owners.setdefault((round(point[0], 6), round(point[1], 6)), set()).add((code, i))
+    kept, left_out = [], []
+    for code in sorted(countries):
+        holes = []
+        for hole in raw.get(code, {}).get('holes', []):
+            counts = {}
+            for point in hole:
+                for owner in owners.get((round(point[0], 6), round(point[1], 6)), ()):
+                    if owner[0] != code:
+                        counts[owner] = counts.get(owner, 0) + 1
+            best = max(counts, key=counts.get, default=None)
+            if best is not None and counts[best] * 2 >= len(hole) and best[1] in drawn.get(best[0], {}):
+                holes.append(drawn[best[0]][best[1]])
+                kept.append(f'{best[0]} in {code}')
+            else:
+                left_out.append(f'{best[0] if best else "?"} in {code}')
+        countries[code]['holes'] = holes
+    report.append(f'holes cut for their enclave: {", ".join(kept) or "none"}; '
+                  f'left out (enclave not drawn): {", ".join(left_out) or "none"}')
+
+
+def simplify_rings(rings, tolerance):
+    """Raw ring index -> simplified ring, for the rings kept: the largest and every one of at least MIN_RING_AREA."""
     simplified = [simplify_ring(r, tolerance) for r in rings]
     areas = [ring_area(r) for r in simplified]
     largest = areas.index(max(areas))
-    return [r for i, r in enumerate(simplified) if i == largest or areas[i] >= MIN_RING_AREA]
+    return {i: r for i, r in enumerate(simplified) if i == largest or areas[i] >= MIN_RING_AREA}
+
+
+def simplify_country(rings, tolerance):
+    return list(simplify_rings(rings, tolerance).values())
 
 
 def record(polys, label, capital, point, wrap=True):
@@ -469,6 +519,7 @@ def record(polys, label, capital, point, wrap=True):
     bbox = bbox_of(polys, wrap)
     return {
         'polys': polys,
+        'holes': [],
         'bbox': [rnd(v) for v in bbox],
         'frame': [rnd(v) for v in (bbox if point or not wrap else frame_of(polys, bbox, capital))],
         'label': [rnd(label[0]), rnd(label[1])],
@@ -479,8 +530,8 @@ def record(polys, label, capital, point, wrap=True):
 
 # ---------------------------------------------------------------------------------------------------- outputs
 
-def asset_text(countries):
-    return json.dumps({'format': FORMAT, 'source': SOURCE, 'countries': countries},
+def asset_text(countries, background):
+    return json.dumps({'format': FORMAT, 'source': SOURCE, 'countries': countries, 'background': background},
                       separators=(',', ':'), ensure_ascii=False) + '\n'
 
 
@@ -585,6 +636,11 @@ def check():
             problems.append(f'{code} has no bbox or frame')
         elif not isinstance(c.get('neighbours'), list):
             problems.append(f'{code} has no neighbours list')
+        elif not isinstance(c.get('holes'), list) or any(len(ring) < MIN_RING_POINTS for ring in c['holes']):
+            problems.append(f'{code} has no usable holes list')
+    background = data.get('background')
+    if not isinstance(background, list) or not background or any(len(ring) < MIN_RING_POINTS for ring in background):
+        problems.append('the background land is missing or has a ring of fewer than four points')
     for code in codes:
         for other in countries.get(code, {}).get('neighbours', []):
             if other not in countries:
@@ -619,24 +675,25 @@ def main():
 
     tolerance = args.tolerance
     report = []
-    countries = build(args.cache, tolerance, report)
-    text = asset_text(countries)
+    countries, background = build(args.cache, tolerance, report)
+    text = asset_text(countries, background)
     if len(text.encode('utf-8')) > MAX_ASSET_BYTES and tolerance < FALLBACK_TOLERANCE:
         print(f'asset would be {len(text.encode("utf-8"))} bytes at {tolerance} degrees; '
               f'retrying at {FALLBACK_TOLERANCE}')
         tolerance = FALLBACK_TOLERANCE
         report = []
-        countries = build(args.cache, tolerance, report)
-        text = asset_text(countries)
+        countries, background = build(args.cache, tolerance, report)
+        text = asset_text(countries, background)
     OUT_JSON.parent.mkdir(parents=True, exist_ok=True)
     OUT_JSON.write_text(text, encoding='utf-8')
     OUT_KT.write_text(kotlin_text(countries), encoding='utf-8')
     OUT_NEIGHBOURS_KT.write_text(neighbours_text(countries), encoding='utf-8')
     for line in report:
         print(line)
-    points = sum(len(ring) for c in countries.values() for ring in c['polys'])
-    rings = sum(len(c['polys']) for c in countries.values())
-    print(f'tolerance {tolerance} degrees: {rings} rings, {points} points')
+    points = sum(len(ring) for c in countries.values() for ring in c['polys'] + c['holes'])
+    rings = sum(len(c['polys']) + len(c['holes']) for c in countries.values())
+    print(f'tolerance {tolerance} degrees: {rings} rings, {points} points in the countries; '
+          f'{len(background)} rings, {sum(len(ring) for ring in background)} points of background land')
     print(f'wrote {OUT_JSON.relative_to(REPO)}: {OUT_JSON.stat().st_size} bytes; {OUT_KT.relative_to(REPO)}; {OUT_NEIGHBOURS_KT.relative_to(REPO)}')
     return 0
 

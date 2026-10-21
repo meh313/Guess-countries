@@ -22,7 +22,7 @@ class WorldMapDataTest {
 
     @Test
     fun parse_readsEveryCountry_itsBoxLabelCapitalAndFlag() {
-        assertEquals(setOf("AA", "BB", "XX", "PP", "FF", "SS", "AQ"), data.countries.keys)
+        assertEquals(setOf("AA", "BB", "XX", "PP", "FF", "SS", "AQ", "HH", "EE"), data.countries.keys)
 
         val aa = data["AA"]!!
         assertEquals(Bbox(-30f, -10f, 30f, 10f), aa.bbox)
@@ -73,5 +73,26 @@ class WorldMapDataTest {
 
         assertEquals(1, parsed["LL"]!!.polys.size)
         assertArrayEquals(floatArrayOf(0f, 0f, 2f, 0f, 2f, 2f), parsed["LL"]!!.polys[0], 0f)
+    }
+
+    @Test
+    fun theHoles_areReadAsRings_theEnclavesOwn() {
+        val hh = data["HH"]!!
+        assertEquals(1, hh.holes.size)
+        assertArrayEquals("the hole is the enclave's ring", data["EE"]!!.polys[0], hh.holes[0], 0f)
+        assertTrue("an empty list", data["EE"]!!.holes.isEmpty())
+        assertTrue("no key: no holes", data["AA"]!!.holes.isEmpty())
+    }
+
+    @Test
+    fun theBackgroundLand_isReadAsBareRings_noCountry() {
+        assertEquals(1, data.background.size)
+        assertArrayEquals(floatArrayOf(-170f, 30f, -150f, 30f, -150f, 50f, -170f, 50f), data.background[0], 0f)
+        // A format 1 file has none.
+        val old = WorldMapData.parse(
+            """{"format":1,"countries":{"LL":{"polys":[[[0,0],[2,0],[2,2]]],"bbox":[0,0,2,2],"label":[1,1],"capital":null,"point":false}}}"""
+        )
+        assertTrue(old.background.isEmpty())
+        assertTrue(old["LL"]!!.holes.isEmpty())
     }
 }

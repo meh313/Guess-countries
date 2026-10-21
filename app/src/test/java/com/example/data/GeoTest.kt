@@ -43,13 +43,7 @@ class GeoTest {
 
     private fun frame(code: String): Box = box(code, "frame")
 
-    private fun rings(code: String): List<List<Pair<Double, Double>>> {
-        val polys = countries.getJSONObject(code).getJSONArray("polys")
-        return List(polys.length()) { i ->
-            val ring: JSONArray = polys.getJSONArray(i)
-            List(ring.length()) { j -> ring.getJSONArray(j).let { it.getDouble(0) to it.getDouble(1) } }
-        }
-    }
+    private fun rings(code: String): List<List<Pair<Double, Double>>> = ringList(countries.getJSONObject(code).getJSONArray("polys"))
 
     private fun point(code: String, key: String): Pair<Double, Double>? {
         val country = countries.getJSONObject(code)
@@ -57,13 +51,90 @@ class GeoTest {
         return country.getJSONArray(key).let { it.getDouble(0) to it.getDouble(1) }
     }
 
+    private fun ringList(list: JSONArray): List<List<Pair<Double, Double>>> = List(list.length()) { i ->
+        val ring: JSONArray = list.getJSONArray(i)
+        List(ring.length()) { j -> ring.getJSONArray(j).let { it.getDouble(0) to it.getDouble(1) } }
+    }
+
+    private fun holes(code: String): List<List<Pair<Double, Double>>> = ringList(countries.getJSONObject(code).getJSONArray("holes"))
+
+    private val background: List<List<Pair<Double, Double>>> by lazy { ringList(root.getJSONArray("background")) }
+
+    /** Ray casting: whether ([lon], [lat]) lies inside [ring]. */
+    private fun inRing(ring: List<Pair<Double, Double>>, lon: Double, lat: Double): Boolean {
+        var inside = false
+        var j = ring.size - 1
+        for (i in ring.indices) {
+            val (xi, yi) = ring[i]
+            val (xj, yj) = ring[j]
+            if ((yi > lat) != (yj > lat) && lon < (xj - xi) * (lat - yi) / (yj - yi) + xi) inside = !inside
+            j = i
+        }
+        return inside
+    }
+
+    /** Whether the point is in what the map paints for [code]: its rings with its holes cut out (even-odd). */
+    private fun paints(code: String, lon: Double, lat: Double): Boolean =
+        (rings(code) + holes(code)).count { inRing(it, lon, lat) } % 2 == 1
+
+    /** The catalog countries whose painted area holds the point. */
+    private fun paintedBy(lon: Double, lat: Double): List<String> = catalog.filter { paints(it, lon, lat) }
+
     private val codesInAsset: Set<String> get() = countries.keys().asSequence().toSet()
 
     @Test
-    fun assetIsFormat1_fromNaturalEarth_andUnder700KB() {
-        assertEquals(1, root.getInt("format"))
+    fun assetIsFormat2_fromNaturalEarth_andUnder700KB() {
+        assertEquals(2, root.getInt("format"))
         assertTrue(root.getString("source").startsWith("Natural Earth"))
         assertTrue("${file.length()} bytes", file.length() < 700 * 1024)
+    }
+
+    @Test
+    fun theHolesAreTheEnclavesOwnRings_insideTheirHost_soTheHostLeavesThemOut() {
+        val withHoles = catalog.filter { holes(it).isNotEmpty() }.toSet()
+        assertEquals(setOf("IT", "KG", "ZA"), withHoles)
+        val outlines = catalog.associateWith { rings(it) }
+        withHoles.forEach { host ->
+            holes(host).forEach { hole ->
+                assertTrue("$host's hole is no other country's ring", outlines.any { (code, rings) -> code != host && hole in rings })
+                hole.forEach { (lon, lat) ->
+                    assertTrue("$host's hole runs outside it at ($lon, $lat)", rings(host).any { inRing(it, lon, lat) })
+                }
+            }
+        }
+        // Lesotho in South Africa; the Vatican and San Marino (point squares) in Italy; Sokh and Shakhimardan
+        // (Uzbekistan) and Vorukh (Tajikistan) in Kyrgyzstan.
+        assertEquals(listOf("LS"), paintedBy(28.25, -29.6))
+        assertEquals(listOf("VA"), paintedBy(12.45, 41.90))
+        assertEquals(listOf("SM"), paintedBy(12.45, 43.94))
+        assertEquals(listOf("UZ"), paintedBy(71.11, 39.99))
+        assertEquals(listOf("UZ"), paintedBy(71.73, 39.95))
+        assertEquals(listOf("TJ"), paintedBy(70.59, 39.84))
+        assertEquals(listOf("ZA"), paintedBy(24.0, -31.0))
+        assertEquals(listOf("IT"), paintedBy(11.25, 43.77))
+    }
+
+    @Test
+    fun theBackgroundLand_coversWhatIsNoCatalogCountry_andIsNoCountry() {
+        assertTrue(background.isNotEmpty())
+        background.forEach { ring ->
+            assertTrue("a background ring of ${ring.size} points", ring.size >= 4)
+            ring.forEach { (lon, lat) -> assertTrue("($lon, $lat)", lon >= -180.0 && lon <= 180.0 && lat >= -90.0 && lat <= 90.0) }
+        }
+        // Land that the catalog leaves out is land on the map, under no country: Greenland, the land between
+        // Palestine, Egypt, Jordan, Lebanon and Syria, Western Sahara, Puerto Rico, New Caledonia, the Falklands,
+        // Hong Kong, Bermuda, the Faroes.
+        val places = mapOf(
+            "Greenland" to (-42.0 to 72.0), "Tel Aviv" to (34.78 to 32.08), "Beersheba" to (34.79 to 31.25),
+            "Katzrin" to (35.69 to 32.99), "Tifariti" to (-10.03 to 26.16), "San Juan" to (-66.1 to 18.4),
+            "New Caledonia" to (165.5 to -21.5), "Stanley" to (-57.85 to -51.69), "Hong Kong" to (114.17 to 22.32),
+            "Bermuda" to (-64.78 to 32.3), "Tórshavn" to (-6.77 to 62.0),
+        )
+        places.forEach { (name, at) ->
+            val (lon, lat) = at
+            assertTrue("$name is not background land", background.any { inRing(it, lon, lat) })
+            assertEquals("$name is painted as a country", emptyList<String>(), paintedBy(lon, lat))
+        }
     }
 
     @Test
