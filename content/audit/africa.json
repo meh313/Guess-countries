@@ -649,7 +649,8 @@
     "https://en.wikipedia.org/wiki/Flag_of_Eritrea",
     "https://www.britannica.com/topic/flag-of-Eritrea"
    ],
-   "from": "af14"
+   "from": "af14",
+   "resolved": "In the artwork, not the data: the shipped flag no longer has the pale triangle sampled here; it is #418fde. The content-review note on ER in notes gives the source and why it differs from #3C8BDC."
   },
   {
    "code": "MW",
@@ -739,7 +740,7 @@
   "critic: DOUBT (no fix): colour naming mixes \"Gold\" (Ghana, Mali, Senegal, Mauritania, Egypt, Eritrea, Namibia, South Africa, Zimbabwe) and \"Yellow\" (Benin, Guinea, Cameroon, Togo and others) for the same Pan-African shade. The rules only police Light Blue versus Blue, so this is reported as a style note, not an error.",
   "critic: Niger's language list (Hausa only) was checked: Wikipedia's infobox now gives Hausa as the official language with English and French as working languages under the 2025 transitional charter, so the entry is consistent with the field rule.",
   "critic: Flag-text hedging is consistent across the continent: official meanings are attributed (constitution, flag law, government, presidency, embassy) and traditional readings are hedged; no entry states a folk meaning as fact. The decided fixes for DZ, LY, SD, CM, CF, CG, GN, LR, ML, SZ, ER, MG, MU, MZ, SC were taken as applied.",
-  "content-review: The ER flagColors doubt (af14) is settled in the artwork, not the data: tools/render-flags.mjs now draws the lower triangle in the flag's blue, #418fde (Pantone 279 C), instead of flag-icons' pale #b4d7f4, so the catalog word \"Blue\" matches what the app shows."
+  "content-review: Resolved: the ER flagColors doubt (af14) is settled in the artwork, not the data. The light sky blue the doubt sampled (RGB 180,215,244) was flag-icons' #b4d7f4; tools/render-flags.mjs (RECOLOUR) now draws the lower triangle #418fde (RGB 65,143,222), the triangle's fill in Wikimedia Commons' Flag_of_Eritrea.svg (https://commons.wikimedia.org/wiki/File:Flag_of_Eritrea.svg, the drawing Wikipedia's Flag of Eritrea article shows), and FlagArtTest pins it. The #3C8BDC the doubt cites is the hex in that article's color table (RGB 60,139,220), given for the same ink, Pantone 279 C: the two sRGB values for it differ by at most 5 in any channel, the same medium blue, and the art takes the drawing's. The catalog word \"Blue\" is unchanged and matches what the app shows."
  ],
  "duplicates": [],
  "perBatch": [

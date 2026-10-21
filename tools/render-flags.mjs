@@ -35,8 +35,9 @@ if (!codes.length) {
 
 // flag-icons fills replaced with the flag's specified colour, per code: [flag-icons fill, the flag's own].
 //   er  The lower triangle. flag-icons draws it #b4d7f4, a pale sky blue. The flag's blue is Pantone 279 C (the
-//       colour table of Wikipedia's Flag of Eritrea), a medium blue whose sRGB value is #418fde, the fill of
-//       Wikimedia Commons' Flag_of_Eritrea.svg too.
+//       colour table of Wikipedia's Flag of Eritrea), a medium blue. The fill is #418fde, the triangle's in
+//       Wikimedia Commons' Flag_of_Eritrea.svg, the drawing that article shows; its table gives the same ink as
+//       #3c8bdc, at most 5 off in any channel.
 const RECOLOUR = { er: [['#b4d7f4', '#418fde']] };
 
 const cfi = source === 'cfi';
