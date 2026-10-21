@@ -38,7 +38,6 @@ import com.example.ui.components.mapViewport
 import com.example.ui.theme.WorldFlagsTheme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
-import org.junit.Assume.assumeTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -276,7 +275,8 @@ class WorldMapTest {
     @Test
     fun theBundledAsset_rendersTheAwkwardCountries_andKeepsBrazilInsideItsBox() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        assumeTrue("world.json is not bundled yet", WorldMapData.isBundled(context))
+        // A failure, not a skip: without the asset in the build the app would ship with empty maps.
+        assertTrue("world.json must be bundled", WorldMapData.isBundled(context))
         val data = WorldMapData.load(context)
 
         // France (a far-flung territory), the Vatican (a point), Kiribati (astride the antimeridian) and Antarctica.

@@ -83,7 +83,7 @@ class WorldMapData(val countries: Map<String, MapCountry>, val background: List<
                 shared ?: withContext(Dispatchers.IO) { load(context.applicationContext) }.also { shared = it }
             }
 
-        /** Whether the asset ships in this build: tests against the real data skip without it. */
+        /** Whether the asset ships in this build: the tests against the real data fail without it. */
         fun isBundled(context: Context): Boolean =
             try {
                 context.assets.open(ASSET).close()
