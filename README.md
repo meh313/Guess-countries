@@ -120,9 +120,10 @@ Requires JDK 21 and the Android SDK (compileSdk 37, targetSdk 36). The Gradle wr
 
 ```sh
 ./gradlew assembleDebug        # debug APK
-./gradlew build                # lint, unit tests and both APKs, as CI runs it
-./gradlew connectedDebugAndroidTest   # the smoke test on a connected device or emulator (see Emulator tests)
 ./gradlew testDebugUnitTest    # unit and Robolectric UI tests only
+./gradlew connectedDebugAndroidTest   # the smoke test on a connected device or emulator (see Emulator tests)
+# lint, the unit tests, both APKs and the smoke test's APK (built, not run), as CI runs it:
+./gradlew lintDebug testDebugUnitTest assembleDebug assembleRelease assembleDebugAndroidTest
 ```
 
 The unit tests include Compose UI tests that drive the real activity under Robolectric, so no emulator is
