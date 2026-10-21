@@ -48,6 +48,17 @@ class QuizSessionTest {
     }
 
     @Test
+    fun aPausedQuiz_neitherTimesOutNorEndsByItsClock_untilItIsResumed() {
+        val paused = timed().pause(3_000L)
+        assertSame(paused, paused.timeOut(now = 60_000L))
+        assertSame(paused, paused.finish())
+
+        val resumed = paused.resume(60_000L)
+        assertTrue(resumed.timeOut(now = 60_000L).timedOut)
+        assertTrue(resumed.finish().isFinished)
+    }
+
+    @Test
     fun resume_isIgnoredWhenNotPaused() {
         val s = timed()
         assertSame(s, s.resume(5_000L))

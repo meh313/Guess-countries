@@ -352,6 +352,31 @@ class CountryViewModelQuizTest {
     }
 
     @Test
+    fun aPausedQuiz_isNeitherTimedOutNorFinishedByItsClock_andNothingIsSaved() {
+        // The clocks are stopped (the app in the background), so a time-out or the end of the minute cannot come.
+        val vm = newViewModel()
+        vm.startQuiz(QuizMode.SPEED_MATCH, "Global")
+        vm.pauseQuiz()
+        vm.timeOutQuiz()
+        assertFalse(vm.quizSession.value!!.hasAnswered)
+
+        vm.endQuiz()
+        vm.startQuiz(QuizMode.BLITZ, "Global")
+        vm.pauseQuiz()
+        vm.finishQuiz()
+        assertFalse(vm.quizSession.value!!.isFinished)
+
+        db.awaitPendingWrites()
+        assertTrue(runBlocking { db.userProgressDao().getAllSkills().first() }.isEmpty())
+        assertTrue(runBlocking { db.userProgressDao().getQuizHistory().first() }.isEmpty())
+
+        // Back on screen, the clock can run out again.
+        vm.resumeQuiz()
+        vm.finishQuiz()
+        assertTrue(vm.quizSession.value!!.isFinished)
+    }
+
+    @Test
     fun clearFilters_resetsSearchContinentBookmarksAndSort() {
         val vm = newViewModel()
         vm.onSearchQueryChange("fra")

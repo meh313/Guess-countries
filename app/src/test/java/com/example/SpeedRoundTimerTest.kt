@@ -1,5 +1,6 @@
 package com.example
 
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -11,12 +12,14 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.data.local.AppDatabase
 import com.example.data.model.CountryRepository
 import com.example.data.settings.InMemoryUserSettings
 import com.example.data.settings.TimerPace
 import com.example.quiz.QuizMode
 import com.example.support.FakeSpeech
+import com.example.support.HandMovedLifecycle
 import com.example.support.awaitPendingWrites
 import com.example.support.closeWhenIdle
 import com.example.support.inMemoryDatabase
@@ -202,6 +205,37 @@ class SpeedRoundTimerTest {
 
         assertFalse(session.timedOut)
         assertFalse(session.hasAnswered)
+    }
+
+    @Test
+    fun theAppGoingToTheBackground_withTheQuizStillComposed_stopsTheCountdown_andItGoesOnWhereItStopped() {
+        vm.startQuiz(QuizMode.SPEED_MATCH, "Global")
+        val activity = HandMovedLifecycle()
+        rule.setContent { CompositionLocalProvider(LocalLifecycleOwner provides activity) { WorldFlagsTheme { QuizScreen(vm) } } }
+        rule.mainClock.advanceTimeBy(200)
+        clockAt(3_000)
+        countdown("7s left").assertIsDisplayed()
+
+        // Home, or the screen locked: the activity stops and the screen stays composed. Ten minutes go by.
+        onUi { activity.stop() }
+        rule.mainClock.advanceTimeBy(250)
+        assertTrue(session.isPaused)
+        clockAt(600_000)
+        clockAt(600_500)
+
+        assertFalse("timed out in the background", session.hasAnswered)
+        db.awaitPendingWrites()
+        assertTrue("a review was saved in the background", reviews().isEmpty())
+
+        onUi { activity.resume() }
+        rule.mainClock.advanceTimeBy(250)
+        assertFalse(session.isPaused)
+        countdown("7s left").assertIsDisplayed()
+        clockAt(600_500 + 6_900)
+        countdown("1s left").assertIsDisplayed()
+        assertFalse(session.timedOut)
+        clockAt(600_500 + 7_000)
+        assertTrue(session.timedOut)
     }
 
     /** A view model with the timer set to [pace], shown on the speed round. */

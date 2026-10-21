@@ -549,7 +549,8 @@ fun QuizScreen(
         BackHandler { showQuitConfirm = true }
 
         // The clocks only run while the quiz is on screen: a call, a tab switch or the app going to the background
-        // pauses the question and the blitz where they stand, and they go on with the time they had left.
+        // pauses the question and the blitz where they stand, and they go on with the time they had left. A paused
+        // quiz cannot time out or end by its clock (see QuizSession.timeOut and finish).
         val lifecycleOwner = LocalLifecycleOwner.current
         DisposableEffect(lifecycleOwner) {
             val observer = LifecycleEventObserver { _, event ->
@@ -574,17 +575,21 @@ fun QuizScreen(
         if (limitMs != null) {
             // Time is measured from when the question was shown, so rotating or switching tabs neither
             // pauses nor restarts it.
-            LaunchedEffect(active.currentIndex, active.questionStartedAt, active.hasAnswered, active.isPaused) {
-                // Coming back to the screen, the first frame still shows the paused session: its clock must not run
-                // (and time the question out) before the resumed session arrives and restarts this loop.
-                if (active.isPaused) return@LaunchedEffect
-                while (!active.hasAnswered) {
-                    val left = limitMs - (viewModel.clockMillis() - active.questionStartedAt)
-                    remainingMs = left.coerceIn(0L, limitMs)
-                    if (left <= 0L) {
-                        answerFeedback(false)
-                        viewModel.timeOutQuiz()
-                        break
+            LaunchedEffect(active.currentIndex, active.questionStartedAt, active.hasAnswered) {
+                while (true) {
+                    // The view model's session, not the one this screen last drew: while the activity is stopped
+                    // nothing is collected or recomposed but this loop goes on, and only the live session knows the
+                    // quiz was paused. A paused question waits; once resumed it has the time it had left.
+                    val live = viewModel.quizSession.value
+                    if (live == null || live.isFinished || live.hasAnswered || live.currentIndex != active.currentIndex) break
+                    if (!live.isPaused) {
+                        val left = limitMs - (viewModel.clockMillis() - live.questionStartedAt)
+                        remainingMs = left.coerceIn(0L, limitMs)
+                        if (left <= 0L) {
+                            answerFeedback(false)
+                            viewModel.timeOutQuiz()
+                            break
+                        }
                     }
                     delay(100)
                 }
@@ -594,14 +599,18 @@ fun QuizScreen(
         val totalMs = mode.totalTimeSeconds?.let { it * 1000L }
         var totalRemainingMs by remember(active.startedAt) { mutableLongStateOf(totalMs ?: 0L) }
         if (totalMs != null) {
-            LaunchedEffect(active.startedAt, active.isFinished, active.isPaused) {
-                if (active.isPaused) return@LaunchedEffect
-                while (!active.isFinished) {
-                    val left = totalMs - (viewModel.clockMillis() - active.startedAt)
-                    totalRemainingMs = left.coerceIn(0L, totalMs)
-                    if (left <= 0L) {
-                        viewModel.finishQuiz()
-                        break
+            LaunchedEffect(active.startedAt, active.isFinished) {
+                while (true) {
+                    // The live session, as for the question's clock: the minute stands still while the quiz is paused.
+                    val live = viewModel.quizSession.value
+                    if (live == null || live.isFinished) break
+                    if (!live.isPaused) {
+                        val left = totalMs - (viewModel.clockMillis() - live.startedAt)
+                        totalRemainingMs = left.coerceIn(0L, totalMs)
+                        if (left <= 0L) {
+                            viewModel.finishQuiz()
+                            break
+                        }
                     }
                     delay(100)
                 }

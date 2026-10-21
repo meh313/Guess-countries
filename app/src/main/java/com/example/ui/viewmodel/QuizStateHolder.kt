@@ -192,7 +192,7 @@ class QuizStateHolder(
         if (updated !== session) _session.value = updated
     }
 
-    /** Called when a timed question runs out of time: counts as a wrong answer. */
+    /** Called when a timed question runs out of time: counts as a wrong answer. Nothing happens while paused. */
     fun timeOut() {
         val session = _session.value ?: return
         val updated = session.timeOut(clock())
@@ -244,7 +244,7 @@ class QuizStateHolder(
         if (updated.isFinished) onFinished(updated)
     }
 
-    /** The clock of an endless quiz ran out: end it where it stands and keep the score. */
+    /** The clock of an endless quiz ran out: end it where it stands and keep the score. Nothing happens while paused. */
     fun finish() {
         val session = _session.value ?: return
         val updated = session.finish()

@@ -106,8 +106,11 @@ data class QuizSession(
         )
     }
 
-    /** Ends the quiz now, in the middle of a question if need be: the clock of an endless quiz ran out. */
-    fun finish(): QuizSession = if (isFinished) this else copy(isFinished = true)
+    /**
+     * Ends the quiz now, in the middle of a question if need be: the clock of an endless quiz ran out. Ignored once over,
+     * and while paused, since a stopped clock cannot run out.
+     */
+    fun finish(): QuizSession = if (isFinished || isPaused) this else copy(isFinished = true)
 
     val isPaused: Boolean get() = pausedAt != null
 
@@ -124,9 +127,12 @@ data class QuizSession(
         return copy(pausedAt = null, questionStartedAt = questionStartedAt + away, startedAt = startedAt + away)
     }
 
-    /** Ends the question as unanswered when the time ran out at [now]: no points and the streak is lost. */
+    /**
+     * Ends the question as unanswered when the time ran out at [now]: no points and the streak is lost. Ignored once
+     * the question is answered or the quiz is over, and while paused, since a stopped clock cannot run out.
+     */
     fun timeOut(now: Long = questionStartedAt): QuizSession {
-        if (hasAnswered || isFinished) return this
+        if (hasAnswered || isFinished || isPaused) return this
         return copy(
             selectedAnswerIndex = TIMED_OUT,
             streak = 0,
