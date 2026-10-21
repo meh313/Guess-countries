@@ -33,7 +33,8 @@ has no network permission.
   and offers *Retry* and *Practise mistakes*; a wrong text answer shows the two flags side by side at once. A quiz
   survives the app being killed in the background.
 - **Home-screen widget** – how many reviews are due, the streak and today's items against the goal, with a
-  *Practise* button that opens the Quiz tab; redrawn after each saved session and by the reminder's daily run.
+  *Practise* button that opens the Quiz tab; redrawn after each saved session, a reset or an import, a change of goal
+  or language, and by the reminder's daily run.
 - **Settings and About** – theme (system, light, dark) and wallpaper colours on Android 12+, the pace of the timed
   quizzes (normal, relaxed, no limit), sound effects and vibration for quiz answers (both on until switched off),
   *Export* and *Import* of all progress and settings as a JSON file, a reset of

@@ -23,6 +23,7 @@ import com.example.support.awaitPendingWrites
 import com.example.support.closeWhenIdle
 import com.example.support.inMemoryDatabase
 import com.example.ui.viewmodel.CountryViewModel
+import com.example.widget.WidgetRefresher
 import java.util.TimeZone
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -69,12 +70,13 @@ class CountryViewModelImportTest {
         if (db.isOpen) db.closeWhenIdle(*created.toTypedArray())
     }
 
-    private fun viewModel(database: AppDatabase = db) = CountryViewModel(
+    private fun viewModel(database: AppDatabase = db, widgets: WidgetRefresher = WidgetRefresher.NONE) = CountryViewModel(
         CountryRepository(database.userProgressDao()),
         FakeSpeech(),
         settings = settings,
         reminderScheduler = scheduler,
-        savedStateHandle = SavedStateHandle()
+        savedStateHandle = SavedStateHandle(),
+        widgets = widgets
     ).also { created += it }
 
     private fun idle() = shadowOf(Looper.getMainLooper()).idle()
@@ -329,6 +331,44 @@ class CountryViewModelImportTest {
         vm.importJson(file()).getOrThrow()
         assertEquals(20, settings.dailyGoal)
         assertEquals(kept, settings.goalChanges)
+    }
+
+    @Test
+    fun theWidgetIsRedrawn_afterAResetAnImportAndAChangeOfGoalOrLanguage() = runBlocking {
+        // What each redraw would show: the number of skill rows at that moment.
+        val redraws = java.util.Collections.synchronizedList(mutableListOf<Int>())
+        val vm = viewModel(widgets = WidgetRefresher { redraws += db.userProgressDao().getAllSkills().first().size })
+        db.userProgressDao().recordAnswer("JP", Skill.FLAG, true, Evidence.FULL, 2_000L, TimeZone.getDefault())
+
+        vm.setDailyGoal(20)
+        awaitCondition("a redraw for the goal") { redraws.size == 1 }
+        vm.setLanguage("de")
+        awaitCondition("a redraw for the language") { redraws.size == 2 }
+        assertEquals(listOf(1, 1), redraws.toList())
+
+        vm.resetProgress()
+        awaitCondition("a redraw after the reset") { redraws.size == 3 }
+        assertEquals("drawn from the emptied database", 0, redraws.last())
+
+        vm.importJson(file()).getOrThrow()
+        awaitCondition("a redraw after the import") { redraws.size >= 4 }
+        assertEquals("drawn from the imported rows", 1, redraws.last())
+    }
+
+    @Test
+    fun aWidgetThatCannotBeRedrawn_failsNothing() = runBlocking {
+        val vm = viewModel(widgets = WidgetRefresher { error("no widget host") })
+
+        assertTrue(vm.importJson(file()).isSuccess)
+        vm.setDailyGoal(5)
+        vm.setLanguage("fr")
+        vm.resetProgress()
+        idle()
+        db.awaitPendingWrites()
+
+        assertEquals(5, settings.dailyGoal)
+        assertFalse("the reset itself went through", vm.writeError.value)
+        assertTrue(db.userProgressDao().getAllSkills().first().isEmpty())
     }
 
     @Test

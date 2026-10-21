@@ -156,6 +156,8 @@ class CountryViewModel(
         val clean = AppLanguage.sanitize(tag)
         settings.language = clean
         _language.value = clean
+        // The widget's texts are rendered in the language of the moment.
+        viewModelScope.launch { refreshWidget() }
     }
 
     private val _timerPace = MutableStateFlow(settings.timerPace)
@@ -176,10 +178,11 @@ class CountryViewModel(
     /** The daily goal and the goals it replaced: the streak judges each past day by the one in force on it. */
     private val goals = MutableStateFlow(settings.goalHistory)
 
-    /** Picks [goal] from today on; the days before keep the goal they were played under. */
+    /** Picks [goal] from today on; the days before keep the goal they were played under. The widget shows it. */
     fun setDailyGoal(goal: Int) {
         if (goal !in PracticeStreak.GOALS) return
         setGoals(goals.value.changedTo(goal, repository.now()))
+        viewModelScope.launch { refreshWidget() }
     }
 
     private fun setGoals(history: GoalHistory) {
@@ -386,6 +389,7 @@ class CountryViewModel(
             snapshot.settings["soundEffects"]?.toBooleanStrictOrNull()?.let(::setSoundEffects)
             snapshot.settings["haptics"]?.toBooleanStrictOrNull()?.let(::setHaptics)
             snapshot.settings["language"]?.let(::setLanguage)
+            refreshWidget()
             snapshot
         }
     }
@@ -399,12 +403,18 @@ class CountryViewModel(
         study.discard()
         learn.dismiss()
         // Under the shared handler like every other write: a failure is reported, not fatal.
-        viewModelScope.launch(progress.writeErrors.handler) { repository.clearProgress() }
+        viewModelScope.launch(progress.writeErrors.handler) {
+            repository.clearProgress()
+            refreshWidget()
+        }
     }
 
     // --- Quiz -------------------------------------------------------------------------------------------------------
 
-    /** The home-screen widget is redrawn once a session is saved (a quiz, a study session): its numbers changed. */
+    /**
+     * The home-screen widget is redrawn once a session is saved (a quiz, a study session), after a reset or an import,
+     * and when the goal or the language changes: what it shows changed. A failed redraw is only a stale widget.
+     */
     private val refreshWidget: suspend () -> Unit = { runCatching { widgets.refresh() } }
 
     private val quiz = QuizStateHolder(repository, progress, settings, viewModelScope, clock, zone, random, savedStateHandle, afterSave = refreshWidget)

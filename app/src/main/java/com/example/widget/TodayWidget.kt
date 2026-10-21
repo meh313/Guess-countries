@@ -47,7 +47,8 @@ import kotlinx.coroutines.flow.first
 /**
  * The home-screen widget: how many reviews are due, the streak and today's items against the goal, and a Practise
  * button that opens the Quiz tab. Glance renders it from [WidgetState]; the app refreshes it after a quiz or study
- * session is saved ([WidgetRefresher]) and the reminder's daily run refreshes it too, so the due count follows the day.
+ * session is saved, after a reset or an import of progress and when the daily goal or the language changes
+ * ([WidgetRefresher]), and the reminder's daily run refreshes it too, so the due count follows the day.
  */
 class TodayWidget : GlanceAppWidget() {
 
