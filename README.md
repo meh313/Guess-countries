@@ -150,11 +150,13 @@ keystore (alias `upload`) and its passwords:
 export KEYSTORE_PATH=/path/to/upload.jks   # defaults to ./my-upload-key.jks
 export STORE_PASSWORD=...
 export KEY_PASSWORD=...
-export VERSION_CODE=30101                  # optional; overrides the code derived from versionName
+# export VERSION_CODE=<n>                  # only for a one-off build; leave unset so the code follows versionName
 ./gradlew assembleRelease bundleRelease
 ```
 
-The keystore and its passwords are never read from the repository.
+The keystore and its passwords are never read from the repository. Without `VERSION_CODE` the build derives the
+version code from `versionName`, the code the Release workflow gives that version (see below), so a bundle built
+here never takes a code that a later release needs.
 
 ### Publishing a release
 
