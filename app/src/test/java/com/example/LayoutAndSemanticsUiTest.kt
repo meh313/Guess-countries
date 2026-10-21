@@ -171,22 +171,29 @@ class LayoutAndSemanticsUiTest {
         rule.onNodeWithText(context.getString(R.string.result_picked_text, french[wrong]), useUnmergedTree = true).assertExists()
     }
 
+    /** How far the centre of [bounds] sits from the middle of the window, in pixels. */
+    private fun offCentre(bounds: androidx.compose.ui.geometry.Rect): Float =
+        (bounds.left + bounds.right) / 2 - rule.activity.resources.displayMetrics.widthPixels / 2f
+
     /** How far the centre of the tagged node sits from the middle of the window, in pixels. */
-    private fun offCentre(tag: String): Float {
-        val b = rule.boundsOf(tag)
-        return (b.left + b.right) / 2 - rule.activity.resources.displayMetrics.widthPixels / 2f
-    }
+    private fun offCentre(tag: String): Float = offCentre(rule.boundsOf(tag))
 
     @Test
     @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
-    fun theQuestionCard_centresAFlagNarrowerThanTheCard() {
+    fun theQuestionCard_centresAFlagAndAQuestionNarrowerThanTheCard() {
+        // The typed-name question fits on one line, so nothing in the card spans its width: a column that wrapped its
+        // content would put the flag and the question against the start edge. (Flag → Country's question wraps to
+        // the card's width, which kept the flag in the middle even then.)
         rule.openTab("quiz")
-        rule.onNodeWithTag("start_quiz_btn").performClick()
+        ViewModelProvider(rule.activity)[CountryViewModel::class.java].startQuiz(QuizMode.TYPE_NAME, "Global")
         rule.waitForIdle()
         val flag = rule.boundsOf("quiz_flag")
-        val card = rule.activity.resources.displayMetrics.widthPixels - 2 * 20 * density
-        assertTrue("the flag is narrower than the card: ${flag.width} of $card", flag.width < card - 32 * density - 10f)
-        assertEquals("the flag sits in the middle of the card", 0f, offCentre("quiz_flag"), 2f)
+        val question = rule.onNodeWithText(rule.activity.getString(R.string.question_type_name)).fetchSemanticsNode().boundsInRoot
+        val inside = rule.activity.resources.displayMetrics.widthPixels - 2 * 20 * density - 2 * 16 * density
+        assertTrue("the flag is narrower than the card: ${flag.width} of $inside", flag.width < inside - 10f)
+        assertTrue("the question is narrower than the card: ${question.width} of $inside", question.width < inside - 10f)
+        assertEquals("the flag sits in the middle of the card", 0f, offCentre(flag), 2f)
+        assertEquals("the question sits in the middle of the card", 0f, offCentre(question), 2f)
     }
 
     @Test
