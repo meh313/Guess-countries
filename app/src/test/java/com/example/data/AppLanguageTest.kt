@@ -4,6 +4,7 @@ import android.app.LocaleManager
 import android.content.Context
 import android.os.LocaleList
 import android.view.View
+import androidx.core.content.edit
 import androidx.test.core.app.ApplicationProvider
 import com.example.R
 import com.example.data.settings.AppLanguage
@@ -18,6 +19,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import java.io.File
 
@@ -80,9 +82,10 @@ class AppLanguageTest {
         assertEquals(AppLanguage.SYSTEM, AppLanguage.fromSystem(context))
     }
 
-    /** A phone updated from Android 12 with a language picked there, or a restore from such a phone: the system holds none. */
+    /** A new install that a restore gave the language of a phone older than 13: the system holds none. */
     @Test
     fun onAndroid13_aStoredLanguageTheSystemNeverHad_isHandedToItOnce_thenTheSystemCounts() {
+        installTimes(first = INSTALL, last = INSTALL)
         val manager = context.getSystemService(LocaleManager::class.java)
         assertTrue(manager.applicationLocales.isEmpty)
 
@@ -94,6 +97,33 @@ class AppLanguageTest {
         manager.applicationLocales = LocaleList.getEmptyLocaleList()
         assertEquals(AppLanguage.SYSTEM, AppLanguage.reconcile(context, "fr"))
         assertTrue(manager.applicationLocales.isEmpty)
+    }
+
+    /**
+     * An update from 3.1 on a phone already on 13, where a language picked in the app was later taken away in the
+     * phone's settings: 3.1 kept it stored, and showed the phone's language. The empty setting is followed, not undone.
+     */
+    @Test
+    fun onAndroid13_anUpdateFromAnOlderVersion_followsTheSystemsEmptySetting_overAStoredLanguage() {
+        installTimes(first = INSTALL, last = UPDATE)
+        val manager = context.getSystemService(LocaleManager::class.java)
+
+        assertEquals(AppLanguage.SYSTEM, AppLanguage.reconcile(context, "fr"))
+        assertTrue(manager.applicationLocales.isEmpty)
+        assertEquals(AppLanguage.SYSTEM, AppLanguage.reconcile(context, "fr"))
+        assertTrue(manager.applicationLocales.isEmpty)
+    }
+
+    /** A language picked while the app ran on Android 12, then the phone updated to 13: handed over, update or not. */
+    @Test
+    fun onAndroid13_aLanguagePickedWhileTheAppRanBefore13_isHandedOver_afterAnUpdateToo() {
+        installTimes(first = INSTALL, last = UPDATE)
+        // What a start before 13 leaves behind (beforeAndroid13_aStartNotesThatTheAppRanThere).
+        context.getSharedPreferences(AppLanguage.HANDOVER_FILE, Context.MODE_PRIVATE).edit { putBoolean(AppLanguage.KEY_RAN_BEFORE_13, true) }
+        val manager = context.getSystemService(LocaleManager::class.java)
+
+        assertEquals("fr", AppLanguage.reconcile(context, "fr"))
+        assertEquals("fr", manager.applicationLocales.toLanguageTags())
     }
 
     @Test
@@ -166,5 +196,29 @@ class AppLanguageTest {
         // From German screens, the texts of another language or of the phone's.
         assertEquals("Afrique", AppLanguage.resources(german, "fr").getString(R.string.continent_africa))
         assertEquals("Africa", AppLanguage.resources(german, AppLanguage.SYSTEM).getString(R.string.continent_africa))
+    }
+
+    /** A start before 13 notes that the app ran there, so that the first start on 13 hands the stored language over. */
+    @Test
+    @Config(sdk = [24, 32])
+    fun beforeAndroid13_aStartNotesThatTheAppRanThere() {
+        val handover = context.getSharedPreferences(AppLanguage.HANDOVER_FILE, Context.MODE_PRIVATE)
+        assertFalse(handover.getBoolean(AppLanguage.KEY_RAN_BEFORE_13, false))
+
+        assertNull(AppLanguage.reconcile(context, AppLanguage.SYSTEM))
+        assertTrue(handover.getBoolean(AppLanguage.KEY_RAN_BEFORE_13, false))
+    }
+
+    /** The app's install times as the package manager reports them: equal for a new install, apart after an update. */
+    private fun installTimes(first: Long, last: Long) {
+        shadowOf(context.packageManager).getInternalMutablePackageInfo(context.packageName).apply {
+            firstInstallTime = first
+            lastUpdateTime = last
+        }
+    }
+
+    private companion object {
+        const val INSTALL = 1_700_000_000_000L
+        const val UPDATE = 1_760_000_000_000L
     }
 }

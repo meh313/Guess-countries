@@ -2,10 +2,13 @@ package com.example.data.settings
 
 import android.app.LocaleManager
 import android.content.Context
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.content.res.Resources
 import android.os.Build
 import android.os.LocaleList
+import androidx.annotation.RequiresApi
+import androidx.annotation.VisibleForTesting
 import androidx.core.content.edit
 import java.util.Locale
 
@@ -15,9 +18,9 @@ import java.util.Locale
  * choice goes to the system's per-app language setting ([LocaleManager]), which also shows it under the app's
  * system settings and recreates the activity; that setting is the one that counts there (it can be changed in the
  * phone's settings, and a restore brings it back), so the stored choice follows it ([reconcile]), once a stored
- * language the system never had (one picked before the phone reached 13) has been handed to it. Before 13 the
- * activity wraps its base context with the locale ([wrap]) and recreates itself when the choice changes. The catalog
- * (names, capitals, facts) stays English.
+ * language the system never had (one picked before the phone reached 13, or restored onto a new install) has been
+ * handed to it. Before 13 the activity wraps its base context with the locale ([wrap]) and recreates itself when the
+ * choice changes. The catalog (names, capitals, facts) stays English.
  */
 object AppLanguage {
     const val SYSTEM = ""
@@ -60,18 +63,26 @@ object AppLanguage {
     /**
      * What the stored choice [stored] should become at a start or a return on Android 13 and newer: the system's
      * ([fromSystem]), which the phone's settings or a restore can change without the app. The first time on a phone,
-     * though, a stored language the system holds nothing for has never been handed to it (it was picked before the
-     * phone reached Android 13, or a backup from such a phone brought it back): it is handed over then ([apply], which
-     * recreates the activity in it) and kept, instead of being read back as [SYSTEM]. From then on the system's setting
-     * counts. Null before 13, where the stored choice is the only one.
+     * though, a stored language the system holds nothing for may never have been handed to it: one picked while the
+     * app ran here before the phone reached Android 13 (a call before 13 notes that it did), or one a restore brought
+     * onto a new install ([installedAfresh]). It is handed over then ([apply], which recreates the activity in it) and
+     * kept, instead of being read back as [SYSTEM]. After an update from an older version, which took no such note, on
+     * a phone already on 13, the empty setting is followed instead: that version's screens showed it too, and it may be
+     * System default picked in the phone's settings after a language was picked in the app (a language that version
+     * kept from before the phone reached 13 leaves the same data, and is followed the same way). From then on the
+     * system's setting counts. Null before 13, where the stored choice is the only one.
      */
     fun reconcile(context: Context, stored: String): String? {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return null
-        val manager = context.getSystemService(LocaleManager::class.java) ?: return null
         val handover = context.applicationContext.getSharedPreferences(HANDOVER_FILE, Context.MODE_PRIVATE)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            if (!handover.getBoolean(KEY_RAN_BEFORE_13, false)) handover.edit { putBoolean(KEY_RAN_BEFORE_13, true) }
+            return null
+        }
+        val manager = context.getSystemService(LocaleManager::class.java) ?: return null
         if (!handover.getBoolean(KEY_HANDED_OVER, false)) {
             handover.edit { putBoolean(KEY_HANDED_OVER, true) }
-            if (stored != SYSTEM && manager.applicationLocales.isEmpty) {
+            val neverGiven = handover.getBoolean(KEY_RAN_BEFORE_13, false) || installedAfresh(context)
+            if (stored != SYSTEM && manager.applicationLocales.isEmpty && neverGiven) {
                 apply(context, stored)
                 return stored
             }
@@ -80,11 +91,23 @@ object AppLanguage {
     }
 
     /**
-     * The SharedPreferences file that remembers [reconcile]'s first time. It belongs to the phone, so the backup rules
-     * leave it out: a backup restored onto another phone hands its language over to that phone's system again.
+     * Whether the app was installed rather than updated (its first install is its last update): a settings file it
+     * holds then came with a restore, not from an older version run on this phone.
+     */
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    private fun installedAfresh(context: Context): Boolean {
+        val info = context.packageManager.getPackageInfo(context.packageName, PackageManager.PackageInfoFlags.of(0))
+        return info.firstInstallTime == info.lastUpdateTime
+    }
+
+    /**
+     * The SharedPreferences file that remembers, for [reconcile], that the app ran on this phone before Android 13 and
+     * that its first time on 13 has passed. It belongs to the phone, so the backup rules leave it out: a backup
+     * restored onto another phone hands its language over to that phone's system again.
      */
     const val HANDOVER_FILE = "language_handover"
     private const val KEY_HANDED_OVER = "handed_over"
+    @VisibleForTesting internal const val KEY_RAN_BEFORE_13 = "ran_before_13"
 
     /**
      * [context] with the stored language applied, for the activity's base context, a worker's notification and the

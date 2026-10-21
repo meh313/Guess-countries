@@ -25,12 +25,13 @@ import org.junit.rules.TestWatcher
 import org.junit.runner.Description
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
 /**
- * The first start on Android 13 of a phone whose settings file holds a language the system was never given: one
- * picked before the phone was updated to 13, or brought back by a backup from a phone older than 13. The app hands
- * it to the system's per-app setting instead of reading that empty setting back as System, then follows the system.
+ * The first start on Android 13 of a new install whose settings file holds a language the system was never given,
+ * brought back by a backup from a phone older than 13. The app hands it to the system's per-app setting instead of
+ * reading that empty setting back as System, then follows the system.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36], qualifiers = "w360dp-h640dp-xxhdpi")
@@ -38,10 +39,14 @@ class LanguageHandOverUiTest {
 
     private val context: Context get() = ApplicationProvider.getApplicationContext()
 
-    /** French in the settings file, as Android 12 or the backup left it, before the activity starts. */
+    /** French in the settings file, as the backup left it, before the activity starts; installed, not updated. */
     private val storedFrench = object : TestWatcher() {
         override fun starting(description: Description) {
             PrefsUserSettings(context).language = "fr"
+            shadowOf(context.packageManager).getInternalMutablePackageInfo(context.packageName).apply {
+                firstInstallTime = 1_700_000_000_000L
+                lastUpdateTime = firstInstallTime
+            }
         }
     }
 

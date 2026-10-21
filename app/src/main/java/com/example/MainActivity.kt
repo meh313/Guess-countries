@@ -117,9 +117,10 @@ class MainActivity : ComponentActivity() {
             // From Android 13 the screens' language is the system's per-app setting, which the phone's own settings
             // can change (and a restore brings back) without the app: at every start and return the stored choice,
             // which the Language row and the export read, follows it. A stored language the system was never given
-            // (picked before the phone reached 13) goes to the system instead, the first time. The locales the screens
-            // show go to the view model too, which draws the widget again once a new language is in effect: from
-            // Android 13 that is only when the system recreates the activity for it, a moment after the tap on its chip.
+            // (picked here before the phone reached 13, or restored onto a new install) goes to the system instead, the
+            // first time. The locales the screens show go to the view model too, which draws the widget again once a
+            // new language is in effect: from Android 13 that is only when the system recreates the activity for it, a
+            // moment after the tap on its chip.
             LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
                 AppLanguage.reconcile(this@MainActivity, viewModel.language.value)?.takeIf { it != viewModel.language.value }?.let(viewModel::setLanguage)
                 viewModel.onLocalesInEffect(resources.configuration.locales.toLanguageTags())
