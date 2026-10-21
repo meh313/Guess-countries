@@ -294,9 +294,10 @@ class CountryViewModelImportTest {
 
     @Test
     fun theGoalHistory_travelsWithTheExport_andAnImportRestoresItAsItWas() = runBlocking {
-        settings.dailyGoal = 5
+        // 5 until two days ago, 20 since; today's change to 10 is a second one (a day keeps one change).
+        settings.dailyGoal = 20
+        settings.goalChanges = "5@${System.currentTimeMillis() - 2 * 86_400_000L}"
         val vm = viewModel()
-        vm.setDailyGoal(20)
         vm.setDailyGoal(10)
         val exported = settings.goalChanges
         assertEquals(2, GoalHistory.of(10, exported).earlier.size)

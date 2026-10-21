@@ -15,6 +15,7 @@ import org.junit.Test
 class GoalHistoryTest {
 
     private val berlin = TimeZone.getTimeZone("Europe/Berlin")
+    private val dayMillis = SkillMastery.DAY_MILLIS
 
     /** A moment on the Berlin wall clock in October 2026. */
     private fun at(day: Int, hour: Int = 12, minute: Int = 0): Long =
@@ -45,7 +46,7 @@ class GoalHistoryTest {
     fun raisingTheGoal_keepsTheStreakEarnedUnderTheLowerOne() {
         // Four weeks of five-item sessions under a goal of 5, then the goal goes up to 10 this morning.
         val sessions = daily(1..28, items = 5)
-        val goals = GoalHistory(5).changedTo(10, at(29, 8))
+        val goals = GoalHistory(5).changedTo(10, at(29, 8), berlin)
 
         val summary = PracticeStreak.summary(sessions, goals, now, berlin)
 
@@ -61,7 +62,7 @@ class GoalHistoryTest {
     @Test
     fun loweringTheGoal_doesNotCountTheDaysThatFellShortOfTheHigherOne() {
         val sessions = daily(20..28, items = 5)
-        val goals = GoalHistory(10).changedTo(5, at(29, 8))
+        val goals = GoalHistory(10).changedTo(5, at(29, 8), berlin)
 
         assertEquals(PracticeStreak.NONE, PracticeStreak.summary(sessions, goals, now, berlin))
         // Today follows the new goal at once.
@@ -72,28 +73,62 @@ class GoalHistoryTest {
     @Test
     fun changingTheGoalBackAndForth_givesTheStreakBack() {
         val sessions = daily(1..28, items = 5)
-        val goals = GoalHistory(5).changedTo(20, at(29, 8)).changedTo(5, at(29, 9))
+        val goals = GoalHistory(5).changedTo(20, at(29, 8), berlin).changedTo(5, at(29, 9), berlin)
         assertEquals(PracticeStreak.Summary(current = 28, best = 28, practicedToday = false), PracticeStreak.summary(sessions, goals, now, berlin))
     }
 
     @Test
     fun pickingTheGoalInForce_changesNothing() {
         val goals = GoalHistory(10, listOf(Replaced(5, at(3))))
-        assertSame(goals, goals.changedTo(10, now))
-        assertEquals(GoalHistory(20, listOf(Replaced(5, at(3)), Replaced(10, now))), goals.changedTo(20, now))
+        assertSame(goals, goals.changedTo(10, now, berlin))
+        assertEquals(GoalHistory(20, listOf(Replaced(5, at(3)), Replaced(10, now))), goals.changedTo(20, now, berlin))
     }
 
     @Test
     fun onlyTheLatestChangesAreKept() {
+        // One change a day, at noon UTC on days 1, 2, 3 ... of 1970.
+        val utc = TimeZone.getTimeZone("UTC")
         var goals = GoalHistory(5)
-        repeat(GoalHistory.MAX_CHANGES + 6) { goals = goals.changedTo(if (goals.current == 5) 10 else 5, 1_000L * (it + 1)) }
+        repeat(GoalHistory.MAX_CHANGES + 6) { goals = goals.changedTo(if (goals.current == 5) 10 else 5, (it + 1) * dayMillis + dayMillis / 2, utc) }
         assertEquals(GoalHistory.MAX_CHANGES, goals.earlier.size)
-        assertEquals(1_000L * 7, goals.earlier.first().until)
+        assertEquals(7 * dayMillis + dayMillis / 2, goals.earlier.first().until)
+    }
+
+    @Test
+    fun manyChangesInOneDay_keepOnlyTheGoalTheDayBeganWith() {
+        // The goal went from 5 to 10 on the 9th; today the buttons are tapped forty times, ending on 5.
+        var goals = GoalHistory(5).changedTo(10, at(9), berlin)
+        repeat(40) { goals = goals.changedTo(if (it % 2 == 0) 20 else 5, at(29, 8, it), berlin) }
+
+        assertEquals(GoalHistory(5, listOf(Replaced(5, at(9)), Replaced(10, at(29, 8, 0)))), goals)
+        // The days before the 9th keep their 5, the 9th to yesterday their 10; today follows the last tap.
+        assertEquals(5, goals.goalOn(dayOf(8), berlin))
+        assertEquals(10, goals.goalOn(dayOf(9), berlin))
+        assertEquals(10, goals.goalOn(dayOf(28), berlin))
+        assertEquals(5, goals.goalOn(dayOf(29), berlin))
+        // Tomorrow's first change is a change of its own.
+        assertEquals(listOf(Replaced(5, at(9)), Replaced(10, at(29, 8, 0)), Replaced(5, at(30, 7))), goals.changedTo(20, at(30, 7), berlin).earlier)
+    }
+
+    @Test
+    fun goingBackTheSameDayToTheGoalItBeganWith_leavesNoChange() {
+        val goals = GoalHistory(10, listOf(Replaced(5, at(3))))
+        assertEquals(goals, goals.changedTo(20, at(29, 8), berlin).changedTo(5, at(29, 9), berlin).changedTo(10, at(29, 10), berlin))
+    }
+
+    @Test
+    fun theDayOfAChange_isTheLocalOne() {
+        // 23:50 on the 28th and 00:30 on the 29th in Berlin: two days there, one in UTC.
+        val goals = GoalHistory(10).changedTo(20, at(28, 23, 50), berlin).changedTo(5, at(29, 0, 30), berlin)
+        assertEquals(listOf(Replaced(10, at(28, 23, 50)), Replaced(20, at(29, 0, 30))), goals.earlier)
+        val utc = TimeZone.getTimeZone("UTC")
+        val inUtc = GoalHistory(10).changedTo(20, at(28, 23, 50), utc).changedTo(5, at(29, 0, 30), utc)
+        assertEquals(listOf(Replaced(10, at(28, 23, 50))), inUtc.earlier)
     }
 
     @Test
     fun theSettingsText_readsBackAsTheSameHistory() {
-        val goals = GoalHistory(5).changedTo(20, at(3)).changedTo(10, at(17, 21))
+        val goals = GoalHistory(5).changedTo(20, at(3), berlin).changedTo(10, at(17, 21), berlin)
         assertEquals("5@${at(3)},20@${at(17, 21)}", goals.encodeEarlier())
         assertEquals(goals, GoalHistory.of(goals.current, goals.encodeEarlier()))
         assertEquals("", GoalHistory(10).encodeEarlier())

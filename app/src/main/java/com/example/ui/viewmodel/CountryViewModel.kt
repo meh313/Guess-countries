@@ -181,7 +181,7 @@ class CountryViewModel(
     /** Picks [goal] from today on; the days before keep the goal they were played under. The widget shows it. */
     fun setDailyGoal(goal: Int) {
         if (goal !in PracticeStreak.GOALS) return
-        setGoals(goals.value.changedTo(goal, repository.now()))
+        setGoals(goals.value.changedTo(goal, repository.now(), zone()))
         viewModelScope.launch { refreshWidget() }
     }
 
