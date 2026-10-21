@@ -195,14 +195,10 @@ class LearnStateHolderTest {
 
         holder.start()
 
-        // The database may answer between the check above and the start: then the holder planned at once from the
-        // real states. Otherwise it is reading them first, with nothing planned yet. Either way the five seen
-        // countries are never picked.
-        if (holder.planning.value) {
-            assertNull("nothing is planned until the states are in", holder.session.value)
-        } else {
-            assertTrue("planned at once only once the states were in", world.progress.skillsLoaded.value)
-        }
+        // By now the holder planned at once (the database answered between the check above and the start), is still
+        // reading the states, or has read them and planned on another thread: which one depends on the runner. What
+        // never happens is a session planned from the placeholder, the catalog's first five, the ones already seen.
+        holder.session.value?.let { early -> assertTrue("planned from the placeholder: ${early.codes}", early.codes.none { it in firstFive }) }
         holder.settle()
         val codes = holder.session.value!!.codes
         assertEquals(sovereign.drop(5).take(5).map { it.code }, codes)
