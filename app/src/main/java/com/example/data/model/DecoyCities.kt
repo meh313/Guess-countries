@@ -3,26 +3,24 @@ package com.example.data.model
 /**
  * The classic capital traps: for a country whose largest or best-known city is not its capital, that city. A
  * capital question about the country offers one of them among the wrong answers, in place of a random capital.
- * None of these is the capital of any country in the catalog, and a country whose trap is itself a capital in
- * the catalog's text (Bolivia, with La Paz) is left out. Hand-written; keep it to cities nobody disputes.
+ * None of these is the capital of any country in the catalog, and a country whose trap is itself named in its own
+ * capital text, as a capital of any kind or the seat of government, is left out: Bolivia (La Paz), Benin (Cotonou),
+ * Burundi (Bujumbura), Ivory Coast (Abidjan) and Sri Lanka (Colombo). Hand-written; keep it to cities nobody
+ * disputes.
  */
 object DecoyCities {
     val byCode: Map<String, List<String>> = mapOf(
         "AE" to listOf("Dubai"),
         "AU" to listOf("Sydney", "Melbourne"),
-        "BI" to listOf("Bujumbura"),
-        "BJ" to listOf("Cotonou"),
         "BR" to listOf("São Paulo", "Rio de Janeiro"),
         "BZ" to listOf("Belize City"),
         "CA" to listOf("Toronto", "Montreal"),
         "CH" to listOf("Zurich", "Geneva"),
-        "CI" to listOf("Abidjan"),
         "CM" to listOf("Douala"),
         "CN" to listOf("Shanghai"),
         "EC" to listOf("Guayaquil"),
         "IN" to listOf("Mumbai"),
         "KZ" to listOf("Almaty"),
-        "LK" to listOf("Colombo"),
         "MA" to listOf("Casablanca"),
         "MM" to listOf("Yangon"),
         "NG" to listOf("Lagos"),

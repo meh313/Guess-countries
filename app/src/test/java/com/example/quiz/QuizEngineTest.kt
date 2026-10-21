@@ -395,7 +395,7 @@ class QuizEngineTest {
     @Test
     fun capitalQuestions_aboutACountryWithoutDecoys_neverOfferAnyDecoy() {
         val everyDecoy = DecoyCities.byCode.values.flatten().toSet()
-        for (code in listOf("FR", "DE", "JP", "EG", "BO")) {
+        for (code in listOf("FR", "DE", "JP", "EG", "BO", "BJ")) {
             assertTrue(code, DecoyCities.of(code).isEmpty())
             for (seed in 1..20) {
                 val q = capitalQuestionAbout(code, seed)
@@ -407,7 +407,8 @@ class QuizEngineTest {
 
     @Test
     fun decoysNeverCollideWithACapital_soEveryCapitalQuestionOverTheCatalogStaysUnambiguous() {
-        val capitals = allCountries.flatMap { listOf(it.capital, it.quizCapital) }.toSet()
+        // Each city of a capital text counts, not only the whole text: Benin's names Cotonou as its seat of government.
+        val capitals = allCountries.flatMap { it.capital.split(',', '(', ')').map(String::trim) + it.quizCapital }.toSet()
         DecoyCities.byCode.values.flatten().forEach { decoy -> assertTrue("$decoy is a capital", decoy !in capitals) }
         for (seed in 1..10) {
             QuizEngine.generate(sovereign, QuizMode.CAPITAL, Random(seed), order = { it }).forEach { q ->
