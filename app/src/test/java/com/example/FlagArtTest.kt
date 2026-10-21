@@ -1,13 +1,16 @@
 package com.example
 
 import android.content.Context
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.test.core.app.ApplicationProvider
 import com.example.R
 import com.example.quiz.allCountries
 import com.example.support.dominantColour
+import com.example.ui.components.FlagAspectRatio
 import com.example.ui.components.flagArtFor
+import java.util.Locale
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -57,6 +60,18 @@ class FlagArtTest {
             val bitmap = bitmapOf(it.code)
             assertEquals("${it.code} width", 600, bitmap.width)
             assertEquals("${it.code} height", 450, bitmap.height)
+        }
+    }
+
+    @Test
+    fun theAboutScreenSaysEveryFlagIsDrawnIn4To3_inEveryLanguage() {
+        // It once said each flag kept its country's own proportions, while the boxes and the images are all 4:3.
+        assertEquals(4f / 3f, FlagAspectRatio, 0f)
+        listOf("en", "fr", "es", "de", "ar").forEach { language ->
+            val configuration = Configuration(resources.configuration).apply { setLocale(Locale.forLanguageTag(language)) }
+            val text = ApplicationProvider.getApplicationContext<Context>().createConfigurationContext(configuration)
+                .getString(R.string.about_catalog_text)
+            assertTrue("$language: $text", text.contains("4:3"))
         }
     }
 

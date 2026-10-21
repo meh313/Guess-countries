@@ -108,7 +108,7 @@
 
     <!-- À propos : ce que contient le catalogue -->
     <string name="about_catalog_title">Ce que contient le catalogue</string>
-    <string name="about_catalog_text">Les 196 États souverains largement reconnus, plus l\'Antarctique à parcourir. Les drapeaux sont dessinés aux proportions propres à chaque pays. Quand la signification d\'un drapeau est contestée ou légendaire, le texte le dit au lieu de trancher ; un fait impossible à établir a été laissé de côté plutôt que deviné.</string>
+    <string name="about_catalog_text">Les 196 États souverains largement reconnus, plus l\'Antarctique à parcourir. Tous les drapeaux sont dessinés au même format 4:3, si bien que leurs proportions peuvent différer de celles du vrai drapeau (celui de la Suisse, par exemple, est carré). Quand la signification d\'un drapeau est contestée ou légendaire, le texte le dit au lieu de trancher ; un fait impossible à établir a été laissé de côté plutôt que deviné.</string>
 
     <!-- À propos : confidentialité -->
     <string name="about_translations_title">Traductions</string>

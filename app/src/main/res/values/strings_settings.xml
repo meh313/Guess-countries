@@ -104,7 +104,7 @@
 
     <!-- About: what is in the catalogue -->
     <string name="about_catalog_title">What is in the catalogue</string>
-    <string name="about_catalog_text">The 196 sovereign states as widely recognised, plus Antarctica to browse. Flags are drawn to each country\'s own proportions. Where the meaning of a flag is disputed or legendary, the text says so instead of picking a side; a fact that could not be settled was left out rather than guessed.</string>
+    <string name="about_catalog_text">The 196 sovereign states as widely recognised, plus Antarctica to browse. Every flag is drawn in the same 4:3 shape, so its proportions can differ from the real flag\'s (Switzerland\'s, for one, is square). Where the meaning of a flag is disputed or legendary, the text says so instead of picking a side; a fact that could not be settled was left out rather than guessed.</string>
 
     <!-- About: privacy -->
     <string name="about_translations_title">Translations</string>
