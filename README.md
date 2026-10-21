@@ -13,8 +13,8 @@ has no network permission.
 - **Flashcards** – browse the deck (it follows the Explore filters) with Previous and Next, shuffle it, and
   *study*: a session of up to 20 cards from the flags due today, the capitals due today (flag and name on the
   front, the capital on the back), the weak spots or this deck, each graded Again / Good / Easy after the flip
-  (Again brings the card back a few places later; the last grade can be undone). A session of five or more cards is
-  logged and counts towards the daily goal.
+  (Again brings the card back a few places later; the last grade can be undone, the session's final one from its
+  summary until you move on). A session of five or more cards is logged and counts towards the daily goal.
 - **Learn 5 new** – from the study chooser (or the Today card): the next five flags you have never seen, one card at
   a time with the flag, the name, the region, the cue to spot it and, where one exists, the flag it is most often
   confused with (and how to tell the two apart). The focus continent's flags come first. Seeing a card counts as

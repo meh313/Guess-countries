@@ -1365,6 +1365,74 @@ class QuizAndFlashcardUiTest {
         assertNull(viewModel.studySession.value)
     }
 
+    /** The flag score of [code] as the database has it now. */
+    private fun flagScore(code: String): Int {
+        val dao = AppDatabase.getDatabase(ApplicationProvider.getApplicationContext()).userProgressDao()
+        return runBlocking { dao.getAllSkills().first() }.single { it.countryCode == code && it.skill == Skill.FLAG.name }.score
+    }
+
+    /** A Due today session over [codes] (due flags at score 40), every card graded Good: the summary, its final grade pending. */
+    private fun studyAllDueWithGood(vararg codes: String): String {
+        due(*codes)
+        rule.awaitQuizPlan(viewModel) { it.due(Skill.FLAG).size == codes.size }
+        openStudyChooser()
+        rule.onNodeWithTag("study_due_btn").performClick()
+        rule.waitForIdle()
+        repeat(codes.size) { gradeCard("grade_good_btn") }
+        rule.onNodeWithTag("flashcard_summary").assertIsDisplayed()
+        return viewModel.studySession.value!!.pending!!.code
+    }
+
+    @Test
+    fun theSummary_holdsTheFinalGradeBehindUndo_throughARotation_untilDone() {
+        val last = studyAllDueWithGood("FR", "DE")
+        rule.onNodeWithText("Again 0 · Good 2 · Easy 0").assertIsDisplayed()
+        assertEquals("not written yet", 40, flagScore(last))
+
+        rule.onNodeWithTag("study_summary_undo_btn").assert(hasText("Undo last grade")).performClick()
+        rule.waitForIdle()
+        rule.onNodeWithText("Card 2 of 2").assertIsDisplayed()
+        rule.onNodeWithText("Flag meaning").assertIsDisplayed() // back on top, flipped
+        rule.onNodeWithTag("grade_easy_btn").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithText("Again 0 · Good 1 · Easy 1").assertIsDisplayed()
+
+        rotate()
+        rule.onNodeWithTag("study_summary_undo_btn").assertIsDisplayed()
+        assertEquals("a rotation writes nothing", 40, flagScore(last))
+
+        rule.onNodeWithTag("flashcard_summary_done_btn").performClick()
+        rule.waitForIdle()
+        rule.eventually("the Easy written") { assertEquals(40 + 12, flagScore(last)) }
+        assertNull(viewModel.studySession.value)
+    }
+
+    @Test
+    fun leavingTheSummary_writesTheFinalGrade_andUndoIsGoneOnReturn() {
+        val last = studyAllDueWithGood("FR", "DE")
+
+        tab("explore")
+        rule.eventually("the Good written") { assertEquals(40 + 8, flagScore(last)) }
+
+        tab("flashcards")
+        rule.onNodeWithTag("flashcard_summary").assertIsDisplayed()
+        rule.onAllNodesWithTag("study_summary_undo_btn").assertCountEquals(0)
+    }
+
+    @Test
+    fun studyAgain_afterADueSession_doesNotTakeTheJustGradedCardForTheOnlyOneStillDue() {
+        val last = studyAllDueWithGood("FR", "DE", "ES")
+        // The first two grades are in; the last one waits on the summary, so the plan still counts its card due.
+        rule.awaitQuizPlan(viewModel) { plan -> plan.due(Skill.FLAG).map { it.code } == listOf(last) }
+
+        rule.onNodeWithTag("flashcard_study_again_btn").performClick()
+        rule.waitForIdle()
+
+        // Nothing is due once the last grade is written either: the same three cards again, not that one alone.
+        assertEquals(setOf("FR", "DE", "ES"), viewModel.studySession.value!!.cards.toSet())
+        rule.eventually("the final grade written as the next session started") { assertEquals(40 + 8, flagScore(last)) }
+    }
+
     @Test
     fun aStudySessionOfTenCards_countsForTheStreak_andShowsInTheLog() {
         openStudyChooser()

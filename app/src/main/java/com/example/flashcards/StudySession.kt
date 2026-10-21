@@ -8,7 +8,8 @@ import kotlin.random.Random
  * One flashcard study session, immutable like [com.example.quiz.QuizSession]: a queue of cards, the card on top
  * flipped or not, the grades given so far. Grading needs the flipped card; *Again* puts the card back three to
  * five places down the queue, and that second showing is rehearsal, not a new grade. The last grade stays
- * [pending] until the next one (or the end) so it can be taken back.
+ * [pending] until the next one (the session's final grade until its summary is left, see [settle]) so it can be
+ * taken back.
  */
 data class StudySession(
     /** Where the cards came from: [DUE], [WEAK], [DECK] or [CAPITALS_DUE]; also the label of the session in the quiz log. */
@@ -79,7 +80,10 @@ data class StudySession(
         return copy(queue = next, isFlipped = false, graded = graded + listOfNotNull(pending), pending = record)
     }
 
-    /** Takes the pending grade back: its card is on top again, flipped, and an *Again* copy is removed from the queue. */
+    /**
+     * Takes the pending grade back: its card is on top again, flipped, and an *Again* copy is removed from the queue.
+     * A finished session's final grade can be taken back too, which starts the session again at that card.
+     */
     fun undo(): StudySession {
         val last = pending ?: return this
         val without = if (last.grade == Grade.AGAIN) {

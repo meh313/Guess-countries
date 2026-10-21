@@ -1,6 +1,7 @@
 package com.example.ui.screens
 
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -55,6 +56,7 @@ import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
@@ -85,6 +87,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.R
 import com.example.data.model.Country
@@ -154,6 +158,12 @@ fun FlashcardScreen(
 
     val session = study
     if (session != null) {
+        // The summary keeps the final grade pending for its Undo until the player moves on: leaving the screen (another
+        // tab, the app in the background) settles it, but a rotation does not, so Undo is still there after one.
+        val activity = LocalActivity.current
+        val settle = { if (activity?.isChangingConfigurations != true) viewModel.settleStudy() }
+        LifecycleEventEffect(Lifecycle.Event.ON_STOP) { settle() }
+        DisposableEffect(viewModel) { onDispose { settle() } }
         // Back on the summary means Done; mid-session it ends the session, writing the pending grade, as End does.
         BackHandler {
             viewModel.stopSpeaking()
@@ -178,10 +188,12 @@ fun FlashcardScreen(
                 viewModel.endStudy()
             },
             onStudyAgain = {
+                // The final grade is written as the next session starts: its card is graded, so no longer due.
+                val graded = setOfNotNull(session.pending?.code)
                 val codes = when (session.source) {
-                    StudySession.DUE -> due.map { it.code }
+                    StudySession.DUE -> due.map { it.code } - graded
                     StudySession.WEAK -> weak.map { it.code }
-                    StudySession.CAPITALS_DUE -> capitalsDue.map { it.code }
+                    StudySession.CAPITALS_DUE -> capitalsDue.map { it.code } - graded
                     else -> session.cards
                 }
                 viewModel.startStudy(session.source, codes.ifEmpty { session.cards }, session.skill)
@@ -615,7 +627,7 @@ private fun StudyView(
     val code = session.current
     val country = code?.let { countriesByCode[it] }
     if (session.isOver || country == null) {
-        StudySummary(session, outcome, onStudyAgain, onDone, modifier)
+        StudySummary(session, outcome, onUndo, onStudyAgain, onDone, modifier)
         return
     }
     val rotation = key(code) {
@@ -723,11 +735,12 @@ private fun GradeButton(label: String, color: Color, contentColor: Color, enable
     }
 }
 
-/** What the session did: cards remembered, the grades, the streak, and the ways on. */
+/** What the session did: cards remembered, the grades, the streak, and the ways on, with Undo while the final grade is pending. */
 @Composable
 private fun StudySummary(
     session: StudySession,
     outcome: PracticeStreak.Outcome?,
+    onUndo: () -> Unit,
     onStudyAgain: () -> Unit,
     onDone: () -> Unit,
     modifier: Modifier = Modifier
@@ -826,6 +839,18 @@ private fun StudySummary(
                 .testTag("flashcard_summary_done_btn")
         ) {
             Text(stringResource(R.string.action_done), fontWeight = FontWeight.Bold)
+        }
+        if (session.pending != null) {
+            TextButton(
+                onClick = onUndo,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("study_summary_undo_btn")
+            ) {
+                Icon(imageVector = Icons.AutoMirrored.Filled.Undo, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(stringResource(R.string.study_undo), fontWeight = FontWeight.Bold)
+            }
         }
     }
     }

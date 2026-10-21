@@ -392,10 +392,10 @@ class CountryViewModel(
     /** [prepareImport] and [applyImport] in one step, for callers that need no confirmation. */
     suspend fun importJson(json: String): Result<ProgressSnapshot> = prepareImport(json).mapCatching { applyImport().getOrThrow() }
 
-    /** Forgets every bookmark, skill state and logged quiz, and drops any quiz or study session in progress. */
+    /** Forgets every bookmark, skill state and logged quiz, and drops any quiz or study session in progress unwritten. */
     fun resetProgress() {
         quiz.end()
-        study.dismiss()
+        study.discard()
         learn.dismiss()
         // Under the shared handler like every other write: a failure is reported, not fatal.
         viewModelScope.launch(progress.writeErrors.handler) { repository.clearProgress() }
@@ -458,7 +458,7 @@ class CountryViewModel(
     /** The flashcard study session in progress, or null outside one. */
     val studySession: StateFlow<StudySession?> get() = study.session
 
-    /** What the finished study session did for the streak; null until known, or when it was too short to count. */
+    /** What the finished study session does for the streak; null until known, or when it was too short to count. */
     val studyOutcome: StateFlow<PracticeStreak.Outcome?> get() = study.outcome
 
     /** Starts a study session over [codes] from [source] (one of the [StudySession] sources), graded in [skill]. */
@@ -476,6 +476,9 @@ class CountryViewModel(
 
     /** Leaves the study summary, or an unfinished session. */
     fun dismissStudy() = study.dismiss()
+
+    /** Writes the final grade a study summary still holds and logs the session (the player left the screen). */
+    fun settleStudy() = study.settle()
 
     // --- Learn ------------------------------------------------------------------------------------------------------
 

@@ -169,6 +169,9 @@ class CountryRepository(
         ).map { it.toPracticeSession() }
     }
 
+    /** Every logged quiz and study session as the streak reads it, for what a session not yet logged would do. */
+    suspend fun practiceSessions(): List<PracticeStreak.Session> = progressDao.practiceSessions().map { it.toPracticeSession() }
+
     /** Everything in the database, for an export file. */
     suspend fun exportSnapshot(): ProgressSnapshot = progressDao.snapshot(now())
 
