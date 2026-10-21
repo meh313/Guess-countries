@@ -415,8 +415,9 @@ internal object QuizSnapshotBundle {
 
     /**
      * The snapshot in [bundle], or null when it holds none or is not one this version wrote. A bundle from before
-     * the accepted alternatives, the light marks, the re-ask (with where it begins), the per-question kinds and the
-     * typed answers reads as having none of them.
+     * the accepted alternatives, the light marks, the re-ask, the per-question kinds and the typed answers reads as
+     * having none of them. One from before the re-ask kept where it begins (a "reasked" flag) still reads as having
+     * re-asked, from where its last questions are the misses asked again ([legacyReaskedFrom]).
      */
     fun read(bundle: Bundle): QuizSnapshot? {
         val mode = bundle.getString("mode")?.let { name -> QuizMode.entries.firstOrNull { it.name == name } } ?: return null
@@ -460,7 +461,25 @@ internal object QuizSnapshotBundle {
             questionElapsedMs = bundle.getLong("questionElapsed"),
             totalElapsedMs = bundle.getLong("totalElapsed"),
             reaskedFrom = bundle.getInt("reaskedFrom", NONE).takeIf { it != NONE }
+                ?: if (bundle.getBoolean("reasked")) legacyReaskedFrom(questions, picks) else null
         )
+    }
+
+    /**
+     * Where the re-ask begins in a bundle that kept only whether it had happened: the re-ask appended the first
+     * [QuizStateHolder.REASK_LIMIT] countries missed, each once, so it begins where the questions left are exactly
+     * the misses before it (at most one place fits). Should none fit, the last question is taken for the re-ask, so
+     * the quiz still never asks its misses twice.
+     */
+    private fun legacyReaskedFrom(questions: List<QuizSnapshot.Question>, picks: List<Int?>): Int {
+        for (asked in 1..QuizStateHolder.REASK_LIMIT) {
+            val from = questions.size - asked
+            if (from < 1 || from > picks.size) continue
+            val missed = (0 until from).filter { i -> picks[i].let { it == null || it !in questions[i].acceptedIndices } }
+                .map { questions[it].targetCode }.distinct().take(QuizStateHolder.REASK_LIMIT)
+            if (missed == questions.drop(from).map { it.targetCode }) return from
+        }
+        return questions.size - 1
     }
 
     /** Stands for null in an int array; no option index and no time-out marker is this low. */

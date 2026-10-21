@@ -23,12 +23,14 @@ import com.example.quiz.QuestionPicker
 import com.example.quiz.QuizEngine
 import com.example.quiz.QuizMode
 import com.example.quiz.QuizSession
+import com.example.quiz.QuizSnapshot
 import com.example.support.FakeSpeech
 import com.example.support.awaitPendingWrites
 import com.example.support.closeWhenIdle
 import com.example.support.inMemoryDatabase
 import com.example.ui.viewmodel.CountryViewModel
 import com.example.ui.viewmodel.QuizPlan
+import com.example.ui.viewmodel.QuizSnapshotBundle
 import com.example.ui.viewmodel.QuizStateHolder
 import java.util.TimeZone
 import kotlin.random.Random
@@ -1337,6 +1339,74 @@ class CountryViewModelQuizTest {
         assertFalse(after.reasked)
         assertTrue(after.questions.none { it.light })
         assertTrue(after.questions.all { it.acceptedIndices == setOf(it.correctAnswerIndex) })
+    }
+
+    @Test
+    fun aSavedQuizThatKeptOnlyThatItReasked_stillReadsAsReasked_andNeverAsksItsMissesAgain() {
+        val handle = SavedStateHandle()
+        val vm = newViewModel(random = Random(24), savedState = handle)
+        vm.startQuiz(QuizMode.FLAG_NAME, "Global")
+        var n = 0
+        while (!vm.quizSession.value!!.reasked) {
+            val q = vm.quizSession.value!!.current
+            vm.answerQuiz(if (n < 2) (q.correctAnswerIndex + 1) % q.options.size else q.correctAnswerIndex)
+            vm.nextQuizQuestion()
+            check(++n <= 10)
+        }
+        val before = vm.quizSession.value!!
+        // As the version before wrote it: whether the misses were asked again, not where they begin.
+        val state = handle.savedStateProvider().saveState()
+        val bundle = state.getBundle(QuizStateHolder.SAVED_QUIZ)!!
+        bundle.remove("reaskedFrom")
+        bundle.putBoolean("reasked", true)
+
+        val revived = newViewModel(random = Random(27), savedState = SavedStateHandle.createHandle(state, null))
+
+        val after = revived.quizSession.value!!
+        assertEquals(10, after.reaskedFrom)
+        assertEquals(before.questions, after.questions)
+        // Both misses missed again: the quiz ends after them, with no third round.
+        while (revived.quizSession.value?.isFinished == false) {
+            val q = revived.quizSession.value!!.current
+            revived.answerQuiz((q.correctAnswerIndex + 1) % q.options.size)
+            revived.nextQuizQuestion()
+            check(++n <= 14) { "the quiz never finished" }
+        }
+        assertEquals(12, revived.quizSession.value!!.questions.size)
+    }
+
+    @Test
+    fun whereAnOlderReaskBegins_isWhereTheQuestionsLeftAreTheMissesBeforeIt() {
+        // Each question answered 0 (right) or 1 (wrong), its options plain letters; the "reasked" flag only.
+        fun legacy(targets: List<String>, picks: List<Int?>): Int? {
+            val snapshot = QuizSnapshot(
+                mode = QuizMode.FLAG_NAME,
+                scope = QuizEngine.LEARN,
+                difficulty = QuizDifficulty.NORMAL,
+                questions = targets.map { QuizSnapshot.Question(it, listOf("a", "b", "c", "d"), List(4) { null }, correctAnswerIndex = 0) },
+                currentIndex = targets.lastIndex,
+                score = 0,
+                streak = 0,
+                selectedAnswerIndex = null,
+                isFinished = false,
+                correct = 0,
+                picks = picks,
+                times = picks.map { 1_000L },
+                questionElapsedMs = 0L,
+                totalElapsedMs = 0L
+            )
+            val bundle = QuizSnapshotBundle.write(snapshot).apply {
+                remove("reaskedFrom")
+                putBoolean("reasked", true)
+            }
+            return QuizSnapshotBundle.read(bundle)!!.reaskedFrom
+        }
+        // A Learn quiz asks each flag twice: France missed first, so France alone was asked again, after the four.
+        assertEquals(4, legacy(listOf("FR", "DE", "FR", "DE", "FR"), listOf(1, 0, 0, 0)))
+        // Two misses, a time-out among them: both asked again, in the order missed.
+        assertEquals(3, legacy(listOf("FR", "DE", "IT", "FR", "IT"), listOf(1, 0, null)))
+        // Nothing fits (a damaged state): the last question counts as the re-ask, so it is not asked a second time.
+        assertEquals(2, legacy(listOf("FR", "DE", "IT"), listOf(0, 0)))
     }
 
     @Test
