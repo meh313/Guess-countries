@@ -93,10 +93,11 @@ class TodayWidgetSessionTest {
     /**
      * Waits until [refresh] (if any) is done and the home screen shows every one of [wanted]. The session runs on the
      * main looper, moved on here in small steps of its clock (about a second for each drawing, far inside the 45 s the
-     * session stays open), while the database answers on its own threads.
+     * session stays open), while the database answers on its own threads. The 30 s are for a slow runner's first
+     * drawing, which also loads Glance, Room and WorkManager; at 20 ms of session clock a turn they stay inside the 45 s.
      */
     private fun waitFor(id: Int, vararg wanted: String, refresh: Deferred<Unit>? = null) {
-        val deadline = System.currentTimeMillis() + 10_000
+        val deadline = System.currentTimeMillis() + 30_000
         while (!((refresh?.isCompleted ?: true) && wanted.all { it in shownTexts(id) })) {
             refresh?.takeIf { it.isCompleted }?.getCompletionExceptionOrNull()?.let { throw it }
             assertTrue("waited for ${wanted.toList()}, the widget shows ${shownTexts(id)}", System.currentTimeMillis() < deadline)
