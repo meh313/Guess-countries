@@ -81,8 +81,9 @@ class QuizStateHolder(
 
     /**
      * Starts a quiz; does nothing if the scope has nothing to ask about. A fixed-length quiz over a place fills its
-     * ten questions by group, due reviews first and at most a few never-seen countries (see [QuestionPicker.select]
-     * and [NEW_PER_DAY]), in a shuffled order; the blitz runs through the place's countries, the likeliest first
+     * ten questions by group, due reviews first, then a few never-seen countries, more only when nothing is left but
+     * them and the countries just asked about (see [QuestionPicker.select] and [NEW_PER_DAY]), in a shuffled order;
+     * the blitz runs through the place's countries, the likeliest first
      * ([QuestionPicker.order]). The weak-spots scope asks about the ten weakest in the mode's skill (every weak spot
      * in the endless blitz), the due scope about the ten longest due; both take the wrong answers, look-alike flags
      * included, from the whole world.

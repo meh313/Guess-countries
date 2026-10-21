@@ -574,8 +574,8 @@ fun QuizScreen(
         val limitMs = timerPace.limit(mode.timeLimitSeconds)?.let { it * 1000L }
         var remainingMs by remember(active.currentIndex, active.questionStartedAt) { mutableLongStateOf(limitMs ?: 0L) }
         if (limitMs != null) {
-            // Time is measured from when the question was shown, so rotating or switching tabs neither
-            // pauses nor restarts it.
+            // Time is measured from when the question was shown, less the time the quiz was paused (see above):
+            // a rotation does not restart it, and a tab switch stops it where it stands.
             LaunchedEffect(active.currentIndex, active.questionStartedAt, active.hasAnswered) {
                 while (true) {
                     // The view model's session, not the one this screen last drew: while the activity is stopped

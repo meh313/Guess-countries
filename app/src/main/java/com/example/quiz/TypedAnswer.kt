@@ -16,7 +16,7 @@ object TypedAnswer {
     /** Keys this long or longer are accepted with one edit of difference. */
     const val FORGIVE_FROM = 5
 
-    /** The keys a typed answer may equal for any entry of the catalog: what is one of them names that entry. */
+    /** The keys a typed answer may equal for any entry of the catalog: an answer that is one of them names that entry. */
     private val catalogKeys: Set<String> by lazy { CountryCatalog.all.flatMapTo(HashSet()) { acceptedKeys(it) } }
 
     fun matches(input: String, country: Country): Boolean {
