@@ -1071,6 +1071,24 @@ class CountryViewModelQuizTest {
     }
 
     @Test
+    fun aSecondGlobalQuizStraightAfterTheFirst_asksOtherCountries() {
+        // A newcomer's first quiz: ten new flags, each then reviewed once, weak and not due until tomorrow.
+        val first = newViewModel(random = Random(3))
+        first.startQuiz(QuizMode.FLAG_NAME, "Global")
+        val asked = first.quizSession.value!!.targets().toSet()
+        first.playMissingAllBut(setOf(0, 2, 4, 6, 8))
+        db.awaitPendingWrites()
+
+        val vm = newViewModel(random = Random(4))
+        vm.awaitPlan("the first quiz's ten, reviewed and recent") { it.recent.size >= 10 && it.skills[Skill.FLAG]?.size == 10 }
+        vm.startQuiz(QuizMode.FLAG_NAME, "Global")
+
+        val second = vm.quizSession.value!!.targets()
+        assertEquals(10, second.size)
+        assertEquals("asked again: $second", emptyList<String>(), second.filter { it in asked })
+    }
+
+    @Test
     fun startQuiz_isDeterministicForASeededRandom() {
         val a = newViewModel(random = Random(5)).also { it.startQuiz(QuizMode.FLAG_NAME, "Global") }.quizSession.value!!
         val b = newViewModel(random = Random(5)).also { it.startQuiz(QuizMode.FLAG_NAME, "Global") }.quizSession.value!!

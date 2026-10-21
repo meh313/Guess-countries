@@ -10,9 +10,10 @@ import kotlin.random.Random
  * Which countries a quiz asks about. Pure: every country in the pool gets a weight from its standing in the skill the
  * quiz exercises, and [order] is a weighted draw without replacement; [select] fills a fixed-length quiz by group,
  * due reviews first, so the reviews are cleared before new flags pile more on. Recency means "asked in the same skill
- * in the last 45 minutes" ([RECENT_WINDOW_MILLIS]): a country just asked about is nearly skipped, but never a due
- * one, since an item due today was by construction asked yesterday or earlier. Due means due today in the zone the
- * rules are given ([SkillMastery.isDue]), at whatever hour.
+ * in the last 45 minutes" ([RECENT_WINDOW_MILLIS]): a country just asked about is nearly skipped ([order] weighs it
+ * down, [select] takes it only once nothing else is left), but never a due one, since an item due today was by
+ * construction asked yesterday or earlier. Due means due today in the zone the rules are given ([SkillMastery.isDue]),
+ * at whatever hour.
  */
 object QuestionPicker {
     /** Never reviewed in this skill. */
@@ -38,7 +39,10 @@ object QuestionPicker {
     /** At most this many of a quiz's questions are due reviews, so a backlog still leaves room for new countries. */
     const val DUE_SHARE = 7
 
-    /** At most this many never-seen countries per quiz, so new flags arrive at a pace the reviews can keep up with. */
+    /**
+     * At most this many never-seen countries per quiz, so new flags arrive at a pace the reviews can keep up with; more
+     * only when nothing else is left but the countries just asked about (see [select]).
+     */
     const val NEW_PER_QUIZ = 3
 
     private const val WEEK_MILLIS = 7 * SkillMastery.DAY_MILLIS
@@ -75,13 +79,16 @@ object QuestionPicker {
     ): List<Country> = draw(pool, skill, recent, now, zone, random, pool.size)
 
     /**
-     * How a fixed-length quiz is filled: reviews first, then a few new countries, then the rest by weight.
+     * How a fixed-length quiz is filled: reviews first, then a few new countries, then the rest by weight, and the
+     * countries just asked about last.
      *
      * Returns [count] countries of [pool] (all of it when smaller), as groups in priority order: the due ones (by
      * weighted draw among themselves) up to [DUE_SHARE]; the weak ones (reviewed, not due, not mastered); unseen ones,
      * at most [newAllowance] and at most [NEW_PER_QUIZ]; then the reviewed ones left (mastered, more weak, more due) by
-     * weight; and only when nothing else is left, more unseen ones. The caller shuffles the final question order, so
-     * due reviews are not always the opening questions.
+     * weight; then more unseen ones; and only when nothing else is left, the ones in [recent] that are not due. So a
+     * quiz straight after another moves on to other countries instead of asking the same ten again, even when that
+     * means more new ones. The caller shuffles the final question order, so due reviews are not always the opening
+     * questions.
      *
      * [preferred] holds the codes of the countries to introduce first (the focus continent's): among the unseen, those
      * are drawn before the rest, each part in its own weighted draw.
@@ -98,8 +105,10 @@ object QuestionPicker {
         preferred: Set<String> = emptySet()
     ): List<Country> {
         val due = pool.filter { SkillMastery.isDue(skill[it.code], now, zone) }
-        val weak = pool.filter { SkillMastery.isWeak(skill[it.code], now) && !SkillMastery.isDue(skill[it.code], now, zone) }
-        val unseen = pool.filter { skill[it.code]?.isNew != false }
+        // Just asked about and not due: held back until every other group is used up.
+        val (held, others) = pool.partition { it.code in recent && !SkillMastery.isDue(skill[it.code], now, zone) }
+        val weak = others.filter { SkillMastery.isWeak(skill[it.code], now) && !SkillMastery.isDue(skill[it.code], now, zone) }
+        val unseen = others.filter { skill[it.code]?.isNew != false }
         val picked = ArrayList<Country>(count)
         fun room() = count - picked.size
 
@@ -115,9 +124,10 @@ object QuestionPicker {
         picked += drawUnseen(unseen, minOf(newAllowance.coerceIn(0, NEW_PER_QUIZ), room()))
 
         val taken = picked.mapTo(HashSet()) { it.code }
-        val reviewedLeft = pool.filter { it.code !in taken && skill[it.code]?.isNew == false }
+        val reviewedLeft = others.filter { it.code !in taken && skill[it.code]?.isNew == false }
         picked += draw(reviewedLeft, skill, recent, now, zone, random, room())
         picked += drawUnseen(unseen.filter { it.code !in taken }, room())
+        picked += draw(held, skill, recent, now, zone, random, room())
         return picked
     }
 

@@ -275,6 +275,38 @@ class QuestionPickerTest {
     }
 
     @Test
+    fun select_rightAfterAFirstQuizOfTenNewCountries_movesOnToOthers_insteadOfAskingTheSameTenAgain() {
+        // A newcomer's first quiz leaves ten countries reviewed once, in box 1 and due tomorrow: weak, and just asked.
+        val askedState = SkillState(score = 20, box = 1, dueAt = now + day, reviews = 1, correct = 1)
+        for (seed in 1..20) {
+            val first = QuestionPicker.select(everyone, emptyMap(), emptySet(), now, Random(seed), newAllowance = 15)
+            val asked = first.mapTo(HashSet()) { it.code }
+            val standings = first.associate { it.code to askedState }
+            assertTrue(standings.values.all { SkillMastery.isWeak(it, now) })
+
+            val second = QuestionPicker.select(everyone, standings, asked, now, Random(seed + 100), newAllowance = 5)
+
+            assertEquals(10, second.size)
+            assertEquals("seed=$seed: ${second.map { it.code }}", emptyList<String>(), second.filter { it.code in asked }.map { it.code })
+        }
+    }
+
+    @Test
+    fun select_takesTheCountriesJustAskedOnlyWhenNothingElseIsLeft_butNeverHoldsBackADueOne() {
+        val twelve = everyone.take(12)
+        // Eight weak ones just asked, two due ones just asked, two never seen.
+        val standings = twelve.take(8).associate { it.code to weak } + twelve.drop(8).take(2).associate { it.code to due }
+        val recent = twelve.take(10).mapTo(HashSet()) { it.code }
+        for (seed in 1..20) {
+            val picked = QuestionPicker.select(twelve, standings, recent, now, Random(seed), newAllowance = 3)
+            assertEquals(listOf("due", "due", "new", "new") + List(6) { "weak" }, groups(picked, standings))
+        }
+        // With the weak ones not just asked, they come before the new ones again.
+        val picked = QuestionPicker.select(twelve, standings, emptySet(), now, Random(1), newAllowance = 3)
+        assertEquals(listOf("due", "due") + List(8) { "weak" }, groups(picked, standings))
+    }
+
+    @Test
     fun select_ofAPoolSmallerThanTheCount_returnsThePoolInGroupOrder() {
         val four = everyone.take(4)
         val standings = standings(dueCount = 2, weakCount = 1)

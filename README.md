@@ -73,7 +73,9 @@ countries reviewed but not (or no longer) mastered.
 
 A ten-question quiz is filled with due reviews first (up to seven), then weak countries, then at most three new
 countries, and the rest from whatever is left, so reviews are cleared before new flags pile on; a country asked about
-in the same skill in the last 45 minutes is nearly skipped, unless it is due.
+in the same skill in the last 45 minutes is nearly skipped, unless it is due: a quiz takes it only once nothing else is
+left, so a second quiz straight after a first one moves on to other countries (new ones, past the three, when nothing
+else is there) instead of asking the same ten again, and the blitz puts it far back in its order.
 
 The streak runs on a daily goal of 5, 10 or 20 items (Settings › Quiz; 10 to begin with). An item is a question
 answered or a card graded, so due reviews and new countries both count. A day is practised when its sessions of at
