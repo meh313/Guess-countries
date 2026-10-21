@@ -149,6 +149,17 @@ class GeoTest {
     }
 
     @Test
+    fun theFeaturesMergedIntoTheirState_areDrawnAsIt_somalilandNorthernCyprusAndAland() {
+        // Natural Earth draws them as features of their own; the catalog's areas count them in Somalia, Cyprus and
+        // Finland (338,145 km², the Åland Islands included).
+        assertEquals(listOf("SO"), paintedBy(44.07, 9.56)) // Hargeisa
+        assertEquals(listOf("CY"), paintedBy(33.94, 35.12)) // Famagusta
+        assertEquals(listOf("FI"), paintedBy(19.94, 60.10)) // Mariehamn
+        assertFalse(background.any { inRing(it, 19.94, 60.10) })
+        assertTrue("${box("FI")}", box("FI").west < 20.0)
+    }
+
+    @Test
     fun everyRingWindsClockwise_soTheLandFillNeverCancelsAnEnclave() {
         // WorldMap paints all rings as one non-zero path: Lesotho's ring over South Africa's stays land only while
         // both run the same way round, as Natural Earth's outer rings do (shoelace area below zero).

@@ -8,12 +8,12 @@ one polygon CARVE takes) and the 1:10m populated places, downloaded from the Git
 ~/.cache/natural-earth, outside the repository: the files are data, never run).
 Every entry of the catalog (tools/catalog_codes.py: 196 states plus Antarctica) gets one country record, and nothing
 else does: features are matched by ISO_A2_EH, then ISO_A2, then HAND_A3 for the rest (Somaliland and Northern
-Cyprus are merged into Somalia and Cyprus). The countries file draws the de facto lines; where the UN does not
-recognise one for a catalog country, and the catalog's area counts the recognised line, a rule sets it (see their
-comment): REASSIGN puts Crimea in Ukraine, CLIP_SOUTH stops Morocco at 27°40' N and CARVE puts the Golan Heights in
-Syria. Lines in dispute that no UN resolution settles (Kashmir, the Kurils) stay as drawn. A ring that comes to a
-country from another feature is joined to the ring it shares a stretch of border with, so no seam is drawn where
-the features met. Western Sahara, the dependencies and the other non-catalog features get no record:
+Cyprus are merged into Somalia and Cyprus, Åland into Finland). The countries file draws the de facto lines; where
+the UN does not recognise one for a catalog country, and the catalog's area counts the recognised line, a rule sets
+it (see their comment): REASSIGN puts Crimea in Ukraine, CLIP_SOUTH stops Morocco at 27°40' N and CARVE puts the
+Golan Heights in Syria. Lines in dispute that no UN resolution settles (Kashmir, the Kurils) stay as drawn. A ring
+that comes to a country from another feature is joined to the ring it shares a stretch of border with, so no seam is
+drawn where the features met. Western Sahara, the dependencies and the other non-catalog features get no record:
 their rings go into "background", land drawn in the land colour that is no country (so Greenland or Puerto Rico is
 not shown as sea), simplified like a country's. Each outer ring is simplified with Douglas-Peucker at --tolerance
 degrees, keeps at least four points, and is dropped when its simplified area is under MIN_RING_AREA square degrees
@@ -103,10 +103,12 @@ SNAP = 0.01                 # degrees; a point of a disputed area this close to 
 
 # Features whose ISO codes do not name a catalog country: ADM0_A3 -> catalog code. In the current file ISO_A2_EH
 # (or ISO_A2 for Taiwan, whose EH value is "CN-TW") already covers France, Norway, Kosovo, Palestine, South Sudan
-# and Taiwan; the entries are kept for older copies. Somaliland and Northern Cyprus are merged into their state.
+# and Taiwan; the entries are kept for older copies. Somaliland and Northern Cyprus are merged into their state, and
+# Åland, an autonomous part of Finland that the file draws as a feature of its own, into Finland (whose catalog area
+# counts it).
 HAND_A3 = {
     'KOS': 'XK', 'FRA': 'FR', 'NOR': 'NO', 'PSX': 'PS', 'SDS': 'SS', 'TWN': 'TW',
-    'SOL': 'SO', 'CYN': 'CY',
+    'SOL': 'SO', 'CYN': 'CY', 'ALD': 'FI',
 }
 # Natural Earth's default admin-0 file is its de facto view; its point-of-view files exist at 1:10m only. Besides the
 # merges above, the three places where the UN does not recognise the line the 50m file draws for a catalog country,
@@ -124,7 +126,7 @@ HAND_A3 = {
 # Siachen Glacier, a feature that India and Pakistan both claim, is background land.
 REASSIGN = [('RUS', 'UA', (34.10, 44.95))]     # (ADM0_A3 it is in, catalog code, a point in the polygon: Simferopol)
 CLIP_SOUTH = [('MA', 27 + 40 / 60, 'SAH')]     # (catalog code, latitude, ADM0_A3 of the background feature)
-CARVE = [('ISR', 'Golan Heights', 'SY', (35.69, 32.99))]   # (ADM0_A3 it is in, BRK_NAME, catalog code, a point: Katzrin)
+CARVE = [('ISR', 'Golan Heights', 'SY', (35.69, 32.99))]  # (ADM0_A3 it is in, BRK_NAME, catalog code, a point: Katzrin)
 # Populated places use other ADM0_A3 values than the countries file for a few states.
 CAPITAL_A3 = {'SS': ['SSD', 'SDS'], 'PS': ['PSX'], 'XK': ['KOS']}
 # Capitals the populated places cannot give: the catalog's capital for Palestine is Al Quds (Jerusalem), which the
@@ -586,7 +588,7 @@ def build(cache, tolerance, report):
     for source, name, target, (lon, lat) in CARVE:
         areas = [f for f in disputed_fc['features'] if f['properties'].get('BRK_NAME') == name]
         if len(areas) != 1 or areas[0]['geometry']['type'] != 'Polygon':
-            raise SystemExit(f'CARVE: {len(areas)} features of {DISPUTED_FILE} are a polygon named {name}; expected one')
+            raise SystemExit(f'CARVE: {len(areas)} features of {DISPUTED_FILE} are named {name}; expected a polygon')
         area = areas[0]['geometry']['coordinates'][0]
         holder = rings_of[source]
         hits = [i for i, ring in enumerate(holder) if ring_contains(ring, lon, lat)]
