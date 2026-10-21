@@ -25,16 +25,16 @@
     <string name="today_line">‏%1$s · %2$s · %3$s</string>
     <plurals name="today_due">
         <item quantity="zero">لا شيء مستحق</item>
-        <item quantity="one">واحدة مستحقة</item>
-        <item quantity="two">اثنتان مستحقتان</item>
+        <item quantity="one">مستحقة واحدة</item>
+        <item quantity="two">مستحقتان</item>
         <item quantity="few">%d مستحقة</item>
         <item quantity="many">%d مستحقة</item>
         <item quantity="other">%d مستحقة</item>
     </plurals>
     <plurals name="today_new">
         <item quantity="zero">لا جديد اليوم</item>
-        <item quantity="one">واحدة جديدة اليوم</item>
-        <item quantity="two">اثنتان جديدتان اليوم</item>
+        <item quantity="one">جديدة واحدة اليوم</item>
+        <item quantity="two">جديدتان اليوم</item>
         <item quantity="few">%d جديدة اليوم</item>
         <item quantity="many">%d جديدة اليوم</item>
         <item quantity="other">%d جديدة اليوم</item>

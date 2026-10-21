@@ -148,6 +148,11 @@ class TranslationsTest {
         assertEquals("ادرس · مستحقتان", plural(R.plurals.flashcards_study_due, 2))
         assertEquals("مستحقة واحدة غدًا", plural(R.plurals.stats_forecast_tomorrow, 1))
         assertEquals("مستحقتان غدًا", plural(R.plurals.stats_forecast_tomorrow, 2))
+        // The Today card says them the same way, on the screens it shares with the Study button and the forecast.
+        assertEquals("مستحقة واحدة", plural(R.plurals.today_due, 1))
+        assertEquals("مستحقتان", plural(R.plurals.today_due, 2))
+        assertEquals("جديدة واحدة اليوم", plural(R.plurals.today_new, 1))
+        assertEquals("جديدتان اليوم", plural(R.plurals.today_new, 2))
     }
 
     @Test
