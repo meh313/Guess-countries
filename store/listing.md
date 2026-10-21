@@ -33,8 +33,8 @@ Private by design: no network permission, no account, no ads. Your progress stay
 Works offline, in light and dark, with TalkBack, on phones and tablets.
 
 **What's new (3.2)**
-• Reviews are due all day on their due day; the Today card counts capitals and map reviews too.
-• A truer map: other land drawn, enclaves left out of their host, Crimea in Ukraine, the Golan Heights in Syria, Palestine whole.
+• Reviews are due all day on the day they fall due; the Today card counts capitals and map reviews too.
+• A truer map: other land drawn, enclaves cut out, Crimea in Ukraine, the Golan in Syria, Palestine as one country.
 • Fairer quizzes: another country's name is never a typo; Indonesia and Monaco are never offered for each other.
 • Timed quizzes stop in the background; a new daily goal keeps your streak; undo a session's last grade.
 • Plurals and continents read right in every language.
