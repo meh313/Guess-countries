@@ -104,7 +104,7 @@
 
     <!-- About: what is in the catalogue -->
     <string name="about_catalog_title">Was im Katalog steht</string>
-    <string name="about_catalog_text">Die 196 allgemein anerkannten souveränen Staaten, dazu die Antarktis zum Stöbern. Alle Flaggen sind im selben Seitenverhältnis 4:3 gezeichnet, ihre Proportionen können also von der echten Flagge abweichen (die der Schweiz zum Beispiel ist quadratisch). Wo die Bedeutung einer Flagge umstritten oder legendär ist, sagt der Text das, statt Partei zu ergreifen; ein Fakt, der sich nicht klären ließ, wurde lieber weggelassen als geraten.</string>
+    <string name="about_catalog_text">Die 196 allgemein anerkannten souveränen Staaten, dazu die Antarktis zum Stöbern. Alle Flaggen sind im selben Seitenverhältnis 4:3 gezeichnet, ihre Proportionen können also von denen der echten Flagge abweichen (die der Schweiz zum Beispiel ist quadratisch). Wo die Bedeutung einer Flagge umstritten oder legendär ist, sagt der Text das, statt Partei zu ergreifen; ein Fakt, der sich nicht klären ließ, wurde lieber weggelassen als geraten.</string>
 
     <!-- About: privacy -->
     <string name="about_translations_title">Übersetzungen</string>

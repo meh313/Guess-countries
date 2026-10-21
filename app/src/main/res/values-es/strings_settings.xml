@@ -108,7 +108,7 @@
 
     <!-- About: what is in the catalogue -->
     <string name="about_catalog_title">Qué contiene el catálogo</string>
-    <string name="about_catalog_text">Los 196 estados soberanos de reconocimiento amplio, más la Antártida para explorar. Todas las banderas se dibujan con la misma forma 4:3, así que sus proporciones pueden diferir de las de la bandera real (la de Suiza, por ejemplo, es cuadrada). Cuando el significado de una bandera es discutido o legendario, el texto lo dice en lugar de tomar partido; un dato que no se pudo confirmar se omitió en vez de adivinarlo.</string>
+    <string name="about_catalog_text">Los 196 estados soberanos de reconocimiento amplio, más la Antártida para explorar. Todas las banderas se dibujan con el mismo formato 4:3, así que sus proporciones pueden diferir de las de la bandera real (la de Suiza, por ejemplo, es cuadrada). Cuando el significado de una bandera es discutido o legendario, el texto lo dice en lugar de tomar partido; un dato que no se pudo confirmar se omitió en vez de adivinarlo.</string>
 
     <!-- About: privacy -->
     <string name="about_translations_title">Traducciones</string>
