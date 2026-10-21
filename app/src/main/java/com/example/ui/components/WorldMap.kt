@@ -116,8 +116,9 @@ private fun MapViewport.worldOffsets(): List<Float> =
 
 /**
  * One country's highlight: [fill] is its rings less its holes (a path difference, so an enclave such as Lesotho keeps
- * the land colour however the host's own rings overlap one another), [outline] its rings alone, for the stroke round
- * its edge (a stroke round a hole would cover a small enclave). The same path when the country has no holes.
+ * the land colour however the host's own rings overlap one another; where the platform cannot compute the difference,
+ * the fallback [MapPaths.build] describes), [outline] its rings alone, for the stroke round its edge (a stroke round a
+ * hole would cover a small enclave). The same path when the country has no holes.
  */
 internal class CountryPaths(val fill: Path, val outline: Path)
 
@@ -137,7 +138,14 @@ internal class MapPaths(val land: Path, val byCode: Map<String, CountryPaths>) {
             cached?.takeIf { it.first === data }?.second ?: build(data).also { cached = data to it }
         }
 
-        private fun build(data: WorldMapData): MapPaths {
+        /**
+         * Builds the paths for [data]. A host's fill is its outline less its holes by [difference], which gives null
+         * when the platform's path op fails (Skia's can, on geometry it cannot resolve; [Path.combine] would throw,
+         * here inside composition, on every screen with a map). The fallback needs no path op: the host's rings
+         * wound one way and its holes the other, under the non-zero rule, so a hole is cut out of the one ring it
+         * lies in and two overlapping rings still fill; only a hole inside an overlap would stay filled.
+         */
+        internal fun build(data: WorldMapData, difference: (Path, Path) -> Path? = ::differenceOrNull): MapPaths {
             val land = Path()
             data.background.forEach { ring -> addRing(land, ring) }
             val byCode = HashMap<String, CountryPaths>(data.countries.size * 2)
@@ -151,21 +159,39 @@ internal class MapPaths(val land: Path, val byCode: Map<String, CountryPaths>) {
                 // that would cut the overlap out as if it were a hole.
                 val fill = if (country.holes.isEmpty()) outline else {
                     val holes = Path().apply { country.holes.forEach { ring -> addRing(this, ring) } }
-                    Path.combine(PathOperation.Difference, outline, holes)
+                    difference(outline, holes) ?: Path().apply {
+                        country.polys.forEach { ring -> addRing(this, ring, backwards = signedArea(ring) < 0) }
+                        country.holes.forEach { ring -> addRing(this, ring, backwards = signedArea(ring) > 0) }
+                    }
                 }
                 byCode[country.code] = CountryPaths(fill, outline)
             }
             return MapPaths(land, byCode)
         }
 
-        private fun addRing(path: Path, ring: FloatArray) {
-            path.moveTo(ring[0], -ring[1])
-            var i = 2
-            while (i < ring.size) {
-                path.lineTo(ring[i], -ring[i + 1])
-                i += 2
+        /** [a] less [b], or null when the path op fails. */
+        private fun differenceOrNull(a: Path, b: Path): Path? = Path().takeIf { it.op(a, b, PathOperation.Difference) }
+
+        /** Adds [ring] to [path] as a closed figure, from its last point to its first when [backwards]. */
+        private fun addRing(path: Path, ring: FloatArray, backwards: Boolean = false) {
+            val points = ring.size / 2
+            for (k in 0 until points) {
+                val i = 2 * (if (backwards) points - 1 - k else k)
+                if (k == 0) path.moveTo(ring[i], -ring[i + 1]) else path.lineTo(ring[i], -ring[i + 1])
             }
             path.close()
+        }
+
+        /** The shoelace area of [ring] in square degrees: positive when it runs anticlockwise with north up. */
+        private fun signedArea(ring: FloatArray): Double {
+            var sum = 0.0
+            var i = 0
+            while (i < ring.size) {
+                val j = (i + 2) % ring.size
+                sum += ring[i].toDouble() * ring[j + 1] - ring[j].toDouble() * ring[i + 1]
+                i += 2
+            }
+            return sum / 2
         }
     }
 }

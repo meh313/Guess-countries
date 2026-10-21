@@ -2,6 +2,8 @@ package com.example
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -12,6 +14,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.asAndroidPath
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -33,6 +37,7 @@ import com.example.support.WorldMapFixture
 import com.example.support.crop
 import com.example.support.drawWindow
 import com.example.ui.components.LocalWorldMapData
+import com.example.ui.components.MapPaths
 import com.example.ui.components.WorldMap
 import com.example.ui.components.mapViewport
 import com.example.ui.theme.WorldFlagsTheme
@@ -214,6 +219,55 @@ class WorldMapTest {
         map = mapPixels()
         val own = mapViewport(WorldMapFixture.data["EE"]!!, zoom = true, aspect = aspect)
         assertTrue("the enclave highlighted", map.share(primary, own.fx(28f), own.fy(-28f), own.fx(32f), own.fy(-32f)) > 0.95f)
+    }
+
+    /** Pixels a degree in a [raster]. */
+    private val px = 4
+
+    /** [path], in the map's degree space (y = −latitude), filled without antialiasing from [west], [north] on. */
+    private fun raster(path: Path, west: Float, north: Float, widthDeg: Int, heightDeg: Int): Bitmap {
+        val bitmap = Bitmap.createBitmap(widthDeg * px, heightDeg * px, Bitmap.Config.ARGB_8888)
+        Canvas(bitmap).apply {
+            scale(px.toFloat(), px.toFloat())
+            translate(-west, north)
+            drawPath(path.asAndroidPath(), Paint().apply { color = android.graphics.Color.BLACK })
+        }
+        return bitmap
+    }
+
+    /** Whether the point at [lon], [lat] is filled in a [raster] drawn from [west], [north]. */
+    private fun Bitmap.filledAt(lon: Float, lat: Float, west: Float, north: Float): Boolean =
+        getPixel(((lon - west) * px).toInt(), ((north - lat) * px).toInt()) ushr 24 != 0
+
+    @Test
+    fun whenThePathOpFails_theHostsFillStillLeavesItsHoleOut_andFillsWhereItsRingsOverlap() {
+        // Skia's path op can fail on some geometry; the paths are built during composition, so that must not throw.
+        val fallback = MapPaths.build(WorldMapFixture.data) { _, _ -> null }.byCode.getValue("HH")
+        val difference = MapPaths.build(WorldMapFixture.data).byCode.getValue("HH")
+
+        // HH's rings, 20..40 and 16..24 × -40..-20, are stored anticlockwise, and so is its hole at 26..34 × -34..-26.
+        val (west, north) = 10f to -15f
+        val drawn = raster(fallback.fill, west, north, 35, 30)
+        assertTrue("the hole is left out", !drawn.filledAt(30f, -30f, west, north))
+        assertTrue("the host round it", drawn.filledAt(37f, -30f, west, north))
+        assertTrue("where its two rings overlap", drawn.filledAt(22f, -30f, west, north))
+        assertTrue("its second ring alone", drawn.filledAt(17f, -30f, west, north))
+        assertTrue("past it", !drawn.filledAt(12f, -30f, west, north) && !drawn.filledAt(42f, -30f, west, north))
+        assertTrue("the same pixels as the difference", drawn.sameAs(raster(difference.fill, west, north, 35, 30)))
+    }
+
+    @Test
+    fun whenThePathOpFails_theBundledSouthAfrica_stillLeavesLesothoOut() {
+        // The asset's rings run clockwise, the fixture's anticlockwise: the fallback winds them by their area either way.
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        assertTrue("world.json must be bundled", WorldMapData.isBundled(context))
+        val za = MapPaths.build(WorldMapData.load(context)) { _, _ -> null }.byCode.getValue("ZA")
+
+        val (west, north) = 15f to -20f
+        val drawn = raster(za.fill, west, north, 20, 20)
+        assertTrue("Lesotho is not South Africa", !drawn.filledAt(28.3f, -29.5f, west, north))
+        assertTrue("the Karoo is", drawn.filledAt(23f, -32f, west, north))
+        assertTrue("the Free State, north of Lesotho, is", drawn.filledAt(27f, -28f, west, north))
     }
 
     @Test
