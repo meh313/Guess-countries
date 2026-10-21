@@ -381,6 +381,21 @@ class ReminderWorkerTest {
     }
 
     @Test
+    fun todaysReminderAlerts_evenWhileYesterdaysIsStillInTheShade() {
+        fire(plan(), now = at(2026, 10, 5, 19))
+        val yesterdays = notifications().single()
+
+        // Neither tapped nor swiped away: the next day's run replaces it under the same id.
+        fire(nextAlarm(), now = at(2026, 10, 6, 19))
+
+        val todays = notifications().single()
+        assertTrue("the second day posts a reminder of its own", todays !== yesterdays)
+        // An alert-once notification replaced under its id makes no sound: each day's reminder must be heard.
+        assertEquals(0, todays.flags and Notification.FLAG_ONLY_ALERT_ONCE)
+        assertEquals(0, yesterdays.flags and Notification.FLAG_ONLY_ALERT_ONCE)
+    }
+
+    @Test
     fun planningAgainAfterARun_replacesTheAlarmTheRunSet() {
         fire(plan(), now = at(2026, 10, 5, 19))
         wall = at(2026, 10, 5, 20)
