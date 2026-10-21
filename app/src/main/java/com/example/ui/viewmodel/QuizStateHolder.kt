@@ -37,7 +37,7 @@ import kotlinx.coroutines.launch
 class QuizStateHolder(
     private val repository: CountryRepository,
     private val progress: ProgressStateHolder,
-    /** Keeps the day's counts of new countries (the quizzes' at most [NEW_PER_DAY] a day, and Learn's), the focus continent and the daily goal. */
+    /** Keeps the day's counts of new countries (the quizzes', see [NEW_PER_DAY], and Learn's), the focus continent and the daily goal. */
     private val settings: UserSettings,
     private val scope: CoroutineScope,
     /** Monotonic milliseconds, used to time questions. */
@@ -367,7 +367,10 @@ class QuizStateHolder(
         /** The key of the saved quiz in the [SavedStateHandle]. */
         const val SAVED_QUIZ = "quiz"
 
-        /** How many never-seen countries the quizzes introduce in a day at most; see [UserSettings.newItemsToday]. */
+        /**
+         * How many never-seen countries the quizzes introduce in a day, unless nothing is left to ask but them and the
+         * countries just asked about (see [QuestionPicker.select]); see [UserSettings.newItemsToday].
+         */
         const val NEW_PER_DAY = 15
 
         /** How many missed countries a fixed-length quiz asks again at its end. */
