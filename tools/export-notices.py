@@ -20,7 +20,8 @@ OUT = ROOT / "app" / "src" / "main" / "assets" / "NOTICES.txt"
 # What each work in the markdown file is used for, in the player's words; the section heading is the fallback.
 USED_FOR = {
     "flag-icons": "the flag images; every flag in the app is rendered from its SVG files.",
-    "Natural Earth": "the world map; the country outlines, label points and capitals in world.json are simplified from its data.",
+    "Natural Earth": "the world map; the country outlines, the other land, label points and capitals in world.json are "
+                     "derived from its data (simplified; a few borders and Palestine's capital set by tools/gen-worldmap.py).",
 }
 
 # Works that are not in the markdown file because nothing of theirs is copied into the repository: the libraries the

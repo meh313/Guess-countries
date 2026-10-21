@@ -115,8 +115,9 @@ class GeoTest {
     }
 
     @Test
-    fun bordersFollowTheRecognisedLines_crimeaInUkraine_moroccoNorthOf27Degrees40() {
-        // As the catalog's areas do (Ukraine's 603,550 km² counts Crimea; Morocco's 446,550 km² stops at 27°40′ N).
+    fun bordersFollowTheRecognisedLines_crimeaInUkraine_moroccoNorthOf27Degrees40_theGolanInSyria() {
+        // As the catalog's areas do (Ukraine's 603,550 km² counts Crimea; Morocco's 446,550 km² stops at 27°40′ N;
+        // Syria's 185,180 km² counts the Golan Heights).
         assertEquals(listOf("UA"), paintedBy(34.10, 44.95)) // Simferopol
         assertEquals(listOf("UA"), paintedBy(33.52, 44.60)) // Sevastopol
         assertEquals(listOf("UA"), paintedBy(36.20, 45.30)) // the Kerch peninsula
@@ -134,6 +135,17 @@ class GeoTest {
         }
         assertEquals(27 + 40 / 60.0, box("MA").south, 0.006)
         assertEquals(27 + 40 / 60.0, Geo.of("MA")!!.south, 0.006)
+
+        // Natural Earth's Golan Heights polygon, cut out of its Israel feature: Syria's, in one ring with the rest of
+        // it, and no longer background land; west of it, Israel stays background.
+        listOf(35.69 to 32.99, 35.77 to 33.27, 35.82 to 33.12).forEach { (lon, lat) -> // Katzrin, Majdal Shams, Quneitra
+            assertEquals("($lon, $lat)", listOf("SY"), paintedBy(lon, lat))
+            assertFalse("($lon, $lat) is background", background.any { inRing(it, lon, lat) })
+            assertTrue(inRing(rings("SY").single { inRing(it, lon, lat) }, 36.29, 33.51)) // with Damascus
+        }
+        assertEquals(emptyList<String>(), paintedBy(35.53, 32.79)) // Tiberias
+        assertTrue(background.any { inRing(it, 35.53, 32.79) })
+        assertTrue("${box("SY")}", box("SY").west < 35.65)
     }
 
     @Test
@@ -154,11 +166,11 @@ class GeoTest {
             ring.forEach { (lon, lat) -> assertTrue("($lon, $lat)", lon >= -180.0 && lon <= 180.0 && lat >= -90.0 && lat <= 90.0) }
         }
         // Land that the catalog leaves out is land on the map, under no country: Greenland, the land between
-        // Palestine, Egypt, Jordan, Lebanon and Syria, Western Sahara, Puerto Rico, New Caledonia, the Falklands,
-        // Hong Kong, Bermuda, the Faroes.
+        // Palestine, Egypt, Jordan, Lebanon and the Golan Heights, Western Sahara, Puerto Rico, New Caledonia, the
+        // Falklands, Hong Kong, Bermuda, the Faroes.
         val places = mapOf(
             "Greenland" to (-42.0 to 72.0), "Tel Aviv" to (34.78 to 32.08), "Beersheba" to (34.79 to 31.25),
-            "Katzrin" to (35.69 to 32.99), "Tifariti" to (-10.03 to 26.16), "San Juan" to (-66.1 to 18.4),
+            "Safed" to (35.50 to 32.96), "Tifariti" to (-10.03 to 26.16), "San Juan" to (-66.1 to 18.4),
             "New Caledonia" to (165.5 to -21.5), "Stanley" to (-57.85 to -51.69), "Hong Kong" to (114.17 to 22.32),
             "Bermuda" to (-64.78 to 32.3), "Tórshavn" to (-6.77 to 62.0),
         )

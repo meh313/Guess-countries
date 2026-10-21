@@ -326,7 +326,7 @@ class WorldMapTest {
     }
 
     @Test
-    fun theBundledAsset_highlightsCrimeaWithUkraine_andStopsMoroccoAt27Degrees40() {
+    fun theBundledAsset_highlightsCrimeaWithUkraine_theGolanWithSyria_andStopsMoroccoAt27Degrees40() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         assertTrue("world.json must be bundled", WorldMapData.isBundled(context))
         val data = WorldMapData.load(context)
@@ -343,6 +343,12 @@ class WorldMapTest {
         // tell land from coast stroke, but it would be mostly Russia's colour if Crimea were drawn in Russia.
         val crimea = listOf(ru.fx(33.2f), ru.fy(45.6f), ru.fx(35.2f), ru.fy(44.9f))
         assertTrue("Crimea is not Russia's colour", map.share(primary, crimea[0], crimea[1], crimea[2], crimea[3]) < 0.05f)
+
+        val sy = mapViewport(data["SY"]!!, zoom = true, aspect = aspect)
+        show(mapped("SY"), data = data)
+        map = mapPixels()
+        assertTrue("Katzrin is Syria's colour", map.share(primary, sy.fx(35.66f), sy.fy(33.1f), sy.fx(35.78f), sy.fy(32.9f)) > 0.9f)
+        assertTrue("Tiberias is not", map.share(primary, sy.fx(35.45f), sy.fy(32.85f), sy.fx(35.53f), sy.fy(32.75f)) < 0.02f)
 
         val ma = mapViewport(data["MA"]!!, zoom = true, aspect = aspect)
         show(mapped("MA"), data = data)

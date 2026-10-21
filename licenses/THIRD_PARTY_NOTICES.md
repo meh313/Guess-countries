@@ -34,10 +34,11 @@ SOFTWARE.
 
 ## Map data
 
-The country outlines, label points and capitals in `app/src/main/assets/world.json`, and the bounding boxes in
-`app/src/main/java/com/example/data/model/Geo.kt`, are simplified from
-[Natural Earth](https://www.naturalearthdata.com/) 5.2.0-pre (the 1:50m Admin 0 countries and the 1:10m populated
-places, as published in the GitHub mirror `nvkelso/natural-earth-vector`; `tools/gen-worldmap.py` reproduces them).
+The country outlines, background land, label points and capitals in `app/src/main/assets/world.json`, and the
+bounding boxes in `app/src/main/java/com/example/data/model/Geo.kt`, are derived from
+[Natural Earth](https://www.naturalearthdata.com/) 5.2.0-pre data (the 1:50m Admin 0 countries and breakaway and
+disputed areas and the 1:10m populated places, as published in the GitHub mirror `nvkelso/natural-earth-vector`):
+simplified, with a few borders and Palestine's capital set by `tools/gen-worldmap.py`, which reproduces them.
 Natural Earth is in the public domain: no permission is needed and crediting the authors is unnecessary, so this
 notice is a courtesy. Its terms of use (https://www.naturalearthdata.com/about/terms-of-use/) say:
 

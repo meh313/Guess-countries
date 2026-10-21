@@ -3,14 +3,17 @@
 
     python3 tools/gen-worldmap.py [--cache DIR] [--tolerance 0.05] [--check]
 
-Source: Natural Earth (public domain), the 1:50m admin-0 countries and the 1:10m populated places, downloaded from
-the GitHub mirror into --cache (default ~/.cache/natural-earth, outside the repository: the files are data, never run).
+Source: Natural Earth (public domain), the 1:50m admin-0 countries, the 1:50m breakaway and disputed areas (for the
+one polygon CARVE takes) and the 1:10m populated places, downloaded from the GitHub mirror into --cache (default
+~/.cache/natural-earth, outside the repository: the files are data, never run).
 Every entry of the catalog (tools/catalog_codes.py: 196 states plus Antarctica) gets one country record, and nothing
 else does: features are matched by ISO_A2_EH, then ISO_A2, then HAND_A3 for the rest (Somaliland and Northern
-Cyprus are merged into Somalia and Cyprus). Borders follow the internationally recognised lines, as the catalog's
-areas do: REASSIGN puts Crimea in Ukraine and CLIP_SOUTH stops Morocco at 27°40' N (see their comment). A ring that
-comes to a country from another feature is joined to the ring it shares a stretch of border with, so no seam is
-drawn where the features met. Western Sahara, the dependencies and the other non-catalog features get no record:
+Cyprus are merged into Somalia and Cyprus). The countries file draws the de facto lines; where the UN does not
+recognise one for a catalog country, and the catalog's area counts the recognised line, a rule sets it (see their
+comment): REASSIGN puts Crimea in Ukraine, CLIP_SOUTH stops Morocco at 27°40' N and CARVE puts the Golan Heights in
+Syria. Lines in dispute that no UN resolution settles (Kashmir, the Kurils) stay as drawn. A ring that comes to a
+country from another feature is joined to the ring it shares a stretch of border with, so no seam is drawn where
+the features met. Western Sahara, the dependencies and the other non-catalog features get no record:
 their rings go into "background", land drawn in the land colour that is no country (so Greenland or Puerto Rico is
 not shown as sea), simplified like a country's. Each outer ring is simplified with Douglas-Peucker at --tolerance
 degrees, keeps at least four points, and is dropped when its simplified area is under MIN_RING_AREA square degrees
@@ -82,6 +85,7 @@ OUT_NEIGHBOURS_KT = REPO / 'app/src/main/java/com/example/data/model/Neighbours.
 DEFAULT_CACHE = Path.home() / '.cache' / 'natural-earth'   # outside the repository: the files are data, never run
 MIRROR = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/'
 COUNTRIES_FILE = 'ne_50m_admin_0_countries.geojson'
+DISPUTED_FILE = 'ne_50m_admin_0_breakaway_disputed_areas.geojson'
 PLACES_FILE = 'ne_10m_populated_places_simple.geojson'
 SOURCE = 'Natural Earth 50m (public domain)'
 FORMAT = 2
@@ -95,6 +99,7 @@ POINT_SIDE = 0.08           # side of that square, degrees
 MIN_RING_POINTS = 4
 FRAME_GAP = 3               # degrees; a ring joins the frame when its bbox comes within this of the frame, both axes
 DECIMALS = 2
+SNAP = 0.01                 # degrees; a point of a disputed area this close to a point of an outline lies on it
 
 # Features whose ISO codes do not name a catalog country: ADM0_A3 -> catalog code. In the current file ISO_A2_EH
 # (or ISO_A2 for Taiwan, whose EH value is "CN-TW") already covers France, Norway, Kosovo, Palestine, South Sudan
@@ -103,15 +108,23 @@ HAND_A3 = {
     'KOS': 'XK', 'FRA': 'FR', 'NOR': 'NO', 'PSX': 'PS', 'SDS': 'SS', 'TWN': 'TW',
     'SOL': 'SO', 'CYN': 'CY',
 }
-# Borders follow the internationally recognised lines, as the catalog's areas do (and as the merges above do).
-# Natural Earth's default admin-0 file is its de facto view; its point-of-view files exist at 1:10m only, so the
-# two places where the 50m file differs for a catalog country are set here, by geometry, and checked by GeoTest:
+# Natural Earth's default admin-0 file is its de facto view; its point-of-view files exist at 1:10m only. Besides the
+# merges above, the three places where the UN does not recognise the line the 50m file draws for a catalog country,
+# and the catalog's area counts the recognised one, are set here, by geometry, and checked by GeoTest:
 # REASSIGN moves a whole polygon of a feature (the one holding the point) to a catalog country: Crimea, a polygon of
-# its own in the RUS feature, to Ukraine (it is joined to Ukraine's mainland ring along their shared line).
+# its own in the RUS feature, to Ukraine (General Assembly resolution 68/262; it is joined to Ukraine's mainland ring
+# along their shared line).
 # CLIP_SOUTH cuts a country's rings at a parallel; the part south of it goes to the background feature named: Morocco
-# stops at 27°40' N, its line with Western Sahara, and the part south of it is Western Sahara's background land.
+# stops at 27°40' N, its line with Western Sahara (a non-self-governing territory on the UN's list), and the part
+# south of it is Western Sahara's background land.
+# CARVE takes an area, Natural Earth's own polygon in DISPUTED_FILE named by its BRK_NAME, out of the ring of the
+# feature that holds it (and the point) and adds it to a catalog country along their shared line: the Golan Heights,
+# which the ISR feature holds up to the 1974 line, to Syria (Security Council resolution 497).
+# Lines in dispute that no UN resolution settles (Kashmir, the Kurils) stay as the 50m file draws them, and the
+# Siachen Glacier, a feature that India and Pakistan both claim, is background land.
 REASSIGN = [('RUS', 'UA', (34.10, 44.95))]     # (ADM0_A3 it is in, catalog code, a point in the polygon: Simferopol)
 CLIP_SOUTH = [('MA', 27 + 40 / 60, 'SAH')]     # (catalog code, latitude, ADM0_A3 of the background feature)
+CARVE = [('ISR', 'Golan Heights', 'SY', (35.69, 32.99))]   # (ADM0_A3 it is in, BRK_NAME, catalog code, a point: Katzrin)
 # Populated places use other ADM0_A3 values than the countries file for a few states.
 CAPITAL_A3 = {'SS': ['SSD', 'SDS'], 'PS': ['PSX'], 'XK': ['KOS']}
 # Capitals the populated places cannot give: the catalog's capital for Palestine is Al Quds (Jerusalem), which the
@@ -367,6 +380,41 @@ def split_at_parallel(ring, lat):
     return [r + [r[0]] if len(r) >= 3 else [] for r in (north, south)]
 
 
+def replace_stretch(ring, area):
+    """The ring with the stretch of its outline that the area runs along replaced by the rest of the area's outline:
+    the ring without the area when the area lies inside it, the two as one ring when it lies outside; closed, and
+    running the ring's way round either way. A point of the area lies on the ring when it is within SNAP of one of the
+    ring's points (Natural Earth's disputed areas are cut from nearly, not exactly, the countries' lines). None unless
+    the area leaves the ring's outline once and comes back once."""
+    pts, edge = _open(ring), _open(area)
+    n, m = len(pts), len(edge)
+
+    def on_ring(p):
+        i = min(range(n), key=lambda k: (pts[k][0] - p[0]) ** 2 + (pts[k][1] - p[1]) ** 2)
+        return i if math.hypot(pts[i][0] - p[0], pts[i][1] - p[1]) <= SNAP else None
+    at = [on_ring(p) for p in edge]
+    starts = [k for k in range(m) if at[k] is None and at[k - 1] is not None]
+    if len(starts) != 1:
+        return None
+    k = starts[0]
+    run = []    # the area's outline away from the ring, from where it leaves the ring to where it comes back
+    while at[k % m] is None:
+        run.append(edge[k % m])
+        k += 1
+    a, b = at[starts[0] - 1], at[k % m]
+    along = {i for i in at if i is not None} - {a, b}
+    between = {(a + i) % n for i in range(1, (b - a) % n)}     # the ring's points from a to b, its way round
+    if a == b or not along:
+        return None
+    if along <= between:            # the area runs along a..b: keep b..a, then on from a to b by the run
+        out = [pts[(b + i) % n] for i in range((a - b) % n + 1)] + run
+    elif not along & between:       # along b..a: keep a..b, then back from b to a by the run
+        out = [pts[(a + i) % n] for i in range((b - a) % n + 1)] + run[::-1]
+    else:
+        return None
+    return out + [out[0]]
+
+
 def inside(point, bbox):
     west, south, east, north = bbox
     lon = point[0] + 360 if east > 180 and point[0] < 0 else point[0]
@@ -478,10 +526,12 @@ def build(cache, tolerance, report):
     catalog = {e['code']: e for e in entries()}
     codes = set(catalog)
     countries_fc = fetch(cache, COUNTRIES_FILE)
+    disputed_fc = fetch(cache, DISPUTED_FILE)
     places_fc = fetch(cache, PLACES_FILE)
 
     raw = {}        # code -> {'rings': [...], 'holes': [...], 'labels': [(area, (x, y))], 'a3': set()}
     other_land = {}  # ADM0_A3 -> outer rings of a feature that is no catalog country: the background land
+    rings_of = {}   # ADM0_A3 -> the list its outer rings went into (a country's or the background feature's)
     hand_used = []
     dropped = []
     moved = []      # (code, polygon) from REASSIGN
@@ -502,11 +552,13 @@ def build(cache, tolerance, report):
         if code is None:
             dropped.append(f"{props.get('ADM0_A3')} {props.get('NAME')}")
             a3 = props['ADM0_A3']
-            joined[a3] = joined.get(a3, 0) + add_rings(other_land.setdefault(a3, []), rings)
+            rings_of[a3] = other_land.setdefault(a3, [])
+            joined[a3] = joined.get(a3, 0) + add_rings(other_land[a3], rings)
             continue
         if field == 'ADM0_A3':
             hand_used.append(f"{props['ADM0_A3']} -> {code}")
         entry = raw.setdefault(code, {'rings': [], 'holes': [], 'labels': [], 'a3': set()})
+        rings_of[props['ADM0_A3']] = entry['rings']
         joined[code] = joined.get(code, 0) + add_rings(entry['rings'], rings)
         # An enclave (Lesotho) shares its outline with its host's hole: the holes count for the borders, and the
         # ones whose enclave is drawn are cut out of the host (see holes_of).
@@ -529,10 +581,30 @@ def build(cache, tolerance, report):
                 cut.append(south)
         if not kept or not cut:
             raise SystemExit(f'CLIP_SOUTH: {lat} does not cut {code}')
-        raw[code]['rings'] = kept
+        raw[code]['rings'][:] = kept    # in place: rings_of holds the list
         joined[a3] = joined.get(a3, 0) + add_rings(other_land.setdefault(a3, []), cut)
+    for source, name, target, (lon, lat) in CARVE:
+        areas = [f for f in disputed_fc['features'] if f['properties'].get('BRK_NAME') == name]
+        if len(areas) != 1 or areas[0]['geometry']['type'] != 'Polygon':
+            raise SystemExit(f'CARVE: {len(areas)} features of {DISPUTED_FILE} are a polygon named {name}; expected one')
+        area = areas[0]['geometry']['coordinates'][0]
+        holder = rings_of[source]
+        hits = [i for i, ring in enumerate(holder) if ring_contains(ring, lon, lat)]
+        if not ring_contains(area, lon, lat) or len(hits) != 1:
+            raise SystemExit(f'CARVE: {name} or not exactly one ring of {source} holds {lon}, {lat}')
+        rest = replace_stretch(holder[hits[0]], area)
+        # The target's ring that the area runs along: the one with the most of its points.
+        rings = raw[target]['rings']
+        best = max(range(len(rings)), key=lambda i: sum(
+            min(math.hypot(p[0] - q[0], p[1] - q[1]) for q in rings[i]) <= SNAP for p in area))
+        grown = replace_stretch(rings[best], area)
+        if rest is None or grown is None or ring_contains(rest, lon, lat) or not ring_contains(grown, lon, lat):
+            raise SystemExit(f'CARVE: {name} does not leave {source} and join {target} along one stretch each')
+        holder[hits[0]] = rest
+        rings[best] = grown
     report.append(f'recognised lines: {", ".join(f"{s} polygon at {p} -> {t}" for s, t, p in REASSIGN)}; '
-                  f'{", ".join(f"{c} cut at {lat:.4f} N, the rest to {a3}" for c, lat, a3 in CLIP_SOUTH)}')
+                  f'{", ".join(f"{c} cut at {lat:.4f} N, the rest to {a3}" for c, lat, a3 in CLIP_SOUTH)}; '
+                  f'{", ".join(f"{n} out of {s}, into {t}" for s, n, t, _ in CARVE)}')
     report.append(f'rings joined along a shared border: {", ".join(f"{k} {v}" for k, v in sorted(joined.items()) if v) or "none"}')
 
     capitals = {}   # code -> [candidate]
