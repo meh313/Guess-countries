@@ -72,7 +72,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -137,7 +137,7 @@ fun FlashcardScreen(
     val speechAvailable by viewModel.speechAvailable.collectAsStateWithLifecycle()
     val speechState by viewModel.speechState.collectAsStateWithLifecycle()
     val onInstallVoiceData = { viewModel.installVoiceData(); Unit }
-    val resources = LocalResources.current
+    val context = LocalContext.current
     // Bind the speech engine only once a screen that can speak is shown.
     LaunchedEffect(Unit) { viewModel.prepareSpeech() }
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
@@ -177,7 +177,7 @@ fun FlashcardScreen(
             speechState = speechState,
             onInstallVoiceData = onInstallVoiceData,
             onFlip = { viewModel.flipStudyCard() },
-            onSpeak = { code -> countriesByCode[code]?.let { viewModel.speakCountryDetails(it, CountrySummary.spoken(resources, it)) } },
+            onSpeak = { code -> countriesByCode[code]?.let { viewModel.speakCountryDetails(it, CountrySummary.spoken(context, it)) } },
             onGrade = { grade ->
                 viewModel.stopSpeaking()
                 viewModel.gradeStudyCard(grade)
@@ -336,7 +336,7 @@ fun FlashcardScreen(
                 speechState = speechState,
                 onInstallVoiceData = onInstallVoiceData,
                 onFlip = { flippedCode = if (isFlipped) null else currentCountry.code },
-                onSpeak = { viewModel.speakCountryDetails(currentCountry, CountrySummary.spoken(resources, currentCountry)) },
+                onSpeak = { viewModel.speakCountryDetails(currentCountry, CountrySummary.spoken(context, currentCountry)) },
                 modifier = cardModifier
             )
         },

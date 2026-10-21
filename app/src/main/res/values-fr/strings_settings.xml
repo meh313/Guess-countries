@@ -36,7 +36,7 @@
     <string name="settings_haptics_detail">Une brève vibration pour une bonne ou mauvaise réponse</string>
     <string name="settings_section_speech">Lecture à voix haute</string>
     <string name="settings_speech_loading">Démarrage du moteur vocal…</string>
-    <string name="settings_speech_ready">Prêt. Le haut-parleur sur la fiche d\'un pays et sur les cartes mémoire lit le pays à voix haute.</string>
+    <string name="settings_speech_ready">Prêt. Le haut-parleur sur la fiche d\'un pays et sur les cartes mémoire lit le pays à voix haute, en anglais.</string>
     <string name="settings_speech_missing_data">Le moteur vocal n\'a pas de données vocales en anglais, rien ne peut donc être lu pour l\'instant.</string>
     <string name="settings_speech_unavailable">Cet appareil n\'a pas de moteur vocal, rien ne peut donc être lu à voix haute.</string>
     <string name="settings_speech_install">Installer des données vocales</string>

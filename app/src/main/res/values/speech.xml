@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        The words around the facts when a country is read aloud (CountrySummary). English in every language of the
+        screens: the voice is English (AndroidSpeech asks the engine for English) and so are the names, capitals and
+        facts it reads, so a translated frame would be read in the wrong accent. Not translated, which is why this is
+        not one of the strings*.xml files tools/strings-audit.py checks.
+    -->
+    <string name="speech_name" translatable="false">%1$s.</string>
+    <string name="speech_capital_and_continent" translatable="false">Capital is %1$s, located in %2$s.</string>
+    <string name="speech_continent" translatable="false">Located in %1$s.</string>
+</resources>

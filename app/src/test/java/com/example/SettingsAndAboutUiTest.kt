@@ -206,7 +206,7 @@ class SettingsAndAboutUiTest {
         state.value = Speech.State.READY
         rule.waitForIdle()
         rule.onNodeWithTag("settings_install_voice_btn").assertDoesNotExist()
-        rule.onNodeWithText("Ready. The speaker on a country's detail sheet and on the flashcards reads the country aloud.").assertExists()
+        rule.onNodeWithText("Ready. The speaker on a country's detail sheet and on the flashcards reads the country aloud in English.").assertExists()
 
         state.value = Speech.State.UNAVAILABLE
         rule.waitForIdle()

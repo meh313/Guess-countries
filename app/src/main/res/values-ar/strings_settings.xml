@@ -39,7 +39,7 @@
     <string name="settings_haptics_detail">اهتزازة قصيرة عند الإجابة الصحيحة أو الخاطئة</string>
     <string name="settings_section_speech">القراءة بصوت عالٍ</string>
     <string name="settings_speech_loading">جارٍ تشغيل محرك النطق…</string>
-    <string name="settings_speech_ready">جاهز. زر السماعة في ورقة تفاصيل الدولة وفي البطاقات يقرأ الدولة بصوت عالٍ.</string>
+    <string name="settings_speech_ready">جاهز. زر السماعة في ورقة تفاصيل الدولة وفي البطاقات يقرأ الدولة بصوت عالٍ بالإنجليزية.</string>
     <string name="settings_speech_missing_data">لا يملك محرك النطق بيانات صوت إنجليزية، لذا لا يمكن قراءة شيء بعد.</string>
     <string name="settings_speech_unavailable">لا يوجد محرك نطق على هذا الجهاز، لذا لا يمكن قراءة شيء بصوت عالٍ.</string>
     <string name="settings_speech_install">تثبيت بيانات الصوت</string>

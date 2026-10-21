@@ -36,7 +36,7 @@
     <string name="settings_haptics_detail">Una vibración breve al acertar o fallar</string>
     <string name="settings_section_speech">Leer en voz alta</string>
     <string name="settings_speech_loading">Iniciando el motor de voz…</string>
-    <string name="settings_speech_ready">Listo. El altavoz en la ficha de un país y en las tarjetas lee el país en voz alta.</string>
+    <string name="settings_speech_ready">Listo. El altavoz en la ficha de un país y en las tarjetas lee el país en voz alta, en inglés.</string>
     <string name="settings_speech_missing_data">El motor de voz no tiene datos de voz en inglés, así que aún no se puede leer nada en voz alta.</string>
     <string name="settings_speech_unavailable">Este dispositivo no tiene motor de voz, así que no se puede leer nada en voz alta.</string>
     <string name="settings_speech_install">Instalar datos de voz</string>

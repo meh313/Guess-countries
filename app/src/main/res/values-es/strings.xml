@@ -145,11 +145,6 @@
     <!-- Shown once when a database write failed (see WriteErrors) -->
     <string name="write_error">No se pudo guardar tu último cambio. Exporta tu progreso desde Ajustes e inténtalo más tarde.</string>
 
-    <!-- The spoken country summary -->
-    <string name="speech_name">%1$s.</string>
-    <string name="speech_capital_and_continent">Su capital es %1$s y está en %2$s.</string>
-    <string name="speech_continent">Está en %1$s.</string>
-
     <!-- The home-screen widget. -->
     <string name="widget_label">Repasos de hoy</string>
     <string name="widget_description">Cuántos repasos hay pendientes, tu racha y un botón Practicar</string>

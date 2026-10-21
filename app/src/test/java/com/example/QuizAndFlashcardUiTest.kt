@@ -819,7 +819,7 @@ class QuizAndFlashcardUiTest {
         engine.onInitListener.onInit(TextToSpeech.SUCCESS)
         rule.waitForIdle()
         val vm = ViewModelProvider(rule.activity)[CountryViewModel::class.java]
-        vm.repository.allCountries.first().let { vm.speakCountryDetails(it, CountrySummary.spoken(rule.activity.resources, it)) }
+        vm.repository.allCountries.first().let { vm.speakCountryDetails(it, CountrySummary.spoken(rule.activity, it)) }
         assertFalse("speech should be running", engine.isStopped)
 
         rotate()

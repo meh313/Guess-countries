@@ -94,7 +94,8 @@ strings*.xml`, one file per screen plus the shared one, translated in `values-fr
 same keys, the same placeholders, every plural quantity the language needs. The layout mirrors in Arabic. The
 translations were made with machine help and checked for consistency, not by native speakers; corrections are
 welcome. The catalog itself (names, capitals, flag texts, facts) is English, and typed answers are matched against
-English names and short forms.
+English names and short forms. Read aloud is English in every language, like the voice it asks the engine for and the
+facts it reads: the few words around them (`values/speech.xml`) are not translated.
 
 ## Privacy
 

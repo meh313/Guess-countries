@@ -18,7 +18,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import android.content.Context
-import android.content.res.Resources
 import androidx.test.core.app.ApplicationProvider
 import com.example.speech.Speech
 import com.example.ui.CountrySummary
@@ -48,7 +47,7 @@ class CountryViewModelSpeechTest {
     }
 
     private val country get() = vm.repository.allCountries.first { it.isSovereign }
-    private val resources: Resources get() = ApplicationProvider.getApplicationContext<Context>().resources
+    private val context: Context get() = ApplicationProvider.getApplicationContext()
 
     @Test
     fun theEngineIsNotStartedUntilAScreenAsksForSpeech() {
@@ -81,7 +80,7 @@ class CountryViewModelSpeechTest {
     fun speakCountryDetails_sendsTheSummaryWithAnIdForThatCountry() {
         speech.setAvailable(true)
 
-        vm.speakCountryDetails(country, CountrySummary.spoken(resources, country))
+        vm.speakCountryDetails(country, CountrySummary.spoken(context, country))
 
         val (text, id) = speech.spoken.single()
         assertTrue("text was: $text", text.startsWith("${country.name}. Capital is ${country.capital}"))
@@ -92,13 +91,46 @@ class CountryViewModelSpeechTest {
     @Test
     fun spoken_saysHowToSpotTheFlag_betweenThePlaceAndTheFunFact_onlyWhenThereIsACue() {
         val cue = "Three vertical bands: blue at the pole, then white, then red."
-        val place = "Capital is ${country.capital}, located in ${resources.continentLabel(country.continent)}."
+        val place = "Capital is ${country.capital}, located in ${context.resources.continentLabel(country.continent)}."
 
-        val withCue = CountrySummary.spoken(resources, country.copy(spotIt = cue))
-        val withoutCue = CountrySummary.spoken(resources, country.copy(spotIt = ""))
+        val withCue = CountrySummary.spoken(context, country.copy(spotIt = cue))
+        val withoutCue = CountrySummary.spoken(context, country.copy(spotIt = ""))
 
         assertEquals("${country.name}. $place $cue ${country.funFact}", withCue)
         assertEquals("${country.name}. $place ${country.funFact}", withoutCue)
+    }
+
+    /** Kenya's summary as the English voice reads it, whatever the language of the screens. */
+    private fun assertKenyaIsReadInEnglish() {
+        val kenya = vm.repository.allCountries.single { it.code == "KE" }
+
+        val text = CountrySummary.spoken(context, kenya)
+
+        assertEquals("Kenya. Capital is Nairobi, located in Africa. ${kenya.spotIt} ${kenya.funFact}", text)
+    }
+
+    @Test
+    @Config(qualifiers = "fr")
+    fun spoken_isEnglish_whenTheScreensAreInFrench() {
+        // The screens are French (the continent chip says "Afrique"), the voice and the facts are English.
+        assertEquals("Afrique", context.resources.continentLabel("Africa"))
+        assertKenyaIsReadInEnglish()
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun spoken_isEnglish_whenTheScreensAreInGerman() {
+        assertEquals("Afrika", context.resources.continentLabel("Africa"))
+        assertKenyaIsReadInEnglish()
+    }
+
+    @Test
+    @Config(qualifiers = "ar")
+    fun spoken_isEnglish_whenTheScreensAreInArabic_withNoArabicScriptForTheEnglishVoice() {
+        assertEquals("أفريقيا", context.resources.continentLabel("Africa"))
+        assertKenyaIsReadInEnglish()
+        val text = CountrySummary.spoken(context, country)
+        assertFalse(text, text.any { it in '\u0600'..'\u06FF' })
     }
 
     @Test
@@ -106,7 +138,7 @@ class CountryViewModelSpeechTest {
         speech.setAvailable(true)
         val antarctica = vm.repository.allCountries.single { it.code == "AQ" }
 
-        vm.speakCountryDetails(antarctica, CountrySummary.spoken(resources, antarctica))
+        vm.speakCountryDetails(antarctica, CountrySummary.spoken(context, antarctica))
 
         val text = speech.spoken.single().first
         // No capital, no currency: the name, how to spot the flag, and the fact.
@@ -116,7 +148,7 @@ class CountryViewModelSpeechTest {
 
     @Test
     fun speakCountryDetails_saysNothingWhileSpeechIsUnavailable() {
-        vm.speakCountryDetails(country, CountrySummary.spoken(resources, country))
+        vm.speakCountryDetails(country, CountrySummary.spoken(context, country))
 
         assertTrue(speech.spoken.isEmpty())
     }

@@ -57,7 +57,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.selected
@@ -118,7 +118,7 @@ fun ExploreScreen(
     val continents = listOf("All", "Africa", "Americas", "Asia", "Europe", "Oceania", "Antarctica")
     var showSortMenu by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
-    val resources = LocalResources.current
+    val context = LocalContext.current
     val sortBy by viewModel.sortBy.collectAsStateWithLifecycle()
 
     // One scrolling grid: the banner and the controls are full-width items. That keeps countries
@@ -427,7 +427,7 @@ fun ExploreScreen(
             skillStates = if (country.isSovereign) Skill.entries.associateWith { skills[it]?.get(country.code) } else emptyMap(),
             now = now,
             onDismiss = { viewModel.selectCountry(null) },
-            onSpeak = { viewModel.speakCountryDetails(country, CountrySummary.spoken(resources, country)) },
+            onSpeak = { viewModel.speakCountryDetails(country, CountrySummary.spoken(context, country)) },
             speechAvailable = speechAvailable,
             speechState = speechState,
             onInstallVoiceData = { viewModel.installVoiceData() },

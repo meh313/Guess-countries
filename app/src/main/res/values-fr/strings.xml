@@ -145,11 +145,6 @@
     <!-- Affiché une fois quand une écriture en base a échoué (voir WriteErrors) -->
     <string name="write_error">Votre dernière modification n\'a pas pu être enregistrée. Exportez votre progression depuis les Paramètres et réessayez plus tard.</string>
 
-    <!-- Le résumé du pays lu à voix haute -->
-    <string name="speech_name">%1$s.</string>
-    <string name="speech_capital_and_continent">La capitale est %1$s. Continent : %2$s.</string>
-    <string name="speech_continent">Continent : %1$s.</string>
-
     <!-- Le widget d'écran d'accueil. -->
     <string name="widget_label">Révisions du jour</string>
     <string name="widget_description">Le nombre de révisions à faire, votre série et un bouton S\'entraîner</string>
