@@ -6,7 +6,8 @@ import org.json.JSONObject
 /**
  * The web pages each country's facts were checked against, from the asset `sources.json` that
  * `tools/export-sources.py` writes out of `content/research` and `content/audit`. Read once, on first use, off the
- * main thread by the caller. Countries of the first catalog have no research records and are not in the file.
+ * main thread by the caller. Countries of the first catalog have no research records, so they are in the file only
+ * when an audit fix for them cites a source.
  */
 class CountrySources private constructor(private val byCode: Map<String, List<String>>) {
     /** The URLs for [code], in the order they were first cited; empty when none are on record. */

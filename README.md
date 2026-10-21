@@ -41,9 +41,10 @@ has no network permission.
   quizzes (normal, relaxed, no limit), sound effects and vibration for quiz answers (both on until switched off),
   *Export* and *Import* of all progress and settings as a JSON file, a reset of
   all progress, and an About page with where the facts come from, the catalog's rules, the licences and the privacy
-  terms. A country's detail sheet lists the pages its facts were checked against (`Sources`), for the countries that
-  went through the research pass, and a *Your progress* row per skill; every country card carries two pips (flag,
-  capital) and Explore has Unseen / Learning / Mastered chips, which a tap on a continent on the Progress screen sets.
+  terms. A country's detail sheet lists the pages its facts were checked against (`Sources`), for the countries with
+  research or audit records that cite one, and a *Your progress* row per skill; every country card carries two pips
+  (flag, capital) and Explore has Unseen / Learning / Mastered chips, which a tap on a continent on the Progress
+  screen sets.
 - **Progress** – the Today card (what is due, what you learnt today, the daily goal), a practice streak (a day
   counts when its sessions reach the goal or one of them has ten items; days follow the device's time zone), an
   optional daily reminder (an inexact alarm wakes the app at the time you pick and posts a notification, only on

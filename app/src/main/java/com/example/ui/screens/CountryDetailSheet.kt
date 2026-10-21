@@ -110,7 +110,7 @@ fun CountryDetailSheet(
     /** Where the speech engine stands: a spinner while it loads, an install action when it lacks voice data. */
     speechState: Speech.State = if (speechAvailable) Speech.State.READY else Speech.State.IDLE,
     onInstallVoiceData: () -> Unit = {},
-    /** The web pages this country's facts were checked against; empty for the first catalog's countries. */
+    /** The web pages this country's facts were checked against; empty when none are on record. */
     sources: List<String> = emptyList(),
     /** The player's state per skill (null where never reviewed); empty hides the progress row (Antarctica). */
     skillStates: Map<Skill, SkillState?> = emptyMap(),

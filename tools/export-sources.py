@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Writes app/src/main/assets/sources.json: for every country with research or audit records, the URLs its facts
-were checked against, deduplicated and in first-seen order. Countries from the first catalog (no research files)
-are left out, and the app shows no Sources row for them.
+were checked against, deduplicated and in first-seen order. A country of the first catalog (no research files) is in
+the file only when an audit fix for it cites a source; one with no such fix is left out, and the app shows no
+Sources row for it.
 
 Usage: tools/export-sources.py [--check]   (--check fails when the committed file is out of date)
 """
