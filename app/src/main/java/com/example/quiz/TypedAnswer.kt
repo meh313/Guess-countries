@@ -2,23 +2,30 @@ package com.example.quiz
 
 import com.example.data.model.Country
 import com.example.data.model.CountryAliases
+import com.example.data.model.CountryCatalog
 import com.example.data.model.searchKey
 
 /**
  * Whether a typed name is the country's. Accents, case, punctuation and "Saint"/"St" do not matter (see [searchKey]);
  * the catalog's name, its official name and its aliases ("UK", "Burma") all count; and from five letters on, one
  * typo (a letter wrong, missing or extra) is forgiven, so "Phillipines" passes and "Iran" does not stand for "Iraq".
+ * A typo is never another country's name, official name or alias written out: "Iceland" does not stand for
+ * "Ireland", nor "Zambia" for "Gambia", while "Irelend" still passes.
  */
 object TypedAnswer {
     /** Keys this long or longer are accepted with one edit of difference. */
     const val FORGIVE_FROM = 5
+
+    /** The keys a typed answer may equal for any entry of the catalog: what is one of them names that entry. */
+    private val catalogKeys: Set<String> by lazy { CountryCatalog.all.flatMapTo(HashSet()) { acceptedKeys(it) } }
 
     fun matches(input: String, country: Country): Boolean {
         val key = searchKey(input)
         if (key.isEmpty()) return false
         val accepted = acceptedKeys(country)
         if (key in accepted) return true
-        if (key.length < FORGIVE_FROM) return false
+        // Not one of the country's own keys but another's exactly: the player named that country, so no typo is forgiven.
+        if (key.length < FORGIVE_FROM || key in catalogKeys) return false
         return accepted.any { it.length >= FORGIVE_FROM && editDistance(key, it) <= 1 }
     }
 
