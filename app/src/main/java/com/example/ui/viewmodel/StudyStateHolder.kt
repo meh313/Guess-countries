@@ -119,8 +119,8 @@ class StudyStateHolder(
         val settled = session.settle()
         write(pending, session.skill)
         _session.value = settled
-        // The summary already shows the outcome worked out for it.
-        save(settled, showOutcome = false)
+        // The summary keeps the outcome worked out for it, unless that was not ready yet.
+        save(settled, showOutcome = _outcome.value == null)
     }
 
     /** Leaves the summary (settling it) or an unfinished session (writing its pending grade, without logging it). */

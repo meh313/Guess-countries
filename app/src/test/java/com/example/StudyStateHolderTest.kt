@@ -244,6 +244,18 @@ class StudyStateHolderTest {
     }
 
     @Test
+    fun aSummaryLeftBeforeItsOutcomeIsWorkedOut_stillGetsOne() {
+        val holder = holder(SavedStateHandle())
+        holder.start(StudySession.DECK, twelve.take(10))
+        repeat(10) { holder.flipAndGrade(Grade.GOOD) }
+        // At once, while the preview may still be reading the log.
+        holder.settle()
+
+        assertEquals(PracticeStreak.Kind.STARTED, holder.awaitOutcome().kind)
+        assertEquals(1, logged().size)
+    }
+
+    @Test
     fun leavingTheSummary_orStartingAnother_settlesIt_butDiscardingWritesNothing() {
         val holder = holder(SavedStateHandle())
         holder.start(StudySession.DECK, twelve.take(5))
