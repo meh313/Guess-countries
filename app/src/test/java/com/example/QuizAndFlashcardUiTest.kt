@@ -719,7 +719,10 @@ class QuizAndFlashcardUiTest {
         rule.waitForIdle()
         tab("flashcards")
 
-        rule.onNodeWithText("Card 1 of ${allCountries.count { it.continent == continent }}").assertIsDisplayed()
+        // The deck follows the filtered list, which the view model recomputes off the main thread.
+        rule.eventually("the continent's deck") {
+            rule.onNodeWithText("Card 1 of ${allCountries.count { it.continent == continent }}").assertIsDisplayed()
+        }
         rule.onNodeWithText("Flag meaning").assertDoesNotExist()
         rule.onNodeWithText("Tap to reveal the country name & capital").assertIsDisplayed()
     }
@@ -762,7 +765,8 @@ class QuizAndFlashcardUiTest {
         rule.waitForIdle()
         tab("flashcards")
 
-        rule.onNodeWithText("Card 2 of ${americas.size}").assertIsDisplayed()
+        // The deck follows the filtered list, which the view model recomputes off the main thread.
+        rule.eventually("the Americas deck") { rule.onNodeWithText("Card 2 of ${americas.size}").assertIsDisplayed() }
     }
 
     @Test
@@ -890,7 +894,10 @@ class QuizAndFlashcardUiTest {
         tab("flashcards")
 
         rule.onNodeWithTag("flashcard_filter_notice").assertIsDisplayed()
-        rule.onNodeWithText("Card 1 of ${allCountries.count { it.continent == "Europe" }}").assertIsDisplayed()
+        // The deck follows the filtered list, which the view model recomputes off the main thread.
+        rule.eventually("the Europe deck") {
+            rule.onNodeWithText("Card 1 of ${allCountries.count { it.continent == "Europe" }}").assertIsDisplayed()
+        }
 
         rule.onNodeWithTag("flashcard_clear_filters_btn").performClick()
         rule.waitForIdle()
@@ -907,7 +914,10 @@ class QuizAndFlashcardUiTest {
 
         tab("flashcards")
 
-        rule.onNodeWithText("No flashcards available for current filters.").assertIsDisplayed()
+        // The deck follows the filtered list, which the view model recomputes off the main thread.
+        rule.eventually("the empty deck") {
+            rule.onNodeWithText("No flashcards available for current filters.").assertIsDisplayed()
+        }
         rule.onNodeWithTag("flashcard_empty_clear_filters_btn").performClick()
         rule.waitForIdle()
         // The deck refills from the filtered list, which the view model recomputes off the main thread.
