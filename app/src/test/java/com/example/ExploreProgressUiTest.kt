@@ -34,6 +34,8 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.core.app.ActivityOptionsCompat
+import android.speech.tts.TextToSpeech
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.core.app.ApplicationProvider
 import com.example.data.local.AppDatabase
@@ -67,6 +69,7 @@ import com.example.ui.screens.SettingsScreen
 import com.example.ui.theme.WorldFlagsTheme
 import com.example.ui.viewmodel.CountryViewModel
 import java.io.File
+import java.util.Locale
 import java.util.TimeZone
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -78,7 +81,9 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowTextToSpeech
 
 /** Per-country progress on Explore and in the detail sheet, and the way there from Progress, in the real activity. */
 @RunWith(RobolectricTestRunner::class)
@@ -253,6 +258,33 @@ class ExploreProgressUiTest {
         rule.waitForIdle()
         rule.onNodeWithTag("speak_country_btn").assertIsEnabled()
         rule.onNodeWithContentDescription("Read country summary aloud").assertIsDisplayed()
+    }
+
+    @Test
+    fun backFromTheVoiceDataInstaller_theSheetsSpeakerWorks() {
+        rule.onNodeWithTag("explore_grid").performScrollToNode(hasTestTag(card("FR")))
+        rule.onNodeWithTag(card("FR")).performClick()
+        rule.waitForIdle()
+        // An engine with no English voice data: the sheet offers the installer in the speaker's place.
+        val first = ShadowTextToSpeech.getLastTextToSpeechInstance()
+        shadowOf(first).onInitListener.onInit(TextToSpeech.SUCCESS)
+        rule.waitForIdle()
+        rule.onNodeWithTag("speak_country_install_btn").performClick()
+        rule.waitForIdle()
+        assertTrue("the engine is let go while the installer runs", shadowOf(first).isShutdown)
+
+        // The installer covers the app, the data is installed, the player comes back to the open sheet.
+        rule.activityRule.scenario.moveToState(Lifecycle.State.STARTED)
+        ShadowTextToSpeech.addLanguageAvailability(Locale.US)
+        rule.activityRule.scenario.moveToState(Lifecycle.State.RESUMED)
+        rule.waitForIdle()
+
+        val second = ShadowTextToSpeech.getLastTextToSpeechInstance()
+        assertTrue("coming back binds a fresh engine", second !== first)
+        shadowOf(second).onInitListener.onInit(TextToSpeech.SUCCESS)
+        rule.waitForIdle()
+        rule.onNodeWithTag("speak_country_btn").assertIsEnabled()
+        rule.onAllNodesWithTag("speak_country_install_btn").assertCountEquals(0)
     }
 
     @Test

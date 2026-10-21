@@ -57,7 +57,6 @@ import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -138,8 +137,9 @@ fun FlashcardScreen(
     val speechState by viewModel.speechState.collectAsStateWithLifecycle()
     val onInstallVoiceData = { viewModel.installVoiceData(); Unit }
     val context = LocalContext.current
-    // Bind the speech engine only once a screen that can speak is shown.
-    LaunchedEffect(Unit) { viewModel.prepareSpeech() }
+    // Bind the speech engine only once a screen that can speak is shown, and again on every return to it, as from the
+    // voice-data installer, which lets the engine go (prepare is a no-op while the engine is up).
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.prepareSpeech() }
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val selectedContinent by viewModel.selectedContinent.collectAsStateWithLifecycle()
     val showOnlyBookmarks by viewModel.showOnlyBookmarks.collectAsStateWithLifecycle()

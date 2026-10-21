@@ -35,6 +35,7 @@ import kotlinx.coroutines.runBlocking
 import android.speech.tts.TextToSpeech
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import com.example.quiz.QuizDifficulty
 import com.example.quiz.QuizMode
@@ -827,6 +828,32 @@ class QuizAndFlashcardUiTest {
 
         tab("quiz")
         assertTrue("changing tab stops the speech", engine.isStopped)
+    }
+
+    @Test
+    fun backFromTheVoiceDataInstaller_theFlashcardSpeakerWorks() {
+        // An engine with no English voice data: the back of the card offers the installer.
+        tab("flashcards")
+        val first = ShadowTextToSpeech.getLastTextToSpeechInstance()
+        shadowOf(first).onInitListener.onInit(TextToSpeech.SUCCESS)
+        rule.onNodeWithTag("flashcard_flip_card").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithTag("flashcard_install_voice_btn").performClick()
+        rule.waitForIdle()
+        assertTrue("the engine is let go while the installer runs", shadowOf(first).isShutdown)
+
+        // The installer covers the app, the data is installed, the player comes back to the same card.
+        rule.activityRule.scenario.moveToState(Lifecycle.State.STARTED)
+        ShadowTextToSpeech.addLanguageAvailability(Locale.US)
+        rule.activityRule.scenario.moveToState(Lifecycle.State.RESUMED)
+        rule.waitForIdle()
+
+        val second = ShadowTextToSpeech.getLastTextToSpeechInstance()
+        assertTrue("coming back binds a fresh engine", second !== first)
+        shadowOf(second).onInitListener.onInit(TextToSpeech.SUCCESS)
+        rule.waitForIdle()
+        rule.onNodeWithTag("flashcard_speak_btn").assertIsEnabled()
+        rule.onAllNodesWithTag("flashcard_install_voice_btn").assertCountEquals(0)
     }
 
     @Test

@@ -46,7 +46,8 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -416,8 +417,9 @@ fun ExploreScreen(
 
     // Modal Bottom Sheet when country selected
     selectedCountry?.let { country ->
-        // Bind the speech engine only once the user can actually ask for it.
-        LaunchedEffect(Unit) { viewModel.prepareSpeech() }
+        // Bind the speech engine only once the user can actually ask for it, and again on every return to the sheet, as
+        // from the voice-data installer, which lets the engine go (prepare is a no-op while the engine is up).
+        LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.prepareSpeech() }
         val sources by viewModel.sources.collectAsStateWithLifecycle()
         val allByCode = remember(viewModel) { viewModel.repository.allCountries.associateBy { it.code } }
         CountryDetailSheet(
