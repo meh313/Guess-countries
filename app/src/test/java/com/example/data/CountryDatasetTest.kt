@@ -197,6 +197,12 @@ class CountryDatasetTest {
     }
 
     @Test
+    fun francesPopulationIsTheUnEstimateForFrance() {
+        // The first catalog had 68.8M, about 3% above the UN WPP 2024 figure for 2024 (66,548,530).
+        assertEquals(66_500_000L, country("FR").population)
+    }
+
+    @Test
     fun onlyAntarcticaHasNoCapital() {
         assertEquals(listOf("AQ"), allCountries.filter { it.capital.startsWith("None") }.map { it.code })
     }

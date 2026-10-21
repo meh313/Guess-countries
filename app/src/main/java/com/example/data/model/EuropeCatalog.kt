@@ -229,7 +229,7 @@ object EuropeCatalog {
             capital = "Paris",
             continent = "Europe",
             subregion = "Western Europe",
-            population = 68800000L,
+            population = 66500000L,
             areaSqKm = 643801.0,
             flagEmoji = "🇫🇷",
             flagColors = listOf("Blue", "White", "Red"),

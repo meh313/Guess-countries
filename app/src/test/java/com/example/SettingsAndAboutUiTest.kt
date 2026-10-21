@@ -414,10 +414,12 @@ class SettingsAndAboutUiTest {
         rule.onNodeWithTag("sheet_sources").assertExists()
         rule.onNodeWithText(urls.first()).performScrollTo().assertIsDisplayed()
 
+        // Germany is in the first catalog and has had no fix with a source since.
+        assertTrue(viewModel.sources.value!!.of("DE").isEmpty())
         viewModel.selectCountry(null)
         rule.waitForIdle()
-        rule.onNodeWithTag("explore_grid").performScrollToNode(hasTestTag("country_card_fr"))
-        rule.onNodeWithTag("country_card_fr").performClick()
+        rule.onNodeWithTag("explore_grid").performScrollToNode(hasTestTag("country_card_de"))
+        rule.onNodeWithTag("country_card_de").performClick()
         rule.waitForIdle()
         rule.onNodeWithTag("sheet_sources_btn").assertDoesNotExist()
     }
