@@ -21,11 +21,11 @@ OUT = ROOT / "app" / "src" / "main" / "assets" / "NOTICES.txt"
 # this on the About screen); the section heading is the fallback.
 USED_FOR = {
     "flag-icons": "the flag images; every flag in the app is rendered from its SVG files.",
-    "Natural Earth": "the world map; the country outlines, the other land, label points and capitals are derived from "
-                     "its data, simplified and adjusted to the app's countries: Somaliland, Northern Cyprus and Åland "
-                     "are merged into Somalia, Cyprus and Finland, Crimea is drawn in Ukraine, the Golan Heights in "
-                     "Syria and Morocco without Western Sahara, land that is none of the app's countries is drawn as "
-                     "plain land, and Palestine's capital is placed in East Jerusalem.",
+    "Natural Earth": "the world map. The country outlines, the other land, label points and capitals are derived "
+                     "from its data, simplified and adjusted to the app's countries: Somaliland, Northern Cyprus and "
+                     "Åland are merged into Somalia, Cyprus and Finland; Crimea is drawn in Ukraine; the Golan Heights "
+                     "are drawn in Syria; Morocco is drawn without Western Sahara; land that is none of the app's "
+                     "countries is drawn as plain land; and Palestine's capital is placed in East Jerusalem.",
 }
 
 # Works that are not in the markdown file because nothing of theirs is copied into the repository: the libraries the
