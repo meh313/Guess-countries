@@ -599,8 +599,10 @@ class CountryViewModel(
         sortBy.value = SortOption.NAME
     }
 
+    /** Opens [country]'s sheet, or closes it with null. Closing it, or moving it to another country, stops the reading. */
     fun selectCountry(country: Country?) {
-        if (country == null) stopSpeaking()
+        val shown = selectedCountry.value
+        if (country == null || (shown != null && shown.code != country.code)) stopSpeaking()
         selectedCountry.value = country
     }
 

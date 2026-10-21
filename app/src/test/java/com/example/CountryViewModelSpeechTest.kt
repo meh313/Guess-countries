@@ -172,6 +172,20 @@ class CountryViewModelSpeechTest {
     }
 
     @Test
+    fun movingTheSheetToANeighbour_stopsReadingTheCountryBefore() {
+        val neighbour = vm.repository.allCountries.first { it.isSovereign && it.code != country.code }
+        vm.selectCountry(country)
+
+        vm.selectCountry(neighbour)
+
+        assertEquals(1, speech.stopCalls)
+        assertEquals(neighbour, vm.selectedCountry.value)
+        // The same country again leaves its reading alone.
+        vm.selectCountry(neighbour)
+        assertEquals(1, speech.stopCalls)
+    }
+
+    @Test
     fun stopSpeaking_stopsTheEngine() {
         vm.stopSpeaking()
 

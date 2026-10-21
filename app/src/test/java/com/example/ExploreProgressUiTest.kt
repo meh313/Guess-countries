@@ -74,6 +74,7 @@ import java.util.TimeZone
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -353,6 +354,43 @@ class ExploreProgressUiTest {
         rule.onNode(hasScrollAction() and hasTestTag("country_detail_sheet_jp")).performScrollToNode(hasTestTag("sheet_no_borders"))
         rule.onNodeWithTag("sheet_no_borders").assert(hasText("No land borders"))
         rule.onAllNodesWithTag("sheet_neighbour_fr").assertCountEquals(0)
+    }
+
+    /** How far the sheet of [code] is scrolled, in pixels. */
+    private fun sheetScroll(code: String): Float =
+        rule.onNode(hasScrollAction() and hasTestTag("country_detail_sheet_$code")).fetchSemanticsNode()
+            .config[SemanticsProperties.VerticalScrollAxisRange].value()
+
+    @Test
+    fun aNeighboursSheet_opensAtTheTopWithItsSourcesClosed_andStopsReadingTheCountryBefore() {
+        ShadowTextToSpeech.addLanguageAvailability(Locale.US)
+        rule.onNodeWithTag("explore_grid").performScrollToNode(hasTestTag(card("BE")))
+        rule.onNodeWithTag(card("BE")).performClick()
+        rule.waitForIdle()
+        val engine = shadowOf(ShadowTextToSpeech.getLastTextToSpeechInstance())
+        engine.onInitListener.onInit(TextToSpeech.SUCCESS)
+        rule.waitForIdle()
+        rule.onNodeWithTag("speak_country_btn").performClick()
+        assertFalse("Belgium is being read", engine.isStopped)
+
+        // Belgium's sources open, then down to its borders.
+        val belgium = rule.onNode(hasScrollAction() and hasTestTag("country_detail_sheet_be"))
+        rule.eventually("Belgium's sources") { belgium.performScrollToNode(hasTestTag("sheet_sources_btn")) }
+        rule.onNodeWithTag("sheet_sources_btn").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithTag("sheet_sources").assertExists()
+        belgium.performScrollToNode(hasTestTag("sheet_neighbour_lu"))
+        assertTrue("scrolled down to the chips", sheetScroll("be") > 0f)
+
+        rule.onNodeWithTag("sheet_neighbour_lu").performClick()
+        rule.waitForIdle()
+
+        // Luxembourg's sheet starts at its flag and name, its own sources closed, and Belgium is no longer read.
+        assertEquals(0f, sheetScroll("lu"))
+        rule.onAllNodesWithTag("sheet_sources").assertCountEquals(0)
+        rule.onNode(hasScrollAction() and hasTestTag("country_detail_sheet_lu")).performScrollToNode(hasTestTag("sheet_sources_btn"))
+        rule.onAllNodesWithTag("sheet_sources").assertCountEquals(0)
+        assertTrue("the reading of Belgium stops under Luxembourg's name", engine.isStopped)
     }
 
     @Test

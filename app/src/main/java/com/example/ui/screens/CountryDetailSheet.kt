@@ -20,7 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -124,7 +124,9 @@ fun CountryDetailSheet(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val context = LocalContext.current
     val resources = LocalResources.current
-    var sourcesOpen by rememberSaveable { mutableStateOf(false) }
+    // A neighbour's chip swaps the country in the same sheet: it opens at its top, its Sources closed, like a new sheet.
+    var sourcesOpen by rememberSaveable(country.code) { mutableStateOf(false) }
+    val scroll = rememberSaveable(country.code, saver = ScrollState.Saver) { ScrollState(initial = 0) }
     val isFavorite = progress?.isFavorite == true
     val compactNumbers = rememberCompactNumberFormat()
     val continentColor = getContinentColor(country.continent)
@@ -139,7 +141,7 @@ fun CountryDetailSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp, vertical = 10.dp)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scroll)
                 .testTag("country_detail_sheet_${country.code.lowercase()}")
         ) {
             // Header Row with Title, Speak Button & Close
