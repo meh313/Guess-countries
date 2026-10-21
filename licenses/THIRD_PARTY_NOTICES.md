@@ -41,10 +41,11 @@ bounding boxes in `app/src/main/java/com/example/data/model/Geo.kt`, are derived
 [Natural Earth](https://www.naturalearthdata.com/) 5.2.0-pre data (the 1:50m Admin 0 countries and breakaway and
 disputed areas and the 1:10m populated places, as published in the GitHub mirror `nvkelso/natural-earth-vector`),
 simplified and adjusted to the catalog by `tools/gen-worldmap.py`, which reproduces them. The adjustments:
-Somaliland, Northern Cyprus and Åland are merged into Somalia, Cyprus and Finland; Crimea is moved into Ukraine and
-Natural Earth's own Golan Heights polygon into Syria; Morocco is cut at 27°40′ N, the part south of the line going to
-Western Sahara; Western Sahara, the dependencies and every other feature that is no catalog country are kept only as
-background land, drawn as land but never as a country; and Palestine's capital is set by hand in East Jerusalem.
+Somaliland, Northern Cyprus and Åland are merged into Somalia, Cyprus and Finland, and the ISR feature into
+Palestine, which is drawn as one outline; Crimea is moved into Ukraine and Natural Earth's own Golan Heights polygon
+into Syria; Morocco is cut at 27°40′ N, the part south of the line going to Western Sahara; Western Sahara, the
+dependencies and every other feature that is no catalog country are kept only as background land, drawn as land but
+never as a country; and Palestine's capital is set by hand in East Jerusalem.
 Natural Earth is in the public domain: no permission is needed and crediting the authors is unnecessary, so this
 notice is a courtesy. Its terms of use (https://www.naturalearthdata.com/about/terms-of-use/) say:
 

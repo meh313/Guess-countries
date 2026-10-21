@@ -136,15 +136,16 @@ class GeoTest {
         assertEquals(27 + 40 / 60.0, box("MA").south, 0.006)
         assertEquals(27 + 40 / 60.0, Geo.of("MA")!!.south, 0.006)
 
-        // Natural Earth's Golan Heights polygon, cut out of its Israel feature: Syria's, in one ring with the rest of
-        // it, and no longer background land; west of it, Israel stays background.
+        // Natural Earth's Golan Heights polygon, cut out of its ISR feature (which is merged into Palestine, see
+        // below): Syria's, in one ring with the rest of it, and no longer background land; west of it, the land is
+        // Palestine's.
         listOf(35.69 to 32.99, 35.77 to 33.27, 35.82 to 33.12).forEach { (lon, lat) -> // Katzrin, Majdal Shams, Quneitra
             assertEquals("($lon, $lat)", listOf("SY"), paintedBy(lon, lat))
             assertFalse("($lon, $lat) is background", background.any { inRing(it, lon, lat) })
             assertTrue(inRing(rings("SY").single { inRing(it, lon, lat) }, 36.29, 33.51)) // with Damascus
         }
-        assertEquals(emptyList<String>(), paintedBy(35.53, 32.79)) // Tiberias
-        assertTrue(background.any { inRing(it, 35.53, 32.79) })
+        assertEquals(listOf("PS"), paintedBy(35.53, 32.79)) // Tiberias
+        assertFalse(background.any { inRing(it, 35.53, 32.79) })
         assertTrue("${box("SY")}", box("SY").west < 35.65)
     }
 
@@ -157,6 +158,38 @@ class GeoTest {
         assertEquals(listOf("FI"), paintedBy(19.94, 60.10)) // Mariehamn
         assertFalse(background.any { inRing(it, 19.94, 60.10) })
         assertTrue("${box("FI")}", box("FI").west < 20.0)
+    }
+
+    @Test
+    fun palestineIsOneOutline_fromGazaToTheLebaneseBorder_withNoBackgroundLandInIt() {
+        // The owner's rule: no other state there. Natural Earth's ISR feature is merged into Palestine and joined to
+        // Gaza and the West Bank along their shared lines, so one ring holds them all and no seam is drawn between
+        // them; the Golan Heights stay Syria's (see above).
+        val ring = rings("PS").single()
+        val places = mapOf(
+            "Gaza" to (34.45 to 31.50), "Hebron" to (35.10 to 31.53), "Ramallah" to (35.20 to 31.90),
+            "Nablus" to (35.26 to 32.22), "Beersheba" to (34.79 to 31.25), "Tel Aviv" to (34.78 to 32.08),
+            "Nazareth" to (35.30 to 32.70), "Safed" to (35.50 to 32.96), "the Negev" to (34.85 to 30.40),
+        )
+        places.forEach { (name, at) ->
+            val (lon, lat) = at
+            assertEquals(name, listOf("PS"), paintedBy(lon, lat))
+            assertTrue("$name is not in Palestine's one ring", inRing(ring, lon, lat))
+            assertFalse("$name is background land", background.any { inRing(it, lon, lat) })
+        }
+        // Its box, frame and label are the whole outline's, and no background land is left in that box.
+        val box = box("PS")
+        assertTrue("$box", box.west < 34.3 && box.south < 29.6 && box.north > 33.2)
+        assertEquals(box, frame("PS"))
+        val label = point("PS", "label")!!
+        assertTrue("label $label", inRing(ring, label.first, label.second))
+        background.forEach { other ->
+            other.forEach { (lon, lat) -> assertFalse("background land at ($lon, $lat)", box.contains(lon, lat)) }
+        }
+        // Its neighbours keep their land: Zahle, Amman and the Sinai.
+        assertEquals(listOf("LB"), paintedBy(35.90, 33.85))
+        assertEquals(listOf("JO"), paintedBy(35.93, 31.95))
+        assertEquals(listOf("EG"), paintedBy(33.80, 30.60))
     }
 
     @Test
@@ -176,12 +209,10 @@ class GeoTest {
             assertTrue("a background ring of ${ring.size} points", ring.size >= 4)
             ring.forEach { (lon, lat) -> assertTrue("($lon, $lat)", lon >= -180.0 && lon <= 180.0 && lat >= -90.0 && lat <= 90.0) }
         }
-        // Land that the catalog leaves out is land on the map, under no country: Greenland, the land between
-        // Palestine, Egypt, Jordan, Lebanon and the Golan Heights, Western Sahara, Puerto Rico, New Caledonia, the
-        // Falklands, Hong Kong, Bermuda, the Faroes.
+        // Land that the catalog leaves out is land on the map, under no country: Greenland, Western Sahara, Puerto
+        // Rico, New Caledonia, the Falklands, Hong Kong, Bermuda, the Faroes.
         val places = mapOf(
-            "Greenland" to (-42.0 to 72.0), "Tel Aviv" to (34.78 to 32.08), "Beersheba" to (34.79 to 31.25),
-            "Safed" to (35.50 to 32.96), "Tifariti" to (-10.03 to 26.16), "San Juan" to (-66.1 to 18.4),
+            "Greenland" to (-42.0 to 72.0), "Tifariti" to (-10.03 to 26.16), "San Juan" to (-66.1 to 18.4),
             "New Caledonia" to (165.5 to -21.5), "Stanley" to (-57.85 to -51.69), "Hong Kong" to (114.17 to 22.32),
             "Bermuda" to (-64.78 to 32.3), "Tórshavn" to (-6.77 to 62.0),
         )

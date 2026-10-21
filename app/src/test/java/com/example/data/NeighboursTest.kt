@@ -51,7 +51,10 @@ class NeighboursTest {
         borders("MA", "DZ", "ES") // Morocco stops at 27°40′ N: Western Sahara lies between it and Mauritania
         borders("MR", "DZ", "ML", "SN")
         borders("UA", "BY", "HU", "MD", "PL", "RO", "RU", "SK")
-        borders("PS", "EG", "JO")
+        // Natural Earth's ISR feature is merged into Palestine, and the Golan Heights are Syria's.
+        borders("PS", "EG", "JO", "LB", "SY")
+        borders("LB", "PS", "SY")
+        borders("SY", "IQ", "JO", "LB", "PS", "TR")
         borders("KR", "KP")
         borders("HT", "DO")
         borders("PG", "ID")
@@ -71,6 +74,6 @@ class NeighboursTest {
         landlocked.forEach { assertTrue(it, Neighbours.of(it).isNotEmpty()) }
         val withBorders = sovereign.count { Neighbours.of(it.code).isNotEmpty() }
         assertTrue("$withBorders countries with a land border", withBorders in 145..160)
-        assertEquals(312, Neighbours.byCode.values.sumOf { it.size } / 2)
+        assertEquals(314, Neighbours.byCode.values.sumOf { it.size } / 2)
     }
 }

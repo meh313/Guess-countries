@@ -8,26 +8,27 @@ one polygon CARVE takes) and the 1:10m populated places, downloaded from the Git
 ~/.cache/natural-earth, outside the repository: the files are data, never run).
 Every entry of the catalog (tools/catalog_codes.py: 196 states plus Antarctica) gets one country record, and nothing
 else does: features are matched by ISO_A2_EH, then ISO_A2, then HAND_A3 for the rest (Somaliland and Northern
-Cyprus are merged into Somalia and Cyprus, Åland into Finland). The countries file draws the de facto lines; where
-the UN does not recognise one for a catalog country, and the catalog's area counts the recognised line, a rule sets
-it (see their comment): REASSIGN puts Crimea in Ukraine, CLIP_SOUTH stops Morocco at 27°40' N and CARVE puts the
-Golan Heights in Syria. Lines in dispute that no UN resolution settles (Kashmir, the Kurils) stay as drawn. A ring
-that comes to a country from another feature is joined to the ring it shares a stretch of border with, so no seam is
-drawn where the features met. Western Sahara, the dependencies and the other non-catalog features get no record:
-their rings go into "background", land drawn in the land colour that is no country (so Greenland or Puerto Rico is
-not shown as sea), simplified like a country's. Each outer ring is simplified with Douglas-Peucker at --tolerance
-degrees, keeps at least four points, and is dropped when its simplified area is under MIN_RING_AREA square degrees
-unless it is the country's largest or the one that holds (or is nearest) its capital (Tarawa, Abu Dhabi's island);
-coordinates are rounded to two decimals. A hole (an enclave: Lesotho in South Africa) is kept as the enclave's own
-drawn ring, so both outlines are one line and a renderer that cuts the holes out of the rings leaves the enclave
-out of its host; a hole whose enclave is not drawn is dropped. A country whose largest ring is under POINT_AREA square
-degrees (Monaco, the Vatican, the atoll states) is instead a square of POINT_SIDE degrees around its capital, marked
-"point": true, so every code has a polygon. The label is Natural Earth's LABEL_X/LABEL_Y; the capital is the point
-in HAND_CAPITALS (Palestine's), else the populated-places "Admin-0 capital" whose name matches the catalog's
-quizCapital (accents, case and punctuation folded; "Admin-0 capital alt" or any other place of the country when only
-that matches), else the first "Admin-0 capital", else the label point. A point square is labelled at its centre; a
-Natural Earth label that falls outside the frame (a few island states; Kiribati's sits on Kiritimati) is replaced by
-the centroid of the largest ring.
+Cyprus are merged into Somalia and Cyprus, Åland into Finland, and the ISR feature, by the owner's rule, into
+Palestine, which is one outline bordering Egypt, Jordan, Lebanon and Syria). The countries file draws the de facto
+lines; where the UN does not recognise one for a catalog country, and the catalog's area counts the recognised line,
+a rule sets it (see their comment): REASSIGN puts Crimea in Ukraine, CLIP_SOUTH stops Morocco at 27°40' N and CARVE
+puts the Golan Heights in Syria. Lines in dispute that no UN resolution settles (Kashmir, the Kurils) stay as drawn.
+A ring that comes to a country from another feature is joined to every ring it shares a stretch of border with, so no
+seam is drawn where the features met. Western Sahara, the dependencies and the other non-catalog features get no
+record: their rings go into "background", land drawn in the land colour that is no country (so Greenland or Puerto
+Rico is not shown as sea), simplified like a country's. Each outer ring is simplified with Douglas-Peucker at
+--tolerance degrees, keeps at least four points, and is dropped when its simplified area is under MIN_RING_AREA
+square degrees unless it is the country's largest or the one that holds (or is nearest) its capital (Tarawa, Abu
+Dhabi's island); coordinates are rounded to two decimals. A hole (an enclave: Lesotho in South Africa) is kept as the
+enclave's own drawn ring, so both outlines are one line and a renderer that cuts the holes out of the rings leaves
+the enclave out of its host; a hole whose enclave is not drawn is dropped. A country whose largest ring is under
+POINT_AREA square degrees (Monaco, the Vatican, the atoll states) is instead a square of POINT_SIDE degrees around
+its capital, marked "point": true, so every code has a polygon. The label is Natural Earth's LABEL_X/LABEL_Y; the
+capital is the point in HAND_CAPITALS (Palestine's), else the populated-places "Admin-0 capital" whose name matches
+the catalog's quizCapital (accents, case and punctuation folded; "Admin-0 capital alt" or any other place of the
+country when only that matches), else the first "Admin-0 capital", else the label point. A point square is labelled
+at its centre; a Natural Earth label that falls outside the frame (a few island states; Kiribati's sits on
+Kiritimati) is replaced by the centroid of the largest ring.
 
 The bbox is [west, south, east, north]. A country whose rings span more than 180 degrees of longitude (Russia, Fiji,
 Kiribati, the United States, New Zealand) has it computed with the western hemisphere shifted by +360, so east may
@@ -105,10 +106,14 @@ SNAP = 0.01                 # degrees; a point of a disputed area this close to 
 # (or ISO_A2 for Taiwan, whose EH value is "CN-TW") already covers France, Norway, Kosovo, Palestine, South Sudan
 # and Taiwan; the entries are kept for older copies. Somaliland and Northern Cyprus are merged into their state, and
 # Åland, an autonomous part of Finland that the file draws as a feature of its own, into Finland (whose catalog area
-# counts it).
+# counts it). The ISR feature, whose ISO codes name no catalog country, is merged into Palestine by the owner's rule
+# (the app names no other state there; CatalogPolicyTest records the exclusion): its ring lies between
+# Palestine's two, Gaza and the West Bank, and is joined to both along their shared lines, so Palestine is one
+# outline from Gaza to the Lebanese border with no seam. The Golan Heights, which that feature also holds, still go
+# to Syria (see CARVE).
 HAND_A3 = {
     'KOS': 'XK', 'FRA': 'FR', 'NOR': 'NO', 'PSX': 'PS', 'SDS': 'SS', 'TWN': 'TW',
-    'SOL': 'SO', 'CYN': 'CY', 'ALD': 'FI',
+    'SOL': 'SO', 'CYN': 'CY', 'ALD': 'FI', 'ISR': 'PS',
 }
 # Natural Earth's default admin-0 file is its de facto view; its point-of-view files exist at 1:10m only. Besides the
 # merges above, the three places where the UN does not recognise the line the 50m file draws for a catalog country,
@@ -121,7 +126,8 @@ HAND_A3 = {
 # south of it is Western Sahara's background land.
 # CARVE takes an area, Natural Earth's own polygon in DISPUTED_FILE named by its BRK_NAME, out of the ring of the
 # feature that holds it (and the point) and adds it to a catalog country along their shared line: the Golan Heights,
-# which the ISR feature holds up to the 1974 line, to Syria (Security Council resolution 497).
+# which the ISR feature holds up to the 1974 line, to Syria (Security Council resolution 497); by then that feature's
+# ring is part of Palestine's (see HAND_A3), and the area is cut out of it there.
 # Lines in dispute that no UN resolution settles (Kashmir, the Kurils) stay as the 50m file draws them, and the
 # Siachen Glacier, a feature that India and Pakistan both claim, is background land.
 REASSIGN = [('RUS', 'UA', (34.10, 44.95))]     # (ADM0_A3 it is in, catalog code, a point in the polygon: Simferopol)
@@ -347,19 +353,27 @@ def join_rings(a, b):
 
 
 def add_rings(rings, new):
-    """Adds the rings of another feature to a country's: one that shares a stretch of border with a ring already
-    there is joined to it, so no seam is drawn where the two features met. Returns how many were joined."""
+    """Adds the rings of another feature to a country's: one that shares a stretch of border with rings already
+    there is joined to each of them in turn, so no seam is drawn where the features met, whichever feature the file
+    has first (the ISR feature lies between Palestine's two rings and meets both). The union takes the place of the
+    first ring it was joined to. Returns how many joins were made."""
     joined = 0
     there = len(rings)
     for ring in new:
+        hits = []
         for i in range(there):
             union = join_rings(rings[i], ring)
             if union is not None:
-                rings[i] = union
-                joined += 1
-                break
-        else:
+                ring = union
+                hits.append(i)
+        if not hits:
             rings.append(ring)
+            continue
+        rings[hits[0]] = ring
+        for i in reversed(hits[1:]):    # in place: rings_of holds the list
+            del rings[i]
+        there -= len(hits) - 1
+        joined += len(hits)
     return joined
 
 
@@ -614,9 +628,10 @@ def build(cache, tolerance, report):
             raise SystemExit(f'CARVE: {name} does not leave {source} and join {target} along one stretch each')
         holder[hits[0]] = rest
         rings[best] = grown
+    merged = {s: f' (merged into {HAND_A3[s]})' if s in HAND_A3 else '' for s, _, _, _ in CARVE}
     report.append(f'recognised lines: {", ".join(f"{s} polygon at {p} -> {t}" for s, t, p in REASSIGN)}; '
                   f'{", ".join(f"{c} cut at {lat:.4f} N, the rest to {a3}" for c, lat, a3 in CLIP_SOUTH)}; '
-                  f'{", ".join(f"{n} out of {s}, into {t}" for s, n, t, _ in CARVE)}')
+                  f'{", ".join(f"{n} out of {s}{merged[s]}, into {t}" for s, n, t, _ in CARVE)}')
     report.append(f'rings joined along a shared border: {", ".join(f"{k} {v}" for k, v in sorted(joined.items()) if v) or "none"}')
 
     capitals = {}   # code -> [candidate]
