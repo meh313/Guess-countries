@@ -7,9 +7,12 @@ Source: Natural Earth (public domain), the 1:50m admin-0 countries and the 1:10m
 the GitHub mirror into --cache (default ~/.cache/natural-earth, outside the repository: the files are data, never run).
 Every entry of the catalog (tools/catalog_codes.py: 196 states plus Antarctica) gets one country record, and nothing
 else does: features are matched by ISO_A2_EH, then ISO_A2, then HAND_A3 for the rest (Somaliland and Northern
-Cyprus are merged into Somalia and Cyprus). Western Sahara, the dependencies and the other non-catalog features get
-no record: their rings go into "background", land drawn in the land colour that is no country (so Greenland or
-Puerto Rico is not shown as sea), simplified like a country's. Each outer ring is simplified with Douglas-Peucker at
+Cyprus are merged into Somalia and Cyprus). Borders follow the internationally recognised lines, as the catalog's
+areas do: REASSIGN puts Crimea in Ukraine and CLIP_SOUTH stops Morocco at 27°40' N (see their comment). A ring that
+comes to a country from another feature is joined to the ring it shares a stretch of border with, so no seam is
+drawn where the features met. Western Sahara, the dependencies and the other non-catalog features get no record:
+their rings go into "background", land drawn in the land colour that is no country (so Greenland or Puerto Rico is
+not shown as sea), simplified like a country's. Each outer ring is simplified with Douglas-Peucker at
 --tolerance degrees, keeps at least four points, and is dropped when its simplified area is under MIN_RING_AREA
 square degrees unless it is the country's largest; coordinates are rounded to two decimals. A hole (an enclave:
 Lesotho in South Africa) is kept as the enclave's own drawn ring, so both outlines are one line and a renderer that
@@ -94,6 +97,15 @@ HAND_A3 = {
     'KOS': 'XK', 'FRA': 'FR', 'NOR': 'NO', 'PSX': 'PS', 'SDS': 'SS', 'TWN': 'TW',
     'SOL': 'SO', 'CYN': 'CY',
 }
+# Borders follow the internationally recognised lines, as the catalog's areas do (and as the merges above do).
+# Natural Earth's default admin-0 file is its de facto view; its point-of-view files exist at 1:10m only, so the
+# two places where the 50m file differs for a catalog country are set here, by geometry, and checked by GeoTest:
+# REASSIGN moves a whole polygon of a feature (the one holding the point) to a catalog country: Crimea, a polygon of
+# its own in the RUS feature, to Ukraine (it is joined to Ukraine's mainland ring along their shared line).
+# CLIP_SOUTH cuts a country's rings at a parallel; the part south of it goes to the background feature named: Morocco
+# stops at 27°40' N, its line with Western Sahara, and the part south of it is Western Sahara's background land.
+REASSIGN = [('RUS', 'UA', (34.10, 44.95))]     # (ADM0_A3 it is in, catalog code, a point in the polygon: Simferopol)
+CLIP_SOUTH = [('MA', 27 + 40 / 60, 'SAH')]     # (catalog code, latitude, ADM0_A3 of the background feature)
 # Populated places use other ADM0_A3 values than the countries file for a few states.
 CAPITAL_A3 = {'SS': ['SSD', 'SDS'], 'PS': ['PSX'], 'XK': ['KOS']}
 ANTARCTICA = 'AQ'
@@ -261,6 +273,89 @@ def frame_of(polys, bbox, capital):
     return frame
 
 
+def ring_contains(ring, lon, lat):
+    """Whether the point lies inside the ring (ray casting; closed or not)."""
+    hit = False
+    j = len(ring) - 1
+    for i in range(len(ring)):
+        (xi, yi), (xj, yj) = ring[i][:2], ring[j][:2]
+        if (yi > lat) != (yj > lat) and lon < (xj - xi) * (lat - yi) / (yj - yi) + xi:
+            hit = not hit
+        j = i
+    return hit
+
+
+def _open(ring):
+    """The ring's points without the closing repeat of the first."""
+    pts = [list(p[:2]) for p in ring]
+    return pts[:-1] if len(pts) > 1 and pts[0] == pts[-1] else pts
+
+
+def join_rings(a, b):
+    """Two rings that share one stretch of border (the same points, run the other way round in each, as Natural
+    Earth's neighbours are cut from one line) as one closed ring without it; None when they share no single stretch
+    of at least MIN_SHARED_VERTICES points."""
+    pa, pb = _open(a), _open(b)
+    n, m = len(pa), len(pb)
+
+    def key(p):
+        return round(p[0], 6), round(p[1], 6)
+    in_b = {key(p): j for j, p in enumerate(pb)}
+    shared = {i for i, p in enumerate(pa) if key(p) in in_b}
+    if len(shared) < MIN_SHARED_VERTICES or len(shared) == n:
+        return None
+    starts = [i for i in shared if (i - 1) % n not in shared]
+    if len(starts) != 1:
+        return None
+    first = last = starts[0]
+    while (last + 1) % n in shared:
+        last = (last + 1) % n
+    j_last, j_first = in_b[key(pa[last])], in_b[key(pa[first])]
+    # b runs the stretch from a's last point to its first: check it does, point for point.
+    if (j_first - j_last) % m + 1 != len(shared) or any(
+            key(pb[(j_last + k) % m]) != key(pa[(last - k) % n]) for k in range(len(shared))):
+        return None
+    out = [pa[(last + k) % n] for k in range((first - last) % n + 1)]       # a, from the stretch's end to its start
+    out += [pb[(j_first + k) % m] for k in range(1, (j_last - j_first) % m)]  # b, round the other side
+    return out + [out[0]]
+
+
+def add_rings(rings, new):
+    """Adds the rings of another feature to a country's: one that shares a stretch of border with a ring already
+    there is joined to it, so no seam is drawn where the two features met. Returns how many were joined."""
+    joined = 0
+    there = len(rings)
+    for ring in new:
+        for i in range(there):
+            union = join_rings(rings[i], ring)
+            if union is not None:
+                rings[i] = union
+                joined += 1
+                break
+        else:
+            rings.append(ring)
+    return joined
+
+
+def split_at_parallel(ring, lat):
+    """The parts of the ring north and south of the parallel (Sutherland-Hodgman against each half; a point on it
+    goes to both), each closed, or [] for a side the ring does not reach. A ring the parallel crosses twice gives two
+    simple rings."""
+    pts = _open(ring)
+    north, south = [], []
+    for i, p in enumerate(pts):
+        q = pts[(i + 1) % len(pts)]
+        if p[1] >= lat:
+            north.append(p)
+        if p[1] <= lat:
+            south.append(p)
+        if (p[1] - lat) * (q[1] - lat) < 0:
+            cut = [p[0] + (lat - p[1]) * (q[0] - p[0]) / (q[1] - p[1]), lat]
+            north.append(cut)
+            south.append(cut)
+    return [r + [r[0]] if len(r) >= 3 else [] for r in (north, south)]
+
+
 def inside(point, bbox):
     west, south, east, north = bbox
     lon = point[0] + 360 if east > 180 and point[0] < 0 else point[0]
@@ -378,26 +473,56 @@ def build(cache, tolerance, report):
     other_land = {}  # ADM0_A3 -> outer rings of a feature that is no catalog country: the background land
     hand_used = []
     dropped = []
+    moved = []      # (code, polygon) from REASSIGN
+    joined = {}     # code or ADM0_A3 -> rings joined to another feature's along a shared border
     for feature in countries_fc['features']:
         props = feature['properties']
         code, field = catalog_code(props, codes)
         geometry = feature['geometry']
         polygons = [geometry['coordinates']] if geometry['type'] == 'Polygon' else geometry['coordinates']
+        for source, target, (lon, lat) in REASSIGN:
+            if props.get('ADM0_A3') == source:
+                hits = [p for p in polygons if p and ring_contains(p[0], lon, lat)]
+                if len(hits) != 1:
+                    raise SystemExit(f'REASSIGN: {len(hits)} polygons of {source} hold {lon}, {lat}; expected one')
+                moved.append((target, hits[0]))
+                polygons = [p for p in polygons if p is not hits[0]]
         rings = [polygon[0] for polygon in polygons if polygon]
         if code is None:
             dropped.append(f"{props.get('ADM0_A3')} {props.get('NAME')}")
-            other_land.setdefault(props['ADM0_A3'], []).extend(rings)
+            a3 = props['ADM0_A3']
+            joined[a3] = joined.get(a3, 0) + add_rings(other_land.setdefault(a3, []), rings)
             continue
         if field == 'ADM0_A3':
             hand_used.append(f"{props['ADM0_A3']} -> {code}")
         entry = raw.setdefault(code, {'rings': [], 'holes': [], 'labels': [], 'a3': set()})
-        entry['rings'].extend(rings)
+        joined[code] = joined.get(code, 0) + add_rings(entry['rings'], rings)
         # An enclave (Lesotho) shares its outline with its host's hole: the holes count for the borders, and the
         # ones whose enclave is drawn are cut out of the host (see holes_of).
         entry['holes'].extend(hole for polygon in polygons for hole in polygon[1:])
         entry['a3'].add(props['ADM0_A3'])
         if props.get('LABEL_X') is not None and props.get('LABEL_Y') is not None:
             entry['labels'].append((max((ring_area(r) for r in rings), default=0), (props['LABEL_X'], props['LABEL_Y'])))
+
+    # The recognised lines (see REASSIGN and CLIP_SOUTH), after every feature is read so the order does not matter.
+    for target, polygon in moved:
+        joined[target] = joined.get(target, 0) + add_rings(raw[target]['rings'], [polygon[0]])
+        raw[target]['holes'].extend(polygon[1:])
+    for code, lat, a3 in CLIP_SOUTH:
+        kept, cut = [], []
+        for ring in raw[code]['rings']:
+            north, south = split_at_parallel(ring, lat)
+            if north:
+                kept.append(north)
+            if south:
+                cut.append(south)
+        if not kept or not cut:
+            raise SystemExit(f'CLIP_SOUTH: {lat} does not cut {code}')
+        raw[code]['rings'] = kept
+        joined[a3] = joined.get(a3, 0) + add_rings(other_land.setdefault(a3, []), cut)
+    report.append(f'recognised lines: {", ".join(f"{s} polygon at {p} -> {t}" for s, t, p in REASSIGN)}; '
+                  f'{", ".join(f"{c} cut at {lat:.4f} N, the rest to {a3}" for c, lat, a3 in CLIP_SOUTH)}')
+    report.append(f'rings joined along a shared border: {", ".join(f"{k} {v}" for k, v in sorted(joined.items()) if v) or "none"}')
 
     capitals = {}   # code -> [candidate]
     for feature in places_fc['features']:

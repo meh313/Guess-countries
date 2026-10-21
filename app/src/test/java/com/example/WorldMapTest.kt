@@ -324,4 +324,32 @@ class WorldMapTest {
         assertTrue("Greenland is land", map.share(land, greenland[0], greenland[1], greenland[2], greenland[3]) > 0.9f)
         assertTrue("Greenland is not sea", map.share(sea, greenland[0], greenland[1], greenland[2], greenland[3]) < 0.02f)
     }
+
+    @Test
+    fun theBundledAsset_highlightsCrimeaWithUkraine_andStopsMoroccoAt27Degrees40() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        assertTrue("world.json must be bundled", WorldMapData.isBundled(context))
+        val data = WorldMapData.load(context)
+
+        val ua = mapViewport(data["UA"]!!, zoom = true, aspect = aspect)
+        show(mapped("UA"), data = data)
+        var map = mapPixels()
+        assertTrue("Simferopol is Ukraine's colour", map.share(primary, ua.fx(33.9f), ua.fy(45.1f), ua.fx(34.5f), ua.fy(44.8f)) > 0.9f)
+
+        val ru = mapViewport(data["RU"]!!, zoom = true, aspect = aspect)
+        show(mapped("RU"), data = data)
+        map = mapPixels()
+        // Russia's frame is some 240° wide, so a degree is under four pixels: the box is most of Crimea, too small to
+        // tell land from coast stroke, but it would be mostly Russia's colour if Crimea were drawn in Russia.
+        val crimea = listOf(ru.fx(33.2f), ru.fy(45.6f), ru.fx(35.2f), ru.fy(44.9f))
+        assertTrue("Crimea is not Russia's colour", map.share(primary, crimea[0], crimea[1], crimea[2], crimea[3]) < 0.05f)
+
+        val ma = mapViewport(data["MA"]!!, zoom = true, aspect = aspect)
+        show(mapped("MA"), data = data)
+        map = mapPixels()
+        val laayoune = listOf(ma.fx(-12.8f), ma.fy(27.4f), ma.fx(-12.0f), ma.fy(26.9f))
+        assertTrue("Laayoune's land is not Morocco's colour", map.share(primary, laayoune[0], laayoune[1], laayoune[2], laayoune[3]) < 0.02f)
+        assertTrue("but it is land", map.share(land, laayoune[0], laayoune[1], laayoune[2], laayoune[3]) > 0.9f)
+        assertTrue("Morocco north of the line is", map.share(primary, ma.fx(-6.5f), ma.fy(33.5f), ma.fx(-5.5f), ma.fy(33.0f)) > 0.9f)
+    }
 }

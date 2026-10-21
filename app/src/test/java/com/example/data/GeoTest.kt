@@ -115,6 +115,28 @@ class GeoTest {
     }
 
     @Test
+    fun bordersFollowTheRecognisedLines_crimeaInUkraine_moroccoNorthOf27Degrees40() {
+        // As the catalog's areas do (Ukraine's 603,550 km² counts Crimea; Morocco's 446,550 km² stops at 27°40′ N).
+        assertEquals(listOf("UA"), paintedBy(34.10, 44.95)) // Simferopol
+        assertEquals(listOf("UA"), paintedBy(33.52, 44.60)) // Sevastopol
+        assertEquals(listOf("UA"), paintedBy(36.20, 45.30)) // the Kerch peninsula
+        assertEquals(listOf("RU"), paintedBy(38.97, 45.04)) // Krasnodar, across the strait
+        assertTrue("${box("UA")}", box("UA").south < 44.5)
+        // One ring for the mainland and Crimea, joined along the isthmus: no seam is drawn there.
+        assertTrue(inRing(rings("UA").single { inRing(it, 34.10, 44.95) }, 30.52, 50.45))
+
+        assertEquals(listOf("MA"), paintedBy(-6.84, 34.02)) // Rabat
+        assertEquals(listOf("MA"), paintedBy(-8.0, 31.63)) // Marrakesh
+        assertEquals(listOf("MA"), paintedBy(-9.75, 28.25)) // just north of the line
+        listOf(-13.20 to 27.15, -11.66 to 26.74, -14.5 to 24.0).forEach { (lon, lat) -> // Laayoune, Smara, inland of Dakhla
+            assertEquals("($lon, $lat)", emptyList<String>(), paintedBy(lon, lat))
+            assertTrue("($lon, $lat) is land", background.any { inRing(it, lon, lat) })
+        }
+        assertEquals(27 + 40 / 60.0, box("MA").south, 0.006)
+        assertEquals(27 + 40 / 60.0, Geo.of("MA")!!.south, 0.006)
+    }
+
+    @Test
     fun theBackgroundLand_coversWhatIsNoCatalogCountry_andIsNoCountry() {
         assertTrue(background.isNotEmpty())
         background.forEach { ring ->

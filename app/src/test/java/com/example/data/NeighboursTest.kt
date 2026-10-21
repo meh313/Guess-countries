@@ -44,6 +44,9 @@ class NeighboursTest {
         borders("SM", "IT")
         borders("BW", "NA", "ZA", "ZM", "ZW") // Kazungula's 150 m count; Namibia–Zimbabwe, a mere corner, do not
         borders("ES", "AD", "FR", "MA", "PT") // Ceuta and Melilla
+        borders("MA", "DZ", "ES") // Morocco stops at 27°40′ N: Western Sahara lies between it and Mauritania
+        borders("MR", "DZ", "ML", "SN")
+        borders("UA", "BY", "HU", "MD", "PL", "RO", "RU", "SK")
         borders("PS", "EG", "JO")
         borders("KR", "KP")
         borders("HT", "DO")
