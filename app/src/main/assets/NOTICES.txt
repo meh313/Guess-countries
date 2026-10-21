@@ -34,7 +34,7 @@ SOFTWARE.
 
 Natural Earth 5.2.0
 -------------------
-Used for: the world map; the country outlines, the other land, label points and capitals in world.json are derived from its data (simplified; a few borders and Palestine's capital set by tools/gen-worldmap.py).
+Used for: the world map; the country outlines, the other land, label points and capitals are derived from its data, simplified and adjusted to the app's countries: Somaliland, Northern Cyprus and Åland are merged into Somalia, Cyprus and Finland, Crimea is drawn in Ukraine, the Golan Heights in Syria and Morocco without Western Sahara, land that is none of the app's countries is drawn as plain land, and Palestine's capital is placed in East Jerusalem.
 Licence: Public domain
 https://www.naturalearthdata.com/
 

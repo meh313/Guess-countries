@@ -17,11 +17,15 @@ ROOT = Path(__file__).resolve().parent.parent
 SOURCE = ROOT / "licenses" / "THIRD_PARTY_NOTICES.md"
 OUT = ROOT / "app" / "src" / "main" / "assets" / "NOTICES.txt"
 
-# What each work in the markdown file is used for, in the player's words; the section heading is the fallback.
+# What each work in the markdown file is used for, in the player's words (no file or tool names: the player reads
+# this on the About screen); the section heading is the fallback.
 USED_FOR = {
     "flag-icons": "the flag images; every flag in the app is rendered from its SVG files.",
-    "Natural Earth": "the world map; the country outlines, the other land, label points and capitals in world.json are "
-                     "derived from its data (simplified; a few borders and Palestine's capital set by tools/gen-worldmap.py).",
+    "Natural Earth": "the world map; the country outlines, the other land, label points and capitals are derived from "
+                     "its data, simplified and adjusted to the app's countries: Somaliland, Northern Cyprus and Åland "
+                     "are merged into Somalia, Cyprus and Finland, Crimea is drawn in Ukraine, the Golan Heights in "
+                     "Syria and Morocco without Western Sahara, land that is none of the app's countries is drawn as "
+                     "plain land, and Palestine's capital is placed in East Jerusalem.",
 }
 
 # Works that are not in the markdown file because nothing of theirs is copied into the repository: the libraries the

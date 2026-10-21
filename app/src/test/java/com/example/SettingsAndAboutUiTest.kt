@@ -358,13 +358,18 @@ class SettingsAndAboutUiTest {
         rule.eventually("the notices") {
             rule.onNodeWithTag("about_notices").assert(hasText("flag-icons 7.5.0", substring = true))
         }
-        // The player's notices: each work with its use, licence and copyright line, and no developer instructions.
+        // The player's notices: each work with its use, licence and copyright line, and no developer instructions,
+        // files or tools.
         rule.onNodeWithTag("about_notices")
             .assert(hasText("Used for: the flag images", substring = true))
+            .assert(hasText("Used for: the world map", substring = true))
+            .assert(hasText("adjusted to the app's countries", substring = true))
             .assert(hasText("Licence: MIT License", substring = true))
             .assert(hasText("Copyright (c) 2013 Panayiotis Lipiridis", substring = true))
             .assert(hasText("Apache License 2.0", substring = true))
             .assert(!hasText("render-flags", substring = true))
+            .assert(!hasText("tools/", substring = true))
+            .assert(!hasText("world.json", substring = true))
             .assert(!hasText("```", substring = true))
         rule.onNodeWithTag("about_repository_btn").assertExists()
 
