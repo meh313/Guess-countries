@@ -181,15 +181,17 @@ class ReminderReceiverTest {
 
     // --- the system events ------------------------------------------------------------------------------------------
 
+    /** The events after which the alarm is planned again: a reboot, a time-zone change, a clock change, an update. */
+    private val systemEvents = listOf(
+        Intent.ACTION_BOOT_COMPLETED,
+        Intent.ACTION_TIMEZONE_CHANGED,
+        Intent.ACTION_TIME_CHANGED,
+        Intent.ACTION_MY_PACKAGE_REPLACED
+    )
+
     @Test
     fun eachSystemEvent_withTheReminderOn_setsTheAlarmAgain() {
-        val events = listOf(
-            Intent.ACTION_BOOT_COMPLETED,
-            Intent.ACTION_TIMEZONE_CHANGED,
-            Intent.ACTION_TIME_CHANGED,
-            Intent.ACTION_MY_PACKAGE_REPLACED
-        )
-        for (action in events) {
+        for (action in systemEvents) {
             scheduler.cancel()
             assertEquals(action, 0, alarms().size)
             val before = System.currentTimeMillis()
@@ -227,14 +229,21 @@ class ReminderReceiverTest {
     }
 
     @Test
-    fun aTimeZoneChangeBroadcast_reachesTheReceiverDeclaredInTheManifest() {
-        val before = System.currentTimeMillis()
+    fun eachSystemEventBroadcast_reachesTheReceiverDeclaredInTheManifest() {
+        // Sent, not handed to onReceive: only the manifest's intent filter routes these to the receiver, so an action
+        // missing from it would leave the alarm unplanned after that event.
+        for (action in systemEvents) {
+            scheduler.cancel()
+            assertEquals(action, 0, alarms().size)
+            val before = System.currentTimeMillis()
 
-        context.sendBroadcast(Intent(Intent.ACTION_TIMEZONE_CHANGED))
-        // Broadcasts are delivered through the main looper.
-        shadowOf(Looper.getMainLooper()).idle()
+            context.sendBroadcast(Intent(action))
+            // Broadcasts are delivered through the main looper.
+            shadowOf(Looper.getMainLooper()).idle()
 
-        assertPlannedAtSevenInTheEvening(berlin, notBefore = before)
+            assertEquals("$action reaches the receiver", 1, alarms().size)
+            assertPlannedAtSevenInTheEvening(berlin, notBefore = before)
+        }
     }
 
     @Test
