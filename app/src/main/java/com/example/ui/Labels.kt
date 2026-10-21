@@ -201,3 +201,10 @@ fun Resources.scopeLabel(scope: String): String = scopeLabelRes(scope)?.let { ge
 
 /** [continentLabel] outside composition. */
 fun Resources.continentLabel(name: String): String = continentLabelRes(name)?.let { getString(it) } ?: name
+
+/**
+ * An option of a [mode] question as the player reads it: a continent in the app's language (the option itself stays
+ * the catalog's English key, which is what is scored and logged), anything else as it is.
+ */
+@Composable
+fun optionLabel(mode: QuizMode, option: String): String = if (mode == QuizMode.CONTINENT) continentLabel(option) else option

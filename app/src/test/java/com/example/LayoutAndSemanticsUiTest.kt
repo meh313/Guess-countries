@@ -32,6 +32,7 @@ import androidx.compose.ui.test.performScrollToNode
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import androidx.lifecycle.ViewModelProvider
+import com.example.quiz.QuizMode
 import com.example.quiz.allCountries
 import org.junit.Assert.assertFalse
 import androidx.compose.ui.test.hasSetTextAction
@@ -50,6 +51,7 @@ import com.example.support.eventually
 import com.example.support.openTab
 import com.example.support.stateDescriptionIs
 import com.example.ui.components.FlagAspectRatio
+import com.example.ui.continentLabel
 import com.example.ui.viewmodel.CountryViewModel
 import org.junit.Rule
 import org.junit.rules.RuleChain
@@ -135,6 +137,65 @@ class LayoutAndSemanticsUiTest {
             val b = rule.boundsOf("quiz_option_$i")
             assertTrue("option $i within the window", b.left >= 0f && b.right <= width + 1f)
         }
+    }
+
+    @Test
+    @Config(sdk = [36], qualifiers = "fr-rFR-w360dp-h800dp-xxhdpi")
+    fun french_theContinentQuizNamesTheContinentsInFrench_whileItScoresTheCatalogsKeys() {
+        val context = rule.activity
+        val viewModel = ViewModelProvider(rule.activity)[CountryViewModel::class.java]
+        rule.openTab("quiz")
+        viewModel.startQuiz(QuizMode.CONTINENT, "Global")
+        rule.waitForIdle()
+        val q = viewModel.quizSession.value!!.current
+        val french = q.options.map { context.resources.continentLabel(it) }
+        assertTrue("French, not English: $french", french.zip(q.options).any { (shown, key) -> shown != key })
+        french.forEachIndexed { i, label -> rule.onNodeWithTag("quiz_option_$i").assert(hasText(label)) }
+
+        // A wrong pick: the line under the options names the right continent in French too.
+        val wrong = q.options.indices.first { it !in q.acceptedIndices }
+        rule.onNodeWithTag("quiz_option_$wrong").performClick()
+        rule.waitForIdle()
+        assertEquals("the pick is scored by the catalog's key", false, viewModel.quizSession.value!!.answers.single().correct)
+        rule.onNodeWithTag("quiz_result").assert(hasText(context.getString(R.string.quiz_result_wrong, french[q.correctAnswerIndex])))
+
+        // The score screen says what was picked in French as well.
+        rule.runOnUiThread {
+            viewModel.nextQuizQuestion()
+            while (viewModel.quizSession.value?.isFinished == false) {
+                viewModel.answerQuiz(viewModel.quizSession.value!!.current.correctAnswerIndex)
+                viewModel.nextQuizQuestion()
+            }
+        }
+        rule.waitForIdle()
+        rule.onNodeWithText(context.getString(R.string.result_picked_text, french[wrong]), useUnmergedTree = true).assertExists()
+    }
+
+    /** How far the centre of the tagged node sits from the middle of the window, in pixels. */
+    private fun offCentre(tag: String): Float {
+        val b = rule.boundsOf(tag)
+        return (b.left + b.right) / 2 - rule.activity.resources.displayMetrics.widthPixels / 2f
+    }
+
+    @Test
+    @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
+    fun theQuestionCard_centresAFlagNarrowerThanTheCard() {
+        rule.openTab("quiz")
+        rule.onNodeWithTag("start_quiz_btn").performClick()
+        rule.waitForIdle()
+        val flag = rule.boundsOf("quiz_flag")
+        val card = rule.activity.resources.displayMetrics.widthPixels - 2 * 20 * density
+        assertTrue("the flag is narrower than the card: ${flag.width} of $card", flag.width < card - 32 * density - 10f)
+        assertEquals("the flag sits in the middle of the card", 0f, offCentre("quiz_flag"), 2f)
+    }
+
+    @Test
+    @Config(sdk = [36], qualifiers = "ar-rEG-w360dp-h800dp-xxhdpi")
+    fun arabic_theQuestionCard_centresItsFlag_notAgainstTheStartEdge() {
+        rule.openTab("quiz")
+        rule.onNodeWithTag("start_quiz_btn").performClick()
+        rule.waitForIdle()
+        assertEquals("the flag sits in the middle of the card", 0f, offCentre("quiz_flag"), 2f)
     }
 
     @Test

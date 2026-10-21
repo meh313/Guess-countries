@@ -56,6 +56,7 @@ import com.example.quiz.QuizSession
 import com.example.ui.components.FlagView
 import com.example.ui.components.readingWidth
 import com.example.ui.modeTitle
+import com.example.ui.optionLabel
 import com.example.ui.scopeLabel
 import com.example.ui.titleRes
 import java.text.SimpleDateFormat
@@ -381,7 +382,7 @@ private fun MissRow(miss: ResultContent.Miss, mode: QuizMode, countriesByCode: M
         miss.pickedText == null -> stringResource(R.string.result_no_answer)
         picked != null && mode == QuizMode.CAPITAL -> stringResource(R.string.result_picked_capital, miss.pickedText, picked.name)
         picked != null -> stringResource(R.string.result_picked, picked.name)
-        else -> stringResource(R.string.result_picked_text, miss.pickedText)
+        else -> stringResource(R.string.result_picked_text, optionLabel(mode, miss.pickedText))
     }
     val answer = if (mode == QuizMode.CAPITAL) stringResource(R.string.quiz_capital_and_country, target.quizCapital, target.name) else target.name
     val rowDescription = stringResource(R.string.result_miss_description, answer, pickedText)

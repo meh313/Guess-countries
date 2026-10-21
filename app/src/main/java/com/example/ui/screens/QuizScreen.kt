@@ -120,6 +120,7 @@ import com.example.ui.components.TellApartLine
 import com.example.ui.components.tellApartLine
 import com.example.ui.components.WorldMap
 import com.example.ui.hintRes
+import com.example.ui.optionLabel
 import com.example.ui.questionText
 import com.example.ui.scopeLabel
 import com.example.ui.theme.StreakColor
@@ -729,8 +730,9 @@ fun QuizScreen(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
+                // The column spans the card, so a flag or a question narrower than it sits in the middle.
                 Column(
-                    modifier = Modifier.padding(16.dp),
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     if (mode.showsMap) {
@@ -845,7 +847,7 @@ fun QuizScreen(
                             // The text yields to the result icon, so a long name wraps instead of pushing
                             // the icon out of the card.
                             Text(
-                                text = optionText,
+                                text = optionLabel(mode, optionText),
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = textColor,
@@ -867,7 +869,7 @@ fun QuizScreen(
         val afterAnswer: @Composable () -> Unit = {
             if (active.hasAnswered) {
                 // For "pick the flag" the options are country codes, so say the country instead.
-                val answerText = if (mode.answersAreFlags) q.targetCountry.name else q.options[q.correctAnswerIndex]
+                val answerText = if (mode.answersAreFlags) q.targetCountry.name else optionLabel(mode, q.options[q.correctAnswerIndex])
                 val picked = active.selectedAnswerIndex
                 val result = when {
                     active.timedOut -> stringResource(R.string.quiz_result_timeout, answerText)
@@ -875,7 +877,7 @@ fun QuizScreen(
                         stringResource(R.string.quiz_result_correct, QuizEngine.pointsForCorrectAnswer(active.streak - 1))
                     // A country on two continents: the other continent counts, and the line says why.
                     picked != null && picked in q.acceptedIndices ->
-                        stringResource(R.string.quiz_result_also_counted, q.options[picked], answerText)
+                        stringResource(R.string.quiz_result_also_counted, optionLabel(mode, q.options[picked]), answerText)
                     else -> stringResource(R.string.quiz_result_wrong, answerText)
                 }
                 // The country whose flag or name was picked by mistake, when there is one: a continent has no flag,
