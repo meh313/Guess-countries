@@ -169,7 +169,9 @@ class CountryViewModel(
      * The activity's locales ([tags], as language tags) each time it comes to the front. From Android 13 a language
      * picked through [setLanguage] reaches the app's resources only once the system has applied it, after the widget
      * was redrawn in the old one, and the phone's own language can change while the app is away: when the locales
-     * differ from the last ones heard, the widget is redrawn once more, now in them. The first report only notes them.
+     * differ from the last ones heard, the widget is redrawn once more, now in them (after a tap on a chip that redraw
+     * reaches the session Glance still has open from the first one, which [com.example.widget.TodayWidget.refresh] has
+     * draw anew). The first report only notes them.
      */
     fun onLocalesInEffect(tags: String) {
         val previous = localesInEffect
