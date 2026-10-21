@@ -152,6 +152,9 @@ class QuizSnapshotTest {
         assertNull(snapshot.copy(currentIndex = 99).restore(allCountries, now = 9_000L))
         assertNull(snapshot.copy(times = snapshot.times.drop(1)).restore(allCountries, now = 9_000L))
         assertNull(snapshot.copy(questions = emptyList(), picks = emptyList(), times = emptyList()).restore(allCountries, now = 9_000L))
+        // A re-ask must begin after at least one question and before the end.
+        assertNull(snapshot.copy(reaskedFrom = 0).restore(allCountries, now = 9_000L))
+        assertNull(snapshot.copy(reaskedFrom = snapshot.questions.size).restore(allCountries, now = 9_000L))
     }
 
     @Test
@@ -170,6 +173,9 @@ class QuizSnapshotTest {
 
         assertTrue(snapshot.reasked)
         assertTrue(after.reasked)
+        assertEquals(4, snapshot.reaskedFrom)
+        assertEquals(4, after.reaskedFrom)
+        assertEquals(before.plannedQuestions, after.plannedQuestions)
         assertEquals(before.questions, after.questions)
         assertEquals(cyprus.acceptedIndices, after.questions.single { it.targetCountry.code == "CY" }.acceptedIndices)
         assertEquals(listOf(false, false, false, false, true), after.questions.map { it.light })

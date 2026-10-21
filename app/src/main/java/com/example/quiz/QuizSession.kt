@@ -25,8 +25,11 @@ data class QuizSession(
     val pausedAt: Long? = null,
     /** Every question answered or timed out so far, in order, for the score screen and the quiz log. */
     val answers: List<AnswerRecord> = emptyList(),
-    /** True once the misses were asked again at the end (see [reask]); a fixed-length quiz does that once. */
-    val reasked: Boolean = false
+    /**
+     * Where the misses asked again at the end begin (see [reask]): how many questions the quiz was built with, or null
+     * while they have not been asked; a fixed-length quiz does that once.
+     */
+    val reaskedFrom: Int? = null
 ) {
     init {
         require(questions.isNotEmpty()) { "A quiz needs at least one question" }
@@ -45,6 +48,15 @@ data class QuizSession(
     }
 
     val current: QuizQuestion get() = questions[currentIndex]
+
+    /** True once the misses were asked again at the end (see [reask]). */
+    val reasked: Boolean get() = reaskedFrom != null
+
+    /**
+     * The questions the quiz was built with, the misses asked again at the end left out. A country can come up more
+     * than once among them: a Learn quiz asks each flag twice and ends with a map question about one of them.
+     */
+    val plannedQuestions: List<QuizQuestion> get() = reaskedFrom?.let { questions.take(it) } ?: questions
 
     /** The kind of [question]: its own, where it has one, else the quiz's. */
     fun modeOf(question: QuizQuestion): QuizMode = question.mode ?: mode
@@ -140,7 +152,7 @@ data class QuizSession(
      */
     fun reask(extra: List<QuizQuestion>, now: Long = 0L): QuizSession {
         if (!hasAnswered || isFinished || extra.isEmpty()) return this
-        return copy(questions = questions + extra, reasked = true, currentIndex = currentIndex + 1, selectedAnswerIndex = null, questionStartedAt = now)
+        return copy(questions = questions + extra, reaskedFrom = questions.size, currentIndex = currentIndex + 1, selectedAnswerIndex = null, questionStartedAt = now)
     }
 
     companion object {

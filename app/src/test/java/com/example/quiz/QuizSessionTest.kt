@@ -347,6 +347,8 @@ class QuizSessionTest {
         val reasked = s.reask(listOf(again), now = 7_000L)
 
         assertTrue(reasked.reasked)
+        assertEquals("the re-ask begins after the four questions the quiz was built with", 4, reasked.reaskedFrom)
+        assertEquals(s.questions, reasked.plannedQuestions)
         assertFalse(reasked.isFinished)
         assertEquals(5, reasked.questions.size)
         assertEquals(4, reasked.currentIndex)
@@ -359,6 +361,20 @@ class QuizSessionTest {
         assertTrue(finished.isFinished)
         assertEquals(5, finished.answers.size)
         assertEquals("the first miss stays a miss, listed once", 1, finished.misses.size)
+    }
+
+    @Test
+    fun plannedQuestions_keepACountryAskedTwice_andLeaveOutOnlyTheReask() {
+        // A Learn quiz asks about the same country more than once by design; only what the re-ask appended goes.
+        val q = sessionOf(4).questions
+        var s = QuizSession(QuizMode.CAPITAL, QuizEngine.LEARN, q + q.first())
+        assertNull(s.reaskedFrom)
+        assertEquals(s.questions, s.plannedQuestions)
+        repeat(4) { s = s.answer(s.current.correctAnswerIndex).next() }
+        s = s.answer((s.current.correctAnswerIndex + 1) % 4).reask(listOf(q.first().copy(light = true)))
+
+        assertEquals(5, s.reaskedFrom)
+        assertEquals(q + q.first(), s.plannedQuestions)
     }
 
     @Test

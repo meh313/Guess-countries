@@ -347,6 +347,37 @@ class LearnStateHolderTest {
     }
 
     @Test
+    fun retryingTheLearnQuiz_asksTheSameElevenQuestions_theSecondPassAndTheMapQuestionIncluded() {
+        val world = World()
+        val holder = world.learn()
+        holder.startNow()
+        repeat(4) { holder.next() }
+        holder.startQuiz()
+        val original = world.quiz.session.value!!.questions
+        // Two misses, so the quiz asks them again at the end before it finishes.
+        var n = 0
+        while (world.quiz.session.value?.isFinished == false) {
+            val q = world.quiz.session.value!!.current
+            world.quiz.answer(if (n < 2) (q.correctAnswerIndex + 1) % q.options.size else q.correctAnswerIndex)
+            world.quiz.next()
+            check(++n <= 15) { "the quiz never finished" }
+        }
+        val finished = world.quiz.session.value!!
+        assertEquals("eleven questions and two asked again", 13, finished.questions.size)
+
+        world.quiz.retry()
+
+        val again = world.quiz.session.value!!
+        assertEquals(QuizEngine.LEARN, again.scope)
+        assertEquals(original.map { it.targetCountry.code }, again.questions.map { it.targetCountry.code })
+        assertEquals(original.map { it.mode }, again.questions.map { it.mode })
+        assertEquals(QuizMode.LOCATE, again.modeOf(again.questions.last()))
+        again.questions.forEachIndexed { i, q -> assertEquals(original[i].options.toSet(), q.options.toSet()) }
+        assertTrue("a retry is light evidence", again.questions.all { it.light })
+        assertFalse(again.reasked)
+    }
+
+    @Test
     fun theSessionIsDoneWhenItsQuizIs_andGoneWhenTheQuizIsLeft() {
         val world = World()
         val holder = world.learn()

@@ -29,9 +29,12 @@ data class QuizSnapshot(
     val questionElapsedMs: Long,
     /** How long the quiz has been running, in milliseconds, not counting time paused. */
     val totalElapsedMs: Long,
-    /** Whether the misses were already asked again at the end. */
-    val reasked: Boolean = false
+    /** Where the misses asked again at the end begin (see [QuizSession.reaskedFrom]); null when they were not asked. */
+    val reaskedFrom: Int? = null
 ) {
+    /** Whether the misses were already asked again at the end. */
+    val reasked: Boolean get() = reaskedFrom != null
+
     /**
      * One question: the country asked about, the options as shown, the country behind each (null for a continent),
      * every option that counts as right and whether the question is a light one (asked again).
@@ -58,6 +61,7 @@ data class QuizSnapshot(
             QuizQuestion(target, QuizEngine.questionText(q.mode ?: mode, target), q.options, q.correctAnswerIndex, q.optionCodes, q.acceptedIndices, q.light, q.mode)
         }
         if (rebuilt.isEmpty() || currentIndex !in rebuilt.indices || picks.size != times.size || picks.size > rebuilt.size || typed.size != picks.size) return null
+        if (reaskedFrom != null && reaskedFrom !in 1 until rebuilt.size) return null
         val answers = picks.indices.map { i -> QuizSession.AnswerRecord(rebuilt[i], picks[i], times[i], typed[i]) }
         return QuizSession(
             mode = mode,
@@ -74,7 +78,7 @@ data class QuizSnapshot(
             startedAt = now - totalElapsedMs,
             pausedAt = now,
             answers = answers,
-            reasked = reasked
+            reaskedFrom = reaskedFrom
         )
     }
 
@@ -98,7 +102,7 @@ data class QuizSnapshot(
                 typed = session.answers.map { it.typed },
                 questionElapsedMs = (until - session.questionStartedAt).coerceAtLeast(0L),
                 totalElapsedMs = (until - session.startedAt).coerceAtLeast(0L),
-                reasked = session.reasked
+                reaskedFrom = session.reaskedFrom
             )
         }
     }

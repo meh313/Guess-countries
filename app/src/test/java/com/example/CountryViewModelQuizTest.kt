@@ -1243,6 +1243,7 @@ class CountryViewModelQuizTest {
 
         val after = revived.quizSession.value!!
         assertTrue(after.reasked)
+        assertEquals(10, after.reaskedFrom)
         assertEquals(before.questions, after.questions)
         assertEquals(before.answers, after.answers)
         assertEquals(10, after.currentIndex)
@@ -1284,7 +1285,7 @@ class CountryViewModelQuizTest {
         val bundle = state.getBundle(QuizStateHolder.SAVED_QUIZ)!!
         bundle.remove("accepted")
         bundle.remove("light")
-        bundle.remove("reasked")
+        bundle.remove("reaskedFrom")
 
         val revived = newViewModel(savedState = SavedStateHandle.createHandle(state, null))
 

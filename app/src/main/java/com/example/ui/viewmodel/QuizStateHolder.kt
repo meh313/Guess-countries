@@ -259,14 +259,13 @@ class QuizStateHolder(
     }
 
     /**
-     * The finished quiz again from the top: the same questions (the misses re-asked at the end left out), each with
-     * its options in a new order, and every answer light evidence, since the answers were just shown. Saved again
-     * when finished.
+     * The finished quiz again from the top: the same questions ([QuizSession.plannedQuestions]: the misses re-asked at
+     * the end left out, a Learn quiz's second pass and map question kept), each with its options in a new order, and
+     * every answer light evidence, since the answers were just shown. Saved again when finished.
      */
     fun retry() {
         val session = _session.value?.takeIf { it.isFinished } ?: return
-        val base = if (session.mode.isEndless) session.questions else session.questions.distinctBy { it.targetCountry.code }
-        val questions = base.map { QuizEngine.reshuffle(it, random).copy(light = true) }
+        val questions = session.plannedQuestions.map { QuizEngine.reshuffle(it, random).copy(light = true) }
         _finishOutcome.value = null
         _session.value = QuizSession(
             mode = session.mode,
@@ -407,13 +406,13 @@ internal object QuizSnapshotBundle {
         putStringArrayList("typed", ArrayList(snapshot.typed.map { it ?: "" }))
         putLong("questionElapsed", snapshot.questionElapsedMs)
         putLong("totalElapsed", snapshot.totalElapsedMs)
-        putBoolean("reasked", snapshot.reasked)
+        putInt("reaskedFrom", snapshot.reaskedFrom ?: NONE)
     }
 
     /**
      * The snapshot in [bundle], or null when it holds none or is not one this version wrote. A bundle from before
-     * the accepted alternatives, the light marks, the re-ask, the per-question kinds and the typed answers reads as
-     * having none of them.
+     * the accepted alternatives, the light marks, the re-ask (with where it begins), the per-question kinds and the
+     * typed answers reads as having none of them.
      */
     fun read(bundle: Bundle): QuizSnapshot? {
         val mode = bundle.getString("mode")?.let { name -> QuizMode.entries.firstOrNull { it.name == name } } ?: return null
@@ -456,7 +455,7 @@ internal object QuizSnapshotBundle {
             typed = typed,
             questionElapsedMs = bundle.getLong("questionElapsed"),
             totalElapsedMs = bundle.getLong("totalElapsed"),
-            reasked = bundle.getBoolean("reasked", false)
+            reaskedFrom = bundle.getInt("reaskedFrom", NONE).takeIf { it != NONE }
         )
     }
 
