@@ -228,8 +228,8 @@ Kashmir's and the Kurils', stay as Natural Earth draws them. A feature that
 is no catalog country (Western Sahara, Greenland, Puerto Rico, Hong Kong and the rest) gets no record: its rings go
 into `background`, land the map paints in the land colour so it is not shown as sea, but never highlights, names or
 counts. A hole is kept as the ring of the enclave that fills it (Lesotho in South Africa, San Marino and the Vatican
-in Italy, three exclaves in Kyrgyzstan) and the highlight is filled with the even-odd rule, so a host leaves its
-enclaves out. The format is `{"format":2,"source":...,"countries":{"FR":{"polys":[[[lon,lat],...],...],"holes":
+in Italy, three exclaves in Kyrgyzstan) and the highlight is the host's rings less those holes, so a host leaves
+its enclaves out. The format is `{"format":2,"source":...,"countries":{"FR":{"polys":[[[lon,lat],...],...],"holes":
 [...],"bbox":[west,south,east,north],"frame":[...],"label":[lon,lat],"capital":[lon,lat],"point":false,
 "neighbours":["AD",...]},...},"background":[[[lon,lat],...],...]}`: one record per catalog country (Antarctica
 has a label at 0, −80 and no capital), `point: true` for the seven microstates too small for an outline, drawn as a

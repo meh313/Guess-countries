@@ -197,7 +197,7 @@ class WorldMapTest {
     }
 
     @Test
-    fun aHostsHole_leavesItsEnclaveInTheLandColour_andTheEnclaveIsHighlightedOnItsOwn() {
+    fun aHostsHole_leavesItsEnclaveInTheLandColour_itsOverlappingRingsDoNot_andTheEnclaveIsHighlightedOnItsOwn() {
         val viewport = mapViewport(WorldMapFixture.data["HH"]!!, zoom = true, aspect = aspect)
         show(mapped("HH"))
         var map = mapPixels()
@@ -206,6 +206,9 @@ class WorldMapTest {
         assertTrue("the enclave is land", map.share(land, hole[0], hole[1], hole[2], hole[3]) > 0.95f)
         assertTrue("the enclave is not the host's", map.share(primary, hole[0], hole[1], hole[2], hole[3]) < 0.01f)
         assertTrue("the host round it", map.share(primary, viewport.fx(21f), viewport.fy(-28f), viewport.fx(25f), viewport.fy(-32f)) > 0.95f)
+        // HH's two rings overlap at 20..24 × -38..-22: that is the host's too, not a second hole (an even-odd fill of
+        // rings and holes together would leave it out).
+        assertTrue("where its rings overlap", map.share(primary, viewport.fx(20.5f), viewport.fy(-24f), viewport.fx(23.5f), viewport.fy(-36f)) > 0.95f)
 
         show(mapped("EE"))
         map = mapPixels()

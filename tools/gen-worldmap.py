@@ -19,8 +19,8 @@ not shown as sea), simplified like a country's. Each outer ring is simplified wi
 degrees, keeps at least four points, and is dropped when its simplified area is under MIN_RING_AREA square degrees
 unless it is the country's largest or the one that holds (or is nearest) its capital (Tarawa, Abu Dhabi's island);
 coordinates are rounded to two decimals. A hole (an enclave: Lesotho in South Africa) is kept as the enclave's own
-drawn ring, so both outlines are one line and a renderer that fills with the even-odd rule leaves the enclave out
-of its host; a hole whose enclave is not drawn is dropped. A country whose largest ring is under POINT_AREA square
+drawn ring, so both outlines are one line and a renderer that cuts the holes out of the rings leaves the enclave
+out of its host; a hole whose enclave is not drawn is dropped. A country whose largest ring is under POINT_AREA square
 degrees (Monaco, the Vatican, the atoll states) is instead a square of POINT_SIDE degrees around its capital, marked
 "point": true, so every code has a polygon. The label is Natural Earth's LABEL_X/LABEL_Y; the capital is the point
 in HAND_CAPITALS (Palestine's), else the populated-places "Admin-0 capital" whose name matches the catalog's

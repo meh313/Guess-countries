@@ -18,7 +18,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.PathFillType
+import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -114,9 +114,9 @@ private fun MapViewport.worldOffsets(): List<Float> =
     listOf(-360f, 0f, 360f).filter { off -> -180f + off < east && 180f + off > west }
 
 /**
- * One country's highlight: [fill] is its rings with its holes cut out (even-odd, so an enclave such as Lesotho keeps
- * the land colour), [outline] its rings alone, for the stroke round its edge (a stroke round a hole would cover a
- * small enclave). The same path when the country has no holes.
+ * One country's highlight: [fill] is its rings less its holes (a path difference, so an enclave such as Lesotho keeps
+ * the land colour however the host's own rings overlap one another), [outline] its rings alone, for the stroke round
+ * its edge (a stroke round a hole would cover a small enclave). The same path when the country has no holes.
  */
 internal class CountryPaths(val fill: Path, val outline: Path)
 
@@ -146,10 +146,11 @@ internal class MapPaths(val land: Path, val byCode: Map<String, CountryPaths>) {
                     addRing(outline, ring)
                     addRing(land, ring)
                 }
-                val fill = if (country.holes.isEmpty()) outline else Path().apply {
-                    fillType = PathFillType.EvenOdd
-                    country.polys.forEach { ring -> addRing(this, ring) }
-                    country.holes.forEach { ring -> addRing(this, ring) }
+                // Not an even-odd fill of rings and holes together: where two of the host's simplified rings overlap,
+                // that would cut the overlap out as if it were a hole.
+                val fill = if (country.holes.isEmpty()) outline else {
+                    val holes = Path().apply { country.holes.forEach { ring -> addRing(this, ring) } }
+                    Path.combine(PathOperation.Difference, outline, holes)
                 }
                 byCode[country.code] = CountryPaths(fill, outline)
             }

@@ -73,9 +73,9 @@ class GeoTest {
         return inside
     }
 
-    /** Whether the point is in what the map paints for [code]: its rings with its holes cut out (even-odd). */
+    /** Whether the point is in what the map paints for [code]: its rings less its holes. */
     private fun paints(code: String, lon: Double, lat: Double): Boolean =
-        (rings(code) + holes(code)).count { inRing(it, lon, lat) } % 2 == 1
+        rings(code).any { inRing(it, lon, lat) } && holes(code).none { inRing(it, lon, lat) }
 
     /** The catalog countries whose painted area holds the point. */
     private fun paintedBy(lon: Double, lat: Double): List<String> = catalog.filter { paints(it, lon, lat) }

@@ -33,8 +33,8 @@ data class MapCountry(
     val polys: List<FloatArray>,
     /**
      * Rings cut out of [polys], flattened the same way: the enclaves inside the country (Lesotho in South Africa, San
-     * Marino and the Vatican in Italy), each the very ring the enclave is drawn with. Filled with the even-odd rule,
-     * so the enclave keeps its own colour when this country is highlighted. Empty for most countries.
+     * Marino and the Vatican in Italy), each the very ring the enclave is drawn with. The highlight is [polys] less
+     * these, so the enclave keeps its own colour when this country is highlighted. Empty for most countries.
      */
     val holes: List<FloatArray>,
     /** The box of every ring, far-flung territories included. */
