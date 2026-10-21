@@ -212,7 +212,8 @@ the tests replace them.
 
 Each flag is a lossless 600x450 WebP in `res/drawable-nodpi/flag_xx.webp`, rendered unstretched from the
 MIT-licensed [flag-icons](https://github.com/lipis/flag-icons) SVGs (`tools/render-flags.mjs` and
-`tools/to-webp.py` reproduce them) and looked up by country code in `FlagArt.kt`. Flags are shown in a 4:3 box
+`tools/to-webp.py` reproduce them; the renderer swaps in the flag's own colour where flag-icons strays from it, so
+far only Eritrea's blue) and looked up by country code in `FlagArt.kt`. Flags are shown in a 4:3 box
 (`FlagAspectRatio`), the shape of the artwork. A country without artwork gets a placeholder with its flag emoji,
 and a test fails until it has art. The licence text is in `licenses/THIRD_PARTY_NOTICES.md`, the developers' file
 (where the images came from and how to reproduce them). The player's copy is `app/src/main/assets/NOTICES.txt`, one

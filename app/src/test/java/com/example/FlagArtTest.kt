@@ -386,4 +386,12 @@ class FlagArtTest {
         }
         assertEquals(listOf("red", "white", "blue", "white", "red"), bands)
     }
+
+    @Test
+    fun eritreasTriangleIsTheFlagsBlue_notAPaleSkyBlue() {
+        // flag-icons draws it #b4d7f4; the flag's blue is Pantone 279 C, #418fde (RECOLOUR in tools/render-flags.mjs).
+        val bitmap = bitmapOf("ER")
+        val corner = bitmap.getPixel((0.95f * bitmap.width).toInt(), (0.95f * bitmap.height).toInt())
+        assertEquals("#418fde", "#%06x".format(corner and 0xFFFFFF))
+    }
 }

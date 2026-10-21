@@ -738,7 +738,8 @@
   "critic: DOUBT (not verified, no fix): Senegal's language list versus Mauritania's. Mauritania lists its three constitutional national languages, Senegal lists French only although its constitution names national languages too; whichever policy the owner picks should apply to both (and to Guinea, whose national languages have no constitutional status, so French-only is fine there).",
   "critic: DOUBT (no fix): colour naming mixes \"Gold\" (Ghana, Mali, Senegal, Mauritania, Egypt, Eritrea, Namibia, South Africa, Zimbabwe) and \"Yellow\" (Benin, Guinea, Cameroon, Togo and others) for the same Pan-African shade. The rules only police Light Blue versus Blue, so this is reported as a style note, not an error.",
   "critic: Niger's language list (Hausa only) was checked: Wikipedia's infobox now gives Hausa as the official language with English and French as working languages under the 2025 transitional charter, so the entry is consistent with the field rule.",
-  "critic: Flag-text hedging is consistent across the continent: official meanings are attributed (constitution, flag law, government, presidency, embassy) and traditional readings are hedged; no entry states a folk meaning as fact. The decided fixes for DZ, LY, SD, CM, CF, CG, GN, LR, ML, SZ, ER, MG, MU, MZ, SC were taken as applied."
+  "critic: Flag-text hedging is consistent across the continent: official meanings are attributed (constitution, flag law, government, presidency, embassy) and traditional readings are hedged; no entry states a folk meaning as fact. The decided fixes for DZ, LY, SD, CM, CF, CG, GN, LR, ML, SZ, ER, MG, MU, MZ, SC were taken as applied.",
+  "content-review: The ER flagColors doubt (af14) is settled in the artwork, not the data: tools/render-flags.mjs now draws the lower triangle in the flag's blue, #418fde (Pantone 279 C), instead of flag-icons' pale #b4d7f4, so the catalog word \"Blue\" matches what the app shows."
  ],
  "duplicates": [],
  "perBatch": [

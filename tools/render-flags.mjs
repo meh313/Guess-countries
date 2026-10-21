@@ -7,7 +7,8 @@
 // Codes come from the arguments, else from the seed file, else from every catalog file. flag-icons
 // (4:3, the app's artwork) renders into out/<code>.png at 600x450; --source cfi renders the independent
 // country-flag-icons drawing (3:2) into ref/<code>.png at 600x400 for side-by-side comparison only.
-// Existing files are skipped unless --force.
+// Existing files are skipped unless --force. The few flag-icons colours that are not the flag's own are
+// replaced before rendering (RECOLOUR below; licenses/THIRD_PARTY_NOTICES.md lists them).
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -31,6 +32,12 @@ if (!codes.length) {
   }
 }
 
+// flag-icons fills replaced with the flag's specified colour, per code: [flag-icons fill, the flag's own].
+//   er  The lower triangle. flag-icons draws it #b4d7f4, a pale sky blue. The flag's blue is Pantone 279 C (the
+//       colour table of Wikipedia's Flag of Eritrea), a medium blue whose sRGB value is #418fde, the fill of
+//       Wikimedia Commons' Flag_of_Eritrea.svg too.
+const RECOLOUR = { er: [['#b4d7f4', '#418fde']] };
+
 const cfi = source === 'cfi';
 const outDir = cfi ? 'ref' : 'out';
 const W = 600, H = cfi ? 400 : 450;
@@ -42,8 +49,13 @@ for (const c of codes) {
   const target = `${outDir}/${c}.png`;
   if (!force && fs.existsSync(target)) { skipped++; continue; }
   const file = cfi ? `cfi/package/3x2/${c.toUpperCase()}.svg` : `package/flags/4x3/${c}.svg`;
-  const svg = fs.readFileSync(file, 'utf8')
+  let svg = fs.readFileSync(file, 'utf8')
     .replace(/<svg([^>]*)>/, (m, attrs) => `<svg${attrs.replace(/\s(width|height)="[^"]*"/g, '')} width="${W}" height="${H}">`);
+  for (const [from, to] of cfi ? [] : RECOLOUR[c] || []) {
+    // A fill that is not there means flag-icons changed the drawing: look at it again instead of rendering it.
+    if (!svg.includes(`fill="${from}"`)) throw new Error(`${c}: no fill="${from}" to replace with ${to}`);
+    svg = svg.replaceAll(`fill="${from}"`, `fill="${to}"`);
+  }
   // Transparent page: where two shapes meet, the edge pixel keeps its colour (to-webp.py drops the alpha)
   // instead of being blended with a background, which would draw a pale hairline.
   await page.setContent(`<html><body style="margin:0">${svg}</body></html>`);

@@ -6,7 +6,9 @@ This file is packaged into the app (its `assets/` folder) so the licence travels
 
 The flag images in `app/src/main/res/drawable-nodpi/flag_*.webp` were rendered from the SVG files of
 [flag-icons](https://github.com/lipis/flag-icons) 7.5.0 (`flags/4x3`), unstretched at 600x450 pixels (4:3) and
-saved as lossless WebP (`tools/render-flags.mjs` reproduces them). flag-icons is distributed under the MIT License:
+saved as lossless WebP (`tools/render-flags.mjs` reproduces them). One colour differs from flag-icons: Eritrea's
+lower triangle is drawn in the flag's blue, #418fde (Pantone 279 C), where flag-icons has a pale #b4d7f4 (`RECOLOUR`
+in `tools/render-flags.mjs`). flag-icons is distributed under the MIT License:
 
 ```
 The MIT License (MIT)
