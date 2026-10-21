@@ -88,7 +88,8 @@ focus continent, whose never-seen flags the quizzes then introduce before the re
 The screens come in English, French, Spanish, German and Arabic: pick one under *Settings › Language* (it goes to
 the system's per-app language setting on Android 13 and newer, and the activity applies it itself before that), or
 leave *System* to follow the phone. On Android 13 and newer a language picked in the phone's own per-app language
-setting shows in the row and goes into an export; an import applies the file's language like a tap on its chip. Every word the screens show is a string resource (`app/src/main/res/values/
+setting shows in the row and goes into an export; an import applies the file's language like a tap on its chip.
+Every word the screens show is a string resource (`app/src/main/res/values/
 strings*.xml`, one file per screen plus the shared one, translated in `values-fr`, `values-es`, `values-de` and
 `values-ar`); `ui/Labels.kt` maps the stored keys (quiz modes, scopes, continents, sort orders, standings) to them.
 `tools/strings-audit.py --check` (run by CI, mirrored by `StringsAuditTest`) keeps every translation complete: the
