@@ -2,8 +2,10 @@ package com.example
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.example.data.settings.AppLanguage
@@ -31,6 +33,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -60,6 +63,7 @@ import com.example.ui.screens.AboutScreen
 import com.example.ui.components.Standing
 import com.example.ui.screens.ExploreScreen
 import com.example.ui.screens.SettingsScreen
+import com.example.ui.screens.applyNightMode
 import com.example.ui.screens.FlashcardScreen
 import com.example.ui.screens.LearnScreen
 import com.example.ui.screens.QuizScreen
@@ -99,8 +103,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        // Only a fresh start follows the intent: after a rotation the player may have moved to another tab.
-        if (savedInstanceState == null) requestedTab.value = intent.requestedTab()
+        if (savedInstanceState == null) {
+            // Only a fresh start follows the intent: after a rotation the player may have moved to another tab.
+            requestedTab.value = intent.requestedTab()
+            // The system keeps its own copy of the theme choice (Android 12+: the splash, system dialogs), outside the
+            // app's data and its backup: a restore may bring the setting back without it, so it is handed over again
+            // at every start (nothing happens when the two already agree).
+            applyNightMode(this, PrefsUserSettings(this).themeMode)
+        }
         setContent {
             // The theme follows the settings, so the view model is created here, above the theme.
             val viewModel: CountryViewModel = viewModel(factory = CountryViewModel.Factory)
@@ -111,8 +121,18 @@ class MainActivity : ComponentActivity() {
                 AppLanguage.fromSystem(this@MainActivity)?.takeIf { it != viewModel.language.value }?.let(viewModel::setLanguage)
             }
             val appearance by viewModel.appearance.collectAsStateWithLifecycle()
+            val darkTheme = appearance.themeMode.isDark(isSystemInDarkTheme())
+            // The status and navigation bar icons follow the app's theme, not the system's: before Android 12 the
+            // in-app choice never reaches the system, and after a restore the system may not hold it yet.
+            DisposableEffect(darkTheme) {
+                enableEdgeToEdge(
+                    statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT) { darkTheme },
+                    navigationBarStyle = SystemBarStyle.auto(LIGHT_SCRIM, DARK_SCRIM) { darkTheme }
+                )
+                onDispose {}
+            }
             WorldFlagsTheme(
-                darkTheme = appearance.themeMode.isDark(isSystemInDarkTheme()),
+                darkTheme = darkTheme,
                 dynamicColor = appearance.dynamicColor
             ) {
                 MainAppScreen(viewModel = viewModel, requestedTab = requestedTab.value, onTabRequestShown = { requestedTab.value = null })
@@ -136,6 +156,10 @@ class MainActivity : ComponentActivity() {
         /** String extra naming the tab to open: one of the [Screen] routes. */
         const val EXTRA_OPEN_TAB = "com.example.OPEN_TAB"
         const val TAB_QUIZ = "quiz"
+
+        /** The scrims behind the navigation bar's buttons where Android needs one (older versions, three buttons): androidx's defaults. */
+        internal val LIGHT_SCRIM = Color.argb(0xe6, 0xFF, 0xFF, 0xFF)
+        internal val DARK_SCRIM = Color.argb(0x80, 0x1b, 0x1b, 0x1b)
     }
 }
 

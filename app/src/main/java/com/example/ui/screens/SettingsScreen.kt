@@ -646,7 +646,8 @@ private fun SwitchRow(title: String, detail: String, checked: Boolean, onChecked
 
 /**
  * Tells the system the theme choice too (Android 12 and newer), so the splash screen and system dialogs follow it;
- * the Compose theme switches on its own from the setting. The system keeps the value for the app, so once is enough.
+ * the Compose theme switches on its own from the setting. The system keeps the value for the app; MainActivity hands
+ * it over again at every start, for a restore that brought the setting back without it.
  * Anything but yes or no clears the app's override and the system setting applies, which is what [ThemeMode.SYSTEM]
  * means.
  */
