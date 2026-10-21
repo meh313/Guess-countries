@@ -357,6 +357,31 @@ class CountryViewModelImportTest {
     }
 
     @Test
+    fun aNewLanguage_redrawsTheWidgetOnceMoreWhenItIsInEffect() = runBlocking {
+        val redraws = java.util.concurrent.atomic.AtomicInteger()
+        val vm = viewModel(widgets = WidgetRefresher { redraws.incrementAndGet() })
+        // The activity comes to the front in English: only noted.
+        vm.onLocalesInEffect("en-US")
+        idle()
+        assertEquals(0, redraws.get())
+
+        // The French chip: a redraw at once, which from Android 13 still renders the English texts.
+        vm.setLanguage("fr")
+        awaitCondition("a redraw for the language") { redraws.get() == 1 }
+        // The system applies French and recreates the activity: one more redraw, now in French.
+        vm.onLocalesInEffect("fr")
+        awaitCondition("a redraw in the new language") { redraws.get() == 2 }
+
+        // Back from the background in the same language, or after a rotation: nothing to redraw.
+        vm.onLocalesInEffect("fr")
+        idle()
+        assertEquals(2, redraws.get())
+        // Another language reached the screens without the app (the phone's own settings): redrawn too.
+        vm.onLocalesInEffect("de-DE")
+        awaitCondition("a redraw for the phone's language") { redraws.get() == 3 }
+    }
+
+    @Test
     fun aWidgetThatCannotBeRedrawn_failsNothing() = runBlocking {
         val vm = viewModel(widgets = WidgetRefresher { error("no widget host") })
 

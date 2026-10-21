@@ -2,6 +2,7 @@ package com.example.ui.viewmodel
 
 import android.app.Application
 import android.os.SystemClock
+import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -158,6 +159,22 @@ class CountryViewModel(
         _language.value = clean
         // The widget's texts are rendered in the language of the moment.
         viewModelScope.launch { refreshWidget() }
+    }
+
+    /** The locales the screens were last shown in, as [onLocalesInEffect] heard them; null until it first does. */
+    @VisibleForTesting internal var localesInEffect: String? = null
+        private set
+
+    /**
+     * The activity's locales ([tags], as language tags) each time it comes to the front. From Android 13 a language
+     * picked through [setLanguage] reaches the app's resources only once the system has applied it, after the widget
+     * was redrawn in the old one, and the phone's own language can change while the app is away: when the locales
+     * differ from the last ones heard, the widget is redrawn once more, now in them. The first report only notes them.
+     */
+    fun onLocalesInEffect(tags: String) {
+        val previous = localesInEffect
+        localesInEffect = tags
+        if (previous != null && previous != tags) viewModelScope.launch { refreshWidget() }
     }
 
     private val _timerPace = MutableStateFlow(settings.timerPace)

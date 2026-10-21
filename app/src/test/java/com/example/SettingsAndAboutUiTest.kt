@@ -51,6 +51,7 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
@@ -102,6 +103,26 @@ class SettingsAndAboutUiTest {
         rule.waitForIdle()
         assertEquals("", viewModel.language.value)
         assertTrue(manager.applicationLocales.isEmpty)
+    }
+
+    @Test
+    fun aLanguageTheSystemHasApplied_isReportedByTheRecreatedActivity_soTheWidgetFollows() {
+        val english = rule.activity.resources.configuration.locales.toLanguageTags()
+        assertEquals("the screens' locales, heard as the activity came to the front", english, viewModel.localesInEffect)
+        openSettings()
+        rule.onNodeWithTag("settings_language_fr").performScrollTo().performClick()
+        rule.waitForIdle()
+        // The choice is with the system, which has not applied it yet: the screens are still in English.
+        assertEquals(english, viewModel.localesInEffect)
+
+        // The system applies French and recreates the activity, as Android 13 and newer do.
+        RuntimeEnvironment.setQualifiers("+fr-rFR")
+        rule.activityRule.scenario.recreate()
+        rule.waitForIdle()
+
+        val french = rule.activity.resources.configuration.locales.toLanguageTags()
+        assertTrue(french, french.startsWith("fr"))
+        assertEquals(french, viewModel.localesInEffect)
     }
 
     @Test
