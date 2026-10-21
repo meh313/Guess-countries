@@ -22,8 +22,8 @@
     <!-- The Study button; "Study" alone when nothing is due -->
     <plurals name="flashcards_study_due">
         <item quantity="zero">ادرس · لا مستحق</item>
-        <item quantity="one">ادرس · واحدة مستحقة</item>
-        <item quantity="two">ادرس · اثنتان مستحقتان</item>
+        <item quantity="one">ادرس · مستحقة واحدة</item>
+        <item quantity="two">ادرس · مستحقتان</item>
         <item quantity="few">ادرس · %d مستحقة</item>
         <item quantity="many">ادرس · %d مستحقة</item>
         <item quantity="other">ادرس · %d مستحقة</item>
@@ -174,8 +174,8 @@
     <string name="stats_forecast">قادم: %1$s · %2$s</string>
     <plurals name="stats_forecast_tomorrow">
         <item quantity="zero">لا شيء مستحق غدًا</item>
-        <item quantity="one">واحدة مستحقة غدًا</item>
-        <item quantity="two">اثنتان مستحقتان غدًا</item>
+        <item quantity="one">مستحقة واحدة غدًا</item>
+        <item quantity="two">مستحقتان غدًا</item>
         <item quantity="few">%d مستحقة غدًا</item>
         <item quantity="many">%d مستحقة غدًا</item>
         <item quantity="other">%d مستحقة غدًا</item>

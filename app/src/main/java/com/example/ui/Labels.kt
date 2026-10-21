@@ -200,13 +200,21 @@ fun scopeLabelRes(scope: String): Int? = when (scope) {
 fun continentLabel(name: String): String = continentLabelRes(name)?.let { stringResource(it) } ?: name
 
 /**
- * [continentLabel] inside a sentence, after a preposition or a noun ("No countries in the Americas", "the countries
- * still to learn in the Americas"). Only the Americas change: English adds "the", Arabic puts the dual in the
- * genitive (الأمريكتين).
+ * The resource for a continent name inside a sentence, after a preposition or a noun ("No countries in the Americas",
+ * "the countries still to learn in the Americas"). Two continents change: English gives the Americas "the" and Arabic
+ * puts their dual in the genitive (الأمريكتين); German and Spanish give Antarctica its article ("in der Antarktis",
+ * "en la Antártida"). Any other name is [continentLabelRes]'s.
  */
+@StringRes
+fun continentInSentenceRes(name: String): Int? = when (name.lowercase()) {
+    "americas" -> R.string.continent_americas_in_sentence
+    "antarctica" -> R.string.continent_antarctica_in_sentence
+    else -> continentLabelRes(name)
+}
+
+/** [continentLabel] inside a sentence (see [continentInSentenceRes]); an unknown name is shown as it is. */
 @Composable
-fun continentInSentence(name: String): String =
-    if (name.equals("americas", ignoreCase = true)) stringResource(R.string.continent_americas_in_sentence) else continentLabel(name)
+fun continentInSentence(name: String): String = continentInSentenceRes(name)?.let { stringResource(it) } ?: name
 
 /**
  * "Afrique · Southern Africa": the country's continent as the player reads it, then its subregion, which stays English
@@ -233,3 +241,6 @@ fun Resources.continentLabel(name: String): String = continentLabelRes(name)?.le
  */
 @Composable
 fun optionLabel(mode: QuizMode, option: String): String = if (mode == QuizMode.CONTINENT) continentLabel(option) else option
+
+/** [continentInSentence] outside composition (the sentence read aloud about a country). */
+fun Resources.continentInSentence(name: String): String = continentInSentenceRes(name)?.let { getString(it) } ?: name

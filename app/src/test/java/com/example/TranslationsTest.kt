@@ -5,6 +5,8 @@ import android.content.res.Resources
 import androidx.test.core.app.ApplicationProvider
 import com.example.learn.LearnSession
 import com.example.quiz.QuizMode
+import com.example.ui.continentInSentence
+import com.example.ui.continentLabel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -16,8 +18,9 @@ import org.robolectric.annotation.Config
 /**
  * The words around a number or a continent in each language, read through the resources as the screens read them. A
  * count beside a word that agrees with it comes from a plurals, so 1 is singular ("1 jour", "1 Tag") and Arabic has its
- * one, two, three-to-ten and eleven-and-up forms; the Arabic Americas take the genitive in a sentence; the Arabic mode
- * arrows point the way the line reads; and a sentence put together around a name reads in Spanish whatever the name.
+ * one, two, three-to-ten and eleven-and-up forms; the Arabic Americas take the genitive in a sentence, and German and
+ * Spanish Antarctica its article; the Arabic mode arrows point the way the line reads; and a sentence put together
+ * around a name reads in Spanish whatever the name.
  * StringsAuditTest checks the keys, the placeholders and the quantities; this checks what they say.
  */
 @RunWith(RobolectricTestRunner::class)
@@ -95,6 +98,28 @@ class TranslationsTest {
     }
 
     @Test
+    @Config(qualifiers = "de")
+    fun german_antarcticaTakesItsArticleInASentence() {
+        // On its own (a chip, a pill) the name alone; after "in", the dative article. The other continents take none.
+        assertEquals("Antarktis", resources.continentLabel("Antarctica"))
+        assertEquals("Keine Länder in der Antarktis. Filter löschen?", emptyHint("Antarctica"))
+        assertEquals("Keine Länder in Amerika. Filter löschen?", emptyHint("Americas"))
+        assertEquals("Keine Länder in Afrika. Filter löschen?", emptyHint("Africa"))
+    }
+
+    @Test
+    @Config(qualifiers = "es")
+    fun spanish_antarcticaTakesItsArticleInASentence() {
+        assertEquals("Antártida", resources.continentLabel("Antarctica"))
+        assertEquals("No hay países en la Antártida. ¿Quitar los filtros?", emptyHint("Antarctica"))
+        assertEquals("No hay países en América. ¿Quitar los filtros?", emptyHint("Americas"))
+    }
+
+    /** Explore's empty hint with only the continent filter on, as ExploreScreen puts it together. */
+    private fun emptyHint(continent: String) = resources.getString(R.string.explore_empty_hint_filtered,
+        resources.getString(R.string.explore_empty_scope_continent, resources.continentInSentence(continent)))
+
+    @Test
     @Config(qualifiers = "ar")
     fun arabic_theNounTakesTheFormOfItsNumber() {
         // One and two name the noun alone; three to ten take the plural; eleven to ninety-nine the singular accusative.
@@ -118,7 +143,11 @@ class TranslationsTest {
         assertEquals("بدأت السلسلة: اليوم الأول", resources.getString(R.string.streak_started))
         assertEquals("بليتز ${digits(60)} ثانية", resources.getString(R.string.mode_blitz, 60))
         assertEquals("تعلّم ${digits(5)} جديدة", resources.getString(R.string.today_learn_new, 5))
-        assertEquals("ادرس · واحدة مستحقة", plural(R.plurals.flashcards_study_due, 1))
+        // One and two follow what they count, as in the other plurals; the dual says "two" on its own.
+        assertEquals("ادرس · مستحقة واحدة", plural(R.plurals.flashcards_study_due, 1))
+        assertEquals("ادرس · مستحقتان", plural(R.plurals.flashcards_study_due, 2))
+        assertEquals("مستحقة واحدة غدًا", plural(R.plurals.stats_forecast_tomorrow, 1))
+        assertEquals("مستحقتان غدًا", plural(R.plurals.stats_forecast_tomorrow, 2))
     }
 
     @Test

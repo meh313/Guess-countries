@@ -262,6 +262,15 @@ class WorldMapTest {
     }
 
     @Test
+    @Config(qualifiers = "de-w360dp-h640dp-xxhdpi")
+    fun theGermanDescription_givesAntarcticaItsArticleAfterIn() {
+        // Antarctica's subregion repeats its continent, so the region is the continent alone.
+        show(france.copy(code = "AA", name = "Antarctica", continent = "Antarctica", subregion = "Antarctica"))
+
+        rule.onNodeWithTag("world_map").assertContentDescriptionEquals("Karte: Antarctica, in der Antarktis")
+    }
+
+    @Test
     fun aCountryTheDataDoesNotKnow_getsNoMap() {
         show(mapped("ZZ"))
 

@@ -21,6 +21,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.example.speech.Speech
 import com.example.ui.CountrySummary
+import com.example.ui.continentInSentence
 import com.example.ui.continentLabel
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
@@ -91,7 +92,7 @@ class CountryViewModelSpeechTest {
     @Test
     fun spoken_saysHowToSpotTheFlag_betweenThePlaceAndTheFunFact_onlyWhenThereIsACue() {
         val cue = "Three vertical bands: blue at the pole, then white, then red."
-        val place = "Capital is ${country.capital}, located in ${context.resources.continentLabel(country.continent)}."
+        val place = "Capital is ${country.capital}, located in ${context.resources.continentInSentence(country.continent)}."
 
         val withCue = CountrySummary.spoken(context, country.copy(spotIt = cue))
         val withoutCue = CountrySummary.spoken(context, country.copy(spotIt = ""))
@@ -107,6 +108,31 @@ class CountryViewModelSpeechTest {
         val text = CountrySummary.spoken(context, kenya)
 
         assertEquals("Kenya. Capital is Nairobi, located in Africa. ${kenya.spotIt} ${kenya.funFact}", text)
+    }
+
+    /** Brazil's place as the English voice reads it: "the Americas", as inside any English sentence. */
+    private fun assertBrazilIsInTheAmericas() {
+        val brazil = vm.repository.allCountries.single { it.code == "BR" }
+
+        val text = CountrySummary.spoken(context, brazil)
+
+        assertTrue("text was: $text", text.startsWith("Brazil. Capital is Brasília, located in the Americas. "))
+    }
+
+    @Test
+    fun spoken_saysTheAmericas() {
+        assertBrazilIsInTheAmericas()
+        // A place with no capital of its own is "located in the Americas" too.
+        val noCapital = vm.repository.allCountries.single { it.code == "BR" }.copy(name = "Somewhere", isSovereign = false)
+        assertTrue(CountrySummary.spoken(context, noCapital).startsWith("Somewhere. Located in the Americas. "))
+    }
+
+    @Test
+    @Config(qualifiers = "fr")
+    fun spoken_saysTheAmericasInEnglish_whenTheScreensAreInFrench() {
+        // The French screens say "Amériques" inside a sentence; the English voice still says "the Americas".
+        assertEquals("Amériques", context.resources.continentInSentence("Americas"))
+        assertBrazilIsInTheAmericas()
     }
 
     @Test

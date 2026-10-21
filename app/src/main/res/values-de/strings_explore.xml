@@ -70,7 +70,7 @@
     <string name="explore_empty_hint">Passe deine Suche oder den Kontinentfilter an</string>
     <!-- With filters on, the hint names them: "No countries still to learn in Europe. Clear the filters?" -->
     <string name="explore_empty_hint_filtered">Keine Länder %1$s. Filter löschen?</string>
-    <string name="explore_empty_scope_continent">auf dem Kontinent %1$s</string>
+    <string name="explore_empty_scope_continent">in %1$s</string>
     <string name="explore_empty_scope_search">passend zu \"%1$s\"</string>
     <string name="explore_empty_scope_saved">unter deinen gemerkten Ländern</string>
 

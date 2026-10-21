@@ -8,9 +8,10 @@ the same format placeholders (%1$s, %2$d, %s ...) in the same multiset, no key t
 entry for every quantity the language needs (CLDR: ar has zero/one/two/few/many/other, fr and es one/many/other,
 de one/other; lint asks for the same) and an
 "other" entry everywhere, no untranslated copy of an English string longer than one word (a few words are the same
-in every language: the exceptions are listed in SAME_IS_FINE), no Latin digit typed into a language whose screens
-print their own digits (Arabic: a number there is a placeholder or spelled out, so it has the digits of the numbers
-formatted beside it; LATIN_DIGITS_FINE lists the prose exceptions), and XML that Android accepts (apostrophes escaped).
+in every language: the exceptions are listed in SAME_IS_FINE, and in SAME_IN for one language), no Latin digit
+typed into a language whose screens print their own digits (Arabic: a number there is a placeholder or spelled out,
+so it has the digits of the numbers formatted beside it; LATIN_DIGITS_FINE lists the prose exceptions), and XML that
+Android accepts (apostrophes escaped).
 Without --check the report is printed and the exit code is 0; with it, any problem exits 1 (CI runs it).
 """
 import argparse
@@ -31,6 +32,8 @@ PLACEHOLDER = re.compile(r'%(\d+\$)?[sd]')
 # English strings that stay as they are in every language (brand, codes, symbols, units, proper nouns).
 SAME_IS_FINE = {'World Flags', 'OK', 'Blitz', 'GitHub', 'Antarctica', 'UK, USA, DRC', '%1$s · %2$s', '%1$s, %2$s', '%1$s/%2$s',
                 '·', '—', 'Africa', 'Europe', 'Asia', 'Oceania', '%1$s km²'}
+# English strings one language words the same way: German says "in %1$s" too ("in Afrika", "in der Antarktis").
+SAME_IN = {'de': {'in %1$s'}}
 # Languages whose %d prints its own digits (Arabic-Indic in ar): a Latin digit typed into a string would sit beside them.
 NATIVE_DIGITS = {'ar'}
 # Prose with no formatted number beside it: the catalog's 196, the years of the figures, licence versions.
@@ -101,7 +104,8 @@ def audit(locale, default):
             if kind == 'string':
                 if placeholders(tvalue) != placeholders(value):
                     problems.append(f'values-{locale}/{file}: {key} placeholders {placeholders(tvalue)} != {placeholders(value)}')
-                if tvalue == value and value not in SAME_IS_FINE and len(value.split()) > 1 and not format_only(value):
+                same_is_fine = value in SAME_IS_FINE or value in SAME_IN.get(locale, set())
+                if tvalue == value and not same_is_fine and len(value.split()) > 1 and not format_only(value):
                     problems.append(f'values-{locale}/{file}: {key} is not translated: {value!r}')
                 elif tvalue == value:
                     same += 1

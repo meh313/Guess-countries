@@ -96,6 +96,7 @@
     <string name="continent_oceania">أوقيانوسيا</string>
     <string name="continent_antarctica">القارة القطبية الجنوبية</string>
     <string name="continent_americas_in_sentence">الأمريكتين</string>
+    <string name="continent_antarctica_in_sentence">القارة القطبية الجنوبية</string>
 
     <!-- Sort orders -->
     <string name="sort_by_name">ترتيب حسب الاسم</string>

@@ -87,10 +87,13 @@
     <string name="continent_europe">Europe</string>
     <string name="continent_oceania">Oceania</string>
     <string name="continent_antarctica">Antarctica</string>
-    <!-- The Americas inside a sentence, after a preposition or a noun ("No countries in the Americas", "the countries
-         still to learn in the Americas"): English adds "the", Arabic puts the dual in the genitive. Every other
-         continent reads the same inside a sentence as on its own. -->
+    <!-- Two continents inside a sentence, after a preposition or a noun ("No countries in the Americas", "the
+         countries still to learn in the Americas", "Map: Antarctica, in Antarctica"). English adds "the" to the
+         Americas and Arabic puts their dual in the genitive; German and Spanish give Antarctica its article ("in der
+         Antarktis", "en la Antártida"). The other continents read the same inside a sentence as on their own in these
+         five languages. -->
     <string name="continent_americas_in_sentence">the Americas</string>
+    <string name="continent_antarctica_in_sentence">Antarctica</string>
 
     <!-- Sort orders -->
     <string name="sort_by_name">Sort by name</string>

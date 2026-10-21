@@ -87,6 +87,7 @@
     <string name="continent_oceania">Ozeanien</string>
     <string name="continent_antarctica">Antarktis</string>
     <string name="continent_americas_in_sentence">Amerika</string>
+    <string name="continent_antarctica_in_sentence">der Antarktis</string>
 
     <!-- Sort orders -->
     <string name="sort_by_name">Nach Name sortieren</string>
