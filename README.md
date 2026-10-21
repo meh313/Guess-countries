@@ -133,7 +133,7 @@ Requires JDK 21 and the Android SDK (compileSdk 37, targetSdk 36). The Gradle wr
 ./gradlew lintDebug testDebugUnitTest assembleDebug assembleRelease assembleDebugAndroidTest
 ```
 
-CI also runs the `--check` of six tools before Gradle (see `tools/` under Project layout).
+CI also runs the `--check` of seven tools before Gradle (see `tools/` under Project layout).
 
 The unit tests include Compose UI tests that drive the real activity under Robolectric, so no emulator is
 needed. They run the screens at phone, landscape and tablet sizes and at twice the font size; a window 600dp or
@@ -191,9 +191,16 @@ What a Play Store listing needs is in the repository:
 
 - `store/listing.md`: the title, the short and full descriptions, the "What's new" text, the category and the data
   safety answers.
-- `store/screenshots/`: the store screenshots, written by the `store*` tests of `ScreenshotsTest`
-  (`./gradlew testDebugUnitTest --tests '*ScreenshotsTest*'`) to `app/build/screenshots/store/` and copied from there
-  into `store/screenshots/` when they change: phone 1080×2400 in light and dark, tablet 1600×2560.
+- `store/screenshots/`: the store screenshots, written by the `store*` tests of `ScreenshotsTest` to
+  `app/build/screenshots/store/` and copied from there into `store/screenshots/` when they change: eight phone ones at
+  1080×2160 (seven light, one dark; Play takes at most eight for each kind of device) and two tablet ones at 1600×2560, all
+  24-bit PNGs without an alpha channel, the only PNGs Play takes for a screenshot.
+- `store/feature-graphic.png` (1024×500, 24-bit) and `store/icon-512.png` (512×512, 32-bit): the feature graphic Play
+  needs to publish a listing and the store icon, drawn from the launcher icon's flag ring and navy by
+  `StoreGraphicsTest` to `app/build/screenshots/store-graphics/` and copied from there into `store/`.
+  `./gradlew testDebugUnitTest --tests '*ScreenshotsTest.store*' --tests '*StoreGraphicsTest*'` writes all of them.
+- `tools/store-check.py --check` (run by CI) checks the screenshots, the graphic and the icon against Play's upload
+  rules (format, size, aspect ratio, file size, count) and the listing texts against its length limits.
 - `PRIVACY.md`: the privacy statement to link from the listing; the About screen links to the same file.
 - The `.aab` on each GitHub release (see above) is the file to upload to the Play Console; the `.apk` beside it is
   for sideloading.
@@ -215,7 +222,7 @@ What a Play Store listing needs is in the repository:
 | `data/model/` | The country catalog, one file per continent (`EuropeCatalog.kt`…, alphabetical), `CountryRepository`, `CountrySources` (the per-country source pages, read from the asset `sources.json`) and the generated `Geo` (each country's bounding box, label and capital on the map). |
 | `data/local/` | Room database (version 2): bookmarks, skill states, quiz history with every answer. Schemas are exported to `app/schemas/`; `AppDatabase.MIGRATION_1_2` is tested against the committed version 1 schema. |
 | `ui/` | Compose screens, components, theme, `Labels.kt` (the words for the stored keys) and `CountryViewModel`, which hands progress, the quiz and the study session to the holders in `ui/viewmodel/`. |
-| `tools/` | Content pipeline: flag rendering (`render-flags.mjs`, `to-webp.py`, `contact-sheet.py`), catalog generation (`validate-research.py`, `gen-entries.py`, `apply-edits.py`, `gen-flag-art.py`, `flag-checksums.py`), audit input (`export-entries.py`), quiz data (`gen-lookalikes.py` writes `FlagLookAlikes.kt`), the sources asset (`export-sources.py` writes `app/src/main/assets/sources.json` from the research and audit files; `--check` verifies it), the notices asset (`export-notices.py` writes `app/src/main/assets/NOTICES.txt` from `licenses/THIRD_PARTY_NOTICES.md`; `--check` verifies it), the map and the land borders (`gen-worldmap.py` downloads Natural Earth and writes `app/src/main/assets/world.json`, `Geo.kt` and `Neighbours.kt`; `--check` verifies the committed files offline). CI runs six `--check`s, with the Pillow of `requirements.txt`: `export-sources.py`, `export-notices.py`, `gen-worldmap.py`, `gen-lookalikes.py`, `gen-sounds.py` and `strings-audit.py`. |
+| `tools/` | Content pipeline: flag rendering (`render-flags.mjs`, `to-webp.py`, `contact-sheet.py`), catalog generation (`validate-research.py`, `gen-entries.py`, `apply-edits.py`, `gen-flag-art.py`, `flag-checksums.py`), audit input (`export-entries.py`), quiz data (`gen-lookalikes.py` writes `FlagLookAlikes.kt`), the sources asset (`export-sources.py` writes `app/src/main/assets/sources.json` from the research and audit files; `--check` verifies it), the notices asset (`export-notices.py` writes `app/src/main/assets/NOTICES.txt` from `licenses/THIRD_PARTY_NOTICES.md`; `--check` verifies it), the map and the land borders (`gen-worldmap.py` downloads Natural Earth and writes `app/src/main/assets/world.json`, `Geo.kt` and `Neighbours.kt`; `--check` verifies the committed files offline), the store listing (`store-check.py --check` checks the files in `store/` against Play's rules). CI runs seven `--check`s, with the Pillow of `requirements.txt`: `export-sources.py`, `export-notices.py`, `gen-worldmap.py`, `gen-lookalikes.py`, `gen-sounds.py`, `strings-audit.py` and `store-check.py`. |
 | `content/` | Provenance for the catalog: `seed/` (country lists and owner rules), `research/` (first-pass entries with sources), `audit/` (second-pass fixes, doubts and owner decisions per continent). |
 
 `CountryViewModel` receives its repository, speech engine and clock through the constructor, which is how

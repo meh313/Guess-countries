@@ -43,7 +43,8 @@ jobs:
       # The generated assets must match their sources, or the app ships stale data: the per-country source pages
       # (export-sources.py), the third-party notices the About screen shows (export-notices.py) and the look-alike
       # flags (gen-lookalikes.py, from the flag images). The world map comes from a download, so its check only
-      # verifies the committed asset (format, every catalog code, Geo.kt, Neighbours.kt).
+      # verifies the committed asset (format, every catalog code, Geo.kt, Neighbours.kt). The store listing's
+      # screenshots, feature graphic, icon and texts must be what the Play Console takes (store-check.py).
       - name: Check the generated assets
         run: |
           python3 tools/export-sources.py --check
@@ -52,6 +53,7 @@ jobs:
           python3 tools/gen-lookalikes.py --check
           python3 tools/gen-sounds.py --check
           python3 tools/strings-audit.py --check
+          python3 tools/store-check.py --check
 
       - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6
 
