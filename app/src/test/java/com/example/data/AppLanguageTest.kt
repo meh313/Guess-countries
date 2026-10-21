@@ -2,13 +2,17 @@ package com.example.data
 
 import android.app.LocaleManager
 import android.content.Context
+import android.os.LocaleList
+import android.view.View
 import androidx.test.core.app.ApplicationProvider
+import com.example.R
 import com.example.data.settings.AppLanguage
 import com.example.data.settings.InMemoryUserSettings
 import com.example.data.settings.PrefsUserSettings
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -59,5 +63,46 @@ class AppLanguageTest {
         assertSame(context, AppLanguage.wrap(context, AppLanguage.SYSTEM))
         assertTrue(AppLanguage.isRtl("ar"))
         assertFalse(AppLanguage.isRtl("fr"))
+    }
+
+    @Test
+    fun onAndroid13_fromSystemReadsTheChoiceBack_asOneOfTheRowsTags() {
+        val manager = context.getSystemService(LocaleManager::class.java)
+        assertEquals(AppLanguage.SYSTEM, AppLanguage.fromSystem(context))
+        // What the phone's per-app language screen (or the chips, through apply) leaves there.
+        manager.applicationLocales = LocaleList.forLanguageTags("de")
+        assertEquals("de", AppLanguage.fromSystem(context))
+        manager.applicationLocales = LocaleList.forLanguageTags("fr-CA")
+        assertEquals("fr", AppLanguage.fromSystem(context))
+        manager.applicationLocales = LocaleList.forLanguageTags("pt-BR")
+        assertEquals("a language the app lacks reads as System", AppLanguage.SYSTEM, AppLanguage.fromSystem(context))
+        manager.applicationLocales = LocaleList.getEmptyLocaleList()
+        assertEquals(AppLanguage.SYSTEM, AppLanguage.fromSystem(context))
+    }
+
+    /**
+     * Android 7 to 12: no per-app language in the system, so the activity, the reminder and the widget take the stored
+     * choice through [AppLanguage.wrap], and nothing reads it back from the system.
+     */
+    @Test
+    @Config(sdk = [24, 32])
+    fun beforeAndroid13_wrapGivesTheContextTheLanguage_rightToLeftForArabic() {
+        val german = AppLanguage.wrap(context, "de")
+        assertEquals("de", german.resources.configuration.locales[0].language)
+        assertEquals(View.LAYOUT_DIRECTION_LTR, german.resources.configuration.layoutDirection)
+        assertEquals("Afrika", german.getString(R.string.continent_africa))
+
+        val arabic = AppLanguage.wrap(context, "ar")
+        assertEquals("ar", arabic.resources.configuration.locales[0].language)
+        assertEquals(View.LAYOUT_DIRECTION_RTL, arabic.resources.configuration.layoutDirection)
+        assertEquals("أفريقيا", arabic.getString(R.string.continent_africa))
+
+        // System leaves the phone's language alone: the very same context.
+        assertSame(context, AppLanguage.wrap(context, AppLanguage.SYSTEM))
+        assertEquals("Africa", context.getString(R.string.continent_africa))
+        assertNull(AppLanguage.fromSystem(context))
+        // Nothing to tell the system there; the activity recreates itself instead.
+        AppLanguage.apply(context, "de")
+        assertEquals("Africa", context.getString(R.string.continent_africa))
     }
 }

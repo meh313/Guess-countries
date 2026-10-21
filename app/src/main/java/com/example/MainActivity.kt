@@ -53,6 +53,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.ui.screens.AboutScreen
 import com.example.ui.components.Standing
@@ -102,6 +104,12 @@ class MainActivity : ComponentActivity() {
         setContent {
             // The theme follows the settings, so the view model is created here, above the theme.
             val viewModel: CountryViewModel = viewModel(factory = CountryViewModel.Factory)
+            // From Android 13 the screens' language is the system's per-app setting, which the phone's own settings
+            // can change (and a restore brings back) without the app: at every start and return the stored choice,
+            // which the Language row and the export read, follows it.
+            LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+                AppLanguage.fromSystem(this@MainActivity)?.takeIf { it != viewModel.language.value }?.let(viewModel::setLanguage)
+            }
             val appearance by viewModel.appearance.collectAsStateWithLifecycle()
             WorldFlagsTheme(
                 darkTheme = appearance.themeMode.isDark(isSystemInDarkTheme()),

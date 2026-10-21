@@ -187,7 +187,8 @@ fun SettingsScreen(
         SettingsSection(stringResource(R.string.settings_section_appearance)) {
             SettingLabel(stringResource(R.string.settings_language_label))
             // One chip per language, each in its own language; "System" follows the phone. Applying the choice
-            // recreates the screen (the system does it from Android 13, the activity itself before).
+            // recreates the screen (the system does it from Android 13, the activity itself before). From 13 the
+            // selected chip follows the phone's per-app language setting too (MainActivity reads it back).
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth().testTag("settings_language")) {
                 AppLanguage.CHOICES.forEach { tag ->
                     val selected = language == tag
@@ -196,8 +197,7 @@ fun SettingsScreen(
                         onClick = {
                             if (selected) return@FilterChip
                             viewModel.setLanguage(tag)
-                            AppLanguage.apply(context, tag)
-                            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) (context as? Activity)?.recreate()
+                            applyLanguage(context, tag)
                         },
                         label = { Text(AppLanguage.label(tag) ?: stringResource(R.string.settings_language_system)) },
                         modifier = Modifier.testTag("settings_language_${tag.ifEmpty { "system" }}")
@@ -476,11 +476,15 @@ fun SettingsScreen(
                 Button(
                     onClick = {
                         scope.launch {
+                            val languageBefore = viewModel.language.value
                             transferNote = viewModel.applyImport().fold(
                                 onSuccess = {
                                     transferFailed = false
                                     // The file may carry another theme; the system's copy of the choice follows it.
                                     applyNightMode(context, viewModel.appearance.value.themeMode)
+                                    // And another language, put on screen as a tap on its chip would.
+                                    val language = viewModel.language.value
+                                    if (language != languageBefore) applyLanguage(context, language)
                                     resources.getString(R.string.settings_import_done, quizzes, skills, countries)
                                 },
                                 onFailure = {
@@ -655,6 +659,15 @@ internal fun applyNightMode(context: Context, mode: ThemeMode) {
         ThemeMode.DARK -> UiModeManager.MODE_NIGHT_YES
     }
     runCatching { manager.setApplicationNightMode(nightMode) }
+}
+
+/**
+ * Puts the language [tag] (just stored) on screen: from Android 13 the system takes it and recreates the activity;
+ * before that the activity is recreated here, and its base context is wrapped with the stored language again.
+ */
+internal fun applyLanguage(context: Context, tag: String) {
+    AppLanguage.apply(context, tag)
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) (context as? Activity)?.recreate()
 }
 
 /** The installed version name, as the package manager has it; "?" should that fail. */

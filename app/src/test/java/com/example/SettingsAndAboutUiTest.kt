@@ -2,6 +2,7 @@ package com.example
 
 import android.app.UiModeManager
 import android.content.Intent
+import android.os.LocaleList
 import androidx.activity.compose.setContent
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertHasClickAction
@@ -21,6 +22,7 @@ import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.core.app.ApplicationProvider
 import com.example.data.local.AppDatabase
@@ -99,6 +101,34 @@ class SettingsAndAboutUiTest {
         rule.onNodeWithTag("settings_language_system").performClick()
         rule.waitForIdle()
         assertEquals("", viewModel.language.value)
+        assertTrue(manager.applicationLocales.isEmpty)
+    }
+
+    @Test
+    fun aLanguagePickedInThePhonesSettings_showsInTheRowAndGoesIntoTheExport() {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val manager = context.getSystemService(android.app.LocaleManager::class.java)
+
+        // Android's per-app language screen, while the app waits in the background.
+        rule.activityRule.scenario.moveToState(Lifecycle.State.CREATED)
+        manager.applicationLocales = LocaleList.forLanguageTags("de")
+        rule.activityRule.scenario.moveToState(Lifecycle.State.RESUMED)
+        rule.waitForIdle()
+
+        assertEquals("de", viewModel.language.value)
+        assertEquals("de", PrefsUserSettings(context).language)
+        openSettings()
+        rule.onNodeWithTag("settings_language_de").performScrollTo().assertIsSelected()
+        rule.onNodeWithTag("settings_language_system").assertIsNotSelected()
+        assertTrue(runBlocking { viewModel.exportJson() }.contains("\"language\":\"de\""))
+
+        // Back to "System default" there: the System chip again, and the system's copy left alone.
+        rule.activityRule.scenario.moveToState(Lifecycle.State.CREATED)
+        manager.applicationLocales = LocaleList.getEmptyLocaleList()
+        rule.activityRule.scenario.moveToState(Lifecycle.State.RESUMED)
+        rule.waitForIdle()
+        assertEquals("", viewModel.language.value)
+        rule.onNodeWithTag("settings_language_system").performScrollTo().assertIsSelected()
         assertTrue(manager.applicationLocales.isEmpty)
     }
 

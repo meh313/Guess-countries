@@ -1,5 +1,6 @@
 package com.example
 
+import android.app.LocaleManager
 import android.net.Uri
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivityResultRegistryOwner
@@ -961,6 +962,73 @@ class ExploreProgressUiTest {
         } finally {
             file.delete()
             db.closeWhenIdle(vm)
+        }
+    }
+
+    /**
+     * Exports a file whose language is French from a Settings screen over [settings], switches the stored language
+     * back to System and imports the file through the screen, confirming it. Returns once the import note is shown
+     * (or [whenImported] says the import is done another way); the view model is released afterwards.
+     */
+    private fun importAFrenchFile(settings: com.example.data.settings.UserSettings, whenImported: () -> Unit) {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val file = File(context.cacheDir, "french.json")
+        val picker = PickerStandIn(Uri.fromFile(file))
+        val db = inMemoryDatabase()
+        val vm = CountryViewModel(CountryRepository(db.userProgressDao()), FakeSpeech(), settings = settings)
+        try {
+            vm.setLanguage("fr")
+            file.writeText(runBlocking { vm.exportJson() })
+            vm.setLanguage("")
+            rule.activityRule.scenario.onActivity { activity ->
+                (activity as ComponentActivity).setContent {
+                    CompositionLocalProvider(LocalActivityResultRegistryOwner provides picker) {
+                        WorldFlagsTheme { SettingsScreen(vm, onBack = {}, onAbout = {}) }
+                    }
+                }
+            }
+            rule.waitForIdle()
+            rule.onNodeWithTag("settings_language_system").performScrollTo().assertIsSelected()
+
+            rule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("settings_import_btn"))
+            rule.onNodeWithTag("settings_import_btn").performClick()
+            rule.eventually("the import question") { rule.onNodeWithText("Import this file?").assertIsDisplayed() }
+            rule.onNodeWithTag("settings_import_confirm_btn").performClick()
+            whenImported()
+            assertEquals("fr", settings.language)
+        } finally {
+            file.delete()
+            db.closeWhenIdle(vm)
+        }
+    }
+
+    @Test
+    fun anImportedLanguage_goesToTheSystem_likeATapOnItsChip() {
+        val manager = ApplicationProvider.getApplicationContext<android.content.Context>().getSystemService(LocaleManager::class.java)
+        assertTrue(manager.applicationLocales.isEmpty)
+
+        importAFrenchFile(InMemoryUserSettings()) {
+            rule.eventually("the import note") { rule.onNodeWithTag("settings_transfer_note").assert(hasText("Imported", substring = true)) }
+            // The system holds the file's language (and, on a phone, recreates the activity in it); its chip is lit.
+            assertEquals("fr", manager.applicationLocales.toLanguageTags())
+            rule.onNodeWithTag("settings_language_fr").performScrollTo().assertIsSelected()
+        }
+    }
+
+    @Test
+    @Config(sdk = [32])
+    fun beforeAndroid13_anImportedLanguage_recreatesTheActivityInIt() {
+        val before = rule.activity
+        assertEquals("Explore", before.getString(R.string.nav_explore))
+
+        // The app's own settings, which the recreated activity reads in attachBaseContext.
+        importAFrenchFile(PrefsUserSettings(ApplicationProvider.getApplicationContext())) {
+            rule.eventually("the activity recreated in French") {
+                val now = rule.activity
+                assertTrue("the activity was recreated", now !== before)
+                assertEquals("fr", now.resources.configuration.locales[0].language)
+                rule.onNodeWithTag("nav_tab_explore").assert(hasText("Explorer"))
+            }
         }
     }
 
