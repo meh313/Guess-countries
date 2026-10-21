@@ -48,6 +48,7 @@
         <item quantity="one">%d Land auf der Karte wiederholen</item>
         <item quantity="other">%d Länder auf der Karte wiederholen</item>
     </plurals>
+    <string name="today_back_to_quiz">Zurück zu deinem Quiz</string>
     <string name="today_learn_new" tools:ignore="PluralsCandidate">%1$d neue lernen</string>
     <string name="today_learn_more" tools:ignore="PluralsCandidate">%1$d weitere lernen</string>
     <!-- Every flag has been seen, so there is nothing left for Learn: the button opens the Quiz tab instead -->

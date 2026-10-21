@@ -53,6 +53,7 @@
         <item quantity="other">Repasar %d países en el mapa</item>
         <item quantity="many">Repasar %d países en el mapa</item>
     </plurals>
+    <string name="today_back_to_quiz">Volver a tu quiz</string>
     <string name="today_learn_new" tools:ignore="PluralsCandidate">Aprender %1$d nuevas</string>
     <string name="today_learn_more" tools:ignore="PluralsCandidate">Aprender %1$d más</string>
     <!-- Every flag has been seen, so there is nothing left for Learn: the button opens the Quiz tab instead -->

@@ -49,6 +49,8 @@
         <item quantity="one">Review %d country on the map</item>
         <item quantity="other">Review %d countries on the map</item>
     </plurals>
+    <!-- With map reviews due and another quiz under way, the button goes back to that quiz rather than throw it away -->
+    <string name="today_back_to_quiz">Back to your quiz</string>
     <!-- The number is the size of a Learn session (LearnSession.CARDS_PER_SESSION, five): a fixed number, so a
          plain string written for it in every language (TranslationsTest checks it stays one they fit) -->
     <string name="today_learn_new" tools:ignore="PluralsCandidate">Learn %1$d new</string>

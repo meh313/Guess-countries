@@ -68,6 +68,7 @@
         <item quantity="many">راجع %d دولة على الخريطة</item>
         <item quantity="other">راجع %d دولة على الخريطة</item>
     </plurals>
+    <string name="today_back_to_quiz">عُد إلى اختبارك</string>
     <string name="today_learn_new" tools:ignore="PluralsCandidate">تعلّم %1$d جديدة</string>
     <string name="today_learn_more" tools:ignore="PluralsCandidate">تعلّم %1$d أخرى</string>
     <!-- Every flag has been seen, so there is nothing left for Learn: the button opens the Quiz tab instead -->

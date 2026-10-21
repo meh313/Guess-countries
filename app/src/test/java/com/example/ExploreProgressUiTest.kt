@@ -833,6 +833,31 @@ class ExploreProgressUiTest {
     }
 
     @Test
+    fun withMapReviewsDue_andAnotherQuizUnderWay_theButtonSaysItGoesBackToThatQuiz() {
+        rule.runOnUiThread {
+            viewModel.setTodayCardDismissedDay("")
+            viewModel.chooseFocus("All")
+            viewModel.startQuiz(QuizMode.CAPITAL, "Europe")
+        }
+        dueAt("JP", Skill.LOCATION, 0L)
+        val open = viewModel.quizSession.value!!
+
+        // The capital quiz introduced a few new countries, so the line counts them; the button is the map review's.
+        rule.eventually("one on the map") { rule.onNodeWithTag("today_card").assert(hasText("1 due · ", substring = true)) }
+        rule.onNodeWithTag("today_action_btn").assert(hasText("Back to your quiz"))
+        rule.onNodeWithTag("today_action_btn").performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithTag("nav_tab_quiz").assertIsSelected()
+        assertEquals("the quiz under way, not a map quiz", open.questions, viewModel.quizSession.value?.questions)
+
+        // Once that quiz is over, the button offers the map review again.
+        rule.runOnUiThread { viewModel.endQuiz() }
+        rule.openTab("explore")
+        rule.eventually("the map review") { rule.onNodeWithTag("today_action_btn").assert(hasText("Review 1 country on the map")) }
+    }
+
+    @Test
     fun onceEveryFlagHasBeenSeen_theCardOffersAQuiz_notLearn() {
         rule.runOnUiThread {
             viewModel.setTodayCardDismissedDay("")

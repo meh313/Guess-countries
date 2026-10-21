@@ -54,10 +54,11 @@ val FOCUS_CHOICES = listOf(ALL_CONTINENTS, "Africa", "Americas", "Asia", "Europe
  * The card at the top of Explore and Progress: today's items against the daily goal, and the one next thing to do.
  * Its due count is the Due tile's (flags, capitals and map). With reviews due its button reviews one skill at a time,
  * in that order: a study session of the flags or the capitals due (and [onOpenFlashcards] shows it), or the
- * Map → Country quiz over the map reviews due (and [onOpenQuiz] shows it). Otherwise it offers five new countries
- * through [onLearn], or, once every flag has been seen, a quiz through [onOpenQuiz]. Until the first-run choice is
- * made it asks for a focus continent instead. The screens leave it out when `CountryViewModel.todayCardVisible` is
- * false (put away for the day).
+ * Map → Country quiz over the map reviews due (and [onOpenQuiz] shows it); with another quiz under way it goes back
+ * to that one instead, and says so, since starting the map quiz would throw it away. Otherwise it offers five new
+ * countries through [onLearn], or, once every flag has been seen, a quiz through [onOpenQuiz]. Until the first-run
+ * choice is made it asks for a focus continent instead. The screens leave it out when
+ * `CountryViewModel.todayCardVisible` is false (put away for the day).
  */
 @Composable
 fun TodayCard(
@@ -76,6 +77,7 @@ fun TodayCard(
     val goal by viewModel.dailyGoal.collectAsStateWithLifecycle()
     val newToday by viewModel.newItemsToday.collectAsStateWithLifecycle()
     val plan by viewModel.quizPlan.collectAsStateWithLifecycle()
+    val quiz by viewModel.quizSession.collectAsStateWithLifecycle()
     // The skills the Due tile counts, in the order the button reviews them; the continent has no reviews.
     val dueCodes = remember(plan) { Skill.REVIEWED.associateWith { skill -> plan.due(skill).map { it.code } } }
     val next = Skill.REVIEWED.firstOrNull { dueCodes[it].orEmpty().isNotEmpty() }
@@ -90,6 +92,8 @@ fun TodayCard(
         due = dueCodes.values.sumOf { it.size },
         review = next,
         reviewCount = next?.let { dueCodes[it].orEmpty().size } ?: 0,
+        // The map review is a quiz, and the Quiz tab shows the one under way rather than throw it away.
+        backToQuiz = next == Skill.LOCATION && quiz?.isFinished == false,
         newToday = newToday,
         anyUnseen = anyUnseen,
         onReview = {
@@ -122,8 +126,8 @@ fun TodayCard(
 
 /**
  * The normal state: the progress bar, the line of counts and the one button. [due] counts every skill's reviews due;
- * the button reviews the [reviewCount] of [review], the first skill with any, and with none it offers Learn while
- * [anyUnseen] flags are left, else a quiz.
+ * the button reviews the [reviewCount] of [review], the first skill with any (or, with [backToQuiz], goes back to the
+ * quiz under way, and says that instead), and with none it offers Learn while [anyUnseen] flags are left, else a quiz.
  */
 @Composable
 private fun PracticeCard(
@@ -132,6 +136,7 @@ private fun PracticeCard(
     due: Int,
     review: Skill?,
     reviewCount: Int,
+    backToQuiz: Boolean,
     newToday: Int,
     anyUnseen: Boolean,
     onReview: () -> Unit,
@@ -195,7 +200,10 @@ private fun PracticeCard(
             }
             when {
                 review != null -> Button(onClick = onReview, modifier = Modifier.testTag("today_action_btn")) {
-                    Text(pluralStringResource(reviewLabel, reviewCount, reviewCount), fontWeight = FontWeight.Bold)
+                    Text(
+                        if (backToQuiz) stringResource(R.string.today_back_to_quiz) else pluralStringResource(reviewLabel, reviewCount, reviewCount),
+                        fontWeight = FontWeight.Bold
+                    )
                 }
                 // Once every flag has been seen Learn has nothing to show; a quiz still practises the rest.
                 !goalMet -> Button(onClick = if (anyUnseen) onLearn else onQuiz, modifier = Modifier.testTag("today_action_btn")) {

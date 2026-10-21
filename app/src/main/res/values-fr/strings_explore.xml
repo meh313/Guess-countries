@@ -53,6 +53,7 @@
         <item quantity="other">Réviser %d pays sur la carte</item>
         <item quantity="many">Réviser %d pays sur la carte</item>
     </plurals>
+    <string name="today_back_to_quiz">Reprendre votre quiz</string>
     <string name="today_learn_new" tools:ignore="PluralsCandidate">Apprendre %1$d nouveaux</string>
     <string name="today_learn_more" tools:ignore="PluralsCandidate">Apprendre %1$d de plus</string>
     <!-- Tous les drapeaux ont été vus, Apprendre n'a plus rien à montrer : le bouton ouvre l'onglet Quiz -->
