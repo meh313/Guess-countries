@@ -398,10 +398,10 @@ class CountryViewModel(
     /** What the quiz that just finished did to the streak, for its score screen; null until it is known. */
     val finishOutcome: StateFlow<PracticeStreak.Outcome?> get() = quiz.finishOutcome
 
-    /** How many never-seen countries today's quizzes have introduced so far; 0 once a new day begins. */
+    /** How many never-seen countries today's quizzes and Learn 5 new have introduced so far; 0 once a new day begins. */
     val newItemsToday: StateFlow<Int> = combine(quiz.newItemsToday, progress.refreshes) { count, _ ->
         if (settings.newItemsDay == todayStamp()) count else 0
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), if (settings.newItemsDay == todayStamp()) settings.newItemsToday else 0)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), if (settings.newItemsDay == todayStamp()) quiz.newItemsToday.value else 0)
 
     /** Starts a quiz; does nothing if [scope] has nothing to ask about. See [QuizStateHolder.start]. */
     fun startQuiz(mode: QuizMode, scope: String, difficulty: QuizDifficulty = QuizDifficulty.NORMAL) = quiz.start(mode, scope, difficulty)

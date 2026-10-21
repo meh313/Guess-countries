@@ -36,7 +36,7 @@ import kotlinx.coroutines.launch
 class QuizStateHolder(
     private val repository: CountryRepository,
     private val progress: ProgressStateHolder,
-    /** Keeps the day's count of new countries (at most [NEW_PER_DAY] a day), the focus continent and the daily goal. */
+    /** Keeps the day's counts of new countries (the quizzes' at most [NEW_PER_DAY] a day, and Learn's), the focus continent and the daily goal. */
     private val settings: UserSettings,
     private val scope: CoroutineScope,
     /** Monotonic milliseconds, used to time questions. */
@@ -59,11 +59,12 @@ class QuizStateHolder(
     /** What the quiz that just finished did to the streak, for its score screen; null until it is known. */
     val finishOutcome: StateFlow<PracticeStreak.Outcome?> = _finishOutcome
 
-    private val _newItemsToday = MutableStateFlow(settings.newItemsToday)
+    private val _newItemsToday = MutableStateFlow(settings.newItemsToday + settings.learntToday)
 
     /**
-     * How many never-seen countries the quizzes have introduced on [UserSettings.newItemsDay], as of the last quiz
-     * started; the Today card shows it. Compare the day with the current one before reading it as today's.
+     * How many never-seen countries the quizzes and Learn 5 new have introduced on [UserSettings.newItemsDay], as of
+     * the last quiz started or Learn card shown; the Today card shows it. Compare the day with the current one before
+     * reading it as today's.
      */
     val newItemsToday: StateFlow<Int> = _newItemsToday
 
@@ -132,7 +133,7 @@ class QuizStateHolder(
         if (introduces) {
             settings.newItemsToday += questions.count { states[it.targetCountry.code].let { state -> state == null || state.isNew } }
         }
-        _newItemsToday.value = settings.newItemsToday
+        _newItemsToday.value = settings.newItemsToday + settings.learntToday
         _finishOutcome.value = null
         _session.value = QuizSession(
             mode = mode,
@@ -149,12 +150,28 @@ class QuizStateHolder(
      * what the day's earlier quizzes brought in. The count starts over on the first quiz of a new local day.
      */
     private fun newAllowance(now: Long): Int {
+        startDay(now)
+        return (NEW_PER_DAY - settings.newItemsToday).coerceAtLeast(0)
+    }
+
+    /**
+     * A never-seen flag Learn 5 new showed: one more new today on the Today card, but none of the quizzes' allowance
+     * ([newAllowance]), which limits what the quizzes bring in unasked.
+     */
+    fun countLearnt() {
+        startDay(repository.now())
+        settings.learntToday += 1
+        _newItemsToday.value = settings.newItemsToday + settings.learntToday
+    }
+
+    /** The day's counts of new countries start over on the first quiz or Learn card of a new local day, at [now]. */
+    private fun startDay(now: Long) {
         val today = dayStamp(now, zone())
         if (settings.newItemsDay != today) {
             settings.newItemsDay = today
             settings.newItemsToday = 0
+            settings.learntToday = 0
         }
-        return (NEW_PER_DAY - settings.newItemsToday).coerceAtLeast(0)
     }
 
     /** The clock timed questions run on, so the screen can show how much time is left. */

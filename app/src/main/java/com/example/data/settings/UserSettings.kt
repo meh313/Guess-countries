@@ -38,8 +38,11 @@ interface UserSettings {
     /** How many never-seen countries the quizzes of [newItemsDay] have introduced so far; see `QuizStateHolder.NEW_PER_DAY`. */
     var newItemsToday: Int
 
-    /** The local day (`yyyy-MM-dd`) [newItemsToday] counts; a new day starts the count again. Empty until the first quiz. */
+    /** The local day (`yyyy-MM-dd`) [newItemsToday] and [learntToday] count; a new day starts both again. Empty until the first quiz or Learn card. */
     var newItemsDay: String
+
+    /** How many never-seen flags Learn 5 new has shown on [newItemsDay]: new on the Today card, but no part of the quizzes' allowance. */
+    var learntToday: Int
 
     /** How many items (questions answered, cards graded) make a day count for the streak: one of `PracticeStreak.GOALS`, 10 until changed. */
     var dailyGoal: Int
@@ -118,7 +121,8 @@ class InMemoryUserSettings(
     override var onboarded: Boolean = false,
     override var soundEffects: Boolean = true,
     override var haptics: Boolean = true,
-    override var language: String = AppLanguage.SYSTEM
+    override var language: String = AppLanguage.SYSTEM,
+    override var learntToday: Int = 0
 ) : UserSettings
 
 class PrefsUserSettings(context: Context) : UserSettings {
@@ -163,6 +167,10 @@ class PrefsUserSettings(context: Context) : UserSettings {
         get() = prefs.getString(KEY_NEW_ITEMS_DAY, null) ?: ""
         set(value) = prefs.edit { putString(KEY_NEW_ITEMS_DAY, value) }
 
+    override var learntToday: Int
+        get() = prefs.getInt(KEY_LEARNT_TODAY, 0).coerceAtLeast(0)
+        set(value) = prefs.edit { putInt(KEY_LEARNT_TODAY, value.coerceAtLeast(0)) }
+
     override var dailyGoal: Int
         get() = prefs.getInt(KEY_DAILY_GOAL, PracticeStreak.DEFAULT_GOAL).takeIf { it in PracticeStreak.GOALS } ?: PracticeStreak.DEFAULT_GOAL
         set(value) = prefs.edit { putInt(KEY_DAILY_GOAL, if (value in PracticeStreak.GOALS) value else PracticeStreak.DEFAULT_GOAL) }
@@ -202,6 +210,7 @@ class PrefsUserSettings(context: Context) : UserSettings {
         private const val KEY_TIMER_PACE = "timer_pace"
         private const val KEY_NEW_ITEMS_TODAY = "new_items_today"
         private const val KEY_NEW_ITEMS_DAY = "new_items_day"
+        private const val KEY_LEARNT_TODAY = "learnt_today"
         private const val KEY_DAILY_GOAL = "daily_goal"
         private const val KEY_FOCUS_CONTINENT = "focus_continent"
         private const val KEY_TODAY_CARD_DISMISSED_DAY = "today_card_dismissed_day"

@@ -317,6 +317,35 @@ class LearnStateHolderTest {
     }
 
     @Test
+    fun theCardsShown_countAsNewToday_withoutSpendingTheQuizzesAllowance() {
+        val world = World()
+        // Yesterday's counts: the first card starts the day again.
+        world.settings.newItemsDay = "2000-01-01"
+        world.settings.newItemsToday = 9
+        world.settings.learntToday = 4
+        val holder = world.learn()
+        holder.startNow()
+        assertEquals(1, world.settings.learntToday)
+        assertEquals(QuizStateHolder.dayStamp(world.repository.now(), utc()), world.settings.newItemsDay)
+
+        repeat(4) { holder.next() }
+        // Going back over a card shown already counts nothing more.
+        holder.previous()
+        holder.next()
+        assertEquals(5, world.settings.learntToday)
+        assertEquals("the quizzes' allowance is untouched", 0, world.settings.newItemsToday)
+        assertEquals("the Today card's figure", 5, world.quiz.newItemsToday.value)
+
+        // A quiz that introduces countries adds its own, from the full allowance.
+        holder.startQuiz()
+        world.quiz.end()
+        world.quiz.start(QuizMode.FLAG_NAME, QuizEngine.GLOBAL, com.example.quiz.QuizDifficulty.NORMAL)
+        val introduced = world.settings.newItemsToday
+        assertTrue("some new countries: $introduced", introduced in 1..QuizStateHolder.NEW_PER_DAY)
+        assertEquals(5 + introduced, world.quiz.newItemsToday.value)
+    }
+
+    @Test
     fun theSessionIsDoneWhenItsQuizIs_andGoneWhenTheQuizIsLeft() {
         val world = World()
         val holder = world.learn()

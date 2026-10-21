@@ -979,6 +979,13 @@ class CountryViewModelQuizTest {
     }
 
     @Test
+    fun newItemsToday_addsTheFlagsLearntToTheCountriesTheQuizzesIntroduced_forTodayOnly() {
+        val today = QuizStateHolder.dayStamp(System.currentTimeMillis(), TimeZone.getDefault())
+        assertEquals(5, newViewModel(settings = InMemoryUserSettings(newItemsToday = 2, newItemsDay = today, learntToday = 3)).newItemsToday.value)
+        assertEquals(0, newViewModel(settings = InMemoryUserSettings(newItemsToday = 2, newItemsDay = "2000-01-01", learntToday = 3)).newItemsToday.value)
+    }
+
+    @Test
     fun startQuiz_global_introducesTheFocusContinentsCountriesFirst() {
         // A fresh database: every country is new, so a Global quiz is ten never-seen countries, all from the focus.
         val settings = InMemoryUserSettings(focusContinent = "Europe")

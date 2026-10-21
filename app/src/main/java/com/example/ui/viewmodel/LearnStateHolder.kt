@@ -164,10 +164,14 @@ class LearnStateHolder(
         shown.clear()
     }
 
-    /** A card on screen for the first time: light evidence of knowing the flag, so it counts as seen from now on. */
+    /**
+     * A card on screen for the first time: light evidence of knowing the flag, so it counts as seen from now on, and
+     * one more new flag today on the Today card (see [QuizStateHolder.countLearnt]).
+     */
     private fun show(card: LearnCard) {
         if (!shown.add(card.code)) return
         progress.recordAnswer(card.code, Skill.FLAG, correct = true, Evidence.LIGHT)
+        quiz.countLearnt()
     }
 
     companion object {

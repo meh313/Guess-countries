@@ -138,6 +138,8 @@ class UserSettingsTest {
         assertEquals("", PrefsUserSettings(context).newItemsDay)
         assertEquals(0, InMemoryUserSettings().newItemsToday)
         assertEquals("", InMemoryUserSettings().newItemsDay)
+        assertEquals(0, PrefsUserSettings(context).learntToday)
+        assertEquals(0, InMemoryUserSettings().learntToday)
     }
 
     @Test
@@ -145,17 +147,22 @@ class UserSettingsTest {
         PrefsUserSettings(context).apply {
             newItemsToday = 7
             newItemsDay = "2026-10-14"
+            learntToday = 5
         }
 
         val next = PrefsUserSettings(context)
         assertEquals(7, next.newItemsToday)
         assertEquals("2026-10-14", next.newItemsDay)
+        assertEquals(5, next.learntToday)
         val prefs = context.getSharedPreferences(PrefsUserSettings.FILE, Context.MODE_PRIVATE)
         assertEquals(7, prefs.getInt("new_items_today", -1))
         assertEquals("2026-10-14", prefs.getString("new_items_day", null))
+        assertEquals(5, prefs.getInt("learnt_today", -1))
         // A negative count makes no sense and is held at zero.
         next.newItemsToday = -3
+        next.learntToday = -1
         assertEquals(0, PrefsUserSettings(context).newItemsToday)
+        assertEquals(0, PrefsUserSettings(context).learntToday)
     }
 
     @Test
