@@ -48,7 +48,7 @@ android {
     applicationId = "com.aistudio.worldexplorer.flags"
     minSdk = 24
     targetSdk = 36
-    versionName = "3.1"
+    versionName = "3.2"
     versionCode = versionCodeFromEnv ?: versionCodeOf(versionName!!)
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

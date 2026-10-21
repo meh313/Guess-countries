@@ -170,7 +170,9 @@ Releases are built, signed and published by the **Release** workflow (`.github/w
 which reads the upload keystore and its passwords from the repository secrets `KEYSTORE_BASE64`,
 `STORE_PASSWORD` and `KEY_PASSWORD`. To ship a version:
 
-1. Bump `versionName` in `app/build.gradle.kts` (for example `"1.6"`) and merge it to `main`.
+1. Bump `versionName` in `app/build.gradle.kts` (for example `"1.6"`), write `release-notes/1.6.md` and the
+   "What's new (1.6)" block of `store/listing.md` (`AppVersionTest` fails until both name the version), and merge it
+   to `main`.
 2. Open Actions > Release > Run workflow on `main`. The run creates the tag `v1.6`, builds and signs the
    APK and the app bundle, checks the certificate of both (and the APK's alignment and version), and publishes a
    release with the APK (for sideloading), the `.aab` (for the Play Console), a SHA-256 beside each and the R8

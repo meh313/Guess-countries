@@ -32,11 +32,12 @@ Private by design: no network permission, no account, no ads. Your progress stay
 
 Works offline, in light and dark, with TalkBack, on phones and tablets.
 
-**What's new (3.1)**
-• The app speaks French, Spanish, German and Arabic (Settings › Language).
-• New quiz mode: Flag → Typed name. No options: type the name; short forms count and one typo is forgiven.
-• Every Learn quiz ends with a map question; every country sheet lists its land borders.
-• Sound effects and vibration for answers, each with a switch; a home-screen widget with what is due.
+**What's new (3.2)**
+• Reviews are due all day on the day they fall due; the Today card counts capitals and map reviews too.
+• A truer map: all land drawn, enclaves left out of their host, Crimea in Ukraine, the Golan Heights in Syria.
+• Fairer quizzes: another country's name is never a typo; Indonesia and Monaco are never offered for each other.
+• Timed quizzes stop in the background; a new daily goal keeps your streak; undo a study session's last grade.
+• Plurals and continents read right in every language.
 
 **Category:** Education. **Content rating:** Everyone. **Contains ads:** No. **In-app purchases:** No.
 
