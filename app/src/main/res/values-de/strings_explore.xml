@@ -77,6 +77,8 @@
     <string name="sheet_skill_standing">%1$s: %2$s</string>
     <string name="sheet_standing_not_reviewed">Noch nicht wiederholt</string>
     <string name="sheet_standing_line">%1$s · %2$s · %3$s · %4$s</string>
+    <string name="sheet_standing_line_three">%1$s · %2$s · %3$s</string>
+    <string name="sheet_standing_line_two">%1$s · %2$s</string>
     <string name="sheet_standing_step">Stufe %1$d von %2$d</string>
     <string name="sheet_due_now">jetzt fällig</string>
     <string name="sheet_next_review_tomorrow">nächste Wiederholung morgen</string>

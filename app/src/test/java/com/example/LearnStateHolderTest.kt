@@ -173,8 +173,8 @@ class LearnStateHolderTest {
     fun start_skipsCountriesAlreadySeen_andPutsTheFocusContinentFirst() {
         val world = World()
         val europe = sovereign.filter { it.continent == "Europe" }
-        runBlocking { db.userProgressDao().recordAnswer(europe[0].code, Skill.FLAG, true, Evidence.FULL, now) }
-        runBlocking { db.userProgressDao().recordAnswer(europe[2].code, Skill.FLAG, false, Evidence.LIGHT, now) }
+        runBlocking { db.userProgressDao().recordAnswer(europe[0].code, Skill.FLAG, true, Evidence.FULL, now, utc()) }
+        runBlocking { db.userProgressDao().recordAnswer(europe[2].code, Skill.FLAG, false, Evidence.LIGHT, now, utc()) }
         world.awaitSkills("the two reviewed rows") { it.containsKey(europe[0].code) && it.containsKey(europe[2].code) }
 
         val holder = world.learn(focus = "Europe")
@@ -187,7 +187,7 @@ class LearnStateHolderTest {
     /** Learn opened first thing after the process came back: the states are a placeholder until the database answers. */
     @Test
     fun start_beforeTheSkillStatesArrived_readsThemFirst_andNeverPicksASeenCountry() {
-        firstFive.forEach { runBlocking { db.userProgressDao().recordAnswer(it, Skill.FLAG, true, Evidence.FULL, now) } }
+        firstFive.forEach { runBlocking { db.userProgressDao().recordAnswer(it, Skill.FLAG, true, Evidence.FULL, now, utc()) } }
         val world = World()
         val holder = world.learn()
         assertFalse("the states are still the placeholder", world.progress.skillsLoaded.value)
@@ -224,7 +224,7 @@ class LearnStateHolderTest {
     @Test
     fun start_withEveryFlagSeen_leavesNoSession() {
         val world = World(sovereign.take(3))
-        sovereign.take(3).forEach { runBlocking { db.userProgressDao().recordAnswer(it.code, Skill.FLAG, true, Evidence.FULL, now) } }
+        sovereign.take(3).forEach { runBlocking { db.userProgressDao().recordAnswer(it.code, Skill.FLAG, true, Evidence.FULL, now, utc()) } }
         world.awaitSkills("three reviewed rows") { states -> sovereign.take(3).all { states.containsKey(it.code) } }
 
         val holder = world.learn()

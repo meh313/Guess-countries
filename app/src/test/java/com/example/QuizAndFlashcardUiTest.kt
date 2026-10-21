@@ -29,6 +29,7 @@ import com.example.progress.Skill
 import com.example.progress.SkillState
 import com.example.data.local.QuizScoreEntity
 import com.example.quiz.QuizEngine
+import java.util.TimeZone
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import android.speech.tts.TextToSpeech
@@ -1131,7 +1132,7 @@ class QuizAndFlashcardUiTest {
     /** Writes reviews straight to the database, one after another, so the order of their effects is certain. */
     private fun review(code: String, vararg results: Boolean) = runBlocking {
         val dao = AppDatabase.getDatabase(ApplicationProvider.getApplicationContext()).userProgressDao()
-        results.forEachIndexed { i, correct -> dao.recordAnswer(code, Skill.FLAG, correct, Evidence.FULL, 1_000L + i) }
+        results.forEachIndexed { i, correct -> dao.recordAnswer(code, Skill.FLAG, correct, Evidence.FULL, 1_000L + i, TimeZone.getDefault()) }
     }
 
     /** Seeds a flag as mastered (box 3, score 80, next review a week away), which takes three due days to earn by playing. */

@@ -3,6 +3,7 @@ package com.example.quiz
 import com.example.data.model.Country
 import com.example.progress.SkillMastery
 import com.example.progress.SkillState
+import java.util.TimeZone
 import kotlin.random.Random
 
 /**
@@ -10,13 +11,14 @@ import kotlin.random.Random
  * quiz exercises, and [order] is a weighted draw without replacement; [select] fills a fixed-length quiz by group,
  * due reviews first, so the reviews are cleared before new flags pile more on. Recency means "asked in the same skill
  * in the last 45 minutes" ([RECENT_WINDOW_MILLIS]): a country just asked about is nearly skipped, but never a due
- * one, since an item due today was by construction asked yesterday or earlier.
+ * one, since an item due today was by construction asked yesterday or earlier. Due means due today in the zone the
+ * rules are given ([SkillMastery.isDue]), at whatever hour.
  */
 object QuestionPicker {
     /** Never reviewed in this skill. */
     const val UNSEEN = 4.0
 
-    /** Reviewed and past its due date; grows by [OVERDUE_WEEK_BONUS] per week overdue, up to [OVERDUE_BONUS_CAP]. */
+    /** Reviewed and due today or overdue; grows by [OVERDUE_WEEK_BONUS] per week overdue, up to [OVERDUE_BONUS_CAP]. */
     const val DUE = 4.0
     const val OVERDUE_WEEK_BONUS = 1.0
     const val OVERDUE_BONUS_CAP = 4.0
@@ -42,11 +44,11 @@ object QuestionPicker {
     private const val WEEK_MILLIS = 7 * SkillMastery.DAY_MILLIS
 
     /**
-     * The weight of a country whose state in the quiz's skill is [state] (null when never reviewed) at [now]. A due
-     * item keeps its full weight whether or not it is [recent]: the review is the point.
+     * The weight of a country whose state in the quiz's skill is [state] (null when never reviewed) at [now] in
+     * [zone]. A due item keeps its full weight whether or not it is [recent]: the review is the point.
      */
-    fun weight(state: SkillState?, now: Long, recent: Boolean): Double {
-        if (state != null && SkillMastery.isDue(state, now)) {
+    fun weight(state: SkillState?, now: Long, zone: TimeZone, recent: Boolean): Double {
+        if (state != null && SkillMastery.isDue(state, now, zone)) {
             val weeksOverdue = ((now - state.dueAt) / WEEK_MILLIS).toDouble()
             return DUE + minOf(OVERDUE_BONUS_CAP, weeksOverdue * OVERDUE_WEEK_BONUS)
         }
@@ -68,8 +70,9 @@ object QuestionPicker {
         skill: Map<String, SkillState>,
         recent: Set<String>,
         now: Long,
+        zone: TimeZone,
         random: Random
-    ): List<Country> = draw(pool, skill, recent, now, random, pool.size)
+    ): List<Country> = draw(pool, skill, recent, now, zone, random, pool.size)
 
     /**
      * How a fixed-length quiz is filled: reviews first, then a few new countries, then the rest by weight.
@@ -88,31 +91,32 @@ object QuestionPicker {
         skill: Map<String, SkillState>,
         recent: Set<String>,
         now: Long,
+        zone: TimeZone,
         random: Random,
         newAllowance: Int,
         count: Int = QuizEngine.MAX_QUESTIONS,
         preferred: Set<String> = emptySet()
     ): List<Country> {
-        val due = pool.filter { SkillMastery.isDue(skill[it.code], now) }
-        val weak = pool.filter { SkillMastery.isWeak(skill[it.code], now) && !SkillMastery.isDue(skill[it.code], now) }
+        val due = pool.filter { SkillMastery.isDue(skill[it.code], now, zone) }
+        val weak = pool.filter { SkillMastery.isWeak(skill[it.code], now) && !SkillMastery.isDue(skill[it.code], now, zone) }
         val unseen = pool.filter { skill[it.code]?.isNew != false }
         val picked = ArrayList<Country>(count)
         fun room() = count - picked.size
 
         /** A draw of [limit] unseen countries from [from], the preferred ones first. */
         fun drawUnseen(from: List<Country>, limit: Int): List<Country> {
-            if (preferred.isEmpty()) return draw(from, skill, recent, now, random, limit)
-            val first = draw(from.filter { it.code in preferred }, skill, recent, now, random, limit)
-            return first + draw(from.filter { it.code !in preferred }, skill, recent, now, random, limit - first.size)
+            if (preferred.isEmpty()) return draw(from, skill, recent, now, zone, random, limit)
+            val first = draw(from.filter { it.code in preferred }, skill, recent, now, zone, random, limit)
+            return first + draw(from.filter { it.code !in preferred }, skill, recent, now, zone, random, limit - first.size)
         }
 
-        picked += draw(due, skill, recent, now, random, minOf(DUE_SHARE, room()))
-        picked += draw(weak, skill, recent, now, random, room())
+        picked += draw(due, skill, recent, now, zone, random, minOf(DUE_SHARE, room()))
+        picked += draw(weak, skill, recent, now, zone, random, room())
         picked += drawUnseen(unseen, minOf(newAllowance.coerceIn(0, NEW_PER_QUIZ), room()))
 
         val taken = picked.mapTo(HashSet()) { it.code }
         val reviewedLeft = pool.filter { it.code !in taken && skill[it.code]?.isNew == false }
-        picked += draw(reviewedLeft, skill, recent, now, random, room())
+        picked += draw(reviewedLeft, skill, recent, now, zone, random, room())
         picked += drawUnseen(unseen.filter { it.code !in taken }, room())
         return picked
     }
@@ -123,12 +127,13 @@ object QuestionPicker {
         skill: Map<String, SkillState>,
         recent: Set<String>,
         now: Long,
+        zone: TimeZone,
         random: Random,
         limit: Int
     ): List<Country> {
         if (limit <= 0 || pool.isEmpty()) return emptyList()
         val remaining = pool.sortedBy { it.code }
-            .map { it to weight(skill[it.code], now, it.code in recent) }
+            .map { it to weight(skill[it.code], now, zone, it.code in recent) }
             .toMutableList()
         val drawn = ArrayList<Country>(minOf(limit, remaining.size))
         while (remaining.isNotEmpty() && drawn.size < limit) {

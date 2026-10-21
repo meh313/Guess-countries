@@ -18,6 +18,7 @@ import com.example.support.FakeSpeech
 import com.example.support.closeWhenIdle
 import com.example.support.inMemoryDatabase
 import com.example.ui.viewmodel.CountryViewModel
+import java.util.TimeZone
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
@@ -86,7 +87,7 @@ class CountryViewModelImportTest {
     @Test
     fun aGoodFile_replacesTheDatabase_appliesTheSettings_andPlansTheReminder() = runBlocking {
         val vm = viewModel()
-        db.userProgressDao().recordAnswer("JP", Skill.FLAG, false, Evidence.FULL, 2_000L)
+        db.userProgressDao().recordAnswer("JP", Skill.FLAG, false, Evidence.FULL, 2_000L, TimeZone.getDefault())
 
         val result = vm.importJson(file())
 
@@ -119,7 +120,7 @@ class CountryViewModelImportTest {
     @Test
     fun aRefusedFile_changesNothing_andTheQuizGoesOn() = runBlocking {
         val vm = viewModel()
-        db.userProgressDao().recordAnswer("JP", Skill.FLAG, true, Evidence.FULL, 2_000L)
+        db.userProgressDao().recordAnswer("JP", Skill.FLAG, true, Evidence.FULL, 2_000L, TimeZone.getDefault())
         vm.startQuiz(QuizMode.FLAG_NAME, "Europe", QuizDifficulty.NORMAL)
         assertNotNull(vm.quizSession.value)
 

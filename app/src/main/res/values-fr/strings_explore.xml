@@ -79,6 +79,8 @@
     <string name="sheet_skill_standing">%1$s: %2$s</string>
     <string name="sheet_standing_not_reviewed">Pas encore révisé</string>
     <string name="sheet_standing_line">%1$s · %2$s · %3$s · %4$s</string>
+    <string name="sheet_standing_line_three">%1$s · %2$s · %3$s</string>
+    <string name="sheet_standing_line_two">%1$s · %2$s</string>
     <string name="sheet_standing_step">étape %1$d sur %2$d</string>
     <string name="sheet_due_now">à réviser maintenant</string>
     <string name="sheet_next_review_tomorrow">prochaine révision demain</string>

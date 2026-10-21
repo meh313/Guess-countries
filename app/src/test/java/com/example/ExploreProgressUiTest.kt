@@ -99,7 +99,7 @@ class ExploreProgressUiTest {
         dao.upsertSkill(SkillProgressEntity.of(code, skill, SkillState(score = 80, box = 4, dueAt = System.currentTimeMillis() + 12 * day, reviews = 4, correct = 4, lastResult = 1)))
     }
 
-    private fun learning(code: String, skill: Skill = Skill.FLAG) = runBlocking { dao.recordAnswer(code, skill, false, Evidence.FULL, System.currentTimeMillis()) }
+    private fun learning(code: String, skill: Skill = Skill.FLAG) = runBlocking { dao.recordAnswer(code, skill, false, Evidence.FULL, System.currentTimeMillis(), TimeZone.getDefault()) }
 
     /** Makes the flags of [codes] due for review: reviewed before, due date long passed. */
     private fun due(vararg codes: String) = runBlocking {
@@ -192,6 +192,26 @@ class ExploreProgressUiTest {
         rule.onNode(hasScrollAction() and hasTestTag("country_detail_sheet_fr")).performScrollToNode(hasTestTag("sheet_progress"))
         rule.onNodeWithText("Flag: Mastered · step 4 of 5 · next review in 12 days · last answer right").assertIsDisplayed()
         rule.onNodeWithText("Capital: Learning · step 1 of 5 · next review tomorrow · last answer wrong").assertIsDisplayed()
+    }
+
+    @Test
+    fun theDetailSheet_givesTheContinentNoDueDate_andARowWithNoLastAnswerNoVerdict() {
+        // A continent pick long ago: the continent has no reviews, so it is never "due now".
+        runBlocking {
+            dao.upsertSkill(SkillProgressEntity.of("DE", Skill.CONTINENT, SkillState(score = 16, box = 1, dueAt = 0L, reviews = 2, correct = 2, lastResult = 1)))
+            // A flag row migrated from version 1: reviewed, but with no last answer recorded.
+            dao.upsertSkill(SkillProgressEntity.of("DE", Skill.FLAG, SkillState(score = 50, box = 2, dueAt = System.currentTimeMillis() + 3 * day, reviews = 5, correct = 4, lastResult = 0)))
+        }
+        rule.eventually("the states") { assertEquals(1, viewModel.skills.value[Skill.CONTINENT]?.size) }
+
+        rule.onNodeWithTag("explore_grid").performScrollToNode(hasTestTag(card("DE")))
+        rule.onNodeWithTag(card("DE")).performClick()
+        rule.waitForIdle()
+
+        rule.onNode(hasScrollAction() and hasTestTag("country_detail_sheet_de")).performScrollToNode(hasTestTag("sheet_progress"))
+        rule.onNodeWithText("Continent: Learning · step 1 of 5 · last answer right").assertIsDisplayed()
+        rule.onNodeWithText("Flag: Learning · step 2 of 5 · next review in 3 days").assertIsDisplayed()
+        rule.onAllNodesWithText("last answer wrong", substring = true).assertCountEquals(0)
     }
 
     @Test
@@ -482,6 +502,21 @@ class ExploreProgressUiTest {
     }
 
     @Test
+    fun aReviewDueLaterToday_isOnTheDueTileAndTheTodayCard_notComingUp() {
+        rule.runOnUiThread { viewModel.setTodayCardDismissedDay("") }
+        // A minute before midnight: today's review, whatever the hour the test runs at.
+        dueAt("FR", Skill.FLAG, startOfDay(1) - 60_000L)
+        rule.openTab("stats")
+
+        rule.eventually("due today") { rule.onNodeWithTag("today_card").assert(hasText("1 due · 0 new today · goal 10")) }
+        rule.onNodeWithTag("today_action_btn").assert(hasText("Review 1 due"))
+        rule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("stats_due"))
+        rule.onNodeWithTag("stats_due").assert(describedAs("Due today: 1"))
+        assertTrue(viewModel.forecast.value.isEmpty)
+        rule.onAllNodesWithTag("stats_forecast").assertCountEquals(0)
+    }
+
+    @Test
     fun theForecastLine_countsTheCountriesDueTomorrowAndThisWeek_eachOnce() {
         val tomorrow = startOfDay(1) + 3_600_000L
         val inFiveDays = startOfDay(5) + 3_600_000L
@@ -729,7 +764,7 @@ class ExploreProgressUiTest {
         val settings = InMemoryUserSettings(themeMode = ThemeMode.DARK)
         val vm = CountryViewModel(CountryRepository(db.userProgressDao()), FakeSpeech(), settings = settings)
         runBlocking {
-            db.userProgressDao().recordAnswer("FR", Skill.FLAG, true, Evidence.FULL, 1_000L)
+            db.userProgressDao().recordAnswer("FR", Skill.FLAG, true, Evidence.FULL, 1_000L, TimeZone.getDefault())
             db.userProgressDao().toggleFavorite("DE", 1_000L)
             db.userProgressDao().insertQuizScore(QuizScoreEntity(mode = "FLAG_NAME", score = 10, total = 190, continentFilter = "Global", timestamp = 5L))
         }
@@ -753,7 +788,7 @@ class ExploreProgressUiTest {
             // Change things, then import the file: the old state comes back.
             runBlocking {
                 db.userProgressDao().clearAll()
-                db.userProgressDao().recordAnswer("JP", Skill.FLAG, false, Evidence.FULL, 2_000L)
+                db.userProgressDao().recordAnswer("JP", Skill.FLAG, false, Evidence.FULL, 2_000L, TimeZone.getDefault())
             }
             vm.setThemeMode(ThemeMode.LIGHT)
             rule.onNodeWithTag("settings_import_btn").performClick()
@@ -780,7 +815,7 @@ class ExploreProgressUiTest {
         val picker = PickerStandIn(Uri.fromFile(file))
         val db = inMemoryDatabase()
         val vm = CountryViewModel(CountryRepository(db.userProgressDao()), FakeSpeech())
-        runBlocking { db.userProgressDao().recordAnswer("FR", Skill.FLAG, true, Evidence.FULL, 1_000L) }
+        runBlocking { db.userProgressDao().recordAnswer("FR", Skill.FLAG, true, Evidence.FULL, 1_000L, TimeZone.getDefault()) }
         try {
             rule.activityRule.scenario.onActivity { activity ->
                 (activity as ComponentActivity).setContent {

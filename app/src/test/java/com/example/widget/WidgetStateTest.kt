@@ -40,6 +40,19 @@ class WidgetStateTest {
     }
 
     @Test
+    fun aReviewDueLaterToday_isDueNow_andTheContinentSkillHasNoReviews() {
+        val midnight = com.example.progress.SkillMastery.endOfToday(now, zone)
+        val skills = listOf(
+            row("FR", Skill.FLAG, dueAt = now + 8 * 3_600_000L),   // this evening: due today
+            row("DE", Skill.FLAG, dueAt = midnight),               // after midnight: tomorrow's
+            row("JP", Skill.CONTINENT, dueAt = now - 30 * day),    // a continent pick: never due, however old
+            row("FR", Skill.CONTINENT, dueAt = now - day)
+        )
+
+        assertEquals(1, WidgetState.of(skills, emptyList(), sovereign, goal = 10, now = now, zone = zone).due)
+    }
+
+    @Test
     fun streakAndTodayFollowThePracticeLogAndTheGoal() {
         val sessions = listOf(
             PracticeStreak.Session(now - 2 * day, 10),

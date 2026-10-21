@@ -15,6 +15,7 @@ import com.example.progress.Skill
 import com.example.progress.SkillState
 import com.example.support.inMemoryDatabase
 import com.example.support.seedQuiz
+import java.util.TimeZone
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -59,7 +60,7 @@ class UserProgressDaoTest {
         runBlocking { dao.getAllSkills().first() }.firstOrNull { it.countryCode == code && it.skill == skill.name }
 
     private fun answer(code: String, correct: Boolean, now: Long, skill: Skill = Skill.FLAG, evidence: Evidence = Evidence.FULL) =
-        runBlocking { dao.recordAnswer(code, skill, correct, evidence, now) }
+        runBlocking { dao.recordAnswer(code, skill, correct, evidence, now, TimeZone.getDefault()) }
 
     // --- bookmarks ----------------------------------------------------------------------------------------------------
 
@@ -151,10 +152,10 @@ class UserProgressDaoTest {
 
     @Test
     fun grades_goThroughTheSameRules() {
-        runBlocking { dao.recordGrade("FR", Skill.FLAG, Grade.GOOD, 5L) }
+        runBlocking { dao.recordGrade("FR", Skill.FLAG, Grade.GOOD, 5L, TimeZone.getDefault()) }
         assertEquals(8, skill("FR")!!.score)
 
-        runBlocking { dao.recordGrade("FR", Skill.FLAG, Grade.AGAIN, 6L) }
+        runBlocking { dao.recordGrade("FR", Skill.FLAG, Grade.AGAIN, 6L, TimeZone.getDefault()) }
         val r = skill("FR")!!
         assertEquals(0, r.score)
         assertEquals(1, r.box)
@@ -181,7 +182,7 @@ class UserProgressDaoTest {
         // Every answer is its own transaction on Room's single writer, so none is lost under this load.
         runBlocking {
             coroutineScope {
-                (1..200).map { i -> async(Dispatchers.Default) { dao.recordAnswer("FR", Skill.FLAG, true, Evidence.FULL, i.toLong()) } }.awaitAll()
+                (1..200).map { i -> async(Dispatchers.Default) { dao.recordAnswer("FR", Skill.FLAG, true, Evidence.FULL, i.toLong(), TimeZone.getDefault()) } }.awaitAll()
             }
         }
 
@@ -197,7 +198,7 @@ class UserProgressDaoTest {
         runBlocking {
             coroutineScope {
                 val taps = (1..101).map { i -> async(Dispatchers.Default) { dao.toggleFavorite("FR", i.toLong()) } }
-                val answers = (1..100).map { i -> async(Dispatchers.Default) { dao.recordAnswer("FR", Skill.FLAG, i % 2 == 0, Evidence.FULL, i.toLong()) } }
+                val answers = (1..100).map { i -> async(Dispatchers.Default) { dao.recordAnswer("FR", Skill.FLAG, i % 2 == 0, Evidence.FULL, i.toLong(), TimeZone.getDefault()) } }
                 (taps + answers).awaitAll()
             }
         }
@@ -223,7 +224,7 @@ class UserProgressDaoTest {
         val repository = CountryRepository(dao, now = { 777L })
 
         runBlocking {
-            repository.recordAnswer("FR", Skill.FLAG, true, Evidence.FULL)
+            repository.recordAnswer("FR", Skill.FLAG, true, Evidence.FULL, TimeZone.getDefault())
             repository.saveStudySession("Due today", 8, 10)
         }
 

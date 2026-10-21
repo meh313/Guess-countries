@@ -481,7 +481,7 @@ class CountryViewModelQuizTest {
     private fun reviewWrong(codes: List<String>) {
         codes.forEach { code ->
             now += 10
-            runBlocking { db.userProgressDao().recordAnswer(code, Skill.FLAG, false, Evidence.FULL, now) }
+            runBlocking { db.userProgressDao().recordAnswer(code, Skill.FLAG, false, Evidence.FULL, now, TimeZone.getDefault()) }
         }
     }
 
@@ -507,12 +507,12 @@ class CountryViewModelQuizTest {
     fun weakSpots_listsReviewedCountriesBelowMasteryWeakestFirst() {
         runBlocking {
             val dao = db.userProgressDao()
-            dao.recordAnswer("FR", Skill.FLAG, true, Evidence.FULL, 10L)
-            dao.recordAnswer("FR", Skill.FLAG, true, Evidence.FULL, 11L) // 40
-            dao.recordAnswer("DE", Skill.FLAG, false, Evidence.FULL, 12L) // 0
-            dao.recordAnswer("JP", Skill.FLAG, true, Evidence.FULL, 13L) // 20
+            dao.recordAnswer("FR", Skill.FLAG, true, Evidence.FULL, 10L, TimeZone.getDefault())
+            dao.recordAnswer("FR", Skill.FLAG, true, Evidence.FULL, 11L, TimeZone.getDefault()) // 40
+            dao.recordAnswer("DE", Skill.FLAG, false, Evidence.FULL, 12L, TimeZone.getDefault()) // 0
+            dao.recordAnswer("JP", Skill.FLAG, true, Evidence.FULL, 13L, TimeZone.getDefault()) // 20
             dao.upsertSkill(SkillProgressEntity.of("BR", Skill.FLAG, SkillState(score = 80, box = 3, dueAt = System.currentTimeMillis() + 7 * 86_400_000L, reviews = 3, correct = 3))) // mastered
-            dao.recordAnswer("AQ", Skill.FLAG, false, Evidence.FULL, 20L) // not a country
+            dao.recordAnswer("AQ", Skill.FLAG, false, Evidence.FULL, 20L, TimeZone.getDefault()) // not a country
         }
         val vm = newViewModel()
 
@@ -853,6 +853,39 @@ class CountryViewModelQuizTest {
         vm.startQuiz(QuizMode.FLAG_NAME, QuizEngine.DUE)
 
         assertEquals(listOf("FR"), vm.quizSession.value!!.targets())
+    }
+
+    @Test
+    fun theContinentSkill_hasNoReviewsDue_howeverOldItsRows() {
+        reviewedRow("FR", Skill.CONTINENT)
+        reviewedRow("DE", Skill.FLAG)
+        val vm = newViewModel()
+        vm.awaitPlan("one flag due") { it.due(Skill.FLAG).size == 1 }
+
+        assertTrue(vm.quizPlan.value.due(Skill.CONTINENT).isEmpty())
+        assertEquals("still learning, as the detail sheet says", listOf("FR"), vm.quizPlan.value.weak(Skill.CONTINENT).map { it.code })
+    }
+
+    @Test
+    fun aFlagLearntLastEvening_isInThisMorningsDueQuiz_andTheRightAnswerIsItsDueReview() {
+        val paris = TimeZone.getTimeZone("Europe/Paris")
+        fun at(day: Int, hour: Int) = java.util.Calendar.getInstance(paris).apply { clear(); set(2026, 9, day, hour, 0) }.timeInMillis
+        // Learnt on Monday at 19:00, so due on Tuesday at 19:00; the quiz is played on Tuesday at 09:00.
+        runBlocking { db.userProgressDao().recordAnswer("FR", Skill.FLAG, true, Evidence.FULL, at(19, 19), paris) }
+        val tuesday = at(20, 9)
+        val vm = CountryViewModel(CountryRepository(db.userProgressDao(), now = { tuesday }), FakeSpeech(), clock = { now }, zone = { paris })
+            .also { created += it }
+        vm.awaitPlan("France due this morning") { plan -> plan.due(Skill.FLAG).map { it.code } == listOf("FR") }
+
+        vm.startQuiz(QuizMode.FLAG_NAME, QuizEngine.DUE)
+
+        val session = vm.quizSession.value!!
+        assertEquals(QuizEngine.DUE, session.scope)
+        assertEquals(listOf("FR"), session.targets())
+        vm.answerQuiz(session.current.correctAnswerIndex)
+        awaitCondition("the review to be saved") { skillRow("FR")?.reviews == 2 }
+        assertEquals("the due review moves one box up", 2, skillRow("FR")!!.box)
+        assertEquals(tuesday + 3 * day, skillRow("FR")!!.dueAt)
     }
 
     @Test

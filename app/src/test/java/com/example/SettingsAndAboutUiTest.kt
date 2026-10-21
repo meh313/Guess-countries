@@ -37,6 +37,7 @@ import com.example.support.openTab
 import com.example.ui.screens.PRIVACY_URL
 import com.example.ui.screens.SettingsScreen
 import com.example.ui.viewmodel.CountryViewModel
+import java.util.TimeZone
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -280,7 +281,7 @@ class SettingsAndAboutUiTest {
     @Test
     fun resetProgress_asksFirst_thenForgetsEverythingButTheSettings() {
         runBlocking {
-            dao.recordAnswer("FR", Skill.FLAG, true, Evidence.FULL, 1_000L)
+            dao.recordAnswer("FR", Skill.FLAG, true, Evidence.FULL, 1_000L, TimeZone.getDefault())
             dao.toggleFavorite("DE", 1_000L)
             dao.insertQuizScore(QuizScoreEntity(mode = "FLAG_NAME", score = 10, total = 190, continentFilter = "Global", timestamp = System.currentTimeMillis()))
         }

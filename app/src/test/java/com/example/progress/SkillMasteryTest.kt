@@ -5,19 +5,21 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.util.TimeZone
 
 /** The per-skill Leitner rules, one branch per test, against a clock the test sets. */
 class SkillMasteryTest {
 
     private val day = 86_400_000L
-    private val now = 1_000_000_000_000L
+    private val now = 1_000_000_000_000L // 2001-09-09 01:46:40 UTC
+    private val utc: TimeZone = TimeZone.getTimeZone("UTC")
 
-    private fun fullRight(s: SkillState, at: Long = now) = SkillMastery.afterAnswer(s, correct = true, evidence = Evidence.FULL, now = at)
-    private fun fullWrong(s: SkillState, at: Long = now) = SkillMastery.afterAnswer(s, correct = false, evidence = Evidence.FULL, now = at)
-    private fun timedRight(s: SkillState, at: Long = now) = SkillMastery.afterAnswer(s, correct = true, evidence = Evidence.TIMED, now = at)
-    private fun timedWrong(s: SkillState, at: Long = now) = SkillMastery.afterAnswer(s, correct = false, evidence = Evidence.TIMED, now = at)
-    private fun lightRight(s: SkillState, at: Long = now) = SkillMastery.afterAnswer(s, correct = true, evidence = Evidence.LIGHT, now = at)
-    private fun lightWrong(s: SkillState, at: Long = now) = SkillMastery.afterAnswer(s, correct = false, evidence = Evidence.LIGHT, now = at)
+    private fun fullRight(s: SkillState, at: Long = now) = SkillMastery.afterAnswer(s, correct = true, evidence = Evidence.FULL, now = at, zone = utc)
+    private fun fullWrong(s: SkillState, at: Long = now) = SkillMastery.afterAnswer(s, correct = false, evidence = Evidence.FULL, now = at, zone = utc)
+    private fun timedRight(s: SkillState, at: Long = now) = SkillMastery.afterAnswer(s, correct = true, evidence = Evidence.TIMED, now = at, zone = utc)
+    private fun timedWrong(s: SkillState, at: Long = now) = SkillMastery.afterAnswer(s, correct = false, evidence = Evidence.TIMED, now = at, zone = utc)
+    private fun lightRight(s: SkillState, at: Long = now) = SkillMastery.afterAnswer(s, correct = true, evidence = Evidence.LIGHT, now = at, zone = utc)
+    private fun lightWrong(s: SkillState, at: Long = now) = SkillMastery.afterAnswer(s, correct = false, evidence = Evidence.LIGHT, now = at, zone = utc)
 
     // --- which skill, which evidence --------------------------------------------------------------------------------
 
@@ -187,7 +189,7 @@ class SkillMasteryTest {
     fun aLightRightAnswerOnADueItem_keepsItDue() {
         val s = lightRight(SkillState(score = 20, box = 2, dueAt = now - 1, reviews = 2, correct = 1))
         assertEquals(now - 1, s.dueAt)
-        assertTrue("a continent pick is no review of the flag", SkillMastery.isDue(s, now))
+        assertTrue("light evidence (a Learn card) is no review", SkillMastery.isDue(s, now, utc))
     }
 
     @Test
@@ -203,13 +205,13 @@ class SkillMasteryTest {
 
     @Test
     fun again_dropsTwoBoxes() {
-        val s = SkillMastery.afterGrade(SkillState(score = 50, box = 3, dueAt = now + day, reviews = 3, correct = 3), Grade.AGAIN, now)
+        val s = SkillMastery.afterGrade(SkillState(score = 50, box = 3, dueAt = now + day, reviews = 3, correct = 3), Grade.AGAIN, now, utc)
         assertEquals(38, s.score)
         assertEquals(1, s.box)
         assertEquals(now + day, s.dueAt)
         assertEquals(-1, s.lastResult)
 
-        val five = SkillMastery.afterGrade(SkillState(score = 90, box = 5, dueAt = now - 1, reviews = 9, correct = 9), Grade.AGAIN, now)
+        val five = SkillMastery.afterGrade(SkillState(score = 90, box = 5, dueAt = now - 1, reviews = 9, correct = 9), Grade.AGAIN, now, utc)
         assertEquals("not a reset to box 1", 3, five.box)
         assertEquals(now + 7 * day, five.dueAt)
         assertEquals(78, five.score)
@@ -218,28 +220,28 @@ class SkillMasteryTest {
     @Test
     fun good_beforeItIsDue_isLightEvidenceOfKnowing_andKeepsTheDate() {
         val before = SkillState(score = 20, box = 1, dueAt = now + day, reviews = 1, correct = 1)
-        assertEquals(lightRight(before), SkillMastery.afterGrade(before, Grade.GOOD, now))
-        assertEquals(now + day, SkillMastery.afterGrade(before, Grade.GOOD, now).dueAt)
+        assertEquals(lightRight(before), SkillMastery.afterGrade(before, Grade.GOOD, now, utc))
+        assertEquals(now + day, SkillMastery.afterGrade(before, Grade.GOOD, now, utc).dueAt)
     }
 
     @Test
     fun good_onADueCard_reschedulesItAtItsBox_soItLeavesTheDueList() {
         val due = SkillState(score = 20, box = 2, dueAt = now - 1, reviews = 2, correct = 1)
-        val s = SkillMastery.afterGrade(due, Grade.GOOD, now)
+        val s = SkillMastery.afterGrade(due, Grade.GOOD, now, utc)
         assertEquals(28, s.score)
         assertEquals(2, s.box)
         assertEquals(now + 3 * day, s.dueAt)
-        assertFalse(SkillMastery.isDue(s, now))
-        assertTrue(SkillMastery.isDue(s, now + 3 * day))
+        assertFalse(SkillMastery.isDue(s, now, utc))
+        assertTrue(SkillMastery.isDue(s, now + 3 * day, utc))
 
-        val five = SkillMastery.afterGrade(SkillState(score = 90, box = 5, dueAt = now - 1, reviews = 9, correct = 9), Grade.GOOD, now)
+        val five = SkillMastery.afterGrade(SkillState(score = 90, box = 5, dueAt = now - 1, reviews = 9, correct = 9), Grade.GOOD, now, utc)
         assertEquals(5, five.box)
         assertEquals(now + 60 * day, five.dueAt)
     }
 
     @Test
     fun good_onANewCard_isDueTomorrow() {
-        val s = SkillMastery.afterGrade(SkillState(), Grade.GOOD, now)
+        val s = SkillMastery.afterGrade(SkillState(), Grade.GOOD, now, utc)
         assertEquals(1, s.box)
         assertEquals(now + day, s.dueAt)
     }
@@ -247,24 +249,24 @@ class SkillMasteryTest {
     @Test
     fun easy_promotesWhenDue_butNeverPastBoxTwo() {
         var s = SkillState()
-        s = SkillMastery.afterGrade(s, Grade.EASY, now)                // box 1, due +1d
+        s = SkillMastery.afterGrade(s, Grade.EASY, now, utc)           // box 1, due +1d
         assertEquals(1, s.box)
-        s = SkillMastery.afterGrade(s, Grade.EASY, now + day)          // box 2, due +3d
+        s = SkillMastery.afterGrade(s, Grade.EASY, now + day, utc)     // box 2, due +3d
         assertEquals(2, s.box)
         assertEquals(now + 4 * day, s.dueAt)
-        s = SkillMastery.afterGrade(s, Grade.EASY, now + 4 * day)      // due again: stays box 2, rescheduled
+        s = SkillMastery.afterGrade(s, Grade.EASY, now + 4 * day, utc) // due again: stays box 2, rescheduled
         assertEquals(SkillMastery.SELF_GRADE_MAX_BOX, s.box)
         assertEquals(now + 7 * day, s.dueAt)
         assertEquals(36, s.score)
         assertFalse("Easy grades alone never master a flag", SkillMastery.isMastered(s, now + 4 * day))
-        repeat(10) { s = SkillMastery.afterGrade(s, Grade.EASY, now + 100 * day) }
+        repeat(10) { s = SkillMastery.afterGrade(s, Grade.EASY, now + 100 * day, utc) }
         assertEquals(2, s.box)
         assertEquals(SkillMastery.LIGHT_CAP, s.score)
     }
 
     @Test
     fun easy_onADueCardAboveBoxTwo_reschedulesItWithoutMovingIt() {
-        val s = SkillMastery.afterGrade(SkillState(score = 80, box = 4, dueAt = now - 1, reviews = 4, correct = 4), Grade.EASY, now)
+        val s = SkillMastery.afterGrade(SkillState(score = 80, box = 4, dueAt = now - 1, reviews = 4, correct = 4), Grade.EASY, now, utc)
         assertEquals(4, s.box)
         assertEquals(now + 21 * day, s.dueAt)
         assertEquals("above the light cap the score stays", 80, s.score)
@@ -272,7 +274,7 @@ class SkillMasteryTest {
 
     @Test
     fun easy_beforeItIsDue_doesNotPromote() {
-        val s = SkillMastery.afterGrade(SkillState(score = 20, box = 2, dueAt = now + day, reviews = 2, correct = 2), Grade.EASY, now)
+        val s = SkillMastery.afterGrade(SkillState(score = 20, box = 2, dueAt = now + day, reviews = 2, correct = 2), Grade.EASY, now, utc)
         assertEquals(2, s.box)
         assertEquals(now + day, s.dueAt)
     }
@@ -309,11 +311,77 @@ class SkillMasteryTest {
     }
 
     @Test
-    fun dueMeansReviewedBeforeAndPastItsDate() {
-        assertFalse("never reviewed is unseen, not due", SkillMastery.isDue(SkillState(), now))
-        assertTrue(SkillMastery.isDue(mastered.copy(dueAt = now), now))
-        assertFalse(SkillMastery.isDue(mastered.copy(dueAt = now + 1), now))
-        assertFalse(SkillMastery.isDue(null, now))
+    fun dueMeansReviewedBeforeAndDueToday_atAnyHour() {
+        val midnight = SkillMastery.endOfToday(now, utc)
+        assertEquals("the next midnight in the zone", 1_000_080_000_000L, midnight)
+        assertFalse("never reviewed is unseen, not due", SkillMastery.isDue(SkillState(), now, utc))
+        assertTrue(SkillMastery.isDue(mastered.copy(dueAt = now), now, utc))
+        assertTrue("due later today is due today", SkillMastery.isDue(mastered.copy(dueAt = now + 1), now, utc))
+        assertTrue(SkillMastery.isDue(mastered.copy(dueAt = midnight - 1), now, utc))
+        assertFalse("tomorrow's review is not today's", SkillMastery.isDue(mastered.copy(dueAt = midnight), now, utc))
+        assertFalse(SkillMastery.isDue(null, now, utc))
+    }
+
+    // --- the day a review falls due -----------------------------------------------------------------------------------
+
+    private val paris: TimeZone = TimeZone.getTimeZone("Europe/Paris")
+    private val newYork: TimeZone = TimeZone.getTimeZone("America/New_York")
+
+    /** Epoch millis of a wall-clock moment in [zone]. */
+    private fun at(zone: TimeZone, year: Int, month: Int, day: Int, hour: Int, minute: Int = 0): Long =
+        java.util.Calendar.getInstance(zone).apply {
+            clear()
+            set(year, month - 1, day, hour, minute)
+        }.timeInMillis
+
+    @Test
+    fun aFlagLearntOnMondayEvening_isDueOnTuesdayMorning_andThatAnswerIsItsDueReview() {
+        val monday = at(paris, 2026, 10, 19, 19)
+        val tuesday = at(paris, 2026, 10, 20, 9)
+        val learnt = fullRight(SkillState(), at = monday)
+        assertEquals("due 24 hours on", at(paris, 2026, 10, 20, 19), learnt.dueAt)
+
+        assertFalse("not due the evening it was learnt", SkillMastery.isDue(learnt, monday, paris))
+        assertTrue("due all of Tuesday, 09:00 included", SkillMastery.isDue(learnt, tuesday, paris))
+
+        val reviewed = SkillMastery.afterAnswer(learnt, correct = true, evidence = Evidence.FULL, now = tuesday, zone = paris)
+        assertEquals("promoted: the review was due", 2, reviewed.box)
+        assertEquals(tuesday + 3 * day, reviewed.dueAt)
+        assertFalse(SkillMastery.isDue(reviewed, tuesday, paris))
+
+        // A Good or an Easy on the card that morning is its due review too.
+        val good = SkillMastery.afterGrade(learnt, Grade.GOOD, tuesday, paris)
+        assertEquals(tuesday + day, good.dueAt)
+        assertFalse(SkillMastery.isDue(good, tuesday, paris))
+        assertEquals(2, SkillMastery.afterGrade(learnt, Grade.EASY, tuesday, paris).box)
+    }
+
+    @Test
+    fun aClockChangeDay_isDueUntilItsOwnMidnight() {
+        // Sunday 25 October 2026 in Paris has 25 hours (the clocks go back at 03:00).
+        val morning = at(paris, 2026, 10, 25, 8)
+        assertEquals(at(paris, 2026, 10, 26, 0), SkillMastery.endOfToday(morning, paris))
+        assertEquals(25 * 3_600_000L, SkillMastery.endOfToday(morning, paris) - at(paris, 2026, 10, 25, 0))
+        assertTrue(SkillMastery.isDue(mastered.copy(dueAt = at(paris, 2026, 10, 25, 23, 30)), morning, paris))
+        assertFalse(SkillMastery.isDue(mastered.copy(dueAt = at(paris, 2026, 10, 26, 0, 30)), morning, paris))
+
+        // Sunday 29 March 2026 has 23 hours (the clocks go forward at 02:00).
+        val spring = at(paris, 2026, 3, 29, 8)
+        assertEquals(23 * 3_600_000L, SkillMastery.endOfToday(spring, paris) - at(paris, 2026, 3, 29, 0))
+        assertTrue(SkillMastery.isDue(mastered.copy(dueAt = at(paris, 2026, 3, 29, 23, 30)), spring, paris))
+        assertFalse(SkillMastery.isDue(mastered.copy(dueAt = at(paris, 2026, 3, 30, 0, 30)), spring, paris))
+    }
+
+    @Test
+    fun afterATimeZoneChange_todayIsTheNewZonesDay() {
+        // 03:00 UTC on 22 October: 05:00 in Paris on the 22nd, 23:00 in New York on the 21st.
+        val review = mastered.copy(dueAt = at(TimeZone.getTimeZone("UTC"), 2026, 10, 22, 3))
+        val seen = at(TimeZone.getTimeZone("UTC"), 2026, 10, 21, 18) // 20:00 in Paris, 14:00 in New York
+        assertFalse("tomorrow's in Paris", SkillMastery.isDue(review, seen, paris))
+        assertTrue("today's in New York", SkillMastery.isDue(review, seen, newYork))
+        // And the answer follows the zone it is given in: in New York it is the due review.
+        assertEquals(4, SkillMastery.afterAnswer(review, correct = true, evidence = Evidence.FULL, now = seen, zone = newYork).box)
+        assertEquals(3, SkillMastery.afterAnswer(review, correct = true, evidence = Evidence.FULL, now = seen, zone = paris).box)
     }
 
     @Test

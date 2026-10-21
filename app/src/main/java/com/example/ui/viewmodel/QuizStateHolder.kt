@@ -95,7 +95,7 @@ class QuizStateHolder(
         val now = repository.now()
         val states = plan.skills[skill].orEmpty()
         val recent = plan.recent(skill, now)
-        val order: (List<Country>) -> List<Country> = { QuestionPicker.order(it, states, recent, now, random) }
+        val order: (List<Country>) -> List<Country> = { QuestionPicker.order(it, states, recent, now, zone(), random) }
         val world = QuizEngine.poolFor(QuizEngine.GLOBAL, repository.allCountries)
         var introduces = false
         val questions = when (effectiveScope) {
@@ -123,7 +123,7 @@ class QuizStateHolder(
                     // The focus continent's never-seen flags come before the rest of the world's; see UserSettings.focusContinent.
                     val focus = settings.focusContinent
                     val preferred = if (focus == ALL_CONTINENTS) emptySet() else pool.filter { it.continent == focus }.mapTo(HashSet()) { it.code }
-                    val targets = QuestionPicker.select(pool, states, recent, now, random, newAllowance(now), preferred = preferred)
+                    val targets = QuestionPicker.select(pool, states, recent, now, zone(), random, newAllowance(now), preferred = preferred)
                     QuizEngine.generate(targets, mode, random, difficulty, answerPool = pool, order = { it.shuffled(random) })
                 }
             }

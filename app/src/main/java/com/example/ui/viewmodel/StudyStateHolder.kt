@@ -111,7 +111,7 @@ class StudyStateHolder(
     /** Writes a first-time grade down in the session's [skill]; a rehearsal grade is not written. */
     private fun write(record: StudySession.GradeRecord, skill: Skill) {
         if (!record.firstTime) return
-        scope.launch(writeErrors.handler) { repository.recordGrade(record.code, skill, record.grade) }
+        scope.launch(writeErrors.handler) { repository.recordGrade(record.code, skill, record.grade, zone()) }
     }
 
     private inline fun update(change: (StudySession) -> StudySession) {

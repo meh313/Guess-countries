@@ -79,6 +79,9 @@
     <string name="sheet_skill_standing">%1$s: %2$s</string>
     <string name="sheet_standing_not_reviewed">Not reviewed yet</string>
     <string name="sheet_standing_line">%1$s · %2$s · %3$s · %4$s</string>
+    <!-- The same line with a part left out: the continent has no due reviews, and a row migrated from version 1 has no last answer -->
+    <string name="sheet_standing_line_three">%1$s · %2$s · %3$s</string>
+    <string name="sheet_standing_line_two">%1$s · %2$s</string>
     <string name="sheet_standing_step">step %1$d of %2$d</string>
     <string name="sheet_due_now">due now</string>
     <string name="sheet_next_review_tomorrow">next review tomorrow</string>
