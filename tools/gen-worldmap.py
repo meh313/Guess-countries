@@ -636,7 +636,7 @@ def holes_of(raw, drawn, countries, report):
                 for owner in owners.get((round(point[0], 6), round(point[1], 6)), ()):
                     if owner[0] != code:
                         counts[owner] = counts.get(owner, 0) + 1
-            best = max(counts, key=counts.get, default=None)
+            best = max(counts, key=lambda owner: (counts[owner], owner), default=None)   # ties by code, not set order
             if best is not None and counts[best] * 2 >= len(hole) and best[1] in drawn.get(best[0], {}):
                 holes.append(drawn[best[0]][best[1]])
                 kept.append(f'{best[0]} in {code}')
