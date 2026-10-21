@@ -131,6 +131,16 @@ class CountryDatasetTest {
     }
 
     @Test
+    fun theWorldWarsTakeNoArticle() {
+        // A house-style pass once turned "in the Second World War" into "in the World War II" (Eswatini). The article
+        // is right only before a noun the name describes, as in "the World War II siege".
+        val article = Regex("""\bthe World War II?\b(?!\s+[a-z])""")
+        allCountries.forEach { c ->
+            listOf(c.flagDescription, c.funFact, c.spotIt).forEach { assertTrue("${c.code}: '$it'", article.find(it) == null) }
+        }
+    }
+
+    @Test
     fun funFactsAndFlagDescriptionsFitTheirCards_andDoNotAge() {
         val volatile = Regex("\\b(currently|nowadays|these days|this year|recently|fastest|most visited)\\b", RegexOption.IGNORE_CASE)
         allCountries.forEach {
