@@ -11,6 +11,7 @@ import com.example.data.model.FlagLookAlikes
 import com.example.data.settings.InMemoryUserSettings
 import com.example.learn.LearnSession
 import com.example.progress.Evidence
+import com.example.progress.GoalHistory
 import com.example.progress.PracticeStreak
 import com.example.progress.Skill
 import com.example.progress.SkillMastery
@@ -62,7 +63,7 @@ class LearnStateHolderTest {
     private inner class World(countries: List<Country> = sovereign) {
         val repository = CountryRepository(db.userProgressDao(), countries)
         val settings = InMemoryUserSettings()
-        val progress = ProgressStateHolder(repository, scope, utc, MutableStateFlow(PracticeStreak.DEFAULT_GOAL))
+        val progress = ProgressStateHolder(repository, scope, utc, MutableStateFlow(GoalHistory(PracticeStreak.DEFAULT_GOAL)))
         val quiz = QuizStateHolder(repository, progress, settings, scope, { now }, utc, Random(7), null)
 
         fun learn(savedState: SavedStateHandle? = null, focus: String = LearnStateHolder.NO_FOCUS) =

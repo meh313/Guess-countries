@@ -7,6 +7,7 @@ import com.example.data.model.CountryRepository
 import com.example.data.model.Geo
 import com.example.data.settings.ALL_CONTINENTS
 import com.example.data.settings.UserSettings
+import com.example.data.settings.goalHistory
 import com.example.progress.Evidence
 import com.example.progress.PracticeStreak
 import com.example.progress.SkillMastery
@@ -358,7 +359,7 @@ class QuizStateHolder(
             val earlier = repository.saveQuiz(session)
             val now = repository.now()
             val finished = PracticeStreak.Session(now, session.answers.size)
-            _finishOutcome.value = PracticeStreak.outcome(earlier, finished, settings.dailyGoal, now, zone())
+            _finishOutcome.value = PracticeStreak.outcome(earlier, finished, settings.goalHistory, now, zone())
             afterSave()
         }
     }

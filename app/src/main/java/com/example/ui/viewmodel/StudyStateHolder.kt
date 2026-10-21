@@ -5,6 +5,7 @@ import androidx.lifecycle.SavedStateHandle
 import com.example.data.model.CountryRepository
 import com.example.flashcards.StudySession
 import com.example.progress.Grade
+import com.example.progress.GoalHistory
 import com.example.progress.PracticeStreak
 import com.example.progress.Skill
 import java.util.TimeZone
@@ -30,8 +31,8 @@ class StudyStateHolder(
     private val writeErrors: WriteErrors = WriteErrors(),
     /** Null when nothing keeps the session across process death (tests). */
     private val savedState: SavedStateHandle? = null,
-    /** How many items make a day count for the streak, read when a session is logged. */
-    private val dailyGoal: () -> Int = { PracticeStreak.DEFAULT_GOAL },
+    /** How many items make a day count for the streak, and the goals it replaced; read when a session is logged. */
+    private val goals: () -> GoalHistory = { GoalHistory(PracticeStreak.DEFAULT_GOAL) },
     /** Runs once a settled session is saved (the app redraws its widget); nothing by default. */
     private val afterSave: suspend () -> Unit = {}
 ) {
@@ -102,7 +103,7 @@ class StudyStateHolder(
             scope.launch(writeErrors.handler) {
                 val earlier = repository.saveStudySession(settled.source, settled.remembered, settled.gradedCards)
                 val now = repository.now()
-                _outcome.value = PracticeStreak.outcome(earlier, PracticeStreak.Session(now, settled.gradedCards), dailyGoal(), now, zone())
+                _outcome.value = PracticeStreak.outcome(earlier, PracticeStreak.Session(now, settled.gradedCards), goals(), now, zone())
                 afterSave()
             }
         }

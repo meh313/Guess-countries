@@ -75,7 +75,9 @@ in the same skill in the last 45 minutes is nearly skipped, unless it is due.
 The streak runs on a daily goal of 5, 10 or 20 items (Settings › Quiz; 10 to begin with). An item is a question
 answered or a card graded, so due reviews and new countries both count. A day is practised when its sessions of at
 least five items add up to the goal, or when any single session has ten items or more; a quiz of four questions or a
-blitz with no answer counts for nothing. The Today card on Explore and Progress shows the day's items against the
+blitz with no answer counts for nothing. A new goal applies from the day it is picked: the days before keep the goal
+they were played under (the export file carries the goals replaced, so an import judges them the same way). The
+Today card on Explore and Progress shows the day's items against the
 goal and offers the one next thing to do: the due reviews (the flags, then the capitals, then the map; its count is the
 *Due today* tile's), or five new countries, or a quiz once every flag has been seen. On the first run it asks for a
 focus continent, whose never-seen flags the quizzes then introduce before the rest of the world's.

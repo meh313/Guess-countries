@@ -40,6 +40,7 @@ import com.example.data.local.AppDatabase
 import com.example.data.model.CountryCatalog
 import com.example.data.settings.AppLanguage
 import com.example.data.settings.PrefsUserSettings
+import com.example.data.settings.goalHistory
 import java.util.TimeZone
 import kotlinx.coroutines.flow.first
 
@@ -64,7 +65,7 @@ class TodayWidget : GlanceAppWidget() {
             val skills = dao.getAllSkills().first()
             val sessions = dao.practiceSessions().map { it.toPracticeSession() }
             val sovereign = CountryCatalog.all.filter { it.isSovereign }.mapTo(HashSet()) { it.code }
-            return WidgetState.of(skills, sessions, sovereign, PrefsUserSettings(context).dailyGoal, now, zone)
+            return WidgetState.of(skills, sessions, sovereign, PrefsUserSettings(context).goalHistory, now, zone)
         }
 
         /** Redraws every instance of the widget; nothing happens when none is placed. */

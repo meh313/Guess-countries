@@ -10,7 +10,8 @@ import java.util.TimeZone
  *
  * The rule: a day is practised when the sessions of at least [MIN_SESSION] items finished on it add up to the goal
  * or more, or when any single session of the day has [FULL_SESSION] items or more. A session under [MIN_SESSION]
- * items (a quiz of four questions, a blitz with no answer) never counts towards anything.
+ * items (a quiz of four questions, a blitz with no answer) never counts towards anything. Each day is judged by the
+ * goal in force at its end ([GoalHistory.goalOn]): a goal picked today applies from today on.
  */
 object PracticeStreak {
     private const val DAY_MILLIS = 86_400_000L
@@ -57,23 +58,28 @@ object PracticeStreak {
         return countedItems(sessions.filter { localDay(it.at, zone) == today }.map { it.items })
     }
 
-    /** The days practised among [sessions] against [goal], up to and including [today]. */
-    private fun practisedDays(sessions: Collection<Session>, goal: Int, today: Long, zone: TimeZone): java.util.SortedSet<Long> =
+    /** The days practised among [sessions], each against the goal [goals] says was in force on it, up to and including [today]. */
+    private fun practisedDays(sessions: Collection<Session>, goals: GoalHistory, today: Long, zone: TimeZone): java.util.SortedSet<Long> =
         sessions.asSequence()
             .map { localDay(it.at, zone) to it.items }
             .filter { (day, _) -> day <= today }
             .groupBy({ it.first }, { it.second })
-            .filterValues { dayCounts(it, goal) }
+            .filter { (day, items) -> dayCounts(items, goals.goalOn(day, zone)) }
             .keys
             .toSortedSet()
 
+    /** [summary] with one [goal] for every day, as if it had never changed. */
+    fun summary(sessions: Collection<Session>, goal: Int, now: Long, zone: TimeZone): Summary =
+        summary(sessions, GoalHistory(goal), now, zone)
+
     /**
-     * The streak after [sessions], against [goal], seen at [now]. Sessions dated after [now] (a clock that was set
-     * back) count for nothing. The current run may end yesterday: today is still open, so the streak is not lost yet.
+     * The streak after [sessions], each day judged by the goal [goals] says was in force on it, seen at [now].
+     * Sessions dated after [now] (a clock that was set back) count for nothing. The current run may end yesterday:
+     * today is still open, so the streak is not lost yet.
      */
-    fun summary(sessions: Collection<Session>, goal: Int, now: Long, zone: TimeZone): Summary {
+    fun summary(sessions: Collection<Session>, goals: GoalHistory, now: Long, zone: TimeZone): Summary {
         val today = localDay(now, zone)
-        val days = practisedDays(sessions, goal, today, zone)
+        val days = practisedDays(sessions, goals, today, zone)
         if (days.isEmpty()) return NONE
 
         val practicedToday = today in days
@@ -95,16 +101,20 @@ object PracticeStreak {
         return Summary(current, best, practicedToday)
     }
 
+    /** [outcome] with one [goal] for every day, as if it had never changed. */
+    fun outcome(previous: Collection<Session>, latest: Session, goal: Int, now: Long, zone: TimeZone): Outcome =
+        outcome(previous, latest, GoalHistory(goal), now, zone)
+
     /**
      * What [latest], a session just finished, does to the streak made by [previous], the sessions before it, against
-     * [goal] at [now]. Today was already counted when [previous] alone made it a practised day; the session starts or
+     * [goals] at [now]. Today was already counted when [previous] alone made it a practised day; the session starts or
      * keeps the streak when it is what makes today count; and a session that leaves today short of the goal changes
      * nothing, which comes back as [Kind.ALREADY_COUNTED] with 0 days (the score screen says the goal is not met yet).
      */
-    fun outcome(previous: Collection<Session>, latest: Session, goal: Int, now: Long, zone: TimeZone): Outcome {
-        val before = summary(previous, goal, now, zone)
+    fun outcome(previous: Collection<Session>, latest: Session, goals: GoalHistory, now: Long, zone: TimeZone): Outcome {
+        val before = summary(previous, goals, now, zone)
         if (before.practicedToday) return Outcome(Kind.ALREADY_COUNTED, before.current)
-        val after = summary(previous + latest, goal, now, zone)
+        val after = summary(previous + latest, goals, now, zone)
         return when {
             !after.practicedToday -> Outcome(Kind.ALREADY_COUNTED, 0)
             before.current == 0 -> Outcome(Kind.STARTED, 1)

@@ -27,11 +27,13 @@ import com.example.data.settings.ReminderPrefs
 import com.example.data.settings.ThemeMode
 import com.example.data.settings.TimerPace
 import com.example.data.settings.UserSettings
+import com.example.data.settings.goalHistory
 import com.example.data.transfer.ProgressSnapshot
 import com.example.data.transfer.ProgressTransfer
 import com.example.flashcards.StudySession
 import com.example.learn.LearnSession
 import com.example.progress.DueForecast
+import com.example.progress.GoalHistory
 import com.example.progress.Grade
 import com.example.progress.PracticeStreak
 import com.example.progress.Skill
@@ -171,10 +173,20 @@ class CountryViewModel(
     /** How many items make a day count for the streak (one of [PracticeStreak.GOALS]), remembered across restarts. */
     val dailyGoal: StateFlow<Int> = _dailyGoal
 
+    /** The daily goal and the goals it replaced: the streak judges each past day by the one in force on it. */
+    private val goals = MutableStateFlow(settings.goalHistory)
+
+    /** Picks [goal] from today on; the days before keep the goal they were played under. */
     fun setDailyGoal(goal: Int) {
         if (goal !in PracticeStreak.GOALS) return
-        settings.dailyGoal = goal
-        _dailyGoal.value = goal
+        setGoals(goals.value.changedTo(goal, repository.now()))
+    }
+
+    private fun setGoals(history: GoalHistory) {
+        settings.dailyGoal = history.current
+        settings.goalChanges = history.encodeEarlier()
+        _dailyGoal.value = history.current
+        goals.value = history
     }
 
     private val _focusContinent = MutableStateFlow(settings.focusContinent)
@@ -247,7 +259,7 @@ class CountryViewModel(
 
     // --- Progress ---------------------------------------------------------------------------------------------------
 
-    private val progress = ProgressStateHolder(repository, viewModelScope, zone, dailyGoal)
+    private val progress = ProgressStateHolder(repository, viewModelScope, zone, goals)
 
     /** True after a database write failed, until [clearWriteError]; the activity shows it as a snackbar. */
     val writeError: StateFlow<Boolean> get() = progress.writeError
@@ -320,6 +332,7 @@ class CountryViewModel(
             "dynamicColor" to settings.dynamicColor.toString(),
             "timerPace" to settings.timerPace.name,
             "dailyGoal" to settings.dailyGoal.toString(),
+            "goalHistory" to settings.goalChanges,
             "focusContinent" to settings.focusContinent,
             "onboarded" to settings.onboarded.toString(),
             "soundEffects" to settings.soundEffects.toString(),
@@ -363,7 +376,10 @@ class CountryViewModel(
             snapshot.settings["timerPace"]?.let { name -> TimerPace.entries.firstOrNull { it.name == name } }?.let(::setTimerPace)
             snapshot.settings["reminderMinuteOfDay"]?.toIntOrNull()?.let { setReminderTime(it / 60, it % 60) }
             snapshot.settings["reminderEnabled"]?.toBooleanStrictOrNull()?.let(::setReminderEnabled)
-            snapshot.settings["dailyGoal"]?.toIntOrNull()?.let(::setDailyGoal)
+            // The file's goal and the goals it replaced, as they were: an import is no change of goal. A file from
+            // before the history was kept judges all its days by its goal.
+            snapshot.settings["dailyGoal"]?.toIntOrNull()?.takeIf { it in PracticeStreak.GOALS }
+                ?.let { setGoals(GoalHistory.of(it, snapshot.settings["goalHistory"].orEmpty())) }
             snapshot.settings["focusContinent"]?.takeIf { it in FOCUS_CHOICES }?.let(::setFocusContinent)
             snapshot.settings["onboarded"]?.toBooleanStrictOrNull()?.let(::setOnboarded)
             snapshot.settings["soundEffects"]?.toBooleanStrictOrNull()?.let(::setSoundEffects)
@@ -437,7 +453,7 @@ class CountryViewModel(
 
     // --- Study ------------------------------------------------------------------------------------------------------
 
-    private val study = StudyStateHolder(repository, viewModelScope, zone, random, progress.writeErrors, savedStateHandle, dailyGoal = { settings.dailyGoal }, afterSave = refreshWidget)
+    private val study = StudyStateHolder(repository, viewModelScope, zone, random, progress.writeErrors, savedStateHandle, goals = { goals.value }, afterSave = refreshWidget)
 
     /** The flashcard study session in progress, or null outside one. */
     val studySession: StateFlow<StudySession?> get() = study.session

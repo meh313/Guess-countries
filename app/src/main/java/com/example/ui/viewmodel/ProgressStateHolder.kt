@@ -10,6 +10,7 @@ import com.example.data.model.CountryRepository
 import com.example.data.model.WeakSpots
 import com.example.progress.DueForecast
 import com.example.progress.Evidence
+import com.example.progress.GoalHistory
 import com.example.progress.Grade
 import com.example.progress.PracticeStreak
 import com.example.progress.Skill
@@ -46,8 +47,8 @@ class ProgressStateHolder(
     private val scope: CoroutineScope,
     /** The time zone whose midnights end a practice day. */
     private val zone: () -> TimeZone,
-    /** How many items make a day count for the streak; the streak is worked out again when it changes. */
-    private val dailyGoal: StateFlow<Int>,
+    /** How many items make a day count for the streak, and the goals it replaced; the streak is worked out again when it changes. */
+    private val goals: StateFlow<GoalHistory>,
     /** Where a failed write is reported; shared with the quiz and study holders, which write too. */
     val writeErrors: WriteErrors = WriteErrors()
 ) {
@@ -141,10 +142,10 @@ class ProgressStateHolder(
 
     /**
      * The daily practice streak, worked out from when each quiz or study session finished and how big it was,
-     * against the daily goal; see [refreshClock] for the day rolling over.
+     * each day against the goal in force on it; see [refreshClock] for the day rolling over.
      */
-    val streak: StateFlow<PracticeStreak.Summary> = combine(quizHistory, dailyGoal, refresh) { history, goal, _ ->
-        PracticeStreak.summary(history.map { it.toPracticeSession() }, goal, repository.now(), zone())
+    val streak: StateFlow<PracticeStreak.Summary> = combine(quizHistory, goals, refresh) { history, goals, _ ->
+        PracticeStreak.summary(history.map { it.toPracticeSession() }, goals, repository.now(), zone())
     }
         .flowOn(Dispatchers.Default)
         .stateIn(scope, SharingStarted.WhileSubscribed(5000), PracticeStreak.NONE)

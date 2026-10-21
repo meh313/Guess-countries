@@ -1,6 +1,7 @@
 package com.example.widget
 
 import com.example.data.local.SkillProgressEntity
+import com.example.progress.GoalHistory
 import com.example.progress.PracticeStreak
 import com.example.progress.Skill
 import com.example.progress.SkillState
@@ -30,7 +31,7 @@ class WidgetStateTest {
             row("DE", Skill.CAPITAL, dueAt = now - day, reviews = 0) // never reviewed: not a review that is due
         )
 
-        val state = WidgetState.of(skills, emptyList(), sovereign, goal = 10, now = now, zone = zone)
+        val state = WidgetState.of(skills, emptyList(), sovereign, goals = GoalHistory(10), now = now, zone = zone)
 
         assertEquals(3, state.due)
         assertEquals(0, state.streak)
@@ -49,7 +50,7 @@ class WidgetStateTest {
             row("FR", Skill.CONTINENT, dueAt = now - day)
         )
 
-        assertEquals(1, WidgetState.of(skills, emptyList(), sovereign, goal = 10, now = now, zone = zone).due)
+        assertEquals(1, WidgetState.of(skills, emptyList(), sovereign, goals = GoalHistory(10), now = now, zone = zone).due)
     }
 
     @Test
@@ -60,7 +61,7 @@ class WidgetStateTest {
             PracticeStreak.Session(now - 3_600_000L, 6)
         )
 
-        val state = WidgetState.of(emptyList(), sessions, sovereign, goal = 5, now = now, zone = zone)
+        val state = WidgetState.of(emptyList(), sessions, sovereign, goals = GoalHistory(5), now = now, zone = zone)
 
         assertEquals(PracticeStreak.summary(sessions, 5, now, zone).current, state.streak)
         assertEquals(6, state.today)

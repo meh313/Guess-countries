@@ -65,7 +65,7 @@ object ProgressTransfer {
     /** The settings carried in a file, by name. */
     val SETTINGS = listOf(
         "quizDifficulty", "reminderEnabled", "reminderMinuteOfDay", "themeMode", "dynamicColor", "timerPace",
-        "dailyGoal", "focusContinent", "onboarded",
+        "dailyGoal", "goalHistory", "focusContinent", "onboarded",
         "soundEffects",
         "haptics",
         "language"
