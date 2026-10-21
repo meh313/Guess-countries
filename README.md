@@ -194,9 +194,9 @@ What a Play Store listing needs is in the repository:
 - `store/listing.md`: the title, the short and full descriptions, the "What's new" text, the category and the data
   safety answers.
 - `store/screenshots/`: the store screenshots, written by the `store*` tests of `ScreenshotsTest` to
-  `app/build/screenshots/store/` and copied from there into `store/screenshots/` when they change: eight phone ones at
-  1080×2160 (seven light, one dark; Play takes at most eight for each kind of device) and two tablet ones at 1600×2560, all
-  24-bit PNGs without an alpha channel, the only PNGs Play takes for a screenshot.
+  `app/build/screenshots/store/` and copied from there into `store/screenshots/` when they change: eight phone ones
+  at 1080×2160 (seven light, one dark; Play takes at most eight for each kind of device) and two tablet ones at
+  1600×2560, all 24-bit PNGs without an alpha channel, the only PNGs Play takes for a screenshot.
 - `store/feature-graphic.png` (1024×500, 24-bit) and `store/icon-512.png` (512×512, 32-bit): the feature graphic Play
   needs to publish a listing and the store icon, drawn from the launcher icon's flag ring and navy by
   `StoreGraphicsTest` to `app/build/screenshots/store-graphics/` and copied from there into `store/`.

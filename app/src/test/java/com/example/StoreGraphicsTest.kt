@@ -22,6 +22,7 @@ import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.data.model.CountryCatalog
 import com.example.support.drawWindow
 import com.example.support.writePng
 import com.example.ui.theme.DarkPrimary
@@ -80,7 +81,7 @@ class StoreGraphicsTest {
                             fontSize = 30.sp,
                             lineHeight = 38.sp
                         )
-                        Text("196 countries · offline · no ads", color = DarkPrimary, fontSize = 22.sp, fontWeight = FontWeight.Medium)
+                        Text("${countries()} countries · works offline", color = DarkPrimary, fontSize = 22.sp, fontWeight = FontWeight.Medium)
                     }
                 }
             }
@@ -103,6 +104,9 @@ class StoreGraphicsTest {
         }
         save("icon-512", 512, 512, alpha = true)
     }
+
+    /** The countries the app teaches, counted the way Progress counts them: Antarctica is in the catalog but not one. */
+    private fun countries() = CountryCatalog.all.count { it.isSovereign }
 
     @Composable
     private fun FlagRing(modifier: Modifier) =

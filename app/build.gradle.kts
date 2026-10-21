@@ -101,6 +101,9 @@ android {
       isIncludeAndroidResources = true
       // Robolectric 4.17 needs these module openings on JDK 17+ (robolectric.org/getting-started).
       all {
+        // AppVersionTest reads these, so a change to them alone must run the tests again rather than reuse a cached run.
+        it.inputs.file(rootProject.file("store/listing.md")).withPathSensitivity(PathSensitivity.RELATIVE)
+        it.inputs.dir(rootProject.file("release-notes")).withPathSensitivity(PathSensitivity.RELATIVE)
         it.jvmArgs(
           "--add-opens=java.base/java.lang=ALL-UNNAMED",
           "--add-opens=java.base/java.util=ALL-UNNAMED",

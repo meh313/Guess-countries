@@ -14,6 +14,7 @@ import com.example.data.local.QuizScoreEntity
 import com.example.data.local.AppDatabase
 import androidx.compose.ui.test.assertIsDisplayed
 import android.graphics.Bitmap
+import android.speech.tts.TextToSpeech
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -32,12 +33,14 @@ import com.example.support.drawWindow
 import com.example.support.writePng
 import com.example.support.openTab
 import java.io.File
+import java.util.Locale
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.shadows.ShadowDialog
+import org.robolectric.shadows.ShadowTextToSpeech
 import android.view.View
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
@@ -131,6 +134,7 @@ class ScreenshotsTest {
     @Test
     @Config(qualifiers = "w360dp-h720dp-xxhdpi")
     fun storePhone() {
+        ShadowTextToSpeech.addLanguageAvailability(Locale.US)
         rule.waitForIdle()
         saveStore("01_explore")
 
@@ -169,11 +173,10 @@ class ScreenshotsTest {
         rule.openTab("flashcards")
         rule.onNodeWithTag("flashcard_flip_card").performClick()
         rule.waitForIdle()
-        rule.awaitDelivered { WorldMapData.peek() != null }
-        if (rule.onAllNodesWithTag("flashcard_map", useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()) {
-            rule.onNodeWithTag("flashcard_map", useUnmergedTree = true).performScrollTo()
-            rule.waitForIdle()
-        }
+        // The engine starts as the screen shows; without its answer the read-aloud button would be a spinner.
+        ShadowTextToSpeech.getLastTextToSpeechInstance()?.let { shadowOf(it).onInitListener.onInit(TextToSpeech.SUCCESS) }
+        rule.waitForIdle()
+        // The top of the back, the name with its capital and population: the map has two shots of its own.
         saveStore("05_flashcard_back")
 
         seedProgress(viewModel)

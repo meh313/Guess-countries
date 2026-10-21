@@ -3,10 +3,12 @@
 
     python3 tools/store-check.py [--check]
 
-store/screenshots/: JPEG or 24-bit PNG (8 bits a channel, RGB, no alpha channel and no transparent colour), each side
-320 to 3,840 px and the long side at most twice the short one, at most 8 MB a file. The tablet_* files are the tablet
-screenshots, each side at least 1,080 px; the rest are the phone ones. Play takes up to eight of each kind and needs
-two to publish, so there are two to eight phone screenshots and at most eight tablet ones.
+store/screenshots/: JPEG or 24-bit PNG (8 bits a channel, RGB, no alpha channel and no transparent colour), the long
+side at most twice the short one, at most 8 MB a file. The tablet_* files are the tablet screenshots, each side 1,080
+to 7,680 px; the rest are the phone ones, each side 320 to 3,840 px. For tablets Play also recommends 16:9 or 9:16,
+which makes a listing likelier to be featured on large screens; that is advice, not an upload rule, so it is not
+checked. Play takes up to eight of each kind and needs two to publish, so there are two to eight phone screenshots
+and at most eight tablet ones.
 store/feature-graphic.png: 1,024 x 500 px, JPEG or 24-bit PNG, at most 15 MB.
 store/icon-512.png: 512 x 512 px, 32-bit PNG (RGB with an alpha channel), at most 1,024 KB.
 store/listing.md: the title at most 30 characters, each short description 80, the full description 4,000 and the
@@ -89,9 +91,9 @@ def check_screenshot(path, tablet):
     if kind not in ('png24', 'jpeg'):
         problems.append(f'is a {FORMATS.get(kind, kind)}; Play takes a JPEG or a 24-bit PNG')
     short, long = sorted((width, height))
-    lowest = 1080 if tablet else 320
-    if short < lowest or long > 3840:
-        problems.append(f'is {width}x{height}; each side must be {lowest:,} to 3,840 px')
+    lowest, highest = (1080, 7680) if tablet else (320, 3840)
+    if short < lowest or long > highest:
+        problems.append(f'is {width}x{height}; each side must be {lowest:,} to {highest:,} px')
     if long > 2 * short:
         problems.append(f'is {width}x{height}, {long / short:.2f}:1; the long side can be at most twice the short one')
     if path.stat().st_size > 8 * MB:
