@@ -78,7 +78,8 @@ countries, and the rest from whatever is left, so reviews are cleared before new
 in the same skill in the last 45 minutes is nearly skipped, due or not (a flag first answered at 23:50 is due again at
 midnight): a quiz takes it only once nothing else is left, so a second quiz straight after a first one moves on to
 other countries (new ones, past the three, when nothing else is there) instead of asking the same ten again, and the
-blitz puts it far back in its order.
+blitz puts it far back in its order. The *Due today* and *Weak spots* scopes and the study sessions of due cards (the
+Today card's reviews among them) do not wait: they take what is due or weak, just asked or not.
 
 The streak runs on a daily goal of 5, 10 or 20 items (Settings › Quiz; 10 to begin with). An item is a question
 answered or a card graded, so due reviews and new countries both count. A day is practised when its sessions of at
@@ -86,8 +87,9 @@ least five items add up to the goal, or when any single session has ten items or
 blitz with no answer counts for nothing. A new goal applies from the day it is picked: the days before keep the goal
 they were played under (the export file carries the goals replaced, so an import judges them the same way). The
 Today card on Explore and Progress shows the day's items against the
-goal and offers the one next thing to do: the due reviews (the flags, then the capitals, then the map; its count is the
-*Due today* tile's), or five new countries, or a quiz once every flag has been seen. On the first run it asks for a
+goal and offers the one next thing to do: the due reviews (the flags, then the capitals, then the map, or, while
+another quiz is under way, a way back to it instead of the map; its count is the *Due today* tile's), or five new
+countries, or a quiz once every flag has been seen. On the first run it asks for a
 focus continent, whose never-seen flags the quizzes then introduce before the rest of the world's.
 
 ## Languages
