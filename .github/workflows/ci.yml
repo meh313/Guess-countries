@@ -58,11 +58,10 @@ jobs:
       # Lint, the unit tests (Robolectric, Compose UI) and both APKs. Named tasks rather than `build`, which
       # would run the same unit tests a second time for the release variant (they are not minified, so that
       # second run adds nothing). The release APK is unsigned here: signing only happens when KEYSTORE_PATH,
-      # STORE_PASSWORD and KEY_PASSWORD are set.
+      # STORE_PASSWORD and KEY_PASSWORD are set. The version code is the one app/build.gradle.kts derives from
+      # versionName, as in a release.
       - name: Build and test
         run: ./gradlew lintDebug testDebugUnitTest assembleDebug assembleRelease
-        env:
-          VERSION_CODE: ${{ github.run_number }}
 
       - name: Upload reports
         if: failure()

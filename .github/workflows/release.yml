@@ -27,7 +27,8 @@ name: Release
 #
 # versionCode is derived from the version as major*10000 + minor*100 + patch (1.6 -> 10600,
 # 1.6.1 -> 10601), so it always grows with the version and stays above the hand-numbered codes
-# 1 to 7 of releases 1.0 to 1.5.
+# 1 to 7 of releases 1.0 to 1.5. app/build.gradle.kts derives it; this workflow works it out
+# again for the file names and checks that the APK carries it.
 
 on:
   push:
@@ -153,7 +154,6 @@ jobs:
         env:
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-          VERSION_CODE: ${{ steps.version.outputs.code }}
         run: ./gradlew --console=plain lintDebug testDebugUnitTest assembleRelease bundleRelease
 
       - name: Upload reports

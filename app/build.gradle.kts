@@ -16,8 +16,20 @@ if (!canSignRelease && (releaseStorePassword != null || releaseKeyPassword != nu
   logger.warn("Release signing skipped: set KEYSTORE_PATH (or add my-upload-key.jks) together with STORE_PASSWORD and KEY_PASSWORD.")
 }
 
-// CI can pass VERSION_CODE (for example the build number) so every upload is unique. A bad value
-// fails the build instead of silently falling back to 1.
+// versionCode follows versionName as major*10000 + minor*100 + patch (3.1 -> 30100, 3.1.2 -> 30102), the way every
+// release since 1.6 is numbered, so a build made anywhere gets the code its version is released with and installs
+// over the releases before it. The Release workflow works the code out again and checks the APK carries it.
+fun versionCodeOf(versionName: String): Int {
+  val parts = versionName.split('.').map { it.toIntOrNull() }
+  require(parts.size in 2..3 && parts.all { it != null && it >= 0 } && parts.drop(1).all { it!! <= 99 }) {
+    "versionName must be major.minor or major.minor.patch, with minor and patch at most 99, got '$versionName'"
+  }
+  val (major, minor) = parts.map { it!! }
+  return major * 10_000 + minor * 100 + (parts.getOrNull(2) ?: 0)
+}
+
+// VERSION_CODE overrides the derived code, for a one-off build that needs another one. A bad value fails the build
+// instead of being ignored.
 val versionCodeFromEnv: Int? =
   System.getenv("VERSION_CODE")?.takeIf { it.isNotBlank() }?.let { raw ->
     raw.trim().toIntOrNull()?.takeIf { it in 1..2_100_000_000 }
@@ -36,8 +48,8 @@ android {
     applicationId = "com.aistudio.worldexplorer.flags"
     minSdk = 24
     targetSdk = 36
-    versionCode = versionCodeFromEnv ?: 1
     versionName = "3.1"
+    versionCode = versionCodeFromEnv ?: versionCodeOf(versionName!!)
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -81,6 +93,8 @@ android {
   }
   buildFeatures {
     compose = true
+    // Only for AppVersionTest, which checks the version code the build derives (the unit-test manifest has none).
+    buildConfig = true
   }
   testOptions {
     unitTests {

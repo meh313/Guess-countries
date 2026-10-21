@@ -146,7 +146,7 @@ keystore (alias `upload`) and its passwords:
 export KEYSTORE_PATH=/path/to/upload.jks   # defaults to ./my-upload-key.jks
 export STORE_PASSWORD=...
 export KEY_PASSWORD=...
-export VERSION_CODE=42                     # optional; defaults to 1, must be a positive integer
+export VERSION_CODE=30101                  # optional; overrides the code derived from versionName
 ./gradlew assembleRelease bundleRelease
 ```
 
@@ -164,13 +164,14 @@ which reads the upload keystore and its passwords from the repository secrets `K
    release with the APK (for sideloading), the `.aab` (for the Play Console), a SHA-256 beside each and the R8
    mapping. Pushing a tag `v1.6` does the same, provided the tagged commit is on `main`.
 
-The workflow is two jobs: `build` (read-only token) lints, tests, builds, signs and verifies, and keeps the files as
-a workflow artifact; `publish` (write token, GitHub environment `release`) downloads them and creates the release.
+The workflow is two jobs: `build` (read-only token) lints, tests, builds, signs and verifies, and keeps the files as a
+workflow artifact; `publish` (write token, GitHub environment `release`) downloads them and creates the release.
 Adding required reviewers to the `release` environment (Settings > Environments) makes every publish wait for an
 approval. `versionCode` is derived from the version (`major*10000 + minor*100 + patch`, so `1.6` is `10600`), which
-keeps it increasing without a manual bump. A file `release-notes/<version>.md`, when there is one, is appended
-to the generated release notes. Tick "dry run" to build and verify without publishing; the `publish` job is then
-skipped and the files stay as a workflow artifact for a week.
+keeps it increasing without a manual bump: `app/build.gradle.kts` derives it for every build, and the workflow checks
+the APK carries it. A file `release-notes/<version>.md`, when there is one, is appended to the generated release
+notes. Tick "dry run" to build and verify without publishing; the `publish` job is then skipped and the files stay as
+a workflow artifact for a week.
 
 ## Store
 
