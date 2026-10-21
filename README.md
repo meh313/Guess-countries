@@ -156,8 +156,8 @@ export KEY_PASSWORD=...
 ```
 
 The keystore and its passwords are never read from the repository. Without `VERSION_CODE` the build derives the
-version code from `versionName`, the code the Release workflow gives that version (see below), so a bundle built
-here never takes a code that a later release needs.
+version code from `versionName`, so a bundle built here carries the code the Release workflow gives that version
+(see below) and never one that belongs to another version.
 
 ### Publishing a release
 
