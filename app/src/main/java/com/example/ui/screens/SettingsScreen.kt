@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.FlowRow
 import android.app.Activity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.PluralsRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -85,6 +86,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.R
 import com.example.data.settings.ThemeMode
 import com.example.data.settings.TimerPace
+import com.example.data.transfer.ProgressSnapshot
 import com.example.data.transfer.ProgressTransfer
 import com.example.progress.PracticeStreak
 import com.example.speech.Speech
@@ -478,14 +480,15 @@ fun SettingsScreen(
                         scope.launch {
                             val languageBefore = viewModel.language.value
                             transferNote = viewModel.applyImport().fold(
-                                onSuccess = {
+                                onSuccess = { imported ->
                                     transferFailed = false
                                     // The file may carry another theme; the system's copy of the choice follows it.
                                     applyNightMode(context, viewModel.appearance.value.themeMode)
-                                    // And another language, put on screen as a tap on its chip would.
+                                    // And another language, put on screen as a tap on its chip would. The note is
+                                    // worded in it: the screen comes back in that language and keeps the note.
                                     val language = viewModel.language.value
                                     if (language != languageBefore) applyLanguage(context, language)
-                                    resources.getString(R.string.settings_import_done, quizzes, skills, countries)
+                                    importDoneText(if (language != languageBefore) AppLanguage.resources(context, language) else resources, imported)
                                 },
                                 onFailure = {
                                     transferFailed = true
@@ -703,6 +706,17 @@ private fun java.io.Reader.readText(limit: Int): String {
         out.appendRange(buffer, 0, n)
     }
     return out.toString()
+}
+
+/** The note after an import of [snapshot], in [resources]: how many quizzes, skill records and countries it brought. */
+internal fun importDoneText(resources: android.content.res.Resources, snapshot: ProgressSnapshot): String {
+    fun count(@PluralsRes id: Int, n: Int) = resources.getQuantityString(id, n, n)
+    return resources.getString(
+        R.string.settings_import_done,
+        count(R.plurals.settings_import_quizzes, snapshot.quizzes.size),
+        count(R.plurals.settings_import_skills, snapshot.skills.size),
+        count(R.plurals.settings_import_countries, snapshot.progress.size)
+    )
 }
 
 /** The words for a refused import. */

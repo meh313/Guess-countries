@@ -3,6 +3,7 @@ package com.example.data.settings
 import android.app.LocaleManager
 import android.content.Context
 import android.content.res.Configuration
+import android.content.res.Resources
 import android.os.Build
 import android.os.LocaleList
 import java.util.Locale
@@ -65,6 +66,21 @@ object AppLanguage {
         configuration.setLocales(LocaleList(Locale.forLanguageTag(tag)))
         return context.createConfigurationContext(configuration)
     }
+
+    /**
+     * [context]'s resources in the language [tag] whatever the context's own, the phone's languages for [SYSTEM]: for
+     * a text written just as the screens change to [tag], which the recreated screen keeps (an import's note).
+     */
+    fun resources(context: Context, tag: String): Resources {
+        val configuration = Configuration(context.resources.configuration)
+        configuration.setLocales(if (tag == SYSTEM) systemLocales(context) else LocaleList.forLanguageTags(tag))
+        return context.createConfigurationContext(configuration).resources
+    }
+
+    /** The phone's own languages. From Android 13 the process runs in the app's per-app language, so the system is asked. */
+    private fun systemLocales(context: Context): LocaleList =
+        (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) context.getSystemService(LocaleManager::class.java)?.systemLocales else null)
+            ?: Resources.getSystem().configuration.locales
 
     /** Whether [tag] is written right to left (the layout tests pick their qualifiers by this). */
     fun isRtl(tag: String): Boolean = tag == "ar"

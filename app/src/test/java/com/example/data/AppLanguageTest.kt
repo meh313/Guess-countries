@@ -80,6 +80,18 @@ class AppLanguageTest {
         assertEquals(AppLanguage.SYSTEM, AppLanguage.fromSystem(context))
     }
 
+    /** The texts written just as the screens change language (an import's note), whatever language the app runs in. */
+    @Test
+    @Config(qualifiers = "es")
+    fun onAndroid13_resourcesAreInTheLanguageAsked_andInThePhonesForSystem() {
+        context.getSystemService(LocaleManager::class.java).applicationLocales = LocaleList.forLanguageTags("de")
+
+        assertEquals("Afrique", AppLanguage.resources(context, "fr").getString(R.string.continent_africa))
+        assertEquals("أفريقيا", AppLanguage.resources(context, "ar").getString(R.string.continent_africa))
+        // The phone is Spanish.
+        assertEquals("África", AppLanguage.resources(context, AppLanguage.SYSTEM).getString(R.string.continent_africa))
+    }
+
     /**
      * Android 7 to 12: no per-app language in the system, so the activity, the reminder and the widget take the stored
      * choice through [AppLanguage.wrap], and nothing reads it back from the system.
@@ -104,5 +116,9 @@ class AppLanguageTest {
         // Nothing to tell the system there; the activity recreates itself instead.
         AppLanguage.apply(context, "de")
         assertEquals("Africa", context.getString(R.string.continent_africa))
+
+        // From German screens, the texts of another language or of the phone's.
+        assertEquals("Afrique", AppLanguage.resources(german, "fr").getString(R.string.continent_africa))
+        assertEquals("Africa", AppLanguage.resources(german, AppLanguage.SYSTEM).getString(R.string.continent_africa))
     }
 }

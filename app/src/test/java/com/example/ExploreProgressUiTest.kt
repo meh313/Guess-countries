@@ -1023,7 +1023,10 @@ class ExploreProgressUiTest {
         assertTrue(manager.applicationLocales.isEmpty)
 
         importAFrenchFile(InMemoryUserSettings()) {
-            rule.eventually("the import note") { rule.onNodeWithTag("settings_transfer_note").assert(hasText("Imported", substring = true)) }
+            // The note is in the file's language, which the screen comes back in on a phone (and keeps the note through).
+            rule.eventually("the import note") {
+                rule.onNodeWithTag("settings_transfer_note").assert(hasText("Importé : 0 quiz, 0 fiche de compétence et 0 pays."))
+            }
             // The system holds the file's language (and, on a phone, recreates the activity in it); its chip is lit.
             assertEquals("fr", manager.applicationLocales.toLanguageTags())
             rule.onNodeWithTag("settings_language_fr").performScrollTo().assertIsSelected()
