@@ -222,8 +222,8 @@ the rings with Douglas-Peucker at 0.05° and rounds to two decimals, so the asse
 the internationally recognised lines, as the catalog's areas do: Natural Earth's default file is its de facto view
 (its point-of-view files exist at 1:10m only), so the tool moves Crimea's polygon into Ukraine and cuts Morocco at
 27°40′ N, its line with Western Sahara, by explicit rules that `GeoTest` checks point by point. A feature that
-is no catalog country (Western Sahara, Greenland and the other dependencies) gets no record: its rings go into
-`background`, land the map paints in the land colour so it is not shown as sea, but never highlights, names or
+is no catalog country (Western Sahara, Greenland, Puerto Rico, Hong Kong and the rest) gets no record: its rings go
+into `background`, land the map paints in the land colour so it is not shown as sea, but never highlights, names or
 counts. A hole is kept as the ring of the enclave that fills it (Lesotho in South Africa, San Marino and the Vatican
 in Italy, three exclaves in Kyrgyzstan) and the highlight is filled with the even-odd rule, so a host leaves its
 enclaves out. The format is `{"format":2,"source":...,"countries":{"FR":{"polys":[[[lon,lat],...],...],"holes":

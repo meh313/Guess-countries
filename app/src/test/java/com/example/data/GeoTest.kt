@@ -137,6 +137,16 @@ class GeoTest {
     }
 
     @Test
+    fun everyRingWindsClockwise_soTheLandFillNeverCancelsAnEnclave() {
+        // WorldMap paints all rings as one non-zero path: Lesotho's ring over South Africa's stays land only while
+        // both run the same way round, as Natural Earth's outer rings do (shoelace area below zero).
+        fun signedArea(ring: List<Pair<Double, Double>>) =
+            ring.indices.sumOf { i -> ring[i].first * ring[(i + 1) % ring.size].second - ring[(i + 1) % ring.size].first * ring[i].second } / 2
+        catalog.forEach { code -> rings(code).forEach { assertTrue("$code has a ring running anticlockwise", signedArea(it) < 0) } }
+        background.forEach { assertTrue("a background ring runs anticlockwise: ${it.take(3)}", signedArea(it) < 0) }
+    }
+
+    @Test
     fun theBackgroundLand_coversWhatIsNoCatalogCountry_andIsNoCountry() {
         assertTrue(background.isNotEmpty())
         background.forEach { ring ->
