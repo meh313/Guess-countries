@@ -94,10 +94,12 @@ focus continent, whose never-seen flags the quizzes then introduce before the re
 The screens come in English, French, Spanish, German and Arabic: pick one under *Settings › Language* (it goes to
 the system's per-app language setting on Android 13 and newer, and the activity applies it itself before that), or
 leave *System* to follow the phone. On Android 13 and newer a language picked in the phone's own per-app language
-setting shows in the row and goes into an export; an import applies the file's language like a tap on its chip.
-Every word the screens show is a string resource (`app/src/main/res/values/
-strings*.xml`, one file per screen plus the shared one, translated in `values-fr`, `values-es`, `values-de` and
-`values-ar`); `ui/Labels.kt` maps the stored keys (quiz modes, scopes, continents, sort orders, standings) to them.
+setting shows in the row and goes into an export; an import applies the file's language like a tap on its chip. A
+language picked before the phone reached Android 13 (or restored from a backup of such a phone) is handed to that
+setting at the first start, rather than read back from its empty value as *System*. Every word the screens show is a
+string resource (`app/src/main/res/values/strings*.xml`, one file per screen plus the shared one, translated in
+`values-fr`, `values-es`, `values-de` and `values-ar`); `ui/Labels.kt` maps the stored keys (quiz modes, scopes,
+continents, sort orders, standings) to them.
 `tools/strings-audit.py --check` (run by CI, mirrored by `StringsAuditTest`) keeps every translation complete: the
 same keys, the same placeholders, every plural quantity the language needs, and no digit typed into the Arabic
 outside the About texts (a number there is a placeholder or a word). The numbers the app formats (counts, scores,
@@ -113,9 +115,11 @@ the engine for and the facts it reads: the few words around them (`values/speech
 
 The app has no network permission. Everything stays on the device: progress in the app's own database, a few
 settings in SharedPreferences, both named in the backup rules (`res/xml/backup_rules.xml`, `data_extraction_rules.xml`)
-and so included in Android's backup of the app. Settings > Export writes the same data to a file you keep; Import
-replaces everything with such a file. There is no account and no analytics. The full statement is
-[`PRIVACY.md`](PRIVACY.md); the About screen's Privacy section links to it (*Full privacy statement*).
+and so included in Android's backup of the app. One more SharedPreferences file stays out of it: a flag that the
+phone's per-app language setting has been given the stored language, so a new phone is given it too.
+Settings > Export writes the same data to a file you keep; Import replaces everything with such a file. There is no
+account and no analytics. The full statement is [`PRIVACY.md`](PRIVACY.md); the About screen's Privacy section links
+to it (*Full privacy statement*).
 
 ## Build
 

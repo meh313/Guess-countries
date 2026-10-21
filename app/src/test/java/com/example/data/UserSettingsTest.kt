@@ -2,6 +2,7 @@ package com.example.data
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.example.data.settings.AppLanguage
 import com.example.data.settings.InMemoryUserSettings
 import com.example.data.settings.PrefsUserSettings
 import com.example.data.settings.ThemeMode
@@ -245,7 +246,7 @@ class UserSettingsTest {
     }
 
     @Test
-    fun theBackupRules_nameTheDatabaseAndTheSettings_andLeaveWorkManagerOut() {
+    fun theBackupRules_nameTheDatabaseAndTheSettings_andLeaveWorkManagerAndTheLanguageHandOverOut() {
         for (resource in listOf(com.example.R.xml.backup_rules, com.example.R.xml.data_extraction_rules)) {
             val parser = context.resources.getXml(resource)
             val included = mutableListOf<String>()
@@ -265,6 +266,8 @@ class UserSettingsTest {
             // An explicit include list keeps WorkManager's database out by itself (lint rejects excluding an unlisted path).
             assertEquals(resource.toString(), emptyList<String>(), excluded)
             assertEquals(resource.toString(), false, included.any { it.contains("work") })
+            // The language hand-over flag belongs to the phone: a restore elsewhere hands the language over again.
+            assertEquals(resource.toString(), false, "sharedpref/${AppLanguage.HANDOVER_FILE}.xml" in included)
         }
         // The names the rules use are the real ones.
         assertEquals("world_flags_db", com.example.data.local.AppDatabase.NAME)

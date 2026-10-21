@@ -116,9 +116,10 @@ class MainActivity : ComponentActivity() {
             val viewModel: CountryViewModel = viewModel(factory = CountryViewModel.Factory)
             // From Android 13 the screens' language is the system's per-app setting, which the phone's own settings
             // can change (and a restore brings back) without the app: at every start and return the stored choice,
-            // which the Language row and the export read, follows it.
+            // which the Language row and the export read, follows it. A stored language the system was never given
+            // (picked before the phone reached 13) goes to the system instead, the first time.
             LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
-                AppLanguage.fromSystem(this@MainActivity)?.takeIf { it != viewModel.language.value }?.let(viewModel::setLanguage)
+                AppLanguage.reconcile(this@MainActivity, viewModel.language.value)?.takeIf { it != viewModel.language.value }?.let(viewModel::setLanguage)
             }
             val appearance by viewModel.appearance.collectAsStateWithLifecycle()
             val darkTheme = appearance.themeMode.isDark(isSystemInDarkTheme())

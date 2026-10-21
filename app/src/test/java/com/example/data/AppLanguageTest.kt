@@ -80,6 +80,51 @@ class AppLanguageTest {
         assertEquals(AppLanguage.SYSTEM, AppLanguage.fromSystem(context))
     }
 
+    /** A phone updated from Android 12 with a language picked there, or a restore from such a phone: the system holds none. */
+    @Test
+    fun onAndroid13_aStoredLanguageTheSystemNeverHad_isHandedToItOnce_thenTheSystemCounts() {
+        val manager = context.getSystemService(LocaleManager::class.java)
+        assertTrue(manager.applicationLocales.isEmpty)
+
+        assertEquals("the stored choice is kept", "fr", AppLanguage.reconcile(context, "fr"))
+        assertEquals("fr", manager.applicationLocales.toLanguageTags())
+        assertEquals("fr", AppLanguage.reconcile(context, "fr"))
+
+        // Later the phone's per-app setting goes back to System default: from then on the stored choice follows it.
+        manager.applicationLocales = LocaleList.getEmptyLocaleList()
+        assertEquals(AppLanguage.SYSTEM, AppLanguage.reconcile(context, "fr"))
+        assertTrue(manager.applicationLocales.isEmpty)
+    }
+
+    @Test
+    fun onAndroid13_aLanguageTheSystemHolds_countsFromTheFirstStart() {
+        val manager = context.getSystemService(LocaleManager::class.java)
+        manager.applicationLocales = LocaleList.forLanguageTags("de")
+
+        assertEquals("de", AppLanguage.reconcile(context, "fr"))
+        assertEquals("de", manager.applicationLocales.toLanguageTags())
+    }
+
+    @Test
+    fun onAndroid13_aLanguageTheAppLacks_isStillThePhonesChoice_andIsLeftThere() {
+        val manager = context.getSystemService(LocaleManager::class.java)
+        manager.applicationLocales = LocaleList.forLanguageTags("pt-BR")
+
+        assertEquals(AppLanguage.SYSTEM, AppLanguage.reconcile(context, "fr"))
+        assertEquals("pt-BR", manager.applicationLocales.toLanguageTags())
+    }
+
+    @Test
+    fun onAndroid13_nothingStored_leavesTheSystemAlone_andSpendsTheFirstTime() {
+        val manager = context.getSystemService(LocaleManager::class.java)
+
+        assertEquals(AppLanguage.SYSTEM, AppLanguage.reconcile(context, AppLanguage.SYSTEM))
+        assertTrue(manager.applicationLocales.isEmpty)
+        // A stored language the system lacks after that was taken away in the phone's settings: it is not handed back.
+        assertEquals(AppLanguage.SYSTEM, AppLanguage.reconcile(context, "fr"))
+        assertTrue(manager.applicationLocales.isEmpty)
+    }
+
     /** The texts written just as the screens change language (an import's note), whatever language the app runs in. */
     @Test
     @Config(qualifiers = "es")
@@ -113,6 +158,7 @@ class AppLanguageTest {
         assertSame(context, AppLanguage.wrap(context, AppLanguage.SYSTEM))
         assertEquals("Africa", context.getString(R.string.continent_africa))
         assertNull(AppLanguage.fromSystem(context))
+        assertNull(AppLanguage.reconcile(context, "de"))
         // Nothing to tell the system there; the activity recreates itself instead.
         AppLanguage.apply(context, "de")
         assertEquals("Africa", context.getString(R.string.continent_africa))
