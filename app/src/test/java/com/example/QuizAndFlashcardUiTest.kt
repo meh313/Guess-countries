@@ -734,6 +734,10 @@ class QuizAndFlashcardUiTest {
         rule.onNodeWithTag("continent_chip_${continent.lowercase()}").performClick()
         rule.waitForIdle()
         tab("flashcards")
+        // Flip only once the filtered deck is shown: a flip on the full deck's first card would be another country.
+        rule.eventually("the continent's deck") {
+            rule.onNodeWithText("Card 1 of ${allCountries.count { it.continent == continent }}").assertIsDisplayed()
+        }
         rule.onNodeWithTag("flashcard_flip_card").performClick()
         rule.waitForIdle()
         rule.onNodeWithText("Flag meaning").assertIsDisplayed()
