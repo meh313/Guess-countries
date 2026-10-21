@@ -219,13 +219,15 @@ the tests replace them.
 
 Each flag is a lossless 600x450 WebP in `res/drawable-nodpi/flag_xx.webp`, rendered unstretched from the
 MIT-licensed [flag-icons](https://github.com/lipis/flag-icons) SVGs (`tools/render-flags.mjs` and
-`tools/to-webp.py` reproduce them; the renderer swaps in the flag's own colour where flag-icons strays from it, so
-far only Eritrea's blue) and looked up by country code in `FlagArt.kt`. Flags are shown in a 4:3 box
-(`FlagAspectRatio`), the shape of the artwork. A country without artwork gets a placeholder with its flag emoji,
-and a test fails until it has art. The licence text is in `licenses/THIRD_PARTY_NOTICES.md`, the developers' file
-(where the images came from and how to reproduce them). The player's copy is `app/src/main/assets/NOTICES.txt`, one
-block per third-party work (name, use, licence, copyright, licence text), which the About screen shows;
-`tools/export-notices.py` writes it from the markdown file and CI checks it is current (`--check`).
+`tools/to-webp.py` reproduce them) and looked up by country code in `FlagArt.kt`. The renderer replaces one
+flag-icons colour, Eritrea's pale triangle, with the flag's blue (`RECOLOUR` in `tools/render-flags.mjs`); every
+other colour is flag-icons' own, and South Sudan's deep-blue triangle, light blue on the real flag, is an open
+owner decision in `content/audit/africa.json`. Flags are shown in a 4:3 box (`FlagAspectRatio`), the shape of the
+artwork. A country without artwork gets a placeholder with its flag emoji, and a test fails until it has art. The
+licence text is in `licenses/THIRD_PARTY_NOTICES.md`, the developers' file (where the images came from and how to
+reproduce them). The player's copy is `app/src/main/assets/NOTICES.txt`, one block per third-party work (name, use,
+licence, copyright, licence text), which the About screen shows; `tools/export-notices.py` writes it from the
+markdown file and CI checks it is current (`--check`).
 
 ## Map data
 

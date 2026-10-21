@@ -7,8 +7,9 @@
 // Codes come from the arguments, else from the seed file, else from every catalog file. flag-icons
 // (4:3, the app's artwork) renders into out/<code>.png at 600x450; --source cfi renders the independent
 // country-flag-icons drawing (3:2) into ref/<code>.png at 600x400 for side-by-side comparison only.
-// Existing files are skipped unless --force. The few flag-icons colours that are not the flag's own are
-// replaced before rendering (RECOLOUR below; licenses/THIRD_PARTY_NOTICES.md lists them).
+// Existing files are skipped unless --force. flag-icons fills listed in RECOLOUR below are replaced with the
+// flag's specified colour before rendering (licenses/THIRD_PARTY_NOTICES.md names them); every other colour is
+// flag-icons' own.
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
