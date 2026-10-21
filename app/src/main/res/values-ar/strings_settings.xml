@@ -14,8 +14,8 @@
     <!-- Settings: Quiz -->
     <string name="settings_section_quiz">الاختبار</string>
     <string name="settings_timer_label">المؤقت</string>
-    <string name="settings_timer_hint_normal">الجولة السريعة: 10 ثوانٍ لكل سؤال. بليتز: علم جديد بعد لحظة من كل إجابة.</string>
-    <string name="settings_timer_hint_relaxed">الجولة السريعة: 20 ثانية لكل سؤال. بليتز: علم جديد بعد لحظة من كل إجابة.</string>
+    <string name="settings_timer_hint_normal">الجولة السريعة: عشر ثوانٍ لكل سؤال. بليتز: علم جديد بعد لحظة من كل إجابة.</string>
+    <string name="settings_timer_hint_relaxed">الجولة السريعة: عشرون ثانية لكل سؤال. بليتز: علم جديد بعد لحظة من كل إجابة.</string>
     <string name="settings_timer_hint_off">الجولة السريعة: بلا حد زمني. بليتز: تستمر الدقيقة، لكن العلم التالي ينتظر الضغط على التالي.</string>
     <!-- The daily goal: "Daily goal: 5 · 10 · 20 items" as a label and a segmented row -->
     <string name="settings_goal_label">الهدف اليومي</string>

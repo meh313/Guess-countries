@@ -51,7 +51,7 @@
     <string name="mode_type_name_hint">Keine Auswahl: tippe den Ländernamen ein</string>
     <string name="mode_speed_round">Schnellrunde</string>
     <string name="mode_speed_round_hint">10 Sekunden pro Frage</string>
-    <string name="mode_blitz">60-Sekunden-Blitz</string>
+    <string name="mode_blitz">%1$d-Sekunden-Blitz</string>
     <string name="mode_blitz_hint">So viele Flaggen wie möglich in einer Minute</string>
     <string name="mode_flashcards">Lernkarten</string>
 
@@ -86,6 +86,7 @@
     <string name="continent_europe">Europa</string>
     <string name="continent_oceania">Ozeanien</string>
     <string name="continent_antarctica">Antarktis</string>
+    <string name="continent_americas_in_sentence">Amerika</string>
 
     <!-- Sort orders -->
     <string name="sort_by_name">Nach Name sortieren</string>

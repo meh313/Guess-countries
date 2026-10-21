@@ -94,6 +94,7 @@ import com.example.data.model.Country
 import com.example.data.model.SortOption
 import com.example.flashcards.FlashcardDeck
 import com.example.flashcards.StudySession
+import com.example.learn.LearnSession
 import com.example.progress.Grade
 import com.example.progress.PracticeStreak
 import com.example.progress.Skill
@@ -107,6 +108,7 @@ import com.example.ui.components.readingWidth
 import com.example.ui.components.rememberCompactNumberFormat
 import com.example.ui.continentLabel
 import com.example.ui.nounRes
+import com.example.ui.regionLabel
 import com.example.ui.scopeLabel
 import com.example.ui.standingFilterLabel
 import com.example.speech.Speech
@@ -548,7 +550,7 @@ private fun StudyChooser(
                 StudyOption(
                     StudySession.WEAK,
                     scopeLabel(StudySession.WEAK),
-                    stringResource(R.string.study_weak_detail, weakCount),
+                    pluralStringResource(R.plurals.study_weak_detail, weakCount, weakCount),
                     weakCount > 0,
                     "study_weak_btn"
                 ) { onPick(it) }
@@ -561,7 +563,7 @@ private fun StudyChooser(
                 ) { onPick(it) }
                 StudyOption(
                     LEARN_OPTION,
-                    stringResource(R.string.learn_title),
+                    stringResource(R.string.learn_title, LearnSession.CARDS_PER_SESSION),
                     pluralStringResource(R.plurals.learn_option_detail, unseenCount, unseenCount),
                     unseenCount > 0,
                     "study_learn_btn"
@@ -801,7 +803,7 @@ private fun StudySummary(
             PracticeStreak.Kind.KEPT -> pluralStringResource(R.plurals.streak_kept, outcome.days, outcome.days)
             // 0 days: the session was too small to meet the day's goal, and the day is not counted yet.
             PracticeStreak.Kind.ALREADY_COUNTED ->
-                if (outcome.days == 0) stringResource(R.string.streak_goal_short) else stringResource(R.string.study_streak_already_counted, outcome.days)
+                if (outcome.days == 0) stringResource(R.string.streak_goal_short) else pluralStringResource(R.plurals.study_streak_already_counted, outcome.days, outcome.days)
             null ->
                 if (session.gradedCards < StudySession.MIN_FOR_STREAK) {
                     stringResource(R.string.study_streak_short, StudySession.MIN_FOR_STREAK, session.gradedCards)
@@ -1002,7 +1004,7 @@ private fun FlipCard(
                             modifier = Modifier.testTag("flashcard_continent_chip")
                         ) {
                             Text(
-                                text = country.regionLabel,
+                                text = regionLabel(country),
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,
                                 style = MaterialTheme.typography.labelLarge,

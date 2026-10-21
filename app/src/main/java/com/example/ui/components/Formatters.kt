@@ -45,6 +45,21 @@ fun formatPopulation(compact: android.icu.text.NumberFormat, country: Country): 
     else resources.getString(R.string.population_winter, compact.format(country.population))
 }
 
-/** "640K km²". */
+/** "640K km²", the unit from the resources ("كم²" in Arabic). */
+fun formatArea(resources: Resources, compact: android.icu.text.NumberFormat, areaSqKm: Double): String =
+    resources.getString(R.string.area_km2, compact.format(areaSqKm))
+
+/** [formatArea] in composition. */
+@Composable
 fun formatArea(compact: android.icu.text.NumberFormat, areaSqKm: Double): String =
-    "${compact.format(areaSqKm)} km²"
+    formatArea(LocalResources.current, compact, areaSqKm)
+
+/**
+ * A count on its own, in [locale]'s digits, as the `%d` of a string resource prints it: Arabic-Indic in Arabic, so a
+ * figure built in code matches the ratios formatted beside it. A Kotlin template ("$count") always gives Latin digits.
+ */
+fun formatCount(locale: Locale, count: Int): String = String.format(locale, "%d", count)
+
+/** [formatCount] in the user's locale. */
+@Composable
+fun formatCount(count: Int): String = formatCount(LocalLocale.current.platformLocale, count)

@@ -4,7 +4,11 @@
   log and the daily reminder card). Shared words (Done, Clear filters, scopes, continents, standings…) live in
   strings.xml.
 -->
-<!-- Counts whose wording does not change with the number, or that are never 1, stay plain strings. -->
+<!--
+  A count is a plurals wherever a word next to it changes with the number in one of the five languages. The plain
+  strings hold a fixed number (StudySession.MIN_FOR_STREAK, the study size) or a count no word agrees with ("Card 3
+  of 20", "4 of 54 mastered").
+-->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="PluralsCandidate">
     <!-- Flashcards: the deck header, the filter notice and the empty deck -->
     <string name="flashcards_title">Flashcards</string>
@@ -55,7 +59,10 @@
         <item quantity="one">%1$d capital due for review</item>
         <item quantity="other">%1$d capitals due for review</item>
     </plurals>
-    <string name="study_weak_detail">%1$d reviewed, not mastered</string>
+    <plurals name="study_weak_detail">
+        <item quantity="one">%1$d reviewed, not mastered</item>
+        <item quantity="other">%1$d reviewed, not mastered</item>
+    </plurals>
     <plurals name="study_deck_detail">
         <item quantity="one">the next %1$d card from here</item>
         <item quantity="other">the next %1$d cards from here</item>
@@ -76,7 +83,10 @@
     <string name="study_summary_title">Session complete</string>
     <string name="study_summary_remembered">%1$d of %2$d remembered</string>
     <string name="study_summary_grades">Again %1$d · Good %2$d · Easy %3$d</string>
-    <string name="study_streak_already_counted">%1$d-day streak, already counted today</string>
+    <plurals name="study_streak_already_counted">
+        <item quantity="one">%d-day streak, already counted today</item>
+        <item quantity="other">%d-day streak, already counted today</item>
+    </plurals>
     <string name="study_streak_short">Grade at least %1$d cards for it to count towards your goal (you graded %2$d)</string>
     <string name="study_again">Study again</string>
 
@@ -115,7 +125,10 @@
     <string name="stats_saved">Saved</string>
     <string name="stats_quizzes_finished">Quizzes finished</string>
     <string name="stats_highest_score">Highest score</string>
-    <string name="stats_points">%1$d pts</string>
+    <plurals name="stats_points">
+        <item quantity="one">%d pt</item>
+        <item quantity="other">%d pts</item>
+    </plurals>
     <string name="stats_blitz_best">Blitz best: %1$d</string>
     <!-- What TalkBack reads for a tile: title, value and (when there is one) the detail line -->
     <string name="stat_badge_description">%1$s: %2$s</string>
@@ -123,7 +136,10 @@
 
     <!-- Progress: the week ahead, under the tiles ("Coming up: 4 due tomorrow · 12 this week"); hidden when nothing is coming -->
     <string name="stats_forecast">Coming up: %1$s · %2$s</string>
-    <string name="stats_forecast_tomorrow">%1$d due tomorrow</string>
+    <plurals name="stats_forecast_tomorrow">
+        <item quantity="one">%d due tomorrow</item>
+        <item quantity="other">%d due tomorrow</item>
+    </plurals>
     <string name="stats_forecast_week">%1$d this week</string>
 
     <!-- Progress: the pairs of countries mixed up most often, each row opening how to tell them apart -->
@@ -138,7 +154,7 @@
 
     <!-- Progress: continent mastery -->
     <string name="stats_continent_heading">Mastery by continent</string>
-    <string name="stats_continent_open">Show the %1$s countries still to learn</string>
+    <string name="stats_continent_open">Show the countries still to learn in %1$s</string>
     <string name="stats_mastered_of">%1$d of %2$d mastered</string>
     <string name="stats_capitals_count">Capitals: %1$d of %2$d</string>
 
@@ -146,8 +162,9 @@
     <string name="stats_log_heading">Recent quizzes</string>
     <string name="stats_log_empty">No quizzes yet. Finish a quiz or a study session and it shows up here.</string>
     <string name="stats_log_entry">%1$s · %2$s</string>
-    <string name="stats_log_result">%1$d/%2$d · %3$d pts</string>
-    <string name="stats_log_blitz">%1$d correct · %2$d pts</string>
+    <!-- "8/10 · 150 pts", the points from stats_points; a blitz: "14 correct · 340 pts" (result_correct_count, stats_points) -->
+    <string name="stats_log_result">%1$d/%2$d · %3$s</string>
+    <string name="stats_log_blitz">%1$s · %2$s</string>
     <string name="stats_log_show_all">Show all</string>
     <!-- A log row with stored answers is a button that opens its result screen again -->
     <string name="stats_log_open">Open this quiz\'s result</string>

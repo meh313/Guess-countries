@@ -3,6 +3,7 @@ package com.example
 import com.example.data.model.CountryCatalog
 import com.example.ui.components.compactNumberFormat
 import com.example.ui.components.formatArea
+import com.example.ui.components.formatCount
 import com.example.ui.components.formatPopulation
 import java.util.Locale
 import org.junit.Assert.assertEquals
@@ -61,9 +62,27 @@ class FormattersTest {
 
     @Test
     fun area_isShortWithTheUnit() {
-        assertEquals("644K km²", formatArea(compact(Locale.US), 643_801.0))
-        assertEquals("9.83M km²", formatArea(compact(Locale.US), 9_833_517.0))
-        assertEquals("18.3K km²", formatArea(compact(Locale.US), 18_272.0))
+        assertEquals("644K km²", formatArea(resources, compact(Locale.US), 643_801.0))
+        assertEquals("9.83M km²", formatArea(resources, compact(Locale.US), 9_833_517.0))
+        assertEquals("18.3K km²", formatArea(resources, compact(Locale.US), 18_272.0))
+    }
+
+    @Test
+    @Config(qualifiers = "ar-rEG")
+    fun area_inArabic_hasTheArabicUnit_andArabicDigits() {
+        // Egyptian Arabic, whose digits are Arabic-Indic in both ICU and the JVM this test runs on.
+        val arabic = formatArea(resources, compact(Locale.forLanguageTag("ar-EG")), 643_801.0)
+        assertTrue("arabic: $arabic", arabic.endsWith(" كم²"))
+        assertTrue("arabic: $arabic", arabic.none { it in '0'..'9' } && arabic.any { it in '٠'..'٩' })
+    }
+
+    @Test
+    fun counts_takeTheDigitsOfTheLocale_asAStringResourcePrintsThem() {
+        val egypt = Locale.forLanguageTag("ar-EG")
+        assertEquals("12", formatCount(Locale.US, 12))
+        assertEquals("١٢", formatCount(egypt, 12))
+        // A tile's figure has the digits of the "%1$d من %2$d" ratio beside it.
+        assertEquals(String.format(egypt, "%d من %d", 12, 196), "${formatCount(egypt, 12)} من ${formatCount(egypt, 196)}")
     }
 
     @Test

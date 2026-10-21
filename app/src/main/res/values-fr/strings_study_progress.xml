@@ -4,7 +4,11 @@
   le journal des quiz et la carte du rappel quotidien). Les mots partagés (Terminé, Effacer les filtres, portées,
   continents, états…) vivent dans strings.xml.
 -->
-<!-- Les comptes dont la formulation ne change pas avec le nombre, ou qui ne valent jamais 1, restent des chaînes simples. -->
+<!--
+  Un compte est un plurals dès qu’un mot à côté change avec le nombre dans l’une des cinq langues. Les chaînes
+  simples gardent un nombre fixe (StudySession.MIN_FOR_STREAK, la taille d’une étude) ou un compte auquel aucun mot
+  ne s’accorde (« Carte 3 sur 20 », « Maîtrisés : 4 sur 54 »).
+-->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="PluralsCandidate">
     <!-- Cartes mémoire : l'en-tête du paquet, l'avis de filtre et le paquet vide -->
     <string name="flashcards_title">Cartes mémoire</string>
@@ -58,7 +62,11 @@
         <item quantity="other">%1$d capitales à réviser</item>
         <item quantity="many">%1$d capitales à réviser</item>
     </plurals>
-    <string name="study_weak_detail">%1$d révisés, non maîtrisés</string>
+    <plurals name="study_weak_detail">
+        <item quantity="one">%1$d révisé, non maîtrisé</item>
+        <item quantity="other">%1$d révisés, non maîtrisés</item>
+        <item quantity="many">%1$d révisés, non maîtrisés</item>
+    </plurals>
     <plurals name="study_deck_detail">
         <item quantity="one">%1$d carte suivante à partir d\'ici</item>
         <item quantity="other">%1$d cartes suivantes à partir d\'ici</item>
@@ -78,9 +86,13 @@
 
     <!-- Étudier : le résumé (le journal des quiz réutilise study_summary_remembered) -->
     <string name="study_summary_title">Session terminée</string>
-    <string name="study_summary_remembered">%1$d sur %2$d retenues</string>
+    <string name="study_summary_remembered">Retenues : %1$d sur %2$d</string>
     <string name="study_summary_grades">Encore %1$d · Bien %2$d · Facile %3$d</string>
-    <string name="study_streak_already_counted">Série de %1$d jours, déjà comptée aujourd\'hui</string>
+    <plurals name="study_streak_already_counted">
+        <item quantity="one">Série de %d jour, déjà comptée aujourd\'hui</item>
+        <item quantity="other">Série de %d jours, déjà comptée aujourd\'hui</item>
+        <item quantity="many">Série de %d jours, déjà comptée aujourd\'hui</item>
+    </plurals>
     <string name="study_streak_short">Notez au moins %1$d cartes pour que ça compte pour votre objectif (vous en avez noté %2$d)</string>
     <string name="study_again">Étudier encore</string>
 
@@ -121,7 +133,11 @@
     <string name="stats_saved">Enregistrés</string>
     <string name="stats_quizzes_finished">Quiz terminés</string>
     <string name="stats_highest_score">Meilleur score</string>
-    <string name="stats_points">%1$d pts</string>
+    <plurals name="stats_points">
+        <item quantity="one">%d pt</item>
+        <item quantity="other">%d pts</item>
+        <item quantity="many">%d pts</item>
+    </plurals>
     <string name="stats_blitz_best">Record blitz : %1$d</string>
     <!-- Ce que TalkBack lit pour une tuile : titre, valeur et (s'il y en a une) la ligne de détail -->
     <string name="stat_badge_description">%1$s: %2$s</string>
@@ -129,7 +145,11 @@
 
     <!-- Progrès : la semaine à venir, sous les tuiles (« À venir : 4 à réviser demain · 12 cette semaine ») ; masqué quand rien ne vient -->
     <string name="stats_forecast">À venir : %1$s · %2$s</string>
-    <string name="stats_forecast_tomorrow">%1$d à réviser demain</string>
+    <plurals name="stats_forecast_tomorrow">
+        <item quantity="one">%d à réviser demain</item>
+        <item quantity="other">%d à réviser demain</item>
+        <item quantity="many">%d à réviser demain</item>
+    </plurals>
     <string name="stats_forecast_week">%1$d cette semaine</string>
 
     <!-- Progrès : les paires de pays les plus souvent confondues, chaque ligne ouvrant comment les distinguer -->
@@ -146,15 +166,15 @@
     <!-- Progrès : maîtrise par continent -->
     <string name="stats_continent_heading">Maîtrise par continent</string>
     <string name="stats_continent_open">Afficher les pays encore à apprendre : %1$s</string>
-    <string name="stats_mastered_of">%1$d sur %2$d maîtrisés</string>
+    <string name="stats_mastered_of">Maîtrisés : %1$d sur %2$d</string>
     <string name="stats_capitals_count">Capitales : %1$d sur %2$d</string>
 
     <!-- Progrès : le journal des quiz -->
     <string name="stats_log_heading">Quiz récents</string>
     <string name="stats_log_empty">Pas encore de quiz. Terminez un quiz ou une session d\'étude et il apparaîtra ici.</string>
     <string name="stats_log_entry">%1$s · %2$s</string>
-    <string name="stats_log_result">%1$d/%2$d · %3$d pts</string>
-    <string name="stats_log_blitz">%1$d justes · %2$d pts</string>
+    <string name="stats_log_result">%1$d/%2$d · %3$s</string>
+    <string name="stats_log_blitz">%1$s · %2$s</string>
     <string name="stats_log_show_all">Tout afficher</string>
     <!-- Une ligne du journal avec des réponses enregistrées est un bouton qui rouvre son écran de résultat -->
     <string name="stats_log_open">Ouvrir le résultat de ce quiz</string>

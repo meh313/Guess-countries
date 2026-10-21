@@ -11,6 +11,8 @@ import androidx.activity.result.contract.ActivityResultContract
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
@@ -122,6 +124,9 @@ class ExploreProgressUiTest {
 
     private fun describedAs(text: String) = SemanticsMatcher.expectValue(SemanticsProperties.ContentDescription, listOf(text))
 
+    private fun clickLabelIs(label: String) =
+        SemanticsMatcher("click label \"$label\"") { it.config.getOrNull(SemanticsActions.OnClick)?.label == label }
+
     @Test
     fun countryCards_showTwoPipsForTheFlagAndTheCapital() {
         mastered("FR")
@@ -176,6 +181,12 @@ class ExploreProgressUiTest {
         rule.onNodeWithTag("continent_chip_asia").performClick()
         rule.eventually("nothing mastered in Asia") { rule.onNodeWithText("No countries found").assertIsDisplayed() }
         rule.onNodeWithTag("explore_empty_hint").assert(hasText("No countries mastered in Asia. Clear the filters?"))
+        // Inside the sentence the Americas take "the" (and the Arabic dual its genitive).
+        rule.onNodeWithTag("continent_chips").performScrollToNode(hasTestTag("continent_chip_americas"))
+        rule.onNodeWithTag("continent_chip_americas").performClick()
+        rule.eventually("nothing mastered in the Americas") {
+            rule.onNodeWithTag("explore_empty_hint").assert(hasText("No countries mastered in the Americas. Clear the filters?"))
+        }
         rule.onNodeWithTag("explore_clear_filters_btn").performClick()
         rule.eventually("everyone again") { rule.onNodeWithText("197 countries").assertIsDisplayed() }
     }
@@ -402,7 +413,11 @@ class ExploreProgressUiTest {
         learning("JP")
         rule.eventually("the states") { assertEquals(4, viewModel.skills.value[Skill.FLAG]?.size) }
         rule.openTab("stats")
+        // What TalkBack says a tap does; the Americas take "the" inside the sentence.
+        rule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("stats_continent_americas"))
+        rule.onNodeWithTag("stats_continent_americas").assert(clickLabelIs("Show the countries still to learn in the Americas"))
         rule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("stats_continent_europe"))
+        rule.onNodeWithTag("stats_continent_europe").assert(clickLabelIs("Show the countries still to learn in Europe"))
 
         rule.onNodeWithTag("stats_continent_europe").performClick()
         rule.waitForIdle()
@@ -806,7 +821,7 @@ class ExploreProgressUiTest {
         dueAt("JP", Skill.LOCATION, 0L)
 
         rule.eventually("one on the map") { rule.onNodeWithTag("today_card").assert(hasText("1 due · 0 new today · goal 10")) }
-        rule.onNodeWithTag("today_action_btn").assert(hasText("Review 1 on the map"))
+        rule.onNodeWithTag("today_action_btn").assert(hasText("Review 1 country on the map"))
         rule.onNodeWithTag("today_action_btn").performClick()
         rule.waitForIdle()
 

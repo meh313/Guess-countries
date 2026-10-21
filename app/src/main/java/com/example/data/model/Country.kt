@@ -33,9 +33,12 @@ data class Country(
      */
     val spotIt: String = ""
 ) {
-    /** "Africa · Southern Africa", or just "Antarctica" where the subregion repeats the continent. */
-    val regionLabel: String
-        get() = if (subregion.equals(continent, ignoreCase = true)) continent else "$continent · $subregion"
+    /**
+     * "Africa · Southern Africa", or just "Antarctica" where the subregion repeats the continent. The screens name the
+     * continent in their language ([continentName], see `ui/Labels.kt`); the subregion is the catalog's English.
+     */
+    fun regionLabel(continentName: String = continent): String =
+        if (subregion.equals(continent, ignoreCase = true)) continentName else "$continentName · $subregion"
 
     /** The key the country lists sort names by: lowercase, accents dropped. Folded once, since sorting compares it often. */
     val nameSortKey: String by lazy { fold(name) }

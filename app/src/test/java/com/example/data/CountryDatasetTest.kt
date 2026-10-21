@@ -199,9 +199,14 @@ class CountryDatasetTest {
 
     @Test
     fun regionLabelNeverRepeatsAWord() {
-        assertEquals("Antarctica", allCountries.single { it.code == "AQ" }.regionLabel)
-        assertEquals("Africa · Southern Africa", allCountries.single { it.code == "ZA" }.regionLabel)
-        allCountries.forEach { assertTrue(it.regionLabel, it.regionLabel.split(" · ").distinct().size == it.regionLabel.split(" · ").size) }
+        val antarctica = allCountries.single { it.code == "AQ" }
+        val southAfrica = allCountries.single { it.code == "ZA" }
+        assertEquals("Antarctica", antarctica.regionLabel())
+        assertEquals("Africa · Southern Africa", southAfrica.regionLabel())
+        // The screens name the continent in their language; the subregion stays English and Antarctica's is not repeated.
+        assertEquals("Afrique · Southern Africa", southAfrica.regionLabel("Afrique"))
+        assertEquals("Antarktis", antarctica.regionLabel("Antarktis"))
+        allCountries.forEach { val label = it.regionLabel(); assertTrue(label, label.split(" · ").distinct().size == label.split(" · ").size) }
     }
 
     @Test

@@ -9,6 +9,7 @@
     <!-- Numbers on cards and in the sheet. The number after the figure is the year of the estimate, not a count. -->
     <string name="population_estimate" tools:ignore="PluralsCandidate">%1$s (est. %2$d)</string>
     <string name="population_winter">%1$s invernando en las estaciones</string>
+    <string name="area_km2">%1$s km²</string>
     <string name="card_no_capital">Sin capital</string>
 
     <!-- Explore: the banner -->
@@ -52,8 +53,8 @@
         <item quantity="other">Repasar %d países en el mapa</item>
         <item quantity="many">Repasar %d países en el mapa</item>
     </plurals>
-    <string name="today_learn_new">Aprender 5 nuevas</string>
-    <string name="today_learn_more">Aprender 5 más</string>
+    <string name="today_learn_new" tools:ignore="PluralsCandidate">Aprender %1$d nuevas</string>
+    <string name="today_learn_more" tools:ignore="PluralsCandidate">Aprender %1$d más</string>
     <!-- Every flag has been seen, so there is nothing left for Learn: the button opens the Quiz tab instead -->
     <string name="today_take_quiz">Hacer un quiz</string>
     <string name="today_dismiss">Ocultar por hoy</string>

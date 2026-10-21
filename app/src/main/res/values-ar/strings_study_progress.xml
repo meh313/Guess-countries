@@ -4,7 +4,11 @@
   log and the daily reminder card). Shared words (Done, Clear filters, scopes, continents, standings…) live in
   strings.xml.
 -->
-<!-- Counts whose wording does not change with the number, or that are never 1, stay plain strings. -->
+<!--
+  A count is a plurals wherever a word next to it changes with the number in one of the five languages. The plain
+  strings hold a fixed number (StudySession.MIN_FOR_STREAK, the study size) or a count no word agrees with ("Card 3
+  of 20", "4 of 54 mastered").
+-->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="PluralsCandidate">
     <!-- Flashcards: the deck header, the filter notice and the empty deck -->
     <string name="flashcards_title">بطاقات</string>
@@ -18,8 +22,8 @@
     <!-- The Study button; "Study" alone when nothing is due -->
     <plurals name="flashcards_study_due">
         <item quantity="zero">ادرس · لا مستحق</item>
-        <item quantity="one">ادرس · 1 مستحقة</item>
-        <item quantity="two">ادرس · 2 مستحقتان</item>
+        <item quantity="one">ادرس · واحدة مستحقة</item>
+        <item quantity="two">ادرس · اثنتان مستحقتان</item>
         <item quantity="few">ادرس · %d مستحقة</item>
         <item quantity="many">ادرس · %d مستحقة</item>
         <item quantity="other">ادرس · %d مستحقة</item>
@@ -67,7 +71,14 @@
         <item quantity="many">%1$d عاصمة مستحقة للمراجعة</item>
         <item quantity="other">%1$d عاصمة مستحقة للمراجعة</item>
     </plurals>
-    <string name="study_weak_detail">%1$d مراجَعة وغير متقَنة</string>
+    <plurals name="study_weak_detail">
+        <item quantity="zero">لا بطاقات مراجَعة وغير متقَنة</item>
+        <item quantity="one">بطاقة واحدة مراجَعة وغير متقَنة</item>
+        <item quantity="two">بطاقتان مراجَعتان وغير متقَنتين</item>
+        <item quantity="few">%1$d بطاقات مراجَعة وغير متقَنة</item>
+        <item quantity="many">%1$d بطاقة مراجَعة وغير متقَنة</item>
+        <item quantity="other">%1$d بطاقة مراجَعة وغير متقَنة</item>
+    </plurals>
     <plurals name="study_deck_detail">
         <item quantity="zero">لا بطاقات تالية من هنا</item>
         <item quantity="one">البطاقة التالية من هنا</item>
@@ -92,7 +103,14 @@
     <string name="study_summary_title">اكتملت الجلسة</string>
     <string name="study_summary_remembered">تذكّرت %1$d من %2$d</string>
     <string name="study_summary_grades">مرة أخرى %1$d · جيد %2$d · سهل %3$d</string>
-    <string name="study_streak_already_counted">سلسلة %1$d يوم، احتُسبت اليوم بالفعل</string>
+    <plurals name="study_streak_already_counted">
+        <item quantity="zero">لا سلسلة بعد</item>
+        <item quantity="one">سلسلة يوم واحد، احتُسبت اليوم بالفعل</item>
+        <item quantity="two">سلسلة يومين، احتُسبت اليوم بالفعل</item>
+        <item quantity="few">سلسلة %d أيام، احتُسبت اليوم بالفعل</item>
+        <item quantity="many">سلسلة %d يومًا، احتُسبت اليوم بالفعل</item>
+        <item quantity="other">سلسلة %d يوم، احتُسبت اليوم بالفعل</item>
+    </plurals>
     <string name="study_streak_short">قيّم %1$d بطاقات على الأقل لتُحتسب في هدفك (قيّمت %2$d)</string>
     <string name="study_again">ادرس مرة أخرى</string>
 
@@ -139,7 +157,14 @@
     <string name="stats_saved">المحفوظة</string>
     <string name="stats_quizzes_finished">الاختبارات المنتهية</string>
     <string name="stats_highest_score">أعلى نتيجة</string>
-    <string name="stats_points">%1$d نقطة</string>
+    <plurals name="stats_points">
+        <item quantity="zero">لا نقاط</item>
+        <item quantity="one">نقطة واحدة</item>
+        <item quantity="two">نقطتان</item>
+        <item quantity="few">%d نقاط</item>
+        <item quantity="many">%d نقطة</item>
+        <item quantity="other">%d نقطة</item>
+    </plurals>
     <string name="stats_blitz_best">أفضل بليتز: %1$d</string>
     <!-- What TalkBack reads for a tile: title, value and (when there is one) the detail line -->
     <string name="stat_badge_description">‏%1$s: %2$s</string>
@@ -147,7 +172,14 @@
 
     <!-- Progress: the week ahead, under the tiles ("Coming up: 4 due tomorrow · 12 this week"); hidden when nothing is coming -->
     <string name="stats_forecast">قادم: %1$s · %2$s</string>
-    <string name="stats_forecast_tomorrow">%1$d مستحقة غدًا</string>
+    <plurals name="stats_forecast_tomorrow">
+        <item quantity="zero">لا شيء مستحق غدًا</item>
+        <item quantity="one">واحدة مستحقة غدًا</item>
+        <item quantity="two">اثنتان مستحقتان غدًا</item>
+        <item quantity="few">%d مستحقة غدًا</item>
+        <item quantity="many">%d مستحقة غدًا</item>
+        <item quantity="other">%d مستحقة غدًا</item>
+    </plurals>
     <string name="stats_forecast_week">%1$d هذا الأسبوع</string>
 
     <!-- Progress: the pairs of countries mixed up most often, each row opening how to tell them apart -->
@@ -167,15 +199,15 @@
     <!-- Progress: continent mastery -->
     <string name="stats_continent_heading">الإتقان حسب القارة</string>
     <string name="stats_continent_open">عرض دول %1$s التي ما زالت للتعلم</string>
-    <string name="stats_mastered_of">%1$d من %2$d متقَنة</string>
+    <string name="stats_mastered_of">المتقَنة: %1$d من %2$d</string>
     <string name="stats_capitals_count">العواصم: %1$d من %2$d</string>
 
     <!-- Progress: the quiz log -->
     <string name="stats_log_heading">آخر الاختبارات</string>
     <string name="stats_log_empty">لا اختبارات بعد. أنهِ اختبارًا أو جلسة دراسة وسيظهر هنا.</string>
     <string name="stats_log_entry">%1$s · %2$s</string>
-    <string name="stats_log_result">%1$d/%2$d · %3$d نقطة</string>
-    <string name="stats_log_blitz">%1$d صحيحة · %2$d نقطة</string>
+    <string name="stats_log_result">%1$d/%2$d · %3$s</string>
+    <string name="stats_log_blitz">%1$s · %2$s</string>
     <string name="stats_log_show_all">عرض الكل</string>
     <!-- A log row with stored answers is a button that opens its result screen again -->
     <string name="stats_log_open">فتح نتيجة هذا الاختبار</string>

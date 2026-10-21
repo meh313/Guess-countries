@@ -123,6 +123,7 @@ import com.example.ui.hintRes
 import com.example.ui.optionLabel
 import com.example.ui.questionText
 import com.example.ui.scopeLabel
+import com.example.ui.title
 import com.example.ui.theme.StreakColor
 import com.example.ui.titleRes
 import com.example.ui.viewmodel.CountryViewModel
@@ -278,7 +279,7 @@ fun QuizScreen(
                             Spacer(modifier = Modifier.width(16.dp))
                             Column {
                                 Text(
-                                    text = stringResource(mode.titleRes),
+                                    text = mode.title(),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                     color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
@@ -512,7 +513,7 @@ fun QuizScreen(
                     Text(
                         text = if (canStart) {
                             if (selectedMode.isEndless) stringResource(R.string.quiz_start_blitz, selectedMode.totalTimeSeconds ?: 0)
-                            else stringResource(R.string.quiz_start_quiz, questionCount)
+                            else pluralStringResource(R.plurals.quiz_start_quiz, questionCount, questionCount)
                         } else {
                             stringResource(R.string.quiz_needs_countries, QuizEngine.MIN_POOL)
                         },
@@ -883,7 +884,7 @@ fun QuizScreen(
                 val result = when {
                     active.timedOut -> stringResource(R.string.quiz_result_timeout, answerText)
                     picked == q.correctAnswerIndex ->
-                        stringResource(R.string.quiz_result_correct, QuizEngine.pointsForCorrectAnswer(active.streak - 1))
+                        QuizEngine.pointsForCorrectAnswer(active.streak - 1).let { pluralStringResource(R.plurals.quiz_result_correct, it, it) }
                     // A country on two continents: the other continent counts, and the line says why.
                     picked != null && picked in q.acceptedIndices ->
                         stringResource(R.string.quiz_result_also_counted, optionLabel(mode, q.options[picked]), answerText)

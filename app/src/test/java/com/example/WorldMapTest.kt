@@ -233,8 +233,32 @@ class WorldMapTest {
         show(france.copy(code = "AA"))
 
         rule.onNodeWithTag("world_map")
-            .assertContentDescriptionEquals("Map: France, in ${france.regionLabel}")
+            .assertContentDescriptionEquals("Map: France, in Europe · Western Europe")
             .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Image))
+    }
+
+    @Test
+    fun theDescription_saysTheAmericasInASentence() {
+        show(france.copy(code = "AA", continent = "Americas", subregion = "South America"))
+
+        rule.onNodeWithTag("world_map").assertContentDescriptionEquals("Map: France, in the Americas · South America")
+    }
+
+    @Test
+    @Config(qualifiers = "fr-w360dp-h640dp-xxhdpi")
+    fun theDescription_namesTheContinentInTheLanguageOfTheScreens() {
+        // The continent is the one the cards and chips show; the subregion, like the name, is the catalog's English.
+        show(france.copy(code = "AA", continent = "Africa", subregion = "Western Africa"))
+
+        rule.onNodeWithTag("world_map").assertContentDescriptionEquals("Carte\u00a0: France (Afrique · Western Africa)")
+    }
+
+    @Test
+    @Config(qualifiers = "ar-w360dp-h640dp-xxhdpi")
+    fun theArabicDescription_putsTheAmericasInTheGenitiveAfterIn() {
+        show(france.copy(code = "AA", continent = "Americas", subregion = "South America"))
+
+        rule.onNodeWithTag("world_map").assertContentDescriptionEquals("خريطة: France، في الأمريكتين · South America")
     }
 
     @Test

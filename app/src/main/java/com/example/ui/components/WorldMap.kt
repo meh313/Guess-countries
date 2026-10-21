@@ -38,6 +38,7 @@ import com.example.data.model.Country
 import com.example.data.model.LonLat
 import com.example.data.model.MapCountry
 import com.example.data.model.WorldMapData
+import com.example.ui.regionLabel
 
 /**
  * The outlines a [WorldMap] draws. Null (the default) means the bundled asset, read once off the main thread; a
@@ -207,7 +208,7 @@ fun WorldMap(
     val ring = scheme.surface
     val insetSea = scheme.surface
     val insetFrame = scheme.outline
-    val description = contentDescription ?: stringResource(R.string.map_description, country.name, country.regionLabel)
+    val description = contentDescription ?: stringResource(R.string.map_description, country.name, regionLabel(country, inSentence = true))
     val shape = RoundedCornerShape(12.dp)
 
     Canvas(

@@ -104,7 +104,7 @@ class LayoutAndSemanticsUiTest {
         assertTrue("French, not English: $explore", explore != "Explore")
         rule.onNodeWithTag("nav_tab_explore").assert(hasText(explore))
         rule.openTab("quiz")
-        rule.onNodeWithTag("start_quiz_btn").assertIsDisplayed().assert(hasText(context.getString(R.string.quiz_start_quiz, 10)))
+        rule.onNodeWithTag("start_quiz_btn").assertIsDisplayed().assert(hasText(context.resources.getQuantityString(R.plurals.quiz_start_quiz, 10, 10)))
         rule.onNodeWithTag("start_quiz_btn").performClick()
         rule.waitForIdle()
         rule.onNodeWithText(context.getString(R.string.quiz_progress, 1, 10)).assertIsDisplayed()
@@ -129,7 +129,7 @@ class LayoutAndSemanticsUiTest {
         rule.openTab("quiz")
         val start = rule.boundsOf("start_quiz_btn")
         assertTrue("start button within the window", start.left >= 0f && start.right <= width + 1f)
-        rule.onNodeWithTag("start_quiz_btn").assert(hasText(context.getString(R.string.quiz_start_quiz, 10)))
+        rule.onNodeWithTag("start_quiz_btn").assert(hasText(context.resources.getQuantityString(R.plurals.quiz_start_quiz, 10, 10)))
         rule.onNodeWithTag("start_quiz_btn").performClick()
         rule.waitForIdle()
         rule.onNodeWithText(context.getString(R.string.quiz_progress, 1, 10)).assertIsDisplayed()
@@ -196,6 +196,62 @@ class LayoutAndSemanticsUiTest {
         rule.onNodeWithTag("start_quiz_btn").performClick()
         rule.waitForIdle()
         assertEquals("the flag sits in the middle of the card", 0f, offCentre("quiz_flag"), 2f)
+    }
+
+    @Test
+    @Config(sdk = [36], qualifiers = "ar-rEG-w360dp-h800dp-xxhdpi")
+    fun arabic_theProgressScreenPrintsEveryNumberInOneDigitSystem() {
+        // A %d prints Arabic-Indic digits here; a figure built in code or typed into a string must not print Latin ones.
+        rule.runOnUiThread { ViewModelProvider(rule.activity)[CountryViewModel::class.java].setTodayCardDismissedDay("") }
+        rule.openTab("stats")
+        rule.eventually("the Today card") { rule.onNodeWithTag("today_card").assertIsDisplayed() }
+        val today = rule.onNodeWithTag("today_card").fetchSemanticsNode().config
+        val todayWords = today[SemanticsProperties.Text].joinToString(" ") + " " + today[SemanticsProperties.ContentDescription].joinToString(" ")
+        assertTrue(todayWords, todayWords.none { it in '0'..'9' } && todayWords.any { it in '٠'..'٩' })
+        // "Learn 5 new": the five is formatted, not typed into the string.
+        val action = rule.onNodeWithTag("today_action_btn").fetchSemanticsNode().config[SemanticsProperties.Text].joinToString()
+        assertTrue(action, action.none { it in '0'..'9' } && '٥' in action)
+        for (tag in listOf("stats_capitals", "stats_learning", "stats_located", "stats_due", "stats_saved", "stats_quizzes", "stats_highest")) {
+            rule.onNode(hasScrollAction()).performScrollToNode(hasTestTag(tag))
+            val description = rule.onNodeWithTag(tag).fetchSemanticsNode().config[SemanticsProperties.ContentDescription].joinToString()
+            assertTrue("$tag: $description", description.none { it in '0'..'9' })
+        }
+        // Nothing is being learnt yet: the Learning tile's "0" is the Arabic-Indic zero, like the "0 of 196" beside it.
+        val learning = rule.onNodeWithTag("stats_learning").fetchSemanticsNode().config[SemanticsProperties.ContentDescription].joinToString()
+        assertTrue(learning, learning.endsWith("٠"))
+    }
+
+    @Test
+    @Config(sdk = [36], qualifiers = "de-rDE-w360dp-h800dp-xxhdpi")
+    fun german_theDetailSheetNamesTheContinentInGerman() {
+        // The continent is the one the card and the chips show ("Afrika"); the subregion, like the name, is the catalog's English.
+        val southAfrica = allCountries.single { it.code == "ZA" }
+        rule.onNodeWithTag("search_country_input").performTextInput(southAfrica.name)
+        rule.eventually("the South Africa card") { rule.onNodeWithTag("country_card_za").assertIsDisplayed() }
+        rule.onNodeWithTag("country_card_za").performClick()
+        rule.waitForIdle()
+
+        rule.onNode(hasText("Afrika · Southern Africa") and hasAnyAncestor(hasTestTag("sheet_region_pill")), useUnmergedTree = true).assertIsDisplayed()
+    }
+
+    @Test
+    @Config(sdk = [36], qualifiers = "de-rDE-w360dp-h800dp-xxhdpi")
+    fun german_theFlashcardAndTheLearnCardNameTheContinentInGerman() {
+        val resources = rule.activity.resources
+        fun german(country: com.example.data.model.Country) = country.regionLabel(resources.continentLabel(country.continent))
+        // Every continent's German name differs from its English one, so a label left in English would show.
+        for (continent in allCountries.map { it.continent }.distinct()) assertTrue(continent, resources.continentLabel(continent) != continent)
+
+        rule.openTab("flashcards")
+        rule.onNode(hasText(german(byName.first())) and hasAnyAncestor(hasTestTag("flashcard_continent_chip")), useUnmergedTree = true).assertIsDisplayed()
+
+        rule.onNodeWithTag("flashcard_study_btn").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithTag("study_learn_btn").performClick()
+        rule.waitForIdle()
+        val first = ViewModelProvider(rule.activity)[CountryViewModel::class.java].learnSession.value!!.cards.first()
+        rule.onNode(hasText(german(allCountries.single { it.code == first.code })) and hasAnyAncestor(hasTestTag("learn_card")), useUnmergedTree = true)
+            .assertIsDisplayed()
     }
 
     @Test
@@ -426,7 +482,7 @@ class LayoutAndSemanticsUiTest {
     }
 
     private fun assertLongestRegionPillStaysOnTheFlagAndClearOfTheBookmark() {
-        val longest = allCountries.maxByOrNull { it.regionLabel.length }!!
+        val longest = allCountries.maxByOrNull { it.regionLabel().length }!!
         rule.onNodeWithTag("search_country_input").performTextInput(longest.name)
         rule.eventually("the ${longest.name} card") { rule.onNodeWithTag("country_card_${longest.code.lowercase()}").assertIsDisplayed() }
         rule.onNodeWithTag("country_card_${longest.code.lowercase()}").performClick()
@@ -435,7 +491,7 @@ class LayoutAndSemanticsUiTest {
         val flag = rule.boundsOf("sheet_flag")
         val pill = rule.boundsOf("sheet_region_pill")
         val bookmark = rule.boundsOf("sheet_favorite_btn")
-        val label = longest.regionLabel
+        val label = longest.regionLabel()
         assertTrue("$label: pill $pill sticks out of the flag $flag",
             pill.left >= flag.left && pill.right <= flag.right && pill.top >= flag.top && pill.bottom <= flag.bottom)
         assertTrue("$label: pill $pill runs under the bookmark $bookmark", pill.right <= bookmark.left)

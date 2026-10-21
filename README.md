@@ -97,11 +97,13 @@ Every word the screens show is a string resource (`app/src/main/res/values/
 strings*.xml`, one file per screen plus the shared one, translated in `values-fr`, `values-es`, `values-de` and
 `values-ar`); `ui/Labels.kt` maps the stored keys (quiz modes, scopes, continents, sort orders, standings) to them.
 `tools/strings-audit.py --check` (run by CI, mirrored by `StringsAuditTest`) keeps every translation complete: the
-same keys, the same placeholders, every plural quantity the language needs. The layout mirrors in Arabic. The
-translations were made with machine help and checked for consistency, not by native speakers; corrections are
-welcome. The catalog itself (names, capitals, flag texts, facts) is English, and typed answers are matched against
-English names and short forms. Read aloud is English in every language, like the voice it asks the engine for and the
-facts it reads: the few words around them (`values/speech.xml`) are not translated.
+same keys, the same placeholders, every plural quantity the language needs. Numbers are formatted for the locale, so
+a screen never mixes Latin and Arabic-Indic digits. The layout mirrors in Arabic. The translations were made with
+machine help and checked for consistency, not by native speakers; corrections are welcome. The catalog itself (names,
+capitals, subregions, flag texts, facts) is English, so a region reads "Afrique · Southern Africa" in French, and
+typed answers are matched against English names and short forms. Read aloud is English in every language, like the
+voice it asks the engine for and the facts it reads: the few words around them (`values/speech.xml`) are not
+translated.
 
 ## Privacy
 

@@ -9,6 +9,8 @@
     <!-- Numbers on cards and in the sheet. The number after the figure is the year of the estimate, not a count. -->
     <string name="population_estimate" tools:ignore="PluralsCandidate">%1$s (%2$d est.)</string>
     <string name="population_winter">%1$s wintering at the stations</string>
+    <!-- "640K km²": the area, its figure already shortened -->
+    <string name="area_km2">%1$s km²</string>
     <string name="card_no_capital">No capital</string>
 
     <!-- Explore: the banner -->
@@ -44,11 +46,13 @@
         <item quantity="other">Review %d capitals</item>
     </plurals>
     <plurals name="today_review_map">
-        <item quantity="one">Review %d on the map</item>
-        <item quantity="other">Review %d on the map</item>
+        <item quantity="one">Review %d country on the map</item>
+        <item quantity="other">Review %d countries on the map</item>
     </plurals>
-    <string name="today_learn_new">Learn 5 new</string>
-    <string name="today_learn_more">Learn 5 more</string>
+    <!-- The number is the size of a Learn session (LearnSession.CARDS_PER_SESSION, five): a fixed number, so a
+         plain string written for it in every language (TranslationsTest checks it stays one they fit) -->
+    <string name="today_learn_new" tools:ignore="PluralsCandidate">Learn %1$d new</string>
+    <string name="today_learn_more" tools:ignore="PluralsCandidate">Learn %1$d more</string>
     <!-- Every flag has been seen, so there is nothing left for Learn: the button opens the Quiz tab instead -->
     <string name="today_take_quiz">Take a quiz</string>
     <string name="today_dismiss">Hide for today</string>

@@ -90,6 +90,7 @@ import com.example.ui.components.formatArea
 import com.example.ui.components.formatPopulation
 import com.example.ui.components.rememberCompactNumberFormat
 import com.example.ui.labelRes
+import com.example.ui.regionLabel
 import androidx.compose.ui.text.style.TextOverflow
 import com.example.ui.components.FlagView
 import com.example.ui.components.WorldMap
@@ -230,7 +231,7 @@ fun CountryDetailSheet(
                             color = continentColor
                         ) {
                             Text(
-                                text = country.regionLabel,
+                                text = regionLabel(country),
                                 color = Color.White,
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,

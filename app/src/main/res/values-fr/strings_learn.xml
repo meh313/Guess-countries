@@ -6,7 +6,7 @@
 <!-- « Carte 1 sur 5 » ne change pas de formulation avec le nombre : une chaîne simple, comme celle des cartes mémoire. -->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="PluralsCandidate">
     <!-- L'entrée du sélecteur d'étude des cartes mémoire (le titre de l'écran la partage) -->
-    <string name="learn_title">Apprendre 5 nouveaux</string>
+    <string name="learn_title">Apprendre %1$d nouveaux</string>
     <plurals name="learn_option_detail">
         <item quantity="one">%1$d drapeau pas encore vu</item>
         <item quantity="other">%1$d drapeaux pas encore vus</item>

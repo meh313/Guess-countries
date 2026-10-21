@@ -6,7 +6,7 @@
 <!-- "Card 1 of 5" never changes its wording with the number: a plain string, like the flashcards' one. -->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="PluralsCandidate">
     <!-- The entry on the Flashcards study chooser (the screen's title shares it) -->
-    <string name="learn_title">تعلّم 5 جديدة</string>
+    <string name="learn_title">تعلّم %1$d جديدة</string>
     <plurals name="learn_option_detail">
         <item quantity="zero">لا أعلام لم ترها بعد</item>
         <item quantity="one">علم واحد لم تره بعد</item>

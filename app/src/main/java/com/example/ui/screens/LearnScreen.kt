@@ -50,6 +50,7 @@ import com.example.data.model.Country
 import com.example.data.model.Neighbours
 import com.example.data.model.TellApart
 import com.example.learn.LearnSession
+import com.example.ui.regionLabel
 import com.example.ui.components.FlagView
 import com.example.ui.components.WorldMap
 import com.example.ui.components.getContinentColor
@@ -91,7 +92,7 @@ fun LearnScreen(
                 .weight(1f)
                 .padding(horizontal = 20.dp, vertical = 12.dp)
         ) {
-            ScreenHeader(title = stringResource(R.string.learn_title), onBack = onBack, backTag = "learn_back_btn")
+            ScreenHeader(title = stringResource(R.string.learn_title, LearnSession.CARDS_PER_SESSION), onBack = onBack, backTag = "learn_back_btn")
 
             val current = session?.takeIf { it.stage == LearnSession.Stage.CARDS }
             val country = current?.let { countriesByCode[it.current.code] }
@@ -188,7 +189,7 @@ private fun LearnCardView(country: Country, lookAlike: Country?, neighbours: Lis
         ) {
             Surface(shape = RoundedCornerShape(16.dp), color = getContinentColor(country.continent)) {
                 Text(
-                    text = country.regionLabel,
+                    text = regionLabel(country),
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.labelLarge,

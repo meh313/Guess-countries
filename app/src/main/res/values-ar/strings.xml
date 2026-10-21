@@ -34,7 +34,7 @@
     <string name="flag_to_identify">علم عليك تحديده</string>
     <string name="flag_of">علم %1$s</string>
     <string name="bookmark_country">حفظ %1$s</string>
-    <string name="streak_started">بدأت السلسلة: اليوم 1</string>
+    <string name="streak_started">بدأت السلسلة: اليوم الأول</string>
     <!-- The finished session was too small for the daily goal (see Settings); the day counts once the goal is met. -->
     <string name="streak_goal_short">لا يكفي بعد لهدف اليوم</string>
     <plurals name="streak_kept">
@@ -46,20 +46,21 @@
         <item quantity="other">السلسلة مستمرة: %d يوم</item>
     </plurals>
 
-    <!-- Quiz modes (display titles; the stored value is the enum name) -->
-    <string name="mode_flag_name">علم → دولة</string>
-    <string name="mode_pick_flag">دولة → علم</string>
+    <!-- Quiz modes (display titles; the stored value is the enum name). The line reads right to left, so the arrow
+         points left: from the prompt, on the right, to the answer. -->
+    <string name="mode_flag_name">علم ← دولة</string>
+    <string name="mode_pick_flag">دولة ← علم</string>
     <string name="mode_pick_flag_hint">اختر العلم الصحيح من بين أربعة</string>
-    <string name="mode_capital">دولة → عاصمة</string>
-    <string name="mode_continent">علم → قارة</string>
+    <string name="mode_capital">دولة ← عاصمة</string>
+    <string name="mode_continent">علم ← قارة</string>
     <string name="mode_continent_hint">يغطي العالم كله</string>
-    <string name="mode_locate">خريطة → دولة</string>
+    <string name="mode_locate">خريطة ← دولة</string>
     <string name="mode_locate_hint">أين تقع في العالم؟</string>
-    <string name="mode_type_name">علم → اكتب الاسم</string>
+    <string name="mode_type_name">علم ← اكتب الاسم</string>
     <string name="mode_type_name_hint">بلا خيارات: اكتب اسم الدولة</string>
     <string name="mode_speed_round">جولة سريعة</string>
-    <string name="mode_speed_round_hint">10 ثوانٍ لكل سؤال</string>
-    <string name="mode_blitz">بليتز 60 ثانية</string>
+    <string name="mode_speed_round_hint">عشر ثوانٍ لكل سؤال</string>
+    <string name="mode_blitz">بليتز %1$d ثانية</string>
     <string name="mode_blitz_hint">أكبر عدد من الأعلام في دقيقة واحدة</string>
     <string name="mode_flashcards">بطاقات</string>
 
@@ -94,6 +95,7 @@
     <string name="continent_europe">أوروبا</string>
     <string name="continent_oceania">أوقيانوسيا</string>
     <string name="continent_antarctica">القارة القطبية الجنوبية</string>
+    <string name="continent_americas_in_sentence">الأمريكتين</string>
 
     <!-- Sort orders -->
     <string name="sort_by_name">ترتيب حسب الاسم</string>

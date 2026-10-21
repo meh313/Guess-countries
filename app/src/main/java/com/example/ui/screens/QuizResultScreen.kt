@@ -86,8 +86,8 @@ fun QuizResultScreen(
         PracticeStreak.Kind.KEPT -> pluralStringResource(R.plurals.streak_kept, outcome.days, outcome.days)
         // 0 days: the session was too small to meet the day's goal, and the day is not counted yet.
         PracticeStreak.Kind.ALREADY_COUNTED ->
-            if (outcome.days == 0) stringResource(R.string.streak_goal_short) else stringResource(R.string.result_streak_already_counted, outcome.days)
-        null -> if (streakDays > 0) stringResource(R.string.result_streak_days, streakDays) else null
+            if (outcome.days == 0) stringResource(R.string.streak_goal_short) else pluralStringResource(R.plurals.result_streak_already_counted, outcome.days, outcome.days)
+        null -> if (streakDays > 0) pluralStringResource(R.plurals.stats_streak_title, streakDays, streakDays) else null
     }
     ResultBody(
         content = ResultContent.of(session),
@@ -247,7 +247,11 @@ private fun ResultBody(
         // The numbers: right answers first, points second (the blitz keeps its one line, which its tests pin).
         if (content.mode.isEndless) {
             Text(
-                text = stringResource(R.string.result_blitz_score, content.correct, content.score),
+                text = stringResource(
+                    R.string.result_blitz_score,
+                    pluralStringResource(R.plurals.result_correct_count, content.correct, content.correct),
+                    pluralStringResource(R.plurals.result_points, content.score, content.score)
+                ),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary,
@@ -269,7 +273,7 @@ private fun ResultBody(
                 modifier = Modifier.testTag("quiz_finish_correct")
             )
             Text(
-                text = stringResource(R.string.result_points, content.score),
+                text = pluralStringResource(R.plurals.result_points, content.score, content.score),
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,

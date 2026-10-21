@@ -40,6 +40,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.R
 import com.example.data.settings.ALL_CONTINENTS
 import com.example.flashcards.StudySession
+import com.example.learn.LearnSession
 import com.example.progress.Skill
 import com.example.quiz.QuizEngine
 import com.example.quiz.QuizMode
@@ -198,10 +199,10 @@ private fun PracticeCard(
                 }
                 // Once every flag has been seen Learn has nothing to show; a quiz still practises the rest.
                 !goalMet -> Button(onClick = if (anyUnseen) onLearn else onQuiz, modifier = Modifier.testTag("today_action_btn")) {
-                    Text(stringResource(if (anyUnseen) R.string.today_learn_new else R.string.today_take_quiz), fontWeight = FontWeight.Bold)
+                    Text(if (anyUnseen) stringResource(R.string.today_learn_new, LearnSession.CARDS_PER_SESSION) else stringResource(R.string.today_take_quiz), fontWeight = FontWeight.Bold)
                 }
                 else -> TextButton(onClick = if (anyUnseen) onLearn else onQuiz, modifier = Modifier.testTag("today_action_btn")) {
-                    Text(stringResource(if (anyUnseen) R.string.today_learn_more else R.string.today_take_quiz), fontWeight = FontWeight.Bold)
+                    Text(if (anyUnseen) stringResource(R.string.today_learn_more, LearnSession.CARDS_PER_SESSION) else stringResource(R.string.today_take_quiz), fontWeight = FontWeight.Bold)
                 }
             }
         }

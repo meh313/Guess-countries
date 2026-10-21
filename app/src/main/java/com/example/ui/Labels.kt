@@ -22,8 +22,8 @@ import com.example.ui.components.Standing
  * translation touches `res/values-xx/` and nothing else. Nothing here is stored.
  */
 
-/** The title of a quiz mode on the setup screen, the score screen and the quiz log. */
-val QuizMode.titleRes: Int
+/** The resource of a quiz mode's title, which [title] reads: the blitz's takes its length. */
+private val QuizMode.titleRes: Int
     @StringRes get() = when (this) {
         QuizMode.FLAG_NAME -> R.string.mode_flag_name
         QuizMode.PICK_FLAG -> R.string.mode_pick_flag
@@ -34,6 +34,13 @@ val QuizMode.titleRes: Int
         QuizMode.SPEED_MATCH -> R.string.mode_speed_round
         QuizMode.BLITZ -> R.string.mode_blitz
     }
+
+/**
+ * The title of a quiz mode on the setup screen, the score screen and the quiz log. The blitz's names its length
+ * ("60-second blitz") through a placeholder, so the number has the digits of the other numbers on screen.
+ */
+@Composable
+fun QuizMode.title(): String = totalTimeSeconds?.let { stringResource(titleRes, it) } ?: stringResource(titleRes)
 
 /** The extra line under a mode's title on the setup screen; null where the title says it all. */
 val QuizMode.hintRes: Int?
@@ -64,7 +71,7 @@ fun QuizMode.questionText(target: Country): String = when (this) {
 @Composable
 fun modeTitle(storedMode: String): String = when (storedMode) {
     StudySession.MODE -> stringResource(R.string.mode_flashcards)
-    else -> QuizMode.entries.firstOrNull { it.name == storedMode }?.let { stringResource(it.titleRes) } ?: storedMode
+    else -> QuizMode.entries.firstOrNull { it.name == storedMode }?.title() ?: storedMode
 }
 
 val QuizDifficulty.titleRes: Int
@@ -191,6 +198,24 @@ fun scopeLabelRes(scope: String): Int? = when (scope) {
 /** A continent name as the player reads it; an unknown name is shown as it is. */
 @Composable
 fun continentLabel(name: String): String = continentLabelRes(name)?.let { stringResource(it) } ?: name
+
+/**
+ * [continentLabel] inside a sentence, after a preposition or a noun ("No countries in the Americas", "the countries
+ * still to learn in the Americas"). Only the Americas change: English adds "the", Arabic puts the dual in the
+ * genitive (الأمريكتين).
+ */
+@Composable
+fun continentInSentence(name: String): String =
+    if (name.equals("americas", ignoreCase = true)) stringResource(R.string.continent_americas_in_sentence) else continentLabel(name)
+
+/**
+ * "Afrique · Southern Africa": the country's continent as the player reads it, then its subregion, which stays English
+ * like the rest of the catalog; the continent alone where the subregion repeats it (Antarctica). [inSentence] names the
+ * continent as [continentInSentence] does, for a label inside a sentence (the map's "in the Americas · South America").
+ */
+@Composable
+fun regionLabel(country: Country, inSentence: Boolean = false): String =
+    country.regionLabel(if (inSentence) continentInSentence(country.continent) else continentLabel(country.continent))
 
 /** A scope or study source key as the player reads it; an unknown key is shown as it is. */
 @Composable

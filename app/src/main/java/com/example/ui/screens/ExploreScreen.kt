@@ -85,7 +85,7 @@ import com.example.progress.Skill
 import com.example.ui.components.Standing
 import com.example.ui.components.TodayCard
 import com.example.ui.components.standing
-import com.example.ui.continentLabel
+import com.example.ui.continentInSentence
 import com.example.ui.labelRes
 import com.example.ui.standingFilterPhrase
 import com.example.ui.viewmodel.CountryViewModel
@@ -355,7 +355,7 @@ fun ExploreScreen(
                 // The hint names what is filtered: "No countries still to learn in Europe. Clear the filters?"
                 val filters = listOfNotNull(
                     standingFilterPhrase(standingFilter),
-                    if (selectedContinent != "All") stringResource(R.string.explore_empty_scope_continent, continentLabel(selectedContinent)) else null,
+                    if (selectedContinent != "All") stringResource(R.string.explore_empty_scope_continent, continentInSentence(selectedContinent)) else null,
                     if (searchQuery.isNotBlank()) stringResource(R.string.explore_empty_scope_search, searchQuery.trim()) else null,
                     if (showOnlyBookmarks) stringResource(R.string.explore_empty_scope_saved) else null
                 ).joinToString(" ")

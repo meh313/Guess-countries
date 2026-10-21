@@ -51,7 +51,8 @@
     <string name="mode_type_name_hint">No options: type the country\'s name</string>
     <string name="mode_speed_round">Speed round</string>
     <string name="mode_speed_round_hint">10 seconds per question</string>
-    <string name="mode_blitz">60-second blitz</string>
+    <!-- "60-second blitz": the number is the blitz's length (QuizMode.totalTimeSeconds) -->
+    <string name="mode_blitz">%1$d-second blitz</string>
     <string name="mode_blitz_hint">As many flags as you can in one minute</string>
     <string name="mode_flashcards">Flashcards</string>
 
@@ -86,6 +87,10 @@
     <string name="continent_europe">Europe</string>
     <string name="continent_oceania">Oceania</string>
     <string name="continent_antarctica">Antarctica</string>
+    <!-- The Americas inside a sentence, after a preposition or a noun ("No countries in the Americas", "the countries
+         still to learn in the Americas"): English adds "the", Arabic puts the dual in the genitive. Every other
+         continent reads the same inside a sentence as on its own. -->
+    <string name="continent_americas_in_sentence">the Americas</string>
 
     <!-- Sort orders -->
     <string name="sort_by_name">Sort by name</string>
