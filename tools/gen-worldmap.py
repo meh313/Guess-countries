@@ -50,10 +50,14 @@ Land borders: each record also carries "neighbours", the codes of the catalog co
 with, sorted. Two countries border each other when their Natural Earth outlines (before simplification) share at
 least MIN_SHARED_VERTICES points (holes included, so an enclave meets its host): the 50m countries are cut from one
 set of boundary lines, so a shared border has the same points on both sides, while two countries that only touch
-at a corner (Namibia and Zimbabwe at the Kazungula quadripoint) share one. HAND_NEIGHBOURS adds the borders the data
-cannot show (the microstates drawn as point squares, the 150 m Botswana–Zambia border, Ceuta and Melilla, Saint
-Martin); DENY_NEIGHBOURS removes any false positive. Neighbours.kt carries the
-same lists, generated from the asset like Geo.kt.
+at a corner (Namibia and Zimbabwe at the Kazungula quadripoint) share one. Which land counts follows one rule, the
+CIA World Factbook's: a state's land borders are those of its integral territory (France's include French Guiana's
+with Brazil and Suriname, Spain's those of Ceuta and Melilla with Morocco) and not those of its dependencies or the
+other countries of its realm (Gibraltar, Saint Martin / Sint Maarten, Greenland, the Sovereign Base Areas on
+Cyprus), so the Netherlands borders Belgium and Germany only and the United Kingdom Ireland only. HAND_NEIGHBOURS
+adds the borders the data cannot show (the microstates drawn as point squares, the 150 m Botswana–Zambia border,
+Ceuta and Melilla); DENY_NEIGHBOURS removes any false positive. Neighbours.kt carries the same lists, generated from
+the asset like Geo.kt.
 
 --check needs no download (CI runs it): it fails when the asset does not parse, is not format 2, misses a catalog
 code or lacks polygons or a holes list for one, has no background land, or when Geo.kt or Neighbours.kt is not what
@@ -117,8 +121,9 @@ ANTARCTICA = 'AQ'
 
 MIN_SHARED_VERTICES = 2     # outline points two countries must share to count as bordering
 # Borders the outlines cannot show (see the module docstring): the point-square microstates; Botswana–Zambia's 150 m
-# at Kazungula; Spain–Morocco at Ceuta and Melilla and France–Netherlands on Saint Martin (not in the 50m outlines).
-HAND_NEIGHBOURS = ['VA IT', 'MC FR', 'SM IT', 'BW ZM', 'ES MA', 'FR NL']
+# at Kazungula; Spain–Morocco at Ceuta and Melilla, integral parts of Spain too small for the 50m outlines. No pair
+# for a dependency's border (Saint Martin / Sint Maarten, Gibraltar): the Factbook's rule leaves those out.
+HAND_NEIGHBOURS = ['VA IT', 'MC FR', 'SM IT', 'BW ZM', 'ES MA']
 DENY_NEIGHBOURS = []        # pairs the outlines wrongly join, as 'XX YY'
 ANTARCTICA_LABEL = (0.0, -80.0)
 

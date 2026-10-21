@@ -237,8 +237,11 @@ are drawn; Palestine's capital, the catalog's Al Quds (Jerusalem), is set by han
 populated places have no such capital under Palestine's code. `frame` is the box to show the country in: the
 largest ring, the capital's ring and every ring within 3° of them, chained, so French Guiana, the Canaries, the
 Azores, the Galápagos, Svalbard, Alaska and Hawaii stay out of their countries' frames while island chains stay
-whole. `Geo.kt` carries the same boxes, labels and capitals as Kotlin constants; `GeoTest` checks both against the
-catalog, and that every capital lies on its country's outline.
+whole. `neighbours` lists the catalog countries a country shares a land border with, from the outlines' shared
+points, by the CIA World Factbook's rule: a state's integral territory counts (French Guiana, Ceuta and Melilla), its
+dependencies do not (Saint Martin / Sint Maarten, Gibraltar, Greenland). `Geo.kt` and `Neighbours.kt` carry the same
+boxes, labels, capitals and borders as Kotlin constants; `GeoTest` checks them against the catalog, and that every
+capital lies on its country's outline.
 
 ## Dependencies
 

@@ -34,9 +34,13 @@ class NeighboursTest {
     @Test
     fun theAtlasCases() {
         fun borders(code: String, vararg expected: String) = assertEquals(code, expected.sorted(), Neighbours.of(code))
-        borders("FR", "AD", "BE", "BR", "CH", "DE", "ES", "IT", "LU", "MC", "NL", "SR") // French Guiana and Saint Martin count
+        // The Factbook's rule: a state's integral territory counts (French Guiana, Ceuta and Melilla), its
+        // dependencies do not (Saint Martin / Sint Maarten, Gibraltar, Greenland, the bases on Cyprus).
+        borders("FR", "AD", "BE", "BR", "CH", "DE", "ES", "IT", "LU", "MC", "SR")
+        borders("NL", "BE", "DE")
         borders("DE", "AT", "BE", "CH", "CZ", "DK", "FR", "LU", "NL", "PL")
         borders("US", "CA", "MX")
+        borders("CA", "US")
         borders("GB", "IE")
         borders("LS", "ZA") // an enclave: its outline is its host's hole
         borders("VA", "IT")
@@ -67,6 +71,6 @@ class NeighboursTest {
         landlocked.forEach { assertTrue(it, Neighbours.of(it).isNotEmpty()) }
         val withBorders = sovereign.count { Neighbours.of(it.code).isNotEmpty() }
         assertTrue("$withBorders countries with a land border", withBorders in 145..160)
-        assertEquals(313, Neighbours.byCode.values.sumOf { it.size } / 2)
+        assertEquals(312, Neighbours.byCode.values.sumOf { it.size } / 2)
     }
 }
