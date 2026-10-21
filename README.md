@@ -28,7 +28,8 @@ has no network permission.
   a 10-second-per-question speed round and a 60-second blitz
   (as many flags as you can). Ten questions or fewer, with a streak bonus; the questions favour countries you have
   not seen or that are due for review, and avoid the targets of the last few quizzes. *Answers: Normal* puts one
-  look-alike flag among the wrong answers, *Hard* as many as exist (the choice is remembered). The *Due today* scope
+  look-alike flag among the wrong answers, *Hard* as many as exist (the choice is remembered); Indonesia and Monaco,
+  whose flags the app draws alike, are never offered for each other. The *Due today* scope
   reviews what is due, the *Weak spots* scope the ten countries you know least (each in the skill the mode exercises:
   capitals for the capital quiz). The score screen lists every miss with the flag you picked beside the right one,
   and offers *Retry* and *Practise mistakes*; a wrong text answer shows the two flags side by side at once. A quiz
