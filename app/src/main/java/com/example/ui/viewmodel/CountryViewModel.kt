@@ -607,7 +607,6 @@ class CountryViewModel(
     }
 
     override fun onCleared() {
-        super.onCleared()
         speech.shutdown()
     }
 
