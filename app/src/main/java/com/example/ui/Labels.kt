@@ -201,9 +201,10 @@ fun continentLabel(name: String): String = continentLabelRes(name)?.let { string
 
 /**
  * The resource for a continent name inside a sentence, after a preposition or a noun ("No countries in the Americas",
- * "the countries still to learn in the Americas"). Two continents change: English gives the Americas "the" and Arabic
- * puts their dual in the genitive (الأمريكتين); German and Spanish give Antarctica its article ("in der Antarktis",
- * "en la Antártida"). Any other name is [continentLabelRes]'s.
+ * "the countries still to learn in the Americas"). Two continents change: English gives the Americas "the", French
+ * says them in the singular after "en" ("en Amérique") and Arabic puts their dual in the genitive (الأمريكتين); German
+ * and Spanish give Antarctica its article ("in der Antarktis", "en la Antártida"). Any other name is
+ * [continentLabelRes]'s.
  */
 @StringRes
 fun continentInSentenceRes(name: String): Int? = when (name.lowercase()) {

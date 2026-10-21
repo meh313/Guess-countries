@@ -130,8 +130,8 @@ class CountryViewModelSpeechTest {
     @Test
     @Config(qualifiers = "fr")
     fun spoken_saysTheAmericasInEnglish_whenTheScreensAreInFrench() {
-        // The French screens say "Amériques" inside a sentence; the English voice still says "the Americas".
-        assertEquals("Amériques", context.resources.continentInSentence("Americas"))
+        // The French screens say "en Amérique" inside a sentence; the English voice still says "the Americas".
+        assertEquals("Amérique", context.resources.continentInSentence("Americas"))
         assertBrazilIsInTheAmericas()
     }
 

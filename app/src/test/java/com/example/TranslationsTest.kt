@@ -18,9 +18,9 @@ import org.robolectric.annotation.Config
 /**
  * The words around a number or a continent in each language, read through the resources as the screens read them. A
  * count beside a word that agrees with it comes from a plurals, so 1 is singular ("1 jour", "1 Tag") and Arabic has its
- * one, two, three-to-ten and eleven-and-up forms; the Arabic Americas take the genitive in a sentence, and German and
- * Spanish Antarctica its article; the Arabic mode arrows point the way the line reads; and a sentence put together
- * around a name reads in Spanish whatever the name.
+ * one, two, three-to-ten and eleven-and-up forms; the Arabic Americas take the genitive in a sentence, the French ones
+ * the singular after "en", and German and Spanish Antarctica its article; the Arabic mode arrows point the way the line
+ * reads; and a sentence put together around a name reads in Spanish whatever the name.
  * StringsAuditTest checks the keys, the placeholders and the quantities; this checks what they say.
  */
 @RunWith(RobolectricTestRunner::class)
@@ -113,6 +113,19 @@ class TranslationsTest {
         assertEquals("Antártida", resources.continentLabel("Antarctica"))
         assertEquals("No hay países en la Antártida. ¿Quitar los filtros?", emptyHint("Antarctica"))
         assertEquals("No hay países en América. ¿Quitar los filtros?", emptyHint("Americas"))
+    }
+
+    @Test
+    @Config(qualifiers = "fr")
+    fun french_everyContinentReadsAfterEn_theAmericasInTheSingular() {
+        // The chip says "Amériques"; inside a sentence French says "en Amérique", and "en" before each of the others.
+        assertEquals("Amériques", resources.continentLabel("Americas"))
+        assertEquals("Aucun pays en Amérique. Effacer les filtres\u00a0?", emptyHint("Americas"))
+        for ((continent, name) in listOf("Africa" to "Afrique", "Asia" to "Asie", "Europe" to "Europe", "Oceania" to "Océanie", "Antarctica" to "Antarctique")) {
+            assertEquals("Aucun pays en $name. Effacer les filtres\u00a0?", emptyHint(continent))
+        }
+        assertEquals("Afficher les pays encore à apprendre en Amérique",
+            resources.getString(R.string.stats_continent_open, resources.continentInSentence("Americas")))
     }
 
     /** Explore's empty hint with only the continent filter on, as ExploreScreen puts it together. */

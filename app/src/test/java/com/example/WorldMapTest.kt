@@ -304,7 +304,15 @@ class WorldMapTest {
         // The continent is the one the cards and chips show; the subregion, like the name, is the catalog's English.
         show(france.copy(code = "AA", continent = "Africa", subregion = "Western Africa"))
 
-        rule.onNodeWithTag("world_map").assertContentDescriptionEquals("Carte\u00a0: France (Afrique · Western Africa)")
+        rule.onNodeWithTag("world_map").assertContentDescriptionEquals("Carte\u00a0: France, en Afrique · Western Africa")
+    }
+
+    @Test
+    @Config(qualifiers = "fr-w360dp-h640dp-xxhdpi")
+    fun theFrenchDescription_putsTheAmericasInTheSingularAfterEn() {
+        show(france.copy(code = "AA", continent = "Americas", subregion = "South America"))
+
+        rule.onNodeWithTag("world_map").assertContentDescriptionEquals("Carte\u00a0: France, en Amérique · South America")
     }
 
     @Test

@@ -165,7 +165,7 @@
 
     <!-- Progrès : maîtrise par continent -->
     <string name="stats_continent_heading">Maîtrise par continent</string>
-    <string name="stats_continent_open">Afficher les pays encore à apprendre : %1$s</string>
+    <string name="stats_continent_open">Afficher les pays encore à apprendre en %1$s</string>
     <string name="stats_mastered_of">Maîtrisés : %1$d sur %2$d</string>
     <string name="stats_capitals_count">Capitales : %1$d sur %2$d</string>
 

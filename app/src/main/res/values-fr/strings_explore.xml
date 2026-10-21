@@ -73,9 +73,9 @@
     <string name="explore_empty_saved_hint">Touchez le marque-page d\'un pays pour l\'enregistrer ici</string>
     <string name="explore_empty_title">Aucun pays trouvé</string>
     <string name="explore_empty_hint">Essayez de modifier votre recherche ou le filtre de continent</string>
-    <!-- Avec des filtres actifs, l'indice les nomme : « Aucun pays encore à apprendre sur le continent Europe. Effacer les filtres ? » -->
+    <!-- Avec des filtres actifs, l'indice les nomme : « Aucun pays encore à apprendre en Europe. Effacer les filtres ? » -->
     <string name="explore_empty_hint_filtered">Aucun pays %1$s. Effacer les filtres ?</string>
-    <string name="explore_empty_scope_continent">sur le continent %1$s</string>
+    <string name="explore_empty_scope_continent">en %1$s</string>
     <string name="explore_empty_scope_search">correspondant à « %1$s »</string>
     <string name="explore_empty_scope_saved">parmi vos pays enregistrés</string>
 
@@ -112,12 +112,12 @@
 
     <!-- Fiche détail : le drapeau, les lieux célèbres et l'anecdote -->
     <string name="sheet_flag_title">Symbolique &amp; histoire du drapeau</string>
-    <!-- La carte géographique, et ce que TalkBack entend pour toute carte : « Carte : France (Europe · Western Europe) » ; le continent est traduit, la sous-région reste celle du catalogue, en anglais -->
+    <!-- La carte géographique, et ce que TalkBack entend pour toute carte : « Carte : France, en Europe · Western Europe » ; le continent est traduit, la sous-région reste celle du catalogue, en anglais -->
     <string name="sheet_where_title">Où c\'est</string>
     <string name="sheet_borders_title">Frontières</string>
     <string name="sheet_no_borders">Pas de frontière terrestre</string>
     <string name="sheet_open_country">Ouvrir %1$s</string>
-    <string name="map_description">Carte : %1$s (%2$s)</string>
+    <string name="map_description">Carte : %1$s, en %2$s</string>
     <!-- La carte de la question Carte → Pays : le nom du pays est la réponse, TalkBack entend donc ceci à la place -->
     <string name="map_to_identify">Carte avec un pays surligné</string>
     <string name="sheet_landmarks_title">Lieux célèbres</string>
