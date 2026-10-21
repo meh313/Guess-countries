@@ -3,13 +3,15 @@ package com.example.data
 import java.io.File
 import javax.xml.parsers.DocumentBuilderFactory
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.w3c.dom.Element
 
 /**
  * The translations against the English strings, as `tools/strings-audit.py` checks them: every key, the same
- * placeholders, every plural quantity the language needs. Read from the source tree like the map asset tests.
+ * placeholders, every plural quantity the language needs, no Latin digit typed into the Arabic. Read from the source
+ * tree like the map asset tests.
  */
 class StringsAuditTest {
     private val res = File("src/main/res")
@@ -88,6 +90,18 @@ class StringsAuditTest {
         assertTrue("$total strings and plurals", total > 400)
         for ((file, items) in english) for ((key, value) in items) {
             if (value is String) assertTrue("$file $key is empty", value.isNotBlank())
+        }
+    }
+
+    @Test
+    fun arabicTypesNoLatinDigit_outsideAPlaceholder() {
+        // An Arabic %d prints Arabic-Indic digits, so a "60" typed into a string would sit beside them in Latin ones.
+        // The About prose (the catalog's 196, the years of the figures, licence versions) has no formatted number by it.
+        val prose = setOf("about_tagline", "about_sources_text", "about_catalog_text", "about_licences_text")
+        for ((file, items) in entries(File(res, "values-ar"))) for ((key, value) in items) {
+            if (key in prose) continue
+            @Suppress("UNCHECKED_CAST") val texts = if (value is String) listOf(value) else (value as Map<String, String>).values
+            for (text in texts) assertFalse("ar/$file $key: $text", placeholder.replace(text, "").any { it in '0'..'9' })
         }
     }
 }
