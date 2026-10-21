@@ -54,18 +54,19 @@ has no network permission.
 
 ### How mastery works
 
-Each country is tracked per skill (its flag, its capital, its continent, its location) on a Leitner schedule: a confidence score
-from 0 to 100 and a box from 1 to 5 whose review intervals are 1, 3, 7, 21 and 60 days. A review is due for the whole
-local day its interval ends on (a flag learnt at 19:00 is due from the next morning), by the device's time zone: that
-is what *Due today*, the Today card and the widget count, and Progress's *Coming up* starts with tomorrow. A right quiz
-answer raises the score and, when the review was due, moves the box up; an answer before the due day keeps its
-schedule, so nothing is mastered in one sitting. A wrong answer drops the country two boxes (never below box 1); a miss
-under time pressure (Speed round, Blitz) drops it one and costs half the score. The continent quiz has its own skill,
-so a right continent pick never counts as knowing the flag; its answers and the flashcard grades are light evidence:
-they move the score a little and never past 60. The continent has no reviews due (a light answer never moves a date
-on, and the continent quiz always asks the whole world), so no due figure counts it; its standing is on a country's
-detail sheet. The map quiz feeds a fourth skill, *Location*, with its own due dates (the *Due today* and
-*Weak spots* scopes follow it in that mode); it is shown on a country's detail sheet and on Progress, not as a card pip. Studying a card, *Again* drops it two boxes, *Good* reschedules a due card at its current
+Each country is tracked per skill (its flag, its capital, its continent, its location) on a Leitner schedule: a
+confidence score from 0 to 100 and a box from 1 to 5 whose review intervals are 1, 3, 7, 21 and 60 days. A review is
+due for the whole local day its interval ends on (a flag learnt at 19:00 is due all of the next day, from midnight),
+by the device's time zone: that is what *Due today*, the Today card and the widget count, and Progress's *Coming up*
+starts with tomorrow. A right quiz answer raises the score and, when the review was due, moves the box up; an answer
+before the due day keeps its schedule, so nothing is mastered in one sitting. A wrong answer drops the country two
+boxes (never below box 1); a miss under time pressure (Speed round, Blitz) drops it one and costs half the score. The
+continent quiz has its own skill, so a right continent pick never counts as knowing the flag; its answers and the
+flashcard grades are light evidence: they move the score a little and never past 60. The continent has no reviews due
+(a light answer never moves a date on, and the continent quiz always asks the whole world), so no due figure counts
+it; its standing is on a country's detail sheet. The map quiz feeds a fourth skill, *Location*, with its own due dates
+(the *Due today* and *Weak spots* scopes follow it in that mode); it is shown on a country's detail sheet and on
+Progress, not as a card pip. Studying a card, *Again* drops it two boxes, *Good* reschedules a due card at its current
 box (so it leaves the due list until its interval passes) and keeps the date of one not yet due, and *Easy* climbs to
 box 2 at most; the longer intervals come only from quiz answers. A flag counts as *mastered* at box 3 or higher with a
 score of 75 or more, and lapses out of that if it goes unreviewed for twice its interval. *Weak spots* are the
@@ -125,6 +126,8 @@ Requires JDK 21 and the Android SDK (compileSdk 37, targetSdk 36). The Gradle wr
 # lint, the unit tests, both APKs and the smoke test's APK (built, not run), as CI runs it:
 ./gradlew lintDebug testDebugUnitTest assembleDebug assembleRelease assembleDebugAndroidTest
 ```
+
+CI also runs the `--check` of six tools before Gradle (see `tools/` under Project layout).
 
 The unit tests include Compose UI tests that drive the real activity under Robolectric, so no emulator is
 needed. They run the screens at phone, landscape and tablet sizes and at twice the font size; a window 600dp or
@@ -195,7 +198,7 @@ What a Play Store listing needs is in the repository:
 | `progress/` | Pure rules: the practice streak (`PracticeStreak`), computed from when quizzes finished, and per-skill mastery (`SkillMastery`: score, Leitner box, due date). |
 | `reminder/` | The daily reminder: pure schedule rules, the alarm scheduler, the receiver that turns the alarm (and a reboot or time-zone change) into a run, the worker, the notification. |
 | `data/settings/` | `UserSettings`: the preferences kept in SharedPreferences (answers difficulty, reminder, theme, timer pace, daily goal, focus continent, the day's new-item count, the first-run and Today-card state). |
-| `data/transfer/` | `ProgressTransfer`: the export file format (JSON, format 1) and its reader. |
+| `data/transfer/` | `ProgressTransfer`: the export file format (JSON, format 2) and its reader, which also takes format 1 files. |
 | `widget/` | The home-screen widget (Glance): `WidgetState` (pure numbers from the skill rows and the log) and `TodayWidget`. |
 | `ui/sound/` | The quiz's three chimes through a `SoundPool`; the files are written by `tools/gen-sounds.py`. |
 | `learn/` | The pure `LearnSession`: five never-seen flags as cards with their closest look-alike, then the quiz over them. |
@@ -204,7 +207,7 @@ What a Play Store listing needs is in the repository:
 | `data/model/` | The country catalog, one file per continent (`EuropeCatalog.kt`…, alphabetical), `CountryRepository`, `CountrySources` (the per-country source pages, read from the asset `sources.json`) and the generated `Geo` (each country's bounding box, label and capital on the map). |
 | `data/local/` | Room database (version 2): bookmarks, skill states, quiz history with every answer. Schemas are exported to `app/schemas/`; `AppDatabase.MIGRATION_1_2` is tested against the committed version 1 schema. |
 | `ui/` | Compose screens, components, theme, `Labels.kt` (the words for the stored keys) and `CountryViewModel`, which hands progress, the quiz and the study session to the holders in `ui/viewmodel/`. |
-| `tools/` | Content pipeline: flag rendering (`render-flags.mjs`, `to-webp.py`, `contact-sheet.py`), catalog generation (`validate-research.py`, `gen-entries.py`, `apply-edits.py`, `gen-flag-art.py`, `flag-checksums.py`), audit input (`export-entries.py`), quiz data (`gen-lookalikes.py` writes `FlagLookAlikes.kt`), the sources asset (`export-sources.py` writes `app/src/main/assets/sources.json` from the research and audit files; `--check` verifies it), the notices asset (`export-notices.py` writes `app/src/main/assets/NOTICES.txt` from `licenses/THIRD_PARTY_NOTICES.md`; `--check` verifies it), the map and the land borders (`gen-worldmap.py` downloads Natural Earth and writes `app/src/main/assets/world.json`, `Geo.kt` and `Neighbours.kt`; `--check` verifies the committed files offline). CI runs the four checks, with the Pillow of `requirements.txt`. |
+| `tools/` | Content pipeline: flag rendering (`render-flags.mjs`, `to-webp.py`, `contact-sheet.py`), catalog generation (`validate-research.py`, `gen-entries.py`, `apply-edits.py`, `gen-flag-art.py`, `flag-checksums.py`), audit input (`export-entries.py`), quiz data (`gen-lookalikes.py` writes `FlagLookAlikes.kt`), the sources asset (`export-sources.py` writes `app/src/main/assets/sources.json` from the research and audit files; `--check` verifies it), the notices asset (`export-notices.py` writes `app/src/main/assets/NOTICES.txt` from `licenses/THIRD_PARTY_NOTICES.md`; `--check` verifies it), the map and the land borders (`gen-worldmap.py` downloads Natural Earth and writes `app/src/main/assets/world.json`, `Geo.kt` and `Neighbours.kt`; `--check` verifies the committed files offline). CI runs six `--check`s, with the Pillow of `requirements.txt`: `export-sources.py`, `export-notices.py`, `gen-worldmap.py`, `gen-lookalikes.py`, `gen-sounds.py` and `strings-audit.py`. |
 | `content/` | Provenance for the catalog: `seed/` (country lists and owner rules), `research/` (first-pass entries with sources), `audit/` (second-pass fixes, doubts and owner decisions per continent). |
 
 `CountryViewModel` receives its repository, speech engine and clock through the constructor, which is how
@@ -260,5 +263,5 @@ capital lies on its country's outline.
 ## Dependencies
 
 The versions in `gradle/libs.versions.toml` are the newest that build against compileSdk 37; targetSdk stays
-at 36 so Robolectric keeps running at a supported level. androidx.test 1.7 breaks Robolectric's setup, so
-core and runner stay on 1.6 (see `.github/dependabot.yml`).
+at 36 so Robolectric keeps running at a supported level. androidx.test core and runner are on 1.7.0, which works with
+Robolectric 4.17.
