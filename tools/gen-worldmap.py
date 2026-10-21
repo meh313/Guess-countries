@@ -363,10 +363,17 @@ def add_rings(rings, new):
     return joined
 
 
+def parallel_crossings(ring, lat):
+    """How many times the ring crosses the parallel; touching it at a point is no crossing."""
+    sides = [p[1] > lat for p in _open(ring) if p[1] != lat]
+    return sum(a != b for a, b in zip(sides, sides[1:] + sides[:1]))
+
+
 def split_at_parallel(ring, lat):
     """The parts of the ring north and south of the parallel (Sutherland-Hodgman against each half; a point on it
     goes to both), each closed, or [] for a side the ring does not reach. A ring the parallel crosses twice gives two
-    simple rings."""
+    simple rings; one it crosses more often gives a side in pieces joined by edges along the parallel, which a renderer
+    would stroke, so CLIP_SOUTH takes only rings that parallel_crossings says cross it twice or not at all."""
     pts = _open(ring)
     north, south = [], []
     for i, p in enumerate(pts):
@@ -576,6 +583,9 @@ def build(cache, tolerance, report):
     for code, lat, a3 in CLIP_SOUTH:
         kept, cut = [], []
         for ring in raw[code]['rings']:
+            crossings = parallel_crossings(ring, lat)
+            if crossings not in (0, 2):
+                raise SystemExit(f'CLIP_SOUTH: a ring of {code} crosses {lat:.4f} N {crossings} times; expected 0 or 2')
             north, south = split_at_parallel(ring, lat)
             if north:
                 kept.append(north)
