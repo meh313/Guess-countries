@@ -26,7 +26,7 @@ import org.robolectric.annotation.Config
 /**
  * Upgrading a version 1 database (v1.9 and earlier) to version 2. The old database is built from the committed
  * schema file, so the fixture is the real one, and opened through Room, whose own validation throws on any table
- * that does not match what the entities declare.
+ * that does not match what the entities declare; once through the app's own [AppDatabase.getDatabase] as well.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
@@ -49,11 +49,11 @@ class AppDatabaseMigrationTest {
         context.deleteDatabase(name)
     }
 
-    /** Creates the version 1 database exactly as Room 1 did, from app/schemas, and seeds it. */
-    private fun createVersion1() {
+    /** Creates the version 1 database [file] exactly as Room 1 did, from app/schemas, and seeds it. */
+    private fun createVersion1(file: String = name) {
         val schema = JSONObject(File("schemas/com.example.data.local.AppDatabase/1.json").readText()).getJSONObject("database")
         assertEquals(1, schema.getInt("version"))
-        val db = SQLiteDatabase.openOrCreateDatabase(context.getDatabasePath(name), null)
+        val db = SQLiteDatabase.openOrCreateDatabase(context.getDatabasePath(file), null)
         try {
             val entities = schema.getJSONArray("entities")
             for (i in 0 until entities.length()) {
@@ -182,6 +182,25 @@ class AppDatabaseMigrationTest {
             PracticeStreak.Summary(current = 2, best = 2, practicedToday = true),
             PracticeStreak.summary(sessions, PracticeStreak.DEFAULT_GOAL, 6 * day + 1_000L, utc)
         )
+    }
+
+    @Test
+    fun theProductionDatabase_opensAVersion1FileThroughItsMigration() {
+        // The real file name and the app's own builder: a migration dropped from getDatabase fails here.
+        AppDatabase.closeAndReset()
+        context.deleteDatabase(AppDatabase.NAME)
+        createVersion1(AppDatabase.NAME)
+        try {
+            val db = AppDatabase.getDatabase(context)
+
+            val skills = runBlocking { db.userProgressDao().getAllSkills().first() }
+            assertEquals(setOf("FR", "DE", "JP", "IT"), skills.map { it.countryCode }.toSet())
+            assertEquals(3, runBlocking { db.userProgressDao().getQuizHistory().first() }.size)
+            assertEquals(2, db.openHelper.readableDatabase.version)
+        } finally {
+            AppDatabase.closeAndReset()
+            context.deleteDatabase(AppDatabase.NAME)
+        }
     }
 
     @Test
