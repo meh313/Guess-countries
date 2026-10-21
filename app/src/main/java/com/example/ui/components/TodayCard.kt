@@ -41,6 +41,8 @@ import com.example.R
 import com.example.data.settings.ALL_CONTINENTS
 import com.example.flashcards.StudySession
 import com.example.progress.Skill
+import com.example.quiz.QuizEngine
+import com.example.quiz.QuizMode
 import com.example.ui.continentLabel
 import com.example.ui.viewmodel.CountryViewModel
 
@@ -49,15 +51,19 @@ val FOCUS_CHOICES = listOf(ALL_CONTINENTS, "Africa", "Americas", "Asia", "Europe
 
 /**
  * The card at the top of Explore and Progress: today's items against the daily goal, and the one next thing to do.
- * With due reviews it starts a study session of them (and [onOpenFlashcards] shows it); otherwise it offers five new
- * countries through [onLearn]. Until the first-run choice is made it asks for a focus continent instead. The screens
- * leave it out when `CountryViewModel.todayCardVisible` is false (put away for the day).
+ * Its due count is the Due tile's (flags, capitals and map). With reviews due its button reviews one skill at a time,
+ * in that order: a study session of the flags or the capitals due (and [onOpenFlashcards] shows it), or the
+ * Map → Country quiz over the map reviews due (and [onOpenQuiz] shows it). Otherwise it offers five new countries
+ * through [onLearn], or, once every flag has been seen, a quiz through [onOpenQuiz]. Until the first-run choice is
+ * made it asks for a focus continent instead. The screens leave it out when `CountryViewModel.todayCardVisible` is
+ * false (put away for the day).
  */
 @Composable
 fun TodayCard(
     viewModel: CountryViewModel,
     onOpenFlashcards: () -> Unit,
     onLearn: () -> Unit,
+    onOpenQuiz: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val onboarded by viewModel.onboarded.collectAsStateWithLifecycle()
@@ -69,31 +75,67 @@ fun TodayCard(
     val goal by viewModel.dailyGoal.collectAsStateWithLifecycle()
     val newToday by viewModel.newItemsToday.collectAsStateWithLifecycle()
     val plan by viewModel.quizPlan.collectAsStateWithLifecycle()
-    val dueCodes = remember(plan) { plan.due(Skill.FLAG).map { it.code } }
+    // The skills the Due tile counts, in the order the button reviews them; the continent has no reviews.
+    val dueCodes = remember(plan) { Skill.REVIEWED.associateWith { skill -> plan.due(skill).map { it.code } } }
+    val next = Skill.REVIEWED.firstOrNull { dueCodes[it].orEmpty().isNotEmpty() }
+    // What Learn has left to introduce: the sovereign countries with no flag review yet (as the study chooser counts).
+    val anyUnseen = remember(plan, viewModel) {
+        val flags = plan.skills[Skill.FLAG].orEmpty()
+        viewModel.repository.allCountries.any { it.isSovereign && flags[it.code]?.isNew != false }
+    }
     PracticeCard(
         itemsToday = itemsToday,
         goal = goal,
-        due = dueCodes.size,
+        due = dueCodes.values.sumOf { it.size },
+        review = next,
+        reviewCount = next?.let { dueCodes[it].orEmpty().size } ?: 0,
         newToday = newToday,
+        anyUnseen = anyUnseen,
         onReview = {
-            viewModel.startStudy(StudySession.DUE, dueCodes)
-            onOpenFlashcards()
+            val codes = next?.let { dueCodes[it] }.orEmpty()
+            when (next) {
+                Skill.FLAG -> {
+                    viewModel.startStudy(StudySession.DUE, codes)
+                    onOpenFlashcards()
+                }
+                Skill.CAPITAL -> {
+                    viewModel.startStudy(StudySession.CAPITALS_DUE, codes, Skill.CAPITAL)
+                    onOpenFlashcards()
+                }
+                else -> {
+                    // A quiz already under way is not thrown away: the Quiz tab shows it instead.
+                    val running = viewModel.quizSession.value
+                    if (running == null || running.isFinished) {
+                        viewModel.startQuiz(QuizMode.LOCATE, QuizEngine.DUE, viewModel.quizDifficulty.value)
+                    }
+                    onOpenQuiz()
+                }
+            }
         },
         onLearn = onLearn,
+        onQuiz = onOpenQuiz,
         onDismiss = { viewModel.dismissTodayCard() },
         modifier = modifier
     )
 }
 
-/** The normal state: the progress bar, the line of counts and the one button. */
+/**
+ * The normal state: the progress bar, the line of counts and the one button. [due] counts every skill's reviews due;
+ * the button reviews the [reviewCount] of [review], the first skill with any, and with none it offers Learn while
+ * [anyUnseen] flags are left, else a quiz.
+ */
 @Composable
 private fun PracticeCard(
     itemsToday: Int,
     goal: Int,
     due: Int,
+    review: Skill?,
+    reviewCount: Int,
     newToday: Int,
+    anyUnseen: Boolean,
     onReview: () -> Unit,
     onLearn: () -> Unit,
+    onQuiz: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -145,15 +187,21 @@ private fun PracticeCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(8.dp))
+            val reviewLabel = when (review) {
+                Skill.CAPITAL -> R.plurals.today_review_capitals
+                Skill.LOCATION -> R.plurals.today_review_map
+                else -> R.plurals.today_review_flags
+            }
             when {
-                due > 0 -> Button(onClick = onReview, modifier = Modifier.testTag("today_action_btn")) {
-                    Text(stringResource(R.string.today_review_due, due), fontWeight = FontWeight.Bold)
+                review != null -> Button(onClick = onReview, modifier = Modifier.testTag("today_action_btn")) {
+                    Text(pluralStringResource(reviewLabel, reviewCount, reviewCount), fontWeight = FontWeight.Bold)
                 }
-                !goalMet -> Button(onClick = onLearn, modifier = Modifier.testTag("today_action_btn")) {
-                    Text(stringResource(R.string.today_learn_new), fontWeight = FontWeight.Bold)
+                // Once every flag has been seen Learn has nothing to show; a quiz still practises the rest.
+                !goalMet -> Button(onClick = if (anyUnseen) onLearn else onQuiz, modifier = Modifier.testTag("today_action_btn")) {
+                    Text(stringResource(if (anyUnseen) R.string.today_learn_new else R.string.today_take_quiz), fontWeight = FontWeight.Bold)
                 }
-                else -> TextButton(onClick = onLearn, modifier = Modifier.testTag("today_action_btn")) {
-                    Text(stringResource(R.string.today_learn_more), fontWeight = FontWeight.Bold)
+                else -> TextButton(onClick = if (anyUnseen) onLearn else onQuiz, modifier = Modifier.testTag("today_action_btn")) {
+                    Text(stringResource(if (anyUnseen) R.string.today_learn_more else R.string.today_take_quiz), fontWeight = FontWeight.Bold)
                 }
             }
         }

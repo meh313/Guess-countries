@@ -40,11 +40,37 @@
     </plurals>
     <string name="today_goal">الهدف %1$d</string>
     <!-- The card as one sentence for a screen reader: "Today: 3 of 10 items done, 2 due, 4 new today." -->
-    <!-- "items" and "due" are not nouns the number inflects here: "1 of 10 items done", "Review 1 due". -->
+    <!-- "items" is not a noun the number inflects here: "1 of 10 items done". -->
     <string name="today_description" tools:ignore="PluralsCandidate">اليوم: أُنجز %1$d من %2$d عنصرًا، %3$s، %4$s.</string>
-    <string name="today_review_due" tools:ignore="PluralsCandidate">راجع %1$d مستحقة</string>
+    <!-- The button names the skill it reviews, flags first, then capitals, then the map (the Map → Country quiz) -->
+    <plurals name="today_review_flags">
+        <item quantity="zero">لا أعلام للمراجعة</item>
+        <item quantity="one">راجع علمًا واحدًا</item>
+        <item quantity="two">راجع علمين</item>
+        <item quantity="few">راجع %d أعلام</item>
+        <item quantity="many">راجع %d علمًا</item>
+        <item quantity="other">راجع %d علم</item>
+    </plurals>
+    <plurals name="today_review_capitals">
+        <item quantity="zero">لا عواصم للمراجعة</item>
+        <item quantity="one">راجع عاصمة واحدة</item>
+        <item quantity="two">راجع عاصمتين</item>
+        <item quantity="few">راجع %d عواصم</item>
+        <item quantity="many">راجع %d عاصمة</item>
+        <item quantity="other">راجع %d عاصمة</item>
+    </plurals>
+    <plurals name="today_review_map">
+        <item quantity="zero">لا دول للمراجعة على الخريطة</item>
+        <item quantity="one">راجع دولة واحدة على الخريطة</item>
+        <item quantity="two">راجع دولتين على الخريطة</item>
+        <item quantity="few">راجع %d دول على الخريطة</item>
+        <item quantity="many">راجع %d دولة على الخريطة</item>
+        <item quantity="other">راجع %d دولة على الخريطة</item>
+    </plurals>
     <string name="today_learn_new">تعلّم 5 جديدة</string>
     <string name="today_learn_more">تعلّم 5 أخرى</string>
+    <!-- Every flag has been seen, so there is nothing left for Learn: the button opens the Quiz tab instead -->
+    <string name="today_take_quiz">ابدأ اختبارًا</string>
     <string name="today_dismiss">إخفاء لليوم</string>
     <!-- The first run: the card asks for a focus continent before anything else -->
     <string name="today_start_title">ابدأ من هنا</string>

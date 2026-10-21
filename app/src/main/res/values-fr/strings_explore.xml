@@ -34,11 +34,28 @@
     </plurals>
     <string name="today_goal">objectif %1$d</string>
     <!-- La carte en une phrase pour un lecteur d'écran : « Aujourd'hui : 3 sur 10 éléments faits, 2 à réviser, 4 nouveaux aujourd'hui. » -->
-    <!-- Le nombre n'accorde pas « éléments » ni « révision » ici : « 1 sur 10 éléments faits », « Révision 1 à faire ». -->
+    <!-- Le nombre n'accorde pas « éléments » ici : « 1 sur 10 éléments faits ». -->
     <string name="today_description" tools:ignore="PluralsCandidate">Aujourd\'hui : %1$d sur %2$d éléments faits, %3$s, %4$s.</string>
-    <string name="today_review_due" tools:ignore="PluralsCandidate">Révision %1$d à faire</string>
+    <!-- Le bouton nomme la compétence qu'il révise : les drapeaux, puis les capitales, puis la carte (le quiz Carte → Pays) -->
+    <plurals name="today_review_flags">
+        <item quantity="one">Réviser %d drapeau</item>
+        <item quantity="other">Réviser %d drapeaux</item>
+        <item quantity="many">Réviser %d drapeaux</item>
+    </plurals>
+    <plurals name="today_review_capitals">
+        <item quantity="one">Réviser %d capitale</item>
+        <item quantity="other">Réviser %d capitales</item>
+        <item quantity="many">Réviser %d capitales</item>
+    </plurals>
+    <plurals name="today_review_map">
+        <item quantity="one">Réviser %d pays sur la carte</item>
+        <item quantity="other">Réviser %d pays sur la carte</item>
+        <item quantity="many">Réviser %d pays sur la carte</item>
+    </plurals>
     <string name="today_learn_new">Apprendre 5 nouveaux</string>
     <string name="today_learn_more">Apprendre 5 de plus</string>
+    <!-- Tous les drapeaux ont été vus, Apprendre n'a plus rien à montrer : le bouton ouvre l'onglet Quiz -->
+    <string name="today_take_quiz">Faire un quiz</string>
     <string name="today_dismiss">Masquer pour aujourd\'hui</string>
     <!-- Le premier lancement : la carte demande un continent prioritaire avant tout -->
     <string name="today_start_title">Commencez ici</string>

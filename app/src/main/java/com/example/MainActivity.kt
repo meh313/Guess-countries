@@ -237,7 +237,12 @@ fun MainAppScreen(
                 startDestination = Screen.Explore.route
             ) {
                 composable(Screen.Explore.route) {
-                    ExploreScreen(viewModel = viewModel, onOpenFlashcards = { open(Screen.Flashcards) }, onLearn = { openLearn() })
+                    ExploreScreen(
+                        viewModel = viewModel,
+                        onOpenFlashcards = { open(Screen.Flashcards) },
+                        onLearn = { openLearn() },
+                        onOpenQuiz = { open(Screen.Quiz) }
+                    )
                 }
                 composable(Screen.Flashcards.route) {
                     FlashcardScreen(viewModel = viewModel, onLearn = { openLearn() })
@@ -255,6 +260,7 @@ fun MainAppScreen(
                         },
                         onOpenFlashcards = { open(Screen.Flashcards) },
                         onLearn = { openLearn() },
+                        onOpenQuiz = { open(Screen.Quiz) },
                         onOpenReview = { navController.navigate(Screen.REVIEW) { launchSingleTop = true } }
                     )
                 }

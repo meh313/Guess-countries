@@ -32,11 +32,25 @@
     </plurals>
     <string name="today_goal">goal %1$d</string>
     <!-- The card as one sentence for a screen reader: "Today: 3 of 10 items done, 2 due, 4 new today." -->
-    <!-- "items" and "due" are not nouns the number inflects here: "1 of 10 items done", "Review 1 due". -->
+    <!-- "items" is not a noun the number inflects here: "1 of 10 items done". -->
     <string name="today_description" tools:ignore="PluralsCandidate">Today: %1$d of %2$d items done, %3$s, %4$s.</string>
-    <string name="today_review_due" tools:ignore="PluralsCandidate">Review %1$d due</string>
+    <!-- The button names the skill it reviews, flags first, then capitals, then the map (the Map → Country quiz) -->
+    <plurals name="today_review_flags">
+        <item quantity="one">Review %d flag</item>
+        <item quantity="other">Review %d flags</item>
+    </plurals>
+    <plurals name="today_review_capitals">
+        <item quantity="one">Review %d capital</item>
+        <item quantity="other">Review %d capitals</item>
+    </plurals>
+    <plurals name="today_review_map">
+        <item quantity="one">Review %d on the map</item>
+        <item quantity="other">Review %d on the map</item>
+    </plurals>
     <string name="today_learn_new">Learn 5 new</string>
     <string name="today_learn_more">Learn 5 more</string>
+    <!-- Every flag has been seen, so there is nothing left for Learn: the button opens the Quiz tab instead -->
+    <string name="today_take_quiz">Take a quiz</string>
     <string name="today_dismiss">Hide for today</string>
     <!-- The first run: the card asks for a focus continent before anything else -->
     <string name="today_start_title">Start here</string>

@@ -100,6 +100,8 @@ fun StatsScreen(
     onOpenFlashcards: () -> Unit = {},
     /** Opens the Learn screen (five new countries), from the Today card. */
     onLearn: () -> Unit = {},
+    /** Opens the Quiz tab, where the map review or the quiz the Today card offers is played. */
+    onOpenQuiz: () -> Unit = {},
     /** Opens the result screen of a logged quiz, once [CountryViewModel.openReview] has been asked for it. */
     onOpenReview: (quizId: Long) -> Unit = {}
 ) {
@@ -191,7 +193,7 @@ fun StatsScreen(
         }
 
         if (todayCardVisible) {
-            item { TodayCard(viewModel = viewModel, onOpenFlashcards = onOpenFlashcards, onLearn = onLearn) }
+            item { TodayCard(viewModel = viewModel, onOpenFlashcards = onOpenFlashcards, onLearn = onLearn, onOpenQuiz = onOpenQuiz) }
         }
 
         item { StreakCard(streak) }

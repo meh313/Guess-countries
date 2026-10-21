@@ -50,6 +50,8 @@ import com.example.progress.DueForecast
 import com.example.progress.Evidence
 import com.example.progress.Skill
 import com.example.progress.SkillState
+import com.example.quiz.QuizEngine
+import com.example.quiz.QuizMode
 import com.example.quiz.allCountries
 import com.example.speech.Speech
 import com.example.support.boundsOf
@@ -509,7 +511,7 @@ class ExploreProgressUiTest {
         rule.openTab("stats")
 
         rule.eventually("due today") { rule.onNodeWithTag("today_card").assert(hasText("1 due · 0 new today · goal 10")) }
-        rule.onNodeWithTag("today_action_btn").assert(hasText("Review 1 due"))
+        rule.onNodeWithTag("today_action_btn").assert(hasText("Review 1 flag"))
         rule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("stats_due"))
         rule.onNodeWithTag("stats_due").assert(describedAs("Due today: 1"))
         assertTrue(viewModel.forecast.value.isEmpty)
@@ -669,7 +671,7 @@ class ExploreProgressUiTest {
         rule.runOnUiThread { viewModel.chooseFocus("All") }
         rule.eventually("the due count") { rule.onNodeWithTag("today_card").assert(hasText("2 due · 0 new today · goal 10")) }
         rule.onNodeWithTag("today_card").assert(describedAs("Today: 0 of 10 items done, 2 due, 0 new today."))
-        rule.onNodeWithTag("today_action_btn").assert(hasText("Review 2 due"))
+        rule.onNodeWithTag("today_action_btn").assert(hasText("Review 2 flags"))
 
         rule.onNodeWithTag("today_action_btn").performClick()
         rule.waitForIdle()
@@ -678,6 +680,90 @@ class ExploreProgressUiTest {
         rule.onNodeWithText("Study · Due today").assertIsDisplayed()
         assertEquals(StudySession.DUE, viewModel.studySession.value?.source)
         assertEquals(setOf("FR", "DE"), viewModel.studySession.value?.cards?.toSet())
+    }
+
+    @Test
+    fun theCard_countsTheCapitalAndMapReviewsToo_andReviewsTheFlagsFirst() {
+        rule.runOnUiThread {
+            viewModel.setTodayCardDismissedDay("")
+            viewModel.chooseFocus("All")
+        }
+        due("FR")
+        dueAt("DE", Skill.CAPITAL, 0L)
+        dueAt("IT", Skill.CAPITAL, 0L)
+        dueAt("JP", Skill.LOCATION, 0L)
+        // The continent has no reviews, however old its row: not counted.
+        dueAt("BR", Skill.CONTINENT, 0L)
+
+        // The Due tile's figure: one flag, two capitals, one on the map.
+        rule.eventually("every skill's reviews") { rule.onNodeWithTag("today_card").assert(hasText("4 due · 0 new today · goal 10")) }
+        rule.onNodeWithTag("today_action_btn").assert(hasText("Review 1 flag"))
+        rule.onNodeWithTag("today_action_btn").performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithTag("nav_tab_flashcards").assertIsSelected()
+        assertEquals(StudySession.DUE, viewModel.studySession.value?.source)
+        assertEquals(listOf("FR"), viewModel.studySession.value?.cards)
+    }
+
+    @Test
+    fun withOnlyCapitalsDue_theButtonStudiesTheCapitals() {
+        rule.runOnUiThread {
+            viewModel.setTodayCardDismissedDay("")
+            viewModel.chooseFocus("All")
+        }
+        dueAt("DE", Skill.CAPITAL, 0L)
+        dueAt("IT", Skill.CAPITAL, 0L)
+
+        rule.eventually("two capitals due") { rule.onNodeWithTag("today_card").assert(hasText("2 due · 0 new today · goal 10")) }
+        rule.onNodeWithTag("today_action_btn").assert(hasText("Review 2 capitals"))
+        rule.onNodeWithTag("today_action_btn").performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithTag("nav_tab_flashcards").assertIsSelected()
+        assertEquals(StudySession.CAPITALS_DUE, viewModel.studySession.value?.source)
+        assertEquals(Skill.CAPITAL, viewModel.studySession.value?.skill)
+        assertEquals(setOf("DE", "IT"), viewModel.studySession.value?.cards?.toSet())
+    }
+
+    @Test
+    fun withOnlyMapReviewsDue_theButtonPlaysTheMapQuizOverThem() {
+        rule.runOnUiThread {
+            viewModel.setTodayCardDismissedDay("")
+            viewModel.chooseFocus("All")
+        }
+        dueAt("JP", Skill.LOCATION, 0L)
+
+        rule.eventually("one on the map") { rule.onNodeWithTag("today_card").assert(hasText("1 due · 0 new today · goal 10")) }
+        rule.onNodeWithTag("today_action_btn").assert(hasText("Review 1 on the map"))
+        rule.onNodeWithTag("today_action_btn").performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithTag("nav_tab_quiz").assertIsSelected()
+        val quiz = viewModel.quizSession.value
+        assertEquals(QuizMode.LOCATE, quiz?.mode)
+        assertEquals(QuizEngine.DUE, quiz?.scope)
+        assertEquals(listOf("JP"), quiz?.questions?.map { it.targetCountry.code })
+    }
+
+    @Test
+    fun onceEveryFlagHasBeenSeen_theCardOffersAQuiz_notLearn() {
+        rule.runOnUiThread {
+            viewModel.setTodayCardDismissedDay("")
+            viewModel.chooseFocus("All")
+        }
+        val sovereign = viewModel.repository.allCountries.filter { it.isSovereign }
+        // Every flag reviewed, none due today.
+        sovereign.forEach { dueAt(it.code, Skill.FLAG, startOfDay(3)) }
+        rule.eventually("every flag seen") { assertEquals(sovereign.size, viewModel.skills.value[Skill.FLAG]?.size) }
+
+        rule.eventually("a quiz") { rule.onNodeWithTag("today_action_btn").assert(hasText("Take a quiz")) }
+        rule.onNodeWithTag("today_action_btn").performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithTag("nav_tab_quiz").assertIsSelected()
+        // The Quiz tab opens on its setup screen: nothing was started for the player.
+        assertNull(viewModel.quizSession.value)
     }
 
     @Test
@@ -733,12 +819,12 @@ class ExploreProgressUiTest {
 
         assertEquals("Asia", prefs.focusContinent)
         rule.eventually("one due on Progress") { rule.onNodeWithTag("today_card").assert(hasText("1 due · 0 new today · goal 10")) }
-        rule.onNodeWithTag("today_action_btn").assert(hasText("Review 1 due"))
+        rule.onNodeWithTag("today_action_btn").assert(hasText("Review 1 flag"))
         rule.onNodeWithTag("stats_streak").assertIsDisplayed()
 
         rule.openTab("explore")
         rule.eventually("the same card on Explore") { rule.onNodeWithTag("today_card").assert(hasText("1 due · 0 new today · goal 10")) }
-        rule.onNodeWithTag("today_action_btn").assert(hasText("Review 1 due"))
+        rule.onNodeWithTag("today_action_btn").assert(hasText("Review 1 flag"))
     }
 
     // --- Export and import through the Settings screen, with a stand-in for the system file picker --------------------

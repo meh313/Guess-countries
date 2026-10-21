@@ -96,7 +96,9 @@ fun ExploreScreen(
     /** Opens the Flashcards tab, where the study session the Today card starts is shown. */
     onOpenFlashcards: () -> Unit = {},
     /** Opens the Learn screen (five new countries), from the Today card. */
-    onLearn: () -> Unit = {}
+    onLearn: () -> Unit = {},
+    /** Opens the Quiz tab, where the map review or the quiz the Today card offers is played. */
+    onOpenQuiz: () -> Unit = {}
 ) {
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val todayCardVisible by viewModel.todayCardVisible.collectAsStateWithLifecycle()
@@ -182,7 +184,7 @@ fun ExploreScreen(
         // Today: the goal and the one next thing to do; left out once put away for the day.
         if (todayCardVisible) {
             item(key = "today", span = { GridItemSpan(maxLineSpan) }) {
-                TodayCard(viewModel = viewModel, onOpenFlashcards = onOpenFlashcards, onLearn = onLearn)
+                TodayCard(viewModel = viewModel, onOpenFlashcards = onOpenFlashcards, onLearn = onLearn, onOpenQuiz = onOpenQuiz)
             }
         }
 
