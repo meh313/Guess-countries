@@ -274,6 +274,22 @@ class UserProgressDaoTest {
     }
 
     @Test
+    fun aBlitzRowMigratedWithoutItsCount_countsItsRightAnswers() {
+        // What version 2.0 to 3.1 made of a 1.x blitz: its right answers in correct, nothing in questionCount.
+        val migrated = QuizScoreEntity(mode = "BLITZ", score = 340, total = 0, continentFilter = "Global", timestamp = 100L, correct = 14)
+        runBlocking {
+            dao.insertQuizScore(migrated)
+            // A blitz of today's version keeps its count, even 0; only a missing one falls back.
+            dao.insertQuizScore(QuizScoreEntity(mode = "BLITZ", score = 0, total = 0, continentFilter = "Global", timestamp = 200L, correct = 0, questionCount = 0))
+        }
+
+        assertEquals(14, migrated.practiceItems)
+        val sessions = runBlocking { dao.practiceSessions() }.map { it.toPracticeSession() }.sortedBy { it.at }
+        assertEquals(listOf(PracticeStreak.Session(100L, 14), PracticeStreak.Session(200L, 0)), sessions)
+        assertEquals(sessions, runBlocking { dao.getQuizHistory().first() }.map { it.toPracticeSession() }.sortedBy { it.at })
+    }
+
+    @Test
     fun quizTimestamps_isEmptyBeforeTheFirstQuiz() {
         assertTrue(runBlocking { dao.quizTimestamps() }.isEmpty())
     }

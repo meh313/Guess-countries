@@ -77,8 +77,11 @@ abstract class UserProgressDao {
     @Query("SELECT timestamp FROM quiz_scores")
     abstract suspend fun quizTimestamps(): List<Long>
 
-    /** When each finished quiz or study session was saved and how big it was; the practice streak is worked out from these. */
-    @Query("SELECT timestamp, total, questionCount FROM quiz_scores")
+    /**
+     * When each finished quiz or study session was saved and how big it was; the practice streak is worked out from
+     * these. A blitz row from before the count was recorded counts its right answers, as [QuizScoreEntity.practiceItems].
+     */
+    @Query("SELECT timestamp, total, COALESCE(questionCount, CASE WHEN mode = 'BLITZ' THEN correct END) AS questionCount FROM quiz_scores")
     abstract suspend fun practiceSessions(): List<PracticeRow>
 
     /**

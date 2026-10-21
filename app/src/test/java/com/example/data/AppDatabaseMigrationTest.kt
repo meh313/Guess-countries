@@ -5,9 +5,11 @@ import android.database.sqlite.SQLiteDatabase
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.example.data.local.AppDatabase
+import com.example.progress.PracticeStreak
 import com.example.progress.Skill
 import com.example.support.inMemoryDatabase
 import java.io.File
+import java.util.TimeZone
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
@@ -146,7 +148,9 @@ class AppDatabaseMigrationTest {
         val blitz = quizzes.getValue("BLITZ")
         assertEquals(14, blitz.correct)
         assertEquals(0, blitz.total)
-        assertNull(blitz.questionCount)
+        // At least as many questions were answered as were right: the streak counts the blitz by them.
+        assertEquals(14, blitz.questionCount)
+        assertEquals(14, blitz.practiceItems)
         assertNull(blitz.difficulty)
 
         val flag = quizzes.getValue("FLAG_NAME")
@@ -156,6 +160,28 @@ class AppDatabaseMigrationTest {
 
         assertEquals(6, quizzes.getValue("CAPITAL").questionCount)
         assertEquals(90, quizzes.getValue("CAPITAL").total)
+    }
+
+    @Test
+    fun aDayOfBlitzesOnly_stillCountsForTheStreak() {
+        createVersion1()
+        // Two more days in 1970 on which only a blitz was played, with 12 right answers each.
+        val raw = SQLiteDatabase.openDatabase(context.getDatabasePath(name).path, null, SQLiteDatabase.OPEN_READWRITE)
+        try {
+            for (d in 5..6) raw.execSQL("INSERT INTO quiz_scores (mode, score, total, continentFilter, timestamp) VALUES ('BLITZ', 290, 12, 'Global', ${d * day})")
+        } finally {
+            raw.close()
+        }
+        val db = openMigrated()
+
+        val sessions = runBlocking { db.userProgressDao().practiceSessions() }.map { it.toPracticeSession() }
+
+        assertEquals(listOf(14, 10, 6, 12, 12), sessions.sortedBy { it.at }.map { it.items })
+        val utc = TimeZone.getTimeZone("UTC")
+        assertEquals(
+            PracticeStreak.Summary(current = 2, best = 2, practicedToday = true),
+            PracticeStreak.summary(sessions, PracticeStreak.DEFAULT_GOAL, 6 * day + 1_000L, utc)
+        )
     }
 
     @Test
