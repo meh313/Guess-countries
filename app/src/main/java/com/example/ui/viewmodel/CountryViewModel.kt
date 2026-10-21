@@ -360,15 +360,16 @@ class CountryViewModel(
 
     /**
      * Replaces everything with [pendingImport]: the database in one transaction, then the settings the file carries.
-     * The quiz or study session in progress is dropped only once the database write has succeeded; a write that fails
-     * (a damaged file the checks let through) leaves everything as it was and comes back as the failure.
+     * The quiz or study session in progress is dropped only once the database write has succeeded, and without
+     * writing its pending grade, which belongs to the data replaced; a write that fails (a damaged file the checks
+     * let through) leaves everything as it was and comes back as the failure.
      */
     suspend fun applyImport(): Result<ProgressSnapshot> {
         val snapshot = _pendingImport.value ?: return Result.failure(IllegalStateException("nothing to import"))
         _pendingImport.value = null
         return runCatching { repository.importSnapshot(snapshot) }.map {
             quiz.end()
-            study.dismiss()
+            study.discard()
             learn.dismiss()
             snapshot.settings["quizDifficulty"]?.let { name -> QuizDifficulty.entries.firstOrNull { it.name == name } }?.let(::setQuizDifficulty)
             snapshot.settings["themeMode"]?.let { name -> ThemeMode.entries.firstOrNull { it.name == name } }?.let(::setThemeMode)

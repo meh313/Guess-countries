@@ -9,14 +9,17 @@ import com.example.data.settings.InMemoryUserSettings
 import com.example.data.settings.ThemeMode
 import com.example.data.transfer.ImportProblem
 import com.example.data.transfer.ProgressTransfer
+import com.example.flashcards.StudySession
 import com.example.progress.DueForecast
 import com.example.progress.Evidence
 import com.example.progress.GoalHistory
+import com.example.progress.Grade
 import com.example.progress.Skill
 import com.example.quiz.QuizDifficulty
 import com.example.quiz.QuizMode
 import com.example.reminder.ReminderScheduler
 import com.example.support.FakeSpeech
+import com.example.support.awaitPendingWrites
 import com.example.support.closeWhenIdle
 import com.example.support.inMemoryDatabase
 import com.example.ui.viewmodel.CountryViewModel
@@ -104,6 +107,38 @@ class CountryViewModelImportTest {
         assertEquals(1140, settings.reminderMinuteOfDay)
         assertEquals(listOf(1140), scheduler.planned)
         assertNull(vm.pendingImport.value)
+    }
+
+    @Test
+    fun anImportDuringAStudySession_dropsItsPendingGrade_insteadOfWritingItIntoTheFile() = runBlocking {
+        val vm = viewModel()
+        // Mid-session: France graded, its grade pending.
+        vm.startStudy(StudySession.DECK, listOf("FR", "JP"))
+        vm.flipStudyCard()
+        vm.gradeStudyCard(Grade.AGAIN)
+        assertEquals("FR", vm.studySession.value?.pending?.code)
+
+        vm.importJson(file()).getOrThrow()
+        db.awaitPendingWrites()
+
+        assertNull(vm.studySession.value)
+        // The file's France, untouched by the Again: box 3, score 80, due at 500.
+        val france = db.userProgressDao().getAllSkills().first().single()
+        assertEquals(listOf("FR", "80", "3", "500"), listOf(france.countryCode, "${france.score}", "${france.box}", "${france.dueAt}"))
+
+        // A finished session on its summary, long enough to log: neither its final grade nor its log row is written
+        // over the file.
+        vm.startStudy(StudySession.DECK, listOf("DE", "IT", "ES", "JP", "BR"))
+        repeat(5) {
+            vm.flipStudyCard()
+            vm.gradeStudyCard(Grade.EASY)
+        }
+        assertTrue(vm.studySession.value!!.isOver)
+        db.awaitPendingWrites()
+        vm.importJson(file()).getOrThrow()
+        db.awaitPendingWrites()
+        assertEquals(listOf("FR"), db.userProgressDao().getAllSkills().first().map { it.countryCode })
+        assertEquals(listOf("FLAG_NAME"), db.userProgressDao().getQuizHistory().first().map { it.mode })
     }
 
     @Test
