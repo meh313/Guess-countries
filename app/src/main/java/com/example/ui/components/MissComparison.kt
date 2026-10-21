@@ -7,13 +7,20 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -25,6 +32,10 @@ import androidx.compose.ui.unit.dp
 import com.example.R
 import com.example.data.model.Country
 import com.example.data.model.TellApart
+import com.example.ui.theme.MissCorrectOnDark
+import com.example.ui.theme.MissCorrectOnLight
+import com.example.ui.theme.MissPickedOnDark
+import com.example.ui.theme.MissPickedOnLight
 
 /**
  * The teaching moment after a wrong text answer: the flag of the country that was picked beside the flag of the
@@ -59,8 +70,9 @@ fun MissComparison(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.Top
         ) {
-            Side(label = stringResource(R.string.miss_you_picked), country = picked, caption = pickedCaption, tint = Color(0xFFC62828), modifier = Modifier.weight(1f))
-            Side(label = stringResource(R.string.miss_correct), country = correct, caption = correctCaption, tint = Color(0xFF2E7D32), modifier = Modifier.weight(1f))
+            val labels = MissLabelColours.on(MaterialTheme.colorScheme.primaryContainer)
+            Side(label = stringResource(R.string.miss_you_picked), icon = Icons.Default.Cancel, country = picked, caption = pickedCaption, tint = labels.picked, modifier = Modifier.weight(1f))
+            Side(label = stringResource(R.string.miss_correct), icon = Icons.Default.CheckCircle, country = correct, caption = correctCaption, tint = labels.correct, modifier = Modifier.weight(1f))
         }
         if (showMap) {
             Row(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
@@ -96,16 +108,40 @@ fun TellApartLine(text: String, modifier: Modifier = Modifier) {
     )
 }
 
+/**
+ * The colours of the two labels on [container] (the comparison sits on the primary container): the pair made for a
+ * light container or the one made for a dark container, whichever stands out more from it, so a wallpaper-coloured
+ * container (Android 12+) gets the right one too.
+ */
+internal data class MissLabelColours(val picked: Color, val correct: Color) {
+    companion object {
+        private val forLight = MissLabelColours(MissPickedOnLight, MissCorrectOnLight)
+        private val forDark = MissLabelColours(MissPickedOnDark, MissCorrectOnDark)
+
+        fun on(container: Color): MissLabelColours =
+            if (contrast(forLight.picked, container) >= contrast(forDark.picked, container)) forLight else forDark
+
+        private fun contrast(a: Color, b: Color): Float {
+            val (lighter, darker) = listOf(a.luminance(), b.luminance()).sortedDescending()
+            return (lighter + 0.05f) / (darker + 0.05f)
+        }
+    }
+}
+
+/** One side: its label (with a cross or a tick, so the colour is not the only cue), the flag and what it stands for. */
 @Composable
-private fun Side(label: String, country: Country, caption: String, tint: Color, modifier: Modifier = Modifier) {
+private fun Side(label: String, icon: ImageVector, country: Country, caption: String, tint: Color, modifier: Modifier = Modifier) {
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.Bold,
-            color = tint,
-            modifier = Modifier.padding(bottom = 4.dp)
-        )
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 4.dp)) {
+            Icon(imageVector = icon, contentDescription = null, tint = tint, modifier = Modifier.size(16.dp))
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = tint
+            )
+        }
         FlagView(country = country, modifier = Modifier.fillMaxWidth(), contentDescription = null, thumbnail = true)
         Text(
             text = caption,

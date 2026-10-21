@@ -150,12 +150,14 @@ fun ExploreScreen(
                         .fillMaxWidth()
                         .heightIn(min = 150.dp, max = 200.dp)
                 ) {
+                    // The map is a faint texture on the primary colour, so the text over it keeps its contrast
+                    // whatever part of the picture it lands on (see HERO_BANNER_ALPHA).
                     Image(
                         painter = painterResource(id = R.drawable.img_world_banner),
                         contentDescription = null, // decorative
                         modifier = Modifier.matchParentSize(),
                         contentScale = ContentScale.Crop,
-                        alpha = 0.45f
+                        alpha = HERO_BANNER_ALPHA
                     )
 
                     Column(
@@ -169,13 +171,13 @@ fun ExploreScreen(
                             text = stringResource(R.string.explore_title),
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier.semantics { heading() }
                         )
                         Text(
                             text = stringResource(R.string.explore_subtitle),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color.White.copy(alpha = 0.9f)
+                            color = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                 }
@@ -439,3 +441,10 @@ fun ExploreScreen(
         )
     }
 }
+
+/**
+ * How strongly the world map shows through the hero's primary colour. The title and subtitle are drawn in onPrimary
+ * over it, and at this strength they stay at 4.5:1 or more over any pixel of the picture, even pure white or black,
+ * on the app's light and dark primaries and on the wallpaper ones (ThemeContrastTest works it out).
+ */
+internal const val HERO_BANNER_ALPHA = 0.12f
