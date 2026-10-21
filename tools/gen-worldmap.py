@@ -12,17 +12,19 @@ areas do: REASSIGN puts Crimea in Ukraine and CLIP_SOUTH stops Morocco at 27°40
 comes to a country from another feature is joined to the ring it shares a stretch of border with, so no seam is
 drawn where the features met. Western Sahara, the dependencies and the other non-catalog features get no record:
 their rings go into "background", land drawn in the land colour that is no country (so Greenland or Puerto Rico is
-not shown as sea), simplified like a country's. Each outer ring is simplified with Douglas-Peucker at
---tolerance degrees, keeps at least four points, and is dropped when its simplified area is under MIN_RING_AREA
-square degrees unless it is the country's largest; coordinates are rounded to two decimals. A hole (an enclave:
-Lesotho in South Africa) is kept as the enclave's own drawn ring, so both outlines are one line and a renderer that
-fills with the even-odd rule leaves the enclave out of its host; a hole whose enclave is not drawn is dropped. A
-country whose largest ring is under POINT_AREA square degrees (Monaco, the Vatican, the atoll states) is instead a
-square of POINT_SIDE degrees around its capital, marked "point": true, so every code has a polygon. The label is Natural Earth's LABEL_X/LABEL_Y; the capital is the
-populated-places "Admin-0 capital" whose name matches the catalog's quizCapital (accents, case and punctuation
-folded; "Admin-0 capital alt" or any other place of the country when only that matches), else the first "Admin-0
-capital", else the label point. A point square is labelled at its centre; a Natural Earth label that falls outside
-the frame (a few island states; Kiribati's sits on Kiritimati) is replaced by the centroid of the largest ring.
+not shown as sea), simplified like a country's. Each outer ring is simplified with Douglas-Peucker at --tolerance
+degrees, keeps at least four points, and is dropped when its simplified area is under MIN_RING_AREA square degrees
+unless it is the country's largest or the one that holds (or is nearest) its capital (Tarawa, Abu Dhabi's island);
+coordinates are rounded to two decimals. A hole (an enclave: Lesotho in South Africa) is kept as the enclave's own
+drawn ring, so both outlines are one line and a renderer that fills with the even-odd rule leaves the enclave out
+of its host; a hole whose enclave is not drawn is dropped. A country whose largest ring is under POINT_AREA square
+degrees (Monaco, the Vatican, the atoll states) is instead a square of POINT_SIDE degrees around its capital, marked
+"point": true, so every code has a polygon. The label is Natural Earth's LABEL_X/LABEL_Y; the capital is the point
+in HAND_CAPITALS (Palestine's), else the populated-places "Admin-0 capital" whose name matches the catalog's
+quizCapital (accents, case and punctuation folded; "Admin-0 capital alt" or any other place of the country when only
+that matches), else the first "Admin-0 capital", else the label point. A point square is labelled at its centre; a
+Natural Earth label that falls outside the frame (a few island states; Kiribati's sits on Kiritimati) is replaced by
+the centroid of the largest ring.
 
 The bbox is [west, south, east, north]. A country whose rings span more than 180 degrees of longitude (Russia, Fiji,
 Kiribati, the United States, New Zealand) has it computed with the western hemisphere shifted by +360, so east may
@@ -83,7 +85,7 @@ FORMAT = 2
 TOLERANCE = 0.05            # Douglas-Peucker tolerance in degrees
 FALLBACK_TOLERANCE = 0.08   # used when the asset comes out over MAX_ASSET_BYTES
 MAX_ASSET_BYTES = 700 * 1024
-MIN_RING_AREA = 0.01        # square degrees; smaller simplified rings are dropped unless they are the largest
+MIN_RING_AREA = 0.01        # square degrees; smaller simplified rings are dropped unless largest or the capital's
 POINT_AREA = 0.01           # a country whose largest ring is under this is drawn as a point square
 POINT_SIDE = 0.08           # side of that square, degrees
 MIN_RING_POINTS = 4
@@ -108,6 +110,9 @@ REASSIGN = [('RUS', 'UA', (34.10, 44.95))]     # (ADM0_A3 it is in, catalog code
 CLIP_SOUTH = [('MA', 27 + 40 / 60, 'SAH')]     # (catalog code, latitude, ADM0_A3 of the background feature)
 # Populated places use other ADM0_A3 values than the countries file for a few states.
 CAPITAL_A3 = {'SS': ['SSD', 'SDS'], 'PS': ['PSX'], 'XK': ['KOS']}
+# Capitals the populated places cannot give: the catalog's capital for Palestine is Al Quds (Jerusalem), which the
+# places list under no Palestinian code, so the point is set by hand, in East Jerusalem.
+HAND_CAPITALS = {'PS': (35.23, 31.78)}
 ANTARCTICA = 'AQ'
 
 MIN_SHARED_VERTICES = 2     # outline points two countries must share to count as bordering
@@ -231,7 +236,8 @@ def bbox_of(polys, wrap=True):
 
 def frame_of(polys, bbox, capital):
     """The box of the largest ring and the capital's, plus every ring whose bbox comes within FRAME_GAP of it,
-    grown until stable; widened to the capital point when that still lies outside (Tarawa's atoll is too thin)."""
+    grown until stable; widened to the capital point when that still lies outside (Kingstown, just off its rounded
+    island)."""
     shifted = bbox[2] > 180
 
     def shift(lon):
@@ -540,7 +546,7 @@ def build(cache, tolerance, report):
     neighbours = adjacency(raw, report)
     countries = {}
     drawn = {}      # code -> {index of a raw ring: the ring drawn for it}
-    point_codes, fallback_capitals, inexact, relabelled = [], [], [], []
+    point_codes, fallback_capitals, inexact, relabelled, by_hand, capital_rings = [], [], [], [], [], []
     for code in sorted(codes):
         if code == ANTARCTICA:
             drawn[code] = simplify_rings(raw[code]['rings'], tolerance)
@@ -552,9 +558,13 @@ def build(cache, tolerance, report):
             raise SystemExit(f'{code} ({catalog[code]["name"]}) has no feature in {COUNTRIES_FILE}')
         data = raw[code]
         label = list(max(data['labels'])[1]) if data['labels'] else None
-        picked = pick_capital(catalog[code], capitals.get(code, []))
-        if picked and not picked[2] == 'matched':
-            inexact.append(f'{code} {picked[2]}')
+        if code in HAND_CAPITALS:
+            picked = (*HAND_CAPITALS[code], 'by hand')
+            by_hand.append(f'{code} {catalog[code]["capital"]}')
+        else:
+            picked = pick_capital(catalog[code], capitals.get(code, []))
+            if picked and not picked[2] == 'matched':
+                inexact.append(f'{code} {picked[2]}')
         largest = max(ring_area(r) for r in data['rings'])
         if largest < POINT_AREA:
             centre = picked[:2] if picked else label
@@ -564,7 +574,11 @@ def build(cache, tolerance, report):
             point = True
             point_codes.append(code)
         else:
-            drawn[code] = simplify_rings(data['rings'], tolerance)
+            keep = capital_ring(data['rings'], picked[:2]) if picked else None
+            drawn[code] = simplify_rings(data['rings'], tolerance, keep)
+            areas = [ring_area(r) for r in drawn[code].values()]
+            if keep is not None and ring_area(drawn[code][keep]) < min(MIN_RING_AREA, max(areas)):
+                capital_rings.append(code)
             polys = list(drawn[code].values())
             point = False
         if point:
@@ -592,6 +606,8 @@ def build(cache, tolerance, report):
     report.append(f'countries: {len(countries)} ({len(countries) - len(point_codes)} from 50m outlines, '
                   f'{len(point_codes)} point squares: {", ".join(point_codes)})')
     report.append(f'capitals matched inexactly: {"; ".join(inexact) or "none"}')
+    report.append(f'capitals set by hand: {"; ".join(by_hand) or "none"}')
+    report.append(f"capital's ring kept under MIN_RING_AREA: {', '.join(capital_rings) or 'none'}")
     report.append(f'label point outside the outline, centroid used: {", ".join(relabelled) or "none"}')
     report.append(f'capitals missing, label used: {", ".join(fallback_capitals) or "none"}')
     return countries, background
@@ -626,12 +642,26 @@ def holes_of(raw, drawn, countries, report):
                   f'left out (enclave not drawn): {", ".join(left_out) or "none"}')
 
 
-def simplify_rings(rings, tolerance):
-    """Raw ring index -> simplified ring, for the rings kept: the largest and every one of at least MIN_RING_AREA."""
+def capital_ring(rings, capital):
+    """The index of the raw ring that holds the capital, or of the one nearest to it (a coastal capital can sit just
+    off its outline)."""
+    lon, lat = capital
+    for i, ring in enumerate(rings):
+        if ring_contains(ring, lon, lat):
+            return i
+
+    def distance(ring):
+        return min(_segment_distance((lon, lat), ring[k][:2], ring[(k + 1) % len(ring)][:2]) for k in range(len(ring)))
+    return min(range(len(rings)), key=lambda i: distance(rings[i]))
+
+
+def simplify_rings(rings, tolerance, keep=None):
+    """Raw ring index -> simplified ring, for the rings kept: the largest, every one of at least MIN_RING_AREA, and
+    the one at index [keep] whatever its size (the capital's: Tarawa, Abu Dhabi's island)."""
     simplified = [simplify_ring(r, tolerance) for r in rings]
     areas = [ring_area(r) for r in simplified]
     largest = areas.index(max(areas))
-    return {i: r for i, r in enumerate(simplified) if i == largest or areas[i] >= MIN_RING_AREA}
+    return {i: r for i, r in enumerate(simplified) if i in (largest, keep) or areas[i] >= MIN_RING_AREA}
 
 
 def simplify_country(rings, tolerance):

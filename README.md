@@ -232,11 +232,13 @@ enclaves out. The format is `{"format":2,"source":...,"countries":{"FR":{"polys"
 has a label at 0, −80 and no capital), `point: true` for the seven microstates too small for an outline, drawn as a
 0.08° square around the capital, and a `bbox` whose `east` exceeds 180 for the five countries that span the
 antimeridian (Russia, Fiji, Kiribati, the United States, New Zealand), while the rings themselves stay split at ±180
-as Natural Earth draws them. `frame` is the box to show the country
-in: the largest ring, the capital's ring and every ring within 3° of them, chained, so French Guiana, the Canaries,
-the Azores, the Galápagos, Svalbard, Alaska and Hawaii stay out of their countries' frames while island chains stay
+as Natural Earth draws them. The ring that holds a capital is kept however small, so Tarawa and Abu Dhabi's island
+are drawn; Palestine's capital, the catalog's Al Quds (Jerusalem), is set by hand in East Jerusalem, as the
+populated places have no such capital under Palestine's code. `frame` is the box to show the country in: the
+largest ring, the capital's ring and every ring within 3° of them, chained, so French Guiana, the Canaries, the
+Azores, the Galápagos, Svalbard, Alaska and Hawaii stay out of their countries' frames while island chains stay
 whole. `Geo.kt` carries the same boxes, labels and capitals as Kotlin constants; `GeoTest` checks both against the
-catalog.
+catalog, and that every capital lies on its country's outline.
 
 ## Dependencies
 

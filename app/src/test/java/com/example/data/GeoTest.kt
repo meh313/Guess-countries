@@ -207,6 +207,38 @@ class GeoTest {
         }
     }
 
+    /** How far ([lon], [lat]) lies outside [code]'s outer rings, in degrees: 0 inside one. */
+    private fun offOutline(code: String, lon: Double, lat: Double): Double {
+        if (rings(code).any { inRing(it, lon, lat) }) return 0.0
+        return rings(code).minOf { ring ->
+            ring.indices.minOf { i ->
+                val (ax, ay) = ring[i]
+                val (bx, by) = ring[(i + 1) % ring.size]
+                val (dx, dy) = (bx - ax) to (by - ay)
+                val t = if (dx == 0.0 && dy == 0.0) 0.0 else (((lon - ax) * dx + (lat - ay) * dy) / (dx * dx + dy * dy)).coerceIn(0.0, 1.0)
+                Math.hypot(lon - (ax + t * dx), lat - (ay + t * dy))
+            }
+        }
+    }
+
+    @Test
+    fun everyCapitalIsOnItsCountrysOutline_tarawaAbuDhabiAndAlQudsIncluded() {
+        // A coastal capital may sit off the simplified coast by the 0.05° tolerance and the rounding (Banjul is the
+        // farthest); the ring that holds a capital is kept however small, so Tarawa and Abu Dhabi's island are drawn.
+        catalog.forEach { code ->
+            val (lon, lat) = point(code, "capital") ?: return@forEach
+            val off = offOutline(code, lon, lat)
+            assertTrue("$code capital ($lon, $lat) is $off° off its outline", off <= 0.06)
+        }
+        assertTrue(rings("KI").any { inRing(it, 173.02, 1.34) })
+        assertTrue(rings("AE").any { inRing(it, 54.37, 24.47) })
+        // Palestine's capital is the catalog's Al Quds (Jerusalem): East Jerusalem, not the label point.
+        assertEquals(35.23 to 31.78, point("PS", "capital"))
+        assertEquals(35.23, Geo.of("PS")!!.capitalLon!!, 0.0)
+        assertEquals(31.78, Geo.of("PS")!!.capitalLat!!, 0.0)
+        assertTrue(paints("PS", 35.23, 31.78))
+    }
+
     @Test
     fun pointSizedCountriesAreTheMicrostates_asSquaresAroundTheCapital() {
         val points = catalog.filter { countries.getJSONObject(it).getBoolean("point") }.toSet()
