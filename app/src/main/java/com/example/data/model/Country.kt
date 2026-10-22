@@ -31,7 +31,12 @@ data class Country(
      * How to recognise the flag at a glance, in one short sentence ("Three vertical bands, blue at the pole, then
      * white and red."). Shown on the flashcard back, in the detail sheet and after a miss. Empty until written.
      */
-    val spotIt: String = ""
+    val spotIt: String = "",
+    /**
+     * The year [population] estimates, shown next to it ("7.4M (2025 est.)"): [CountryCatalog.DATA_YEAR], the year
+     * of the UN figures, except for an entry the owner gave a figure from another source and year.
+     */
+    val populationYear: Int = CountryCatalog.DATA_YEAR
 ) {
     /**
      * "Africa · Southern Africa", or just "Antarctica" where the subregion repeats the continent. The screens name the

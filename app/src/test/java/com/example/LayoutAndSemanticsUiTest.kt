@@ -437,6 +437,20 @@ class LayoutAndSemanticsUiTest {
 
     @Test
     @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
+    fun detailSheet_ofPalestine_givesTheYearOfItsOwnEstimate() {
+        rule.onNodeWithTag("search_country_input").performTextInput("Palestine")
+        rule.eventually("the Palestine card") { rule.onNodeWithTag("country_card_ps").assertIsDisplayed() }
+        rule.onNodeWithTag("country_card_ps").performClick()
+        rule.waitForIdle()
+
+        // The owner's figures: the Palestinians living in all of Palestine as it was before 1948, PCBS's estimate for
+        // mid-2025 rather than the UN's for 2024, and the area of that land.
+        rule.onNodeWithText("7.4M (2025 est.)").performScrollTo().assertIsDisplayed()
+        rule.onNodeWithText("27K km²").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
     fun detailSheet_ofLeftHandTrafficCountrySaysLeft() {
         rule.onNodeWithTag("search_country_input").performTextInput("Thailand")
         rule.eventually("the Thailand card") { rule.onNodeWithTag("country_card_th").assertIsDisplayed() }

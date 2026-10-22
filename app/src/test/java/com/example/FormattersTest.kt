@@ -26,9 +26,11 @@ class FormattersTest {
     @Test
     fun population_isShortAndCarriesTheYearOfTheEstimate() {
         val year = CountryCatalog.DATA_YEAR
-        assertEquals("68.3M ($year est.)", formatPopulation(resources, compact(Locale.US), 68_300_000L))
-        assertEquals("5.3M ($year est.)", formatPopulation(resources, compact(Locale.US), 5_300_000L))
-        assertEquals("1.45B ($year est.)", formatPopulation(resources, compact(Locale.US), 1_450_000_000L))
+        assertEquals("68.3M ($year est.)", formatPopulation(resources, compact(Locale.US), 68_300_000L, year))
+        assertEquals("5.3M ($year est.)", formatPopulation(resources, compact(Locale.US), 5_300_000L, year))
+        assertEquals("1.45B ($year est.)", formatPopulation(resources, compact(Locale.US), 1_450_000_000L, year))
+        // A figure for another year says that year.
+        assertEquals("7.4M (2025 est.)", formatPopulation(resources, compact(Locale.US), 7_400_000L, 2025))
     }
 
     @Test
@@ -87,7 +89,7 @@ class FormattersTest {
 
     @Test
     fun numbersFollowTheLocale() {
-        val german = formatPopulation(resources, compact(Locale.GERMANY), 68_300_000L)
+        val german = formatPopulation(resources, compact(Locale.GERMANY), 68_300_000L, CountryCatalog.DATA_YEAR)
         assertTrue("german: $german", german.contains("Mio."))
     }
 

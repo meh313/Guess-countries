@@ -99,7 +99,7 @@
 
     <!-- About: where the facts come from -->
     <string name="about_sources_title">Where the facts come from</string>
-    <string name="about_sources_text">Each country entry was researched against public sources, mostly Wikipedia, national constitutions and official sites, and then checked a second time by two independent reviewers who could only change a fact they could both source. Population figures are the United Nations World Population Prospects 2024 estimates, rounded to three significant figures; the other facts were checked in 2026. The research notes, the audit and the owner\'s decisions are in the repository, and a country\'s detail sheet lists the pages its facts were checked against.</string>
+    <string name="about_sources_text">Each country entry was researched against public sources, mostly Wikipedia, national constitutions and official sites, and then checked a second time by two independent reviewers who could only change a fact they could both source. Population figures are the United Nations World Population Prospects 2024 estimates, rounded to three significant figures, except Palestine\'s: the Palestinian Central Bureau of Statistics\' estimate of the Palestinians living in historic Palestine in mid-2025. The other facts were checked in 2026. The research notes, the audit and the owner\'s decisions are in the repository, and a country\'s detail sheet lists the pages its facts were checked against.</string>
     <string name="about_open_repository">Open the repository</string>
 
     <!-- About: what is in the catalogue -->

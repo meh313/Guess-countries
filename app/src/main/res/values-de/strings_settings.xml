@@ -99,7 +99,7 @@
 
     <!-- About: where the facts come from -->
     <string name="about_sources_title">Woher die Fakten stammen</string>
-    <string name="about_sources_text">Jeder Ländereintrag wurde anhand öffentlicher Quellen recherchiert, vor allem Wikipedia, nationale Verfassungen und offizielle Websites, und dann ein zweites Mal von zwei unabhängigen Prüfern kontrolliert, die einen Fakt nur ändern durften, wenn beide ihn belegen konnten. Die Einwohnerzahlen sind die Schätzungen der World Population Prospects 2024 der Vereinten Nationen, auf drei signifikante Stellen gerundet; die übrigen Fakten wurden 2026 geprüft. Die Rechercheprotokolle, das Audit und die Entscheidungen des Betreibers liegen im Repository, und das Infoblatt eines Landes nennt die Seiten, gegen die seine Fakten geprüft wurden.</string>
+    <string name="about_sources_text">Jeder Ländereintrag wurde anhand öffentlicher Quellen recherchiert, vor allem Wikipedia, nationale Verfassungen und offizielle Websites, und dann ein zweites Mal von zwei unabhängigen Prüfern kontrolliert, die einen Fakt nur ändern durften, wenn beide ihn belegen konnten. Die Einwohnerzahlen sind die Schätzungen der World Population Prospects 2024 der Vereinten Nationen, auf drei signifikante Stellen gerundet, mit Ausnahme Palästinas: Dort ist es die Schätzung des Palästinensischen Zentralbüros für Statistik für die Palästinenser, die Mitte 2025 im historischen Palästina lebten. Die übrigen Fakten wurden 2026 geprüft. Die Rechercheprotokolle, das Audit und die Entscheidungen des Betreibers liegen im Repository, und das Infoblatt eines Landes nennt die Seiten, gegen die seine Fakten geprüft wurden.</string>
     <string name="about_open_repository">Repository öffnen</string>
 
     <!-- About: what is in the catalogue -->

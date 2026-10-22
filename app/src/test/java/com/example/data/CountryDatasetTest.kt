@@ -211,6 +211,8 @@ class CountryDatasetTest {
     fun theCatalogsPopulationsAreForTheStatedYear() {
         // Figures are UN World Population Prospects 2024 estimates; the label shown to users says so.
         assertEquals(2024, CountryCatalog.DATA_YEAR)
+        // The one exception is the owner's: Palestine's figure is PCBS's, for mid-2025, and its label says 2025.
+        assertEquals(listOf("PS"), allCountries.filter { it.populationYear != CountryCatalog.DATA_YEAR }.map { it.code })
     }
 
     @Test
@@ -227,8 +229,8 @@ class CountryDatasetTest {
 
     @Test
     fun populationsAreStoredAtThreeSignificantFigures() {
-        // The compact format shows three significant figures rounded half up, so the catalog stores the UN
-        // estimates at exactly that precision and nothing is lost or re-rounded on screen. (An older rule kept
+        // The compact format shows three significant figures rounded half up, so the catalog stores its
+        // estimates at no more than that precision and nothing is lost or re-rounded on screen. (An older rule kept
         // a fourth digit off rounding ties for a half-even, two-figure display; that rule is gone.)
         allCountries.filter { it.isSovereign }.forEach {
             val digits = it.population.toString().trimEnd('0')

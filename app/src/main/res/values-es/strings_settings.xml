@@ -103,7 +103,7 @@
 
     <!-- About: where the facts come from -->
     <string name="about_sources_title">De dónde salen los datos</string>
-    <string name="about_sources_text">Cada entrada de país se investigó en fuentes públicas, sobre todo Wikipedia, constituciones nacionales y sitios oficiales, y luego la comprobaron por segunda vez dos revisores independientes que solo podían cambiar un dato si ambos lo podían documentar. Las cifras de población son las estimaciones de World Population Prospects 2024 de las Naciones Unidas, redondeadas a tres cifras significativas; los demás datos se comprobaron en 2026. Las notas de investigación, la auditoría y las decisiones del responsable están en el repositorio, y la ficha de cada país lista las páginas con las que se comprobaron sus datos.</string>
+    <string name="about_sources_text">Cada entrada de país se investigó en fuentes públicas, sobre todo Wikipedia, constituciones nacionales y sitios oficiales, y luego la comprobaron por segunda vez dos revisores independientes que solo podían cambiar un dato si ambos lo podían documentar. Las cifras de población son las estimaciones de World Population Prospects 2024 de las Naciones Unidas, redondeadas a tres cifras significativas, salvo la de Palestina: la estimación de la Oficina Central Palestina de Estadística de los palestinos que vivían en la Palestina histórica a mediados de 2025. Los demás datos se comprobaron en 2026. Las notas de investigación, la auditoría y las decisiones del responsable están en el repositorio, y la ficha de cada país lista las páginas con las que se comprobaron sus datos.</string>
     <string name="about_open_repository">Abrir el repositorio</string>
 
     <!-- About: what is in the catalogue -->

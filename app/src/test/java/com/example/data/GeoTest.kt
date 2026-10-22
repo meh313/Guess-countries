@@ -164,7 +164,7 @@ class GeoTest {
     fun palestineIsOneOutline_fromGazaToTheLebaneseBorder_withNoBackgroundLandInIt() {
         // The owner's rule: no other state there. Natural Earth's ISR feature is merged into Palestine and joined to
         // Gaza and the West Bank along their shared lines, so one ring holds them all and no seam is drawn between
-        // them; the Golan Heights stay Syria's (see above).
+        // them; the Golan Heights stay Syria's (see above). The catalog's area, 27,000 km², is this whole land.
         val ring = rings("PS").single()
         val places = mapOf(
             "Gaza" to (34.45 to 31.50), "Hebron" to (35.10 to 31.53), "Ramallah" to (35.20 to 31.90),
