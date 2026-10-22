@@ -8,6 +8,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.shadows.ShadowDialog
+import java.io.File
 
 /**
  * The window drawn into a plain bitmap. This works under native graphics. Compose's captureToImage does
@@ -31,6 +32,34 @@ fun drawLatestDialog(): Bitmap {
     val bitmap = Bitmap.createBitmap(view.width.coerceAtLeast(1), view.height.coerceAtLeast(1), Bitmap.Config.ARGB_8888)
     view.draw(Canvas(bitmap))
     return bitmap
+}
+
+/**
+ * The newest dialog drawn over the activity's window, as the screen shows it. On its own ([drawLatestDialog]) a
+ * sheet's scrim and the corners beside its rounded top lie over transparent pixels; here they lie over the screen
+ * beneath. A dialog smaller than the window is drawn at its centre, where the system puts it.
+ */
+fun AndroidComposeTestRule<*, *>.drawLatestDialogOverWindow(): Bitmap {
+    val bitmap = drawWindow()
+    val dialog = drawLatestDialog()
+    Canvas(bitmap).drawBitmap(dialog, (bitmap.width - dialog.width) / 2f, (bitmap.height - dialog.height) / 2f, null)
+    return bitmap
+}
+
+/**
+ * Writes the bitmap to [file] as a PNG. With [alpha] false the file has no alpha channel (a 24-bit PNG, what Google
+ * Play takes for screenshots and the feature graphic). That needs every pixel opaque already, which is checked:
+ * dropping the channel would otherwise turn a translucent pixel into a dark one.
+ */
+fun Bitmap.writePng(file: File, alpha: Boolean = true) {
+    if (!alpha) {
+        val pixels = IntArray(width * height).also { getPixels(it, 0, width, 0, 0, width, height) }
+        val translucent = pixels.count { Color.alpha(it) != 255 }
+        check(translucent == 0) { "${file.name}: $translucent pixels are not opaque" }
+        setHasAlpha(false)
+    }
+    file.parentFile?.mkdirs()
+    file.outputStream().use { compress(Bitmap.CompressFormat.PNG, 100, it) }
 }
 
 /** The part of the bitmap inside [area], which is in pixels, like a node's bounds. */

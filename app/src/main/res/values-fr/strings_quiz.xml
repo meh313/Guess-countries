@@ -3,7 +3,12 @@
   L’onglet Quiz : l’écran de réglage (`quiz_`), l’écran de question (`quiz_`) et l’écran de score (`result_`). Les
   libellés de mode, de difficulté, de portée et de compétence sont partagés et vivent dans strings.xml.
 -->
-<!-- Les comptes dont la formulation ne change pas avec le nombre, ou qui ne valent jamais 1, restent des chaînes simples. -->
+<!--
+  Un compte est un plurals dès qu’un mot à côté change avec le nombre dans l’une des cinq langues. Les chaînes
+  simples gardent un nombre fixe (QuizEngine.MIN_POOL, la durée du blitz), un compte qu’une seule forme couvre dans
+  chaque langue (les 4 à 10 points faibles) ou un compte auquel aucun mot ne s’accorde (« Question 3 sur 10 »,
+  « Score : 40 »).
+-->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="PluralsCandidate">
     <!-- Réglage : en-tête -->
     <string name="quiz_title">Quiz de géographie &amp; de drapeaux</string>
@@ -44,7 +49,11 @@
 
     <!-- Réglage : bouton de départ -->
     <string name="quiz_start_blitz">Lancer le blitz de %1$d secondes</string>
-    <string name="quiz_start_quiz">Lancer un quiz de %1$d questions</string>
+    <plurals name="quiz_start_quiz">
+        <item quantity="one">Lancer un quiz de %d question</item>
+        <item quantity="other">Lancer un quiz de %d questions</item>
+        <item quantity="many">Lancer un quiz de %d questions</item>
+    </plurals>
     <string name="quiz_needs_countries">Il faut au moins %1$d pays</string>
 
     <!-- Jeu : barre d'état -->
@@ -73,7 +82,11 @@
 
     <!-- Jeu : après la réponse -->
     <string name="quiz_result_timeout">Temps écoulé ! La réponse est %1$s</string>
-    <string name="quiz_result_correct">Correct ! +%1$d points</string>
+    <plurals name="quiz_result_correct">
+        <item quantity="one">Correct ! +%d point</item>
+        <item quantity="other">Correct ! +%d points</item>
+        <item quantity="many">Correct ! +%d points</item>
+    </plurals>
     <string name="quiz_result_wrong">Pas tout à fait. La réponse est %1$s</string>
     <string name="quiz_result_also_counted">Juste : %1$s compte aussi, même si le catalogue le classe sous %2$s</string>
     <string name="quiz_capital_and_country">%1$s, %2$s</string>
@@ -94,17 +107,29 @@
     <!-- Écran de score : en-tête et chiffres -->
     <string name="result_times_up">Temps écoulé !</string>
     <string name="result_complete">Quiz terminé !</string>
-    <string name="result_blitz_score">%1$d justes · %2$d points</string>
+    <string name="result_blitz_score">%1$s · %2$s</string>
+    <plurals name="result_correct_count">
+        <item quantity="one">%d juste</item>
+        <item quantity="other">%d justes</item>
+        <item quantity="many">%d justes</item>
+    </plurals>
     <plurals name="result_blitz_flags">
         <item quantity="one">%1$d drapeau en %2$d secondes</item>
         <item quantity="other">%1$d drapeaux en %2$d secondes</item>
         <item quantity="many">%1$d drapeaux en %2$d secondes</item>
     </plurals>
-    <string name="result_correct_ratio">%1$d / %2$d justes</string>
-    <string name="result_points">%1$d points</string>
+    <string name="result_correct_ratio">Réponses justes : %1$d / %2$d</string>
+    <plurals name="result_points">
+        <item quantity="one">%d point</item>
+        <item quantity="other">%d points</item>
+        <item quantity="many">%d points</item>
+    </plurals>
     <string name="result_answers">Réponses : %1$s</string>
-    <string name="result_streak_already_counted">Série de %1$d jours, déjà comptée aujourd\'hui</string>
-    <string name="result_streak_days">Série de %1$d jours</string>
+    <plurals name="result_streak_already_counted">
+        <item quantity="one">Série de %d jour, déjà comptée aujourd\'hui</item>
+        <item quantity="other">Série de %d jours, déjà comptée aujourd\'hui</item>
+        <item quantity="many">Série de %d jours, déjà comptée aujourd\'hui</item>
+    </plurals>
 
     <!-- Écran de score : les erreurs -->
     <string name="result_perfect">Toutes les réponses sont justes !</string>

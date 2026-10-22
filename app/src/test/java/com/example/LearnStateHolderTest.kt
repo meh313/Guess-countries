@@ -11,6 +11,7 @@ import com.example.data.model.FlagLookAlikes
 import com.example.data.settings.InMemoryUserSettings
 import com.example.learn.LearnSession
 import com.example.progress.Evidence
+import com.example.progress.GoalHistory
 import com.example.progress.PracticeStreak
 import com.example.progress.Skill
 import com.example.progress.SkillMastery
@@ -62,7 +63,7 @@ class LearnStateHolderTest {
     private inner class World(countries: List<Country> = sovereign) {
         val repository = CountryRepository(db.userProgressDao(), countries)
         val settings = InMemoryUserSettings()
-        val progress = ProgressStateHolder(repository, scope, utc, MutableStateFlow(PracticeStreak.DEFAULT_GOAL))
+        val progress = ProgressStateHolder(repository, scope, utc, MutableStateFlow(GoalHistory(PracticeStreak.DEFAULT_GOAL)))
         val quiz = QuizStateHolder(repository, progress, settings, scope, { now }, utc, Random(7), null)
 
         fun learn(savedState: SavedStateHandle? = null, focus: String = LearnStateHolder.NO_FOCUS) =
@@ -173,8 +174,8 @@ class LearnStateHolderTest {
     fun start_skipsCountriesAlreadySeen_andPutsTheFocusContinentFirst() {
         val world = World()
         val europe = sovereign.filter { it.continent == "Europe" }
-        runBlocking { db.userProgressDao().recordAnswer(europe[0].code, Skill.FLAG, true, Evidence.FULL, now) }
-        runBlocking { db.userProgressDao().recordAnswer(europe[2].code, Skill.FLAG, false, Evidence.LIGHT, now) }
+        runBlocking { db.userProgressDao().recordAnswer(europe[0].code, Skill.FLAG, true, Evidence.FULL, now, utc()) }
+        runBlocking { db.userProgressDao().recordAnswer(europe[2].code, Skill.FLAG, false, Evidence.LIGHT, now, utc()) }
         world.awaitSkills("the two reviewed rows") { it.containsKey(europe[0].code) && it.containsKey(europe[2].code) }
 
         val holder = world.learn(focus = "Europe")
@@ -187,21 +188,17 @@ class LearnStateHolderTest {
     /** Learn opened first thing after the process came back: the states are a placeholder until the database answers. */
     @Test
     fun start_beforeTheSkillStatesArrived_readsThemFirst_andNeverPicksASeenCountry() {
-        firstFive.forEach { runBlocking { db.userProgressDao().recordAnswer(it, Skill.FLAG, true, Evidence.FULL, now) } }
+        firstFive.forEach { runBlocking { db.userProgressDao().recordAnswer(it, Skill.FLAG, true, Evidence.FULL, now, utc()) } }
         val world = World()
         val holder = world.learn()
         assertFalse("the states are still the placeholder", world.progress.skillsLoaded.value)
 
         holder.start()
 
-        // The database may answer between the check above and the start: then the holder planned at once from the
-        // real states. Otherwise it is reading them first, with nothing planned yet. Either way the five seen
-        // countries are never picked.
-        if (holder.planning.value) {
-            assertNull("nothing is planned until the states are in", holder.session.value)
-        } else {
-            assertTrue("planned at once only once the states were in", world.progress.skillsLoaded.value)
-        }
+        // By now the holder planned at once (the database answered between the check above and the start), is still
+        // reading the states, or has read them and planned on another thread: which one depends on the runner. What
+        // never happens is a session planned from the placeholder, the catalog's first five, the ones already seen.
+        holder.session.value?.let { early -> assertTrue("planned from the placeholder: ${early.codes}", early.codes.none { it in firstFive }) }
         holder.settle()
         val codes = holder.session.value!!.codes
         assertEquals(sovereign.drop(5).take(5).map { it.code }, codes)
@@ -224,7 +221,7 @@ class LearnStateHolderTest {
     @Test
     fun start_withEveryFlagSeen_leavesNoSession() {
         val world = World(sovereign.take(3))
-        sovereign.take(3).forEach { runBlocking { db.userProgressDao().recordAnswer(it.code, Skill.FLAG, true, Evidence.FULL, now) } }
+        sovereign.take(3).forEach { runBlocking { db.userProgressDao().recordAnswer(it.code, Skill.FLAG, true, Evidence.FULL, now, utc()) } }
         world.awaitSkills("three reviewed rows") { states -> sovereign.take(3).all { states.containsKey(it.code) } }
 
         val holder = world.learn()
@@ -314,6 +311,66 @@ class LearnStateHolderTest {
         assertFalse("the answers are full evidence, not light", quiz.questions.any { it.light })
         assertEquals("a hand-picked scope spends no new-item allowance", 0, world.settings.newItemsToday)
         assertTrue(quiz.questions.all { it.options.size == 4 })
+    }
+
+    @Test
+    fun theCardsShown_countAsNewToday_withoutSpendingTheQuizzesAllowance() {
+        val world = World()
+        // Yesterday's counts: the first card starts the day again.
+        world.settings.newItemsDay = "2000-01-01"
+        world.settings.newItemsToday = 9
+        world.settings.learntToday = 4
+        val holder = world.learn()
+        holder.startNow()
+        assertEquals(1, world.settings.learntToday)
+        assertEquals(QuizStateHolder.dayStamp(world.repository.now(), utc()), world.settings.newItemsDay)
+
+        repeat(4) { holder.next() }
+        // Going back over a card shown already counts nothing more.
+        holder.previous()
+        holder.next()
+        assertEquals(5, world.settings.learntToday)
+        assertEquals("the quizzes' allowance is untouched", 0, world.settings.newItemsToday)
+        assertEquals("the Today card's figure", 5, world.quiz.newItemsToday.value)
+
+        // A quiz that introduces countries adds its own, from the full allowance.
+        holder.startQuiz()
+        world.quiz.end()
+        world.quiz.start(QuizMode.FLAG_NAME, QuizEngine.GLOBAL, com.example.quiz.QuizDifficulty.NORMAL)
+        val introduced = world.settings.newItemsToday
+        assertTrue("some new countries: $introduced", introduced in 1..QuizStateHolder.NEW_PER_DAY)
+        assertEquals(5 + introduced, world.quiz.newItemsToday.value)
+    }
+
+    @Test
+    fun retryingTheLearnQuiz_asksTheSameElevenQuestions_theSecondPassAndTheMapQuestionIncluded() {
+        val world = World()
+        val holder = world.learn()
+        holder.startNow()
+        repeat(4) { holder.next() }
+        holder.startQuiz()
+        val original = world.quiz.session.value!!.questions
+        // Two misses, so the quiz asks them again at the end before it finishes.
+        var n = 0
+        while (world.quiz.session.value?.isFinished == false) {
+            val q = world.quiz.session.value!!.current
+            world.quiz.answer(if (n < 2) (q.correctAnswerIndex + 1) % q.options.size else q.correctAnswerIndex)
+            world.quiz.next()
+            check(++n <= 15) { "the quiz never finished" }
+        }
+        val finished = world.quiz.session.value!!
+        assertEquals("eleven questions and two asked again", 13, finished.questions.size)
+
+        world.quiz.retry()
+
+        val again = world.quiz.session.value!!
+        assertEquals(QuizEngine.LEARN, again.scope)
+        assertEquals(original.map { it.targetCountry.code }, again.questions.map { it.targetCountry.code })
+        assertEquals(original.map { it.mode }, again.questions.map { it.mode })
+        assertEquals(QuizMode.LOCATE, again.modeOf(again.questions.last()))
+        again.questions.forEachIndexed { i, q -> assertEquals(original[i].options.toSet(), q.options.toSet()) }
+        assertTrue("a retry is light evidence", again.questions.all { it.light })
+        assertFalse(again.reasked)
     }
 
     @Test

@@ -43,7 +43,8 @@ jobs:
       # The generated assets must match their sources, or the app ships stale data: the per-country source pages
       # (export-sources.py), the third-party notices the About screen shows (export-notices.py) and the look-alike
       # flags (gen-lookalikes.py, from the flag images). The world map comes from a download, so its check only
-      # verifies the committed asset (format, every catalog code, Geo.kt, Neighbours.kt).
+      # verifies the committed asset (format, every catalog code, Geo.kt, Neighbours.kt). The store listing's
+      # screenshots, feature graphic, icon and texts must be what the Play Console takes (store-check.py).
       - name: Check the generated assets
         run: |
           python3 tools/export-sources.py --check
@@ -52,17 +53,18 @@ jobs:
           python3 tools/gen-lookalikes.py --check
           python3 tools/gen-sounds.py --check
           python3 tools/strings-audit.py --check
+          python3 tools/store-check.py --check
 
       - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6
 
-      # Lint, the unit tests (Robolectric, Compose UI) and both APKs. Named tasks rather than `build`, which
-      # would run the same unit tests a second time for the release variant (they are not minified, so that
-      # second run adds nothing). The release APK is unsigned here: signing only happens when KEYSTORE_PATH,
-      # STORE_PASSWORD and KEY_PASSWORD are set.
+      # Lint, the unit tests (Robolectric, Compose UI), both APKs and the instrumented test APK. Named tasks rather
+      # than `build`, which would run the same unit tests a second time for the release variant (they are not
+      # minified, so that second run adds nothing). assembleDebugAndroidTest compiles SmokeTest without running it
+      # (emulator.yml runs it on main), so a pull request that breaks it fails here. The release APK is unsigned:
+      # signing only happens when KEYSTORE_PATH, STORE_PASSWORD and KEY_PASSWORD are set. The version code is the one
+      # app/build.gradle.kts derives from versionName, as in a release.
       - name: Build and test
-        run: ./gradlew lintDebug testDebugUnitTest assembleDebug assembleRelease
-        env:
-          VERSION_CODE: ${{ github.run_number }}
+        run: ./gradlew lintDebug testDebugUnitTest assembleDebug assembleRelease assembleDebugAndroidTest
 
       - name: Upload reports
         if: failure()

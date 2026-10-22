@@ -82,6 +82,8 @@ import com.example.ui.components.TellApartLine
 import com.example.ui.components.TodayCard
 import com.example.ui.components.readingWidth
 import com.example.ui.components.getContinentColor
+import com.example.ui.components.formatCount
+import com.example.ui.continentInSentence
 import com.example.ui.continentLabel
 import com.example.ui.modeTitle
 import com.example.ui.scopeLabel
@@ -100,6 +102,8 @@ fun StatsScreen(
     onOpenFlashcards: () -> Unit = {},
     /** Opens the Learn screen (five new countries), from the Today card. */
     onLearn: () -> Unit = {},
+    /** Opens the Quiz tab, where the map review or the quiz the Today card offers is played. */
+    onOpenQuiz: () -> Unit = {},
     /** Opens the result screen of a logged quiz, once [CountryViewModel.openReview] has been asked for it. */
     onOpenReview: (quizId: Long) -> Unit = {}
 ) {
@@ -191,7 +195,7 @@ fun StatsScreen(
         }
 
         if (todayCardVisible) {
-            item { TodayCard(viewModel = viewModel, onOpenFlashcards = onOpenFlashcards, onLearn = onLearn) }
+            item { TodayCard(viewModel = viewModel, onOpenFlashcards = onOpenFlashcards, onLearn = onLearn, onOpenQuiz = onOpenQuiz) }
         }
 
         item { StreakCard(streak) }
@@ -225,7 +229,7 @@ fun StatsScreen(
             TileRow { tile ->
                 StatBadge(
                     title = stringResource(R.string.stats_learning),
-                    value = "$learningCount",
+                    value = formatCount(learningCount),
                     icon = Icons.Default.School,
                     iconColor = Color(0xFF2980B9),
                     modifier = tile.testTag("stats_learning")
@@ -252,7 +256,7 @@ fun StatsScreen(
                     value = when {
                         dueLocations > 0 -> stringResource(R.string.stats_due_three, dueCount, dueCapitals, dueLocations)
                         dueCapitals > 0 -> stringResource(R.string.stats_due_both, dueCount, dueCapitals)
-                        else -> "$dueCount"
+                        else -> formatCount(dueCount)
                     },
                     icon = Icons.Default.Today,
                     iconColor = Color(0xFF16A085),
@@ -270,10 +274,10 @@ fun StatsScreen(
                 Spacer(modifier = Modifier.width(10.dp))
                 StatBadge(
                     title = stringResource(R.string.stats_saved),
-                    value = "$bookmarkedCount",
+                    value = formatCount(bookmarkedCount),
                     icon = Icons.Default.Bookmark,
                     iconColor = MaterialTheme.colorScheme.primary,
-                    modifier = tile
+                    modifier = tile.testTag("stats_saved")
                 )
             }
         }
@@ -282,7 +286,7 @@ fun StatsScreen(
             TileRow { tile ->
                 StatBadge(
                     title = stringResource(R.string.stats_quizzes_finished),
-                    value = "$totalQuizzes",
+                    value = formatCount(totalQuizzes),
                     icon = Icons.Default.Public,
                     iconColor = Color(0xFF27AE60),
                     modifier = tile.testTag("stats_quizzes")
@@ -290,7 +294,7 @@ fun StatsScreen(
                 Spacer(modifier = Modifier.width(10.dp))
                 StatBadge(
                     title = stringResource(R.string.stats_highest_score),
-                    value = stringResource(R.string.stats_points, maxScore),
+                    value = pluralStringResource(R.plurals.stats_points, maxScore, maxScore),
                     icon = Icons.Default.EmojiEvents,
                     iconColor = Color(0xFFE67E22),
                     modifier = tile.testTag("stats_highest"),
@@ -305,7 +309,7 @@ fun StatsScreen(
                 Text(
                     text = stringResource(
                         R.string.stats_forecast,
-                        stringResource(R.string.stats_forecast_tomorrow, forecast.tomorrow),
+                        pluralStringResource(R.plurals.stats_forecast_tomorrow, forecast.tomorrow, forecast.tomorrow),
                         stringResource(R.string.stats_forecast_week, forecast.week)
                     ),
                     style = MaterialTheme.typography.bodyMedium,
@@ -336,7 +340,7 @@ fun StatsScreen(
             val continentColor = getContinentColor(continent)
             val continentName = continentLabel(continent)
 
-            val openLabel = stringResource(R.string.stats_continent_open, continentName)
+            val openLabel = stringResource(R.string.stats_continent_open, continentInSentence(continent))
             Card(
                 onClick = { onOpenExplore(continent) },
                 modifier = Modifier
@@ -536,13 +540,18 @@ private fun LogRow(entry: QuizScoreEntity, dateFormat: DateFormat, opens: Boolea
         ) {
             val correct = entry.correct
             val asked = entry.questionCount
+            val points = pluralStringResource(R.plurals.stats_points, entry.score, entry.score)
             Text(
                 text = when {
                     entry.mode == StudySession.MODE -> stringResource(R.string.study_summary_remembered, correct ?: 0, asked ?: 0)
-                    entry.mode == QuizMode.BLITZ.name -> stringResource(R.string.stats_log_blitz, correct ?: entry.total, entry.score)
+                    // "14 correct · 340 pts"
+                    entry.mode == QuizMode.BLITZ.name -> {
+                        val right = correct ?: entry.total
+                        stringResource(R.string.stats_log_blitz, pluralStringResource(R.plurals.result_correct_count, right, right), points)
+                    }
                     // "8/10 · 150 pts"; rows saved before the counts were recorded show the points alone.
-                    correct != null && asked != null -> stringResource(R.string.stats_log_result, correct, asked, entry.score)
-                    else -> stringResource(R.string.stats_points, entry.score)
+                    correct != null && asked != null -> stringResource(R.string.stats_log_result, correct, asked, points)
+                    else -> points
                 },
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,

@@ -2,6 +2,7 @@ package com.example
 
 import android.app.UiModeManager
 import android.content.Intent
+import android.os.LocaleList
 import androidx.activity.compose.setContent
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertHasClickAction
@@ -21,6 +22,7 @@ import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.core.app.ApplicationProvider
 import com.example.data.local.AppDatabase
@@ -37,6 +39,7 @@ import com.example.support.openTab
 import com.example.ui.screens.PRIVACY_URL
 import com.example.ui.screens.SettingsScreen
 import com.example.ui.viewmodel.CountryViewModel
+import java.util.TimeZone
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -48,6 +51,7 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
@@ -98,6 +102,54 @@ class SettingsAndAboutUiTest {
         rule.onNodeWithTag("settings_language_system").performClick()
         rule.waitForIdle()
         assertEquals("", viewModel.language.value)
+        assertTrue(manager.applicationLocales.isEmpty)
+    }
+
+    @Test
+    fun aLanguageTheSystemHasApplied_isReportedByTheRecreatedActivity_soTheWidgetFollows() {
+        val english = rule.activity.resources.configuration.locales.toLanguageTags()
+        assertEquals("the screens' locales, heard as the activity came to the front", english, viewModel.localesInEffect)
+        openSettings()
+        rule.onNodeWithTag("settings_language_fr").performScrollTo().performClick()
+        rule.waitForIdle()
+        // The choice is with the system, which has not applied it yet: the screens are still in English.
+        assertEquals(english, viewModel.localesInEffect)
+
+        // The system applies French and recreates the activity, as Android 13 and newer do.
+        RuntimeEnvironment.setQualifiers("+fr-rFR")
+        rule.activityRule.scenario.recreate()
+        rule.waitForIdle()
+
+        val french = rule.activity.resources.configuration.locales.toLanguageTags()
+        assertTrue(french, french.startsWith("fr"))
+        assertEquals(french, viewModel.localesInEffect)
+    }
+
+    @Test
+    fun aLanguagePickedInThePhonesSettings_showsInTheRowAndGoesIntoTheExport() {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val manager = context.getSystemService(android.app.LocaleManager::class.java)
+
+        // Android's per-app language screen, while the app waits in the background.
+        rule.activityRule.scenario.moveToState(Lifecycle.State.CREATED)
+        manager.applicationLocales = LocaleList.forLanguageTags("de")
+        rule.activityRule.scenario.moveToState(Lifecycle.State.RESUMED)
+        rule.waitForIdle()
+
+        assertEquals("de", viewModel.language.value)
+        assertEquals("de", PrefsUserSettings(context).language)
+        openSettings()
+        rule.onNodeWithTag("settings_language_de").performScrollTo().assertIsSelected()
+        rule.onNodeWithTag("settings_language_system").assertIsNotSelected()
+        assertTrue(runBlocking { viewModel.exportJson() }.contains("\"language\":\"de\""))
+
+        // Back to "System default" there: the System chip again, and the system's copy left alone.
+        rule.activityRule.scenario.moveToState(Lifecycle.State.CREATED)
+        manager.applicationLocales = LocaleList.getEmptyLocaleList()
+        rule.activityRule.scenario.moveToState(Lifecycle.State.RESUMED)
+        rule.waitForIdle()
+        assertEquals("", viewModel.language.value)
+        rule.onNodeWithTag("settings_language_system").performScrollTo().assertIsSelected()
         assertTrue(manager.applicationLocales.isEmpty)
     }
 
@@ -205,7 +257,7 @@ class SettingsAndAboutUiTest {
         state.value = Speech.State.READY
         rule.waitForIdle()
         rule.onNodeWithTag("settings_install_voice_btn").assertDoesNotExist()
-        rule.onNodeWithText("Ready. The speaker on a country's detail sheet and on the flashcards reads the country aloud.").assertExists()
+        rule.onNodeWithText("Ready. The speaker on a country's detail sheet and on the flashcards reads the country aloud in English.").assertExists()
 
         state.value = Speech.State.UNAVAILABLE
         rule.waitForIdle()
@@ -280,7 +332,7 @@ class SettingsAndAboutUiTest {
     @Test
     fun resetProgress_asksFirst_thenForgetsEverythingButTheSettings() {
         runBlocking {
-            dao.recordAnswer("FR", Skill.FLAG, true, Evidence.FULL, 1_000L)
+            dao.recordAnswer("FR", Skill.FLAG, true, Evidence.FULL, 1_000L, TimeZone.getDefault())
             dao.toggleFavorite("DE", 1_000L)
             dao.insertQuizScore(QuizScoreEntity(mode = "FLAG_NAME", score = 10, total = 190, continentFilter = "Global", timestamp = System.currentTimeMillis()))
         }
@@ -327,13 +379,18 @@ class SettingsAndAboutUiTest {
         rule.eventually("the notices") {
             rule.onNodeWithTag("about_notices").assert(hasText("flag-icons 7.5.0", substring = true))
         }
-        // The player's notices: each work with its use, licence and copyright line, and no developer instructions.
+        // The player's notices: each work with its use, licence and copyright line, and no developer instructions,
+        // files or tools.
         rule.onNodeWithTag("about_notices")
             .assert(hasText("Used for: the flag images", substring = true))
+            .assert(hasText("Used for: the world map", substring = true))
+            .assert(hasText("adjusted to the app's countries", substring = true))
             .assert(hasText("Licence: MIT License", substring = true))
             .assert(hasText("Copyright (c) 2013 Panayiotis Lipiridis", substring = true))
             .assert(hasText("Apache License 2.0", substring = true))
             .assert(!hasText("render-flags", substring = true))
+            .assert(!hasText("tools/", substring = true))
+            .assert(!hasText("world.json", substring = true))
             .assert(!hasText("```", substring = true))
         rule.onNodeWithTag("about_repository_btn").assertExists()
 
@@ -383,10 +440,12 @@ class SettingsAndAboutUiTest {
         rule.onNodeWithTag("sheet_sources").assertExists()
         rule.onNodeWithText(urls.first()).performScrollTo().assertIsDisplayed()
 
+        // Germany is in the first catalog and has had no fix with a source since.
+        assertTrue(viewModel.sources.value!!.of("DE").isEmpty())
         viewModel.selectCountry(null)
         rule.waitForIdle()
-        rule.onNodeWithTag("explore_grid").performScrollToNode(hasTestTag("country_card_fr"))
-        rule.onNodeWithTag("country_card_fr").performClick()
+        rule.onNodeWithTag("explore_grid").performScrollToNode(hasTestTag("country_card_de"))
+        rule.onNodeWithTag("country_card_de").performClick()
         rule.waitForIdle()
         rule.onNodeWithTag("sheet_sources_btn").assertDoesNotExist()
     }

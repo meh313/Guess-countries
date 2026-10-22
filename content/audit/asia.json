@@ -398,6 +398,33 @@
    ],
    "confidence": "high",
    "from": "content-review"
+  },
+  {
+   "code": "PS",
+   "field": "population",
+   "current": "5500000",
+   "value": "7400000",
+   "reason": "Owner decision of 22 October 2026: Palestine's population is the Palestinians living in all of Palestine as it was before 1948, the land its area and the map count, an exception to the rule that every population is the UN WPP 2024 mid-2024 estimate (the UN's State of Palestine row, 5,495,443, the 5,500,000 shipped before, covers the West Bank and the Gaza Strip only). The Palestinian Central Bureau of Statistics (PCBS), in its press release for the 77th commemoration of the Nakba (May 2025), puts them at approximately 7.4 million in historic Palestine by mid-2025, so the figure is 7,400,000 and its year is 2025: the entry sets populationYear = 2025, so the card reads 2025 est., not 2024 est. pcbs.gov.ps could not be opened from the build machine (its certificate chain failed verification); the sentence was read in WAFA's report of the release, which quotes it.",
+   "sources": [
+    "https://www.pcbs.gov.ps/portals/_pcbs/PressRelease/Press_En_Nakba772025E.pdf",
+    "https://english.wafa.ps/Pages/Details/157272"
+   ],
+   "confidence": "high",
+   "from": "owner"
+  },
+  {
+   "code": "PS",
+   "field": "areaSqKm",
+   "current": "6020.0",
+   "value": "27000.0",
+   "reason": "Owner decision of 22 October 2026: Palestine's area is all of Palestine as it was before 1948, between the Jordan River and the Mediterranean, the land the map draws as Palestine, not the West Bank and the Gaza Strip (5,655 + 365 = 6,020 km2) of the seed's earlier rule. The Palestinian Central Bureau of Statistics (PCBS) gives the area of historical Palestine as about 27,000 km2 in its Nakba press releases of 2016, 2017 and 2018, so the figure is 27,000. pcbs.gov.ps could not be opened from the build machine (its certificate chain failed verification); the figure was read in search results quoting those releases and agrees with a reprint of the PCBS release of May 2023 (27 thousand km2).",
+   "sources": [
+    "https://www.pcbs.gov.ps/portals/_pcbs/PressRelease/Press_En_Nakba-e-2018.docx",
+    "https://www.pcbs.gov.ps/portals/_pcbs/PressRelease/Press_En_11-5-2017-Nakba-en.pdf",
+    "https://www.pcbs.gov.ps/portals/_pcbs/PressRelease/Press_En_Nakba2016E.pdf"
+   ],
+   "confidence": "medium",
+   "from": "owner"
   }
  ],
  "ownerDecisions": [],
@@ -477,7 +504,8 @@
    "sources": [
     "https://www.worldometers.info/world-population/state-of-palestine-population/"
    ],
-   "from": "as07"
+   "from": "as07",
+   "resolved": "By the owner's decision of 22 October 2026 the figure is no longer the UN WPP 2024 one: Palestine's population is the 7.4 million Palestinians in historic Palestine that PCBS gives for mid-2025, so this rounding question no longer arises. See the owner fix on PS population."
   },
   {
    "code": "QA",

@@ -131,6 +131,16 @@ class CountryDatasetTest {
     }
 
     @Test
+    fun theWorldWarsTakeNoArticle() {
+        // A house-style pass once turned "in the Second World War" into "in the World War II" (Eswatini). The article
+        // is right only before a noun the name describes, as in "the World War II siege".
+        val article = Regex("""\bthe World War II?\b(?!\s+[a-z])""")
+        allCountries.forEach { c ->
+            listOf(c.flagDescription, c.funFact, c.spotIt).forEach { assertTrue("${c.code}: '$it'", article.find(it) == null) }
+        }
+    }
+
+    @Test
     fun funFactsAndFlagDescriptionsFitTheirCards_andDoNotAge() {
         val volatile = Regex("\\b(currently|nowadays|these days|this year|recently|fastest|most visited)\\b", RegexOption.IGNORE_CASE)
         allCountries.forEach {
@@ -187,6 +197,12 @@ class CountryDatasetTest {
     }
 
     @Test
+    fun francesPopulationIsTheUnEstimateForFrance() {
+        // The first catalog had 68.8M, about 3% above the UN WPP 2024 figure for 2024 (66,548,530).
+        assertEquals(66_500_000L, country("FR").population)
+    }
+
+    @Test
     fun onlyAntarcticaHasNoCapital() {
         assertEquals(listOf("AQ"), allCountries.filter { it.capital.startsWith("None") }.map { it.code })
     }
@@ -195,19 +211,26 @@ class CountryDatasetTest {
     fun theCatalogsPopulationsAreForTheStatedYear() {
         // Figures are UN World Population Prospects 2024 estimates; the label shown to users says so.
         assertEquals(2024, CountryCatalog.DATA_YEAR)
+        // The one exception is the owner's: Palestine's figure is PCBS's, for mid-2025, and its label says 2025.
+        assertEquals(listOf("PS"), allCountries.filter { it.populationYear != CountryCatalog.DATA_YEAR }.map { it.code })
     }
 
     @Test
     fun regionLabelNeverRepeatsAWord() {
-        assertEquals("Antarctica", allCountries.single { it.code == "AQ" }.regionLabel)
-        assertEquals("Africa · Southern Africa", allCountries.single { it.code == "ZA" }.regionLabel)
-        allCountries.forEach { assertTrue(it.regionLabel, it.regionLabel.split(" · ").distinct().size == it.regionLabel.split(" · ").size) }
+        val antarctica = allCountries.single { it.code == "AQ" }
+        val southAfrica = allCountries.single { it.code == "ZA" }
+        assertEquals("Antarctica", antarctica.regionLabel())
+        assertEquals("Africa · Southern Africa", southAfrica.regionLabel())
+        // The screens name the continent in their language; the subregion stays English and Antarctica's is not repeated.
+        assertEquals("Afrique · Southern Africa", southAfrica.regionLabel("Afrique"))
+        assertEquals("Antarktis", antarctica.regionLabel("Antarktis"))
+        allCountries.forEach { val label = it.regionLabel(); assertTrue(label, label.split(" · ").distinct().size == label.split(" · ").size) }
     }
 
     @Test
     fun populationsAreStoredAtThreeSignificantFigures() {
-        // The compact format shows three significant figures rounded half up, so the catalog stores the UN
-        // estimates at exactly that precision and nothing is lost or re-rounded on screen. (An older rule kept
+        // The compact format shows three significant figures rounded half up, so the catalog stores its
+        // estimates at no more than that precision and nothing is lost or re-rounded on screen. (An older rule kept
         // a fourth digit off rounding ties for a half-even, two-figure display; that rule is gone.)
         allCountries.filter { it.isSovereign }.forEach {
             val digits = it.population.toString().trimEnd('0')

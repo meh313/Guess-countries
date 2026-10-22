@@ -395,7 +395,7 @@ class QuizEngineTest {
     @Test
     fun capitalQuestions_aboutACountryWithoutDecoys_neverOfferAnyDecoy() {
         val everyDecoy = DecoyCities.byCode.values.flatten().toSet()
-        for (code in listOf("FR", "DE", "JP", "EG", "BO")) {
+        for (code in listOf("FR", "DE", "JP", "EG", "BO", "BJ")) {
             assertTrue(code, DecoyCities.of(code).isEmpty())
             for (seed in 1..20) {
                 val q = capitalQuestionAbout(code, seed)
@@ -407,7 +407,8 @@ class QuizEngineTest {
 
     @Test
     fun decoysNeverCollideWithACapital_soEveryCapitalQuestionOverTheCatalogStaysUnambiguous() {
-        val capitals = allCountries.flatMap { listOf(it.capital, it.quizCapital) }.toSet()
+        // Each city of a capital text counts, not only the whole text: Benin's names Cotonou as its seat of government.
+        val capitals = allCountries.flatMap { it.capital.split(',', '(', ')').map(String::trim) + it.quizCapital }.toSet()
         DecoyCities.byCode.values.flatten().forEach { decoy -> assertTrue("$decoy is a capital", decoy !in capitals) }
         for (seed in 1..10) {
             QuizEngine.generate(sovereign, QuizMode.CAPITAL, Random(seed), order = { it }).forEach { q ->
@@ -669,6 +670,28 @@ class QuizEngineTest {
         for (seed in 1..20) {
             val q = questionAbout("IE", QuizDifficulty.HARD, seed, QuizMode.PICK_FLAG)
             assertEquals("seed=$seed ${q.options}", similarCodes, q.options.filter { it != "IE" }.toSet())
+        }
+    }
+
+    @Test
+    fun indonesiaAndMonaco_whoseArtworkIsTheSame_areNeverOfferedForEachOther_butStayLookAlikes() {
+        assertEquals(mapOf("ID" to "MC", "MC" to "ID"), QuizEngine.SAME_ARTWORK)
+        for ((code, twin) in QuizEngine.SAME_ARTWORK) {
+            assertTrue("$code and $twin stay look-alikes for study", twin in FlagLookAlikes.of(code))
+            // Every mode that shows the flag and asks for the country, or names it and asks for the flag.
+            for (mode in QuizMode.entries.filter { it.usesLookAlikes }) {
+                for (difficulty in QuizDifficulty.entries) {
+                    for (seed in 1..30) {
+                        val q = questionAbout(code, difficulty, seed, mode)
+                        val where = "$code mode=$mode $difficulty seed=$seed ${q.optionCodes}"
+                        assertTrue(where, twin !in q.optionCodes)
+                        assertEquals(where, 4, q.options.distinct().size)
+                    }
+                }
+            }
+            // Hard still fills with the look-alikes the artwork does tell apart.
+            val others = FlagLookAlikes.of(code).filter { it != twin }.take(3).toSet()
+            assertEquals(others, questionAbout(code, QuizDifficulty.HARD, 1, QuizMode.PICK_FLAG).optionCodes.filter { it != code }.toSet())
         }
     }
 

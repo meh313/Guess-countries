@@ -10,6 +10,7 @@ import com.example.data.model.CountryRepository
 import com.example.data.model.WeakSpots
 import com.example.progress.DueForecast
 import com.example.progress.Evidence
+import com.example.progress.GoalHistory
 import com.example.progress.Grade
 import com.example.progress.PracticeStreak
 import com.example.progress.Skill
@@ -46,8 +47,8 @@ class ProgressStateHolder(
     private val scope: CoroutineScope,
     /** The time zone whose midnights end a practice day. */
     private val zone: () -> TimeZone,
-    /** How many items make a day count for the streak; the streak is worked out again when it changes. */
-    private val dailyGoal: StateFlow<Int>,
+    /** How many items make a day count for the streak, and the goals it replaced; the streak is worked out again when it changes. */
+    private val goals: StateFlow<GoalHistory>,
     /** Where a failed write is reported; shared with the quiz and study holders, which write too. */
     val writeErrors: WriteErrors = WriteErrors()
 ) {
@@ -91,9 +92,10 @@ class ProgressStateHolder(
     // Declared before the plan: its initializer reads it.
 
     /**
-     * What the quiz setup needs: the skill states, which countries are weak or due in each skill and what the quizzes
-     * of the last [QuestionPicker.RECENT_WINDOW_MILLIS] asked about. One flow, so a screen that collects it keeps
-     * every input current; the recent window is read again on every [refreshClock], since its start moves with the time.
+     * What the quiz setup needs: the skill states, which countries are weak or due today in each skill (the continent
+     * skill has no reviews: [Skill.hasReviews]) and what the quizzes of the last [QuestionPicker.RECENT_WINDOW_MILLIS]
+     * asked about. One flow, so a screen that collects it keeps every input current; the recent window is read again
+     * on every [refreshClock], since its start moves with the time.
      */
     @OptIn(ExperimentalCoroutinesApi::class)
     val quizPlan: StateFlow<QuizPlan> = combine(
@@ -106,7 +108,7 @@ class ProgressStateHolder(
             skills = bySkill,
             recent = recent,
             weak = Skill.entries.associateWith { WeakSpots.select(bySkill[it].orEmpty(), repository.allCountries, now) },
-            due = Skill.entries.associateWith { WeakSpots.due(bySkill[it].orEmpty(), repository.allCountries, now) }
+            due = Skill.REVIEWED.associateWith { WeakSpots.due(bySkill[it].orEmpty(), repository.allCountries, now, zone()) }
         )
     }
         // Two passes over every skill state, on every write: keep them off the main thread.
@@ -140,10 +142,10 @@ class ProgressStateHolder(
 
     /**
      * The daily practice streak, worked out from when each quiz or study session finished and how big it was,
-     * against the daily goal; see [refreshClock] for the day rolling over.
+     * each day against the goal in force on it; see [refreshClock] for the day rolling over.
      */
-    val streak: StateFlow<PracticeStreak.Summary> = combine(quizHistory, dailyGoal, refresh) { history, goal, _ ->
-        PracticeStreak.summary(history.map { it.toPracticeSession() }, goal, repository.now(), zone())
+    val streak: StateFlow<PracticeStreak.Summary> = combine(quizHistory, goals, refresh) { history, goals, _ ->
+        PracticeStreak.summary(history.map { it.toPracticeSession() }, goals, repository.now(), zone())
     }
         .flowOn(Dispatchers.Default)
         .stateIn(scope, SharingStarted.WhileSubscribed(5000), PracticeStreak.NONE)
@@ -197,12 +199,12 @@ class ProgressStateHolder(
 
     /** A flashcard self-grade in [skill] (the flag unless said otherwise): light evidence, never enough on its own to master it. */
     fun recordGrade(countryCode: String, grade: Grade, skill: Skill = Skill.FLAG) {
-        scope.launch(writeErrors.handler) { repository.recordGrade(countryCode, skill, grade) }
+        scope.launch(writeErrors.handler) { repository.recordGrade(countryCode, skill, grade, zone()) }
     }
 
     /** A quiz answer about [countryCode] in [skill], with the [evidence] the mode gives. */
     fun recordAnswer(countryCode: String, skill: Skill, correct: Boolean, evidence: Evidence) {
-        scope.launch(writeErrors.handler) { repository.recordAnswer(countryCode, skill, correct, evidence) }
+        scope.launch(writeErrors.handler) { repository.recordAnswer(countryCode, skill, correct, evidence, zone()) }
     }
 }
 
@@ -239,7 +241,7 @@ data class QuizPlan(
     val recent: List<RecentTarget>,
     /** Per skill: reviewed and not mastered, weakest first. */
     val weak: Map<Skill, List<Country>>,
-    /** Per skill: reviewed and past the due date, longest overdue first. */
+    /** Per skill with reviews ([Skill.REVIEWED]): reviewed and due today or overdue, longest overdue first. */
     val due: Map<Skill, List<Country>>
 ) {
     fun weak(skill: Skill): List<Country> = weak[skill].orEmpty()

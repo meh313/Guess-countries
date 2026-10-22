@@ -22,8 +22,8 @@ import com.example.ui.components.Standing
  * translation touches `res/values-xx/` and nothing else. Nothing here is stored.
  */
 
-/** The title of a quiz mode on the setup screen, the score screen and the quiz log. */
-val QuizMode.titleRes: Int
+/** The resource of a quiz mode's title, which [title] reads: the blitz's takes its length. */
+private val QuizMode.titleRes: Int
     @StringRes get() = when (this) {
         QuizMode.FLAG_NAME -> R.string.mode_flag_name
         QuizMode.PICK_FLAG -> R.string.mode_pick_flag
@@ -34,6 +34,13 @@ val QuizMode.titleRes: Int
         QuizMode.SPEED_MATCH -> R.string.mode_speed_round
         QuizMode.BLITZ -> R.string.mode_blitz
     }
+
+/**
+ * The title of a quiz mode on the setup screen, the score screen and the quiz log. The blitz's names its length
+ * ("60-second blitz") through a placeholder, so the number has the digits of the other numbers on screen.
+ */
+@Composable
+fun QuizMode.title(): String = totalTimeSeconds?.let { stringResource(titleRes, it) } ?: stringResource(titleRes)
 
 /** The extra line under a mode's title on the setup screen; null where the title says it all. */
 val QuizMode.hintRes: Int?
@@ -64,7 +71,7 @@ fun QuizMode.questionText(target: Country): String = when (this) {
 @Composable
 fun modeTitle(storedMode: String): String = when (storedMode) {
     StudySession.MODE -> stringResource(R.string.mode_flashcards)
-    else -> QuizMode.entries.firstOrNull { it.name == storedMode }?.let { stringResource(it.titleRes) } ?: storedMode
+    else -> QuizMode.entries.firstOrNull { it.name == storedMode }?.title() ?: storedMode
 }
 
 val QuizDifficulty.titleRes: Int
@@ -192,6 +199,33 @@ fun scopeLabelRes(scope: String): Int? = when (scope) {
 @Composable
 fun continentLabel(name: String): String = continentLabelRes(name)?.let { stringResource(it) } ?: name
 
+/**
+ * The resource for a continent name inside a sentence, after a preposition or a noun ("No countries in the Americas",
+ * "the countries still to learn in the Americas"). Two continents change: English gives the Americas "the", French
+ * says them in the singular after "en" ("en Amérique") and Arabic puts their dual in the genitive (الأمريكتين); German
+ * and Spanish give Antarctica its article ("in der Antarktis", "en la Antártida"). Any other name is
+ * [continentLabelRes]'s.
+ */
+@StringRes
+fun continentInSentenceRes(name: String): Int? = when (name.lowercase()) {
+    "americas" -> R.string.continent_americas_in_sentence
+    "antarctica" -> R.string.continent_antarctica_in_sentence
+    else -> continentLabelRes(name)
+}
+
+/** [continentLabel] inside a sentence (see [continentInSentenceRes]); an unknown name is shown as it is. */
+@Composable
+fun continentInSentence(name: String): String = continentInSentenceRes(name)?.let { stringResource(it) } ?: name
+
+/**
+ * "Afrique · Southern Africa": the country's continent as the player reads it, then its subregion, which stays English
+ * like the rest of the catalog; the continent alone where the subregion repeats it (Antarctica). [inSentence] names the
+ * continent as [continentInSentence] does, for a label inside a sentence (the map's "in the Americas · South America").
+ */
+@Composable
+fun regionLabel(country: Country, inSentence: Boolean = false): String =
+    country.regionLabel(if (inSentence) continentInSentence(country.continent) else continentLabel(country.continent))
+
 /** A scope or study source key as the player reads it; an unknown key is shown as it is. */
 @Composable
 fun scopeLabel(scope: String): String = scopeLabelRes(scope)?.let { stringResource(it) } ?: scope
@@ -201,3 +235,13 @@ fun Resources.scopeLabel(scope: String): String = scopeLabelRes(scope)?.let { ge
 
 /** [continentLabel] outside composition. */
 fun Resources.continentLabel(name: String): String = continentLabelRes(name)?.let { getString(it) } ?: name
+
+/**
+ * An option of a [mode] question as the player reads it: a continent in the app's language (the option itself stays
+ * the catalog's English key, which is what is scored and logged), anything else as it is.
+ */
+@Composable
+fun optionLabel(mode: QuizMode, option: String): String = if (mode == QuizMode.CONTINENT) continentLabel(option) else option
+
+/** [continentInSentence] outside composition (the sentence read aloud about a country). */
+fun Resources.continentInSentence(name: String): String = continentInSentenceRes(name)?.let { getString(it) } ?: name

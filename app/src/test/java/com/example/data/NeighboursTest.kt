@@ -34,9 +34,13 @@ class NeighboursTest {
     @Test
     fun theAtlasCases() {
         fun borders(code: String, vararg expected: String) = assertEquals(code, expected.sorted(), Neighbours.of(code))
-        borders("FR", "AD", "BE", "BR", "CH", "DE", "ES", "IT", "LU", "MC", "NL", "SR") // French Guiana and Saint Martin count
+        // The Factbook's rule: a state's integral territory counts (French Guiana, Ceuta and Melilla), its
+        // dependencies do not (Saint Martin / Sint Maarten, Gibraltar, Greenland, the bases on Cyprus).
+        borders("FR", "AD", "BE", "BR", "CH", "DE", "ES", "IT", "LU", "MC", "SR")
+        borders("NL", "BE", "DE")
         borders("DE", "AT", "BE", "CH", "CZ", "DK", "FR", "LU", "NL", "PL")
         borders("US", "CA", "MX")
+        borders("CA", "US")
         borders("GB", "IE")
         borders("LS", "ZA") // an enclave: its outline is its host's hole
         borders("VA", "IT")
@@ -44,7 +48,13 @@ class NeighboursTest {
         borders("SM", "IT")
         borders("BW", "NA", "ZA", "ZM", "ZW") // Kazungula's 150 m count; Namibia–Zimbabwe, a mere corner, do not
         borders("ES", "AD", "FR", "MA", "PT") // Ceuta and Melilla
-        borders("PS", "EG", "JO")
+        borders("MA", "DZ", "ES") // Morocco stops at 27°40′ N: Western Sahara lies between it and Mauritania
+        borders("MR", "DZ", "ML", "SN")
+        borders("UA", "BY", "HU", "MD", "PL", "RO", "RU", "SK")
+        // Natural Earth's ISR feature is merged into Palestine, and the Golan Heights are Syria's.
+        borders("PS", "EG", "JO", "LB", "SY")
+        borders("LB", "PS", "SY")
+        borders("SY", "IQ", "JO", "LB", "PS", "TR")
         borders("KR", "KP")
         borders("HT", "DO")
         borders("PG", "ID")
@@ -64,6 +74,6 @@ class NeighboursTest {
         landlocked.forEach { assertTrue(it, Neighbours.of(it).isNotEmpty()) }
         val withBorders = sovereign.count { Neighbours.of(it.code).isNotEmpty() }
         assertTrue("$withBorders countries with a land border", withBorders in 145..160)
-        assertEquals(313, Neighbours.byCode.values.sumOf { it.size } / 2)
+        assertEquals(314, Neighbours.byCode.values.sumOf { it.size } / 2)
     }
 }

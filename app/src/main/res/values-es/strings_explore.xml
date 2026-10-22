@@ -9,6 +9,7 @@
     <!-- Numbers on cards and in the sheet. The number after the figure is the year of the estimate, not a count. -->
     <string name="population_estimate" tools:ignore="PluralsCandidate">%1$s (est. %2$d)</string>
     <string name="population_winter">%1$s invernando en las estaciones</string>
+    <string name="area_km2">%1$s km²</string>
     <string name="card_no_capital">Sin capital</string>
 
     <!-- Explore: the banner -->
@@ -34,11 +35,29 @@
     </plurals>
     <string name="today_goal">meta %1$d</string>
     <!-- The card as one sentence for a screen reader: "Today: 3 of 10 items done, 2 due, 4 new today." -->
-    <!-- "items" and "due" are not nouns the number inflects here: "1 of 10 items done", "Review 1 due". -->
+    <!-- "items" is not a noun the number inflects here: "1 of 10 items done". -->
     <string name="today_description" tools:ignore="PluralsCandidate">Hoy: %1$d de %2$d elementos hechos, %3$s, %4$s.</string>
-    <string name="today_review_due" tools:ignore="PluralsCandidate">Repasar %1$d pendientes</string>
-    <string name="today_learn_new">Aprender 5 nuevas</string>
-    <string name="today_learn_more">Aprender 5 más</string>
+    <!-- The button names the skill it reviews, flags first, then capitals, then the map (the Map → Country quiz) -->
+    <plurals name="today_review_flags">
+        <item quantity="one">Repasar %d bandera</item>
+        <item quantity="other">Repasar %d banderas</item>
+        <item quantity="many">Repasar %d banderas</item>
+    </plurals>
+    <plurals name="today_review_capitals">
+        <item quantity="one">Repasar %d capital</item>
+        <item quantity="other">Repasar %d capitales</item>
+        <item quantity="many">Repasar %d capitales</item>
+    </plurals>
+    <plurals name="today_review_map">
+        <item quantity="one">Repasar %d país en el mapa</item>
+        <item quantity="other">Repasar %d países en el mapa</item>
+        <item quantity="many">Repasar %d países en el mapa</item>
+    </plurals>
+    <string name="today_back_to_quiz">Volver a tu quiz</string>
+    <string name="today_learn_new" tools:ignore="PluralsCandidate">Aprender %1$d nuevas</string>
+    <string name="today_learn_more" tools:ignore="PluralsCandidate">Aprender %1$d más</string>
+    <!-- Every flag has been seen, so there is nothing left for Learn: the button opens the Quiz tab instead -->
+    <string name="today_take_quiz">Hacer un quiz</string>
     <string name="today_dismiss">Ocultar por hoy</string>
     <!-- The first run: the card asks for a focus continent before anything else -->
     <string name="today_start_title">Empieza aquí</string>
@@ -79,6 +98,8 @@
     <string name="sheet_skill_standing">%1$s: %2$s</string>
     <string name="sheet_standing_not_reviewed">Aún sin repasar</string>
     <string name="sheet_standing_line">%1$s · %2$s · %3$s · %4$s</string>
+    <string name="sheet_standing_line_three">%1$s · %2$s · %3$s</string>
+    <string name="sheet_standing_line_two">%1$s · %2$s</string>
     <string name="sheet_standing_step">paso %1$d de %2$d</string>
     <string name="sheet_due_now">pendiente ahora</string>
     <string name="sheet_next_review_tomorrow">próximo repaso mañana</string>

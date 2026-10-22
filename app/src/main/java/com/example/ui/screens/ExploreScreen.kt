@@ -46,7 +46,8 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -57,7 +58,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.selected
@@ -84,7 +85,7 @@ import com.example.progress.Skill
 import com.example.ui.components.Standing
 import com.example.ui.components.TodayCard
 import com.example.ui.components.standing
-import com.example.ui.continentLabel
+import com.example.ui.continentInSentence
 import com.example.ui.labelRes
 import com.example.ui.standingFilterPhrase
 import com.example.ui.viewmodel.CountryViewModel
@@ -96,7 +97,9 @@ fun ExploreScreen(
     /** Opens the Flashcards tab, where the study session the Today card starts is shown. */
     onOpenFlashcards: () -> Unit = {},
     /** Opens the Learn screen (five new countries), from the Today card. */
-    onLearn: () -> Unit = {}
+    onLearn: () -> Unit = {},
+    /** Opens the Quiz tab, where the map review or the quiz the Today card offers is played. */
+    onOpenQuiz: () -> Unit = {}
 ) {
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val todayCardVisible by viewModel.todayCardVisible.collectAsStateWithLifecycle()
@@ -116,7 +119,7 @@ fun ExploreScreen(
     val continents = listOf("All", "Africa", "Americas", "Asia", "Europe", "Oceania", "Antarctica")
     var showSortMenu by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
-    val resources = LocalResources.current
+    val context = LocalContext.current
     val sortBy by viewModel.sortBy.collectAsStateWithLifecycle()
 
     // One scrolling grid: the banner and the controls are full-width items. That keeps countries
@@ -147,12 +150,14 @@ fun ExploreScreen(
                         .fillMaxWidth()
                         .heightIn(min = 150.dp, max = 200.dp)
                 ) {
+                    // The map is a faint texture on the primary colour, so the text over it keeps its contrast
+                    // whatever part of the picture it lands on (see HERO_BANNER_ALPHA).
                     Image(
                         painter = painterResource(id = R.drawable.img_world_banner),
                         contentDescription = null, // decorative
                         modifier = Modifier.matchParentSize(),
                         contentScale = ContentScale.Crop,
-                        alpha = 0.45f
+                        alpha = HERO_BANNER_ALPHA
                     )
 
                     Column(
@@ -166,13 +171,13 @@ fun ExploreScreen(
                             text = stringResource(R.string.explore_title),
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier.semantics { heading() }
                         )
                         Text(
                             text = stringResource(R.string.explore_subtitle),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color.White.copy(alpha = 0.9f)
+                            color = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                 }
@@ -182,7 +187,7 @@ fun ExploreScreen(
         // Today: the goal and the one next thing to do; left out once put away for the day.
         if (todayCardVisible) {
             item(key = "today", span = { GridItemSpan(maxLineSpan) }) {
-                TodayCard(viewModel = viewModel, onOpenFlashcards = onOpenFlashcards, onLearn = onLearn)
+                TodayCard(viewModel = viewModel, onOpenFlashcards = onOpenFlashcards, onLearn = onLearn, onOpenQuiz = onOpenQuiz)
             }
         }
 
@@ -350,7 +355,7 @@ fun ExploreScreen(
                 // The hint names what is filtered: "No countries still to learn in Europe. Clear the filters?"
                 val filters = listOfNotNull(
                     standingFilterPhrase(standingFilter),
-                    if (selectedContinent != "All") stringResource(R.string.explore_empty_scope_continent, continentLabel(selectedContinent)) else null,
+                    if (selectedContinent != "All") stringResource(R.string.explore_empty_scope_continent, continentInSentence(selectedContinent)) else null,
                     if (searchQuery.isNotBlank()) stringResource(R.string.explore_empty_scope_search, searchQuery.trim()) else null,
                     if (showOnlyBookmarks) stringResource(R.string.explore_empty_scope_saved) else null
                 ).joinToString(" ")
@@ -414,8 +419,9 @@ fun ExploreScreen(
 
     // Modal Bottom Sheet when country selected
     selectedCountry?.let { country ->
-        // Bind the speech engine only once the user can actually ask for it.
-        LaunchedEffect(Unit) { viewModel.prepareSpeech() }
+        // Bind the speech engine only once the user can actually ask for it, and again on every return to the sheet, as
+        // from the voice-data installer, which lets the engine go (prepare is a no-op while the engine is up).
+        LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.prepareSpeech() }
         val sources by viewModel.sources.collectAsStateWithLifecycle()
         val allByCode = remember(viewModel) { viewModel.repository.allCountries.associateBy { it.code } }
         CountryDetailSheet(
@@ -425,7 +431,7 @@ fun ExploreScreen(
             skillStates = if (country.isSovereign) Skill.entries.associateWith { skills[it]?.get(country.code) } else emptyMap(),
             now = now,
             onDismiss = { viewModel.selectCountry(null) },
-            onSpeak = { viewModel.speakCountryDetails(country, CountrySummary.spoken(resources, country)) },
+            onSpeak = { viewModel.speakCountryDetails(country, CountrySummary.spoken(context, country)) },
             speechAvailable = speechAvailable,
             speechState = speechState,
             onInstallVoiceData = { viewModel.installVoiceData() },
@@ -435,3 +441,10 @@ fun ExploreScreen(
         )
     }
 }
+
+/**
+ * How strongly the world map shows through the hero's primary colour. The title and subtitle are drawn in onPrimary
+ * over it, and at this strength they stay at 4.5:1 or more over any pixel of the picture, even pure white or black,
+ * on the app's light and dark primaries and on the wallpaper ones (ThemeContrastTest works it out).
+ */
+internal const val HERO_BANNER_ALPHA = 0.12f

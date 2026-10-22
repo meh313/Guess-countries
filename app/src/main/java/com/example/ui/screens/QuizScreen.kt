@@ -120,8 +120,10 @@ import com.example.ui.components.TellApartLine
 import com.example.ui.components.tellApartLine
 import com.example.ui.components.WorldMap
 import com.example.ui.hintRes
+import com.example.ui.optionLabel
 import com.example.ui.questionText
 import com.example.ui.scopeLabel
+import com.example.ui.title
 import com.example.ui.theme.StreakColor
 import com.example.ui.titleRes
 import com.example.ui.viewmodel.CountryViewModel
@@ -277,7 +279,7 @@ fun QuizScreen(
                             Spacer(modifier = Modifier.width(16.dp))
                             Column {
                                 Text(
-                                    text = stringResource(mode.titleRes),
+                                    text = mode.title(),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                     color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
@@ -511,7 +513,7 @@ fun QuizScreen(
                     Text(
                         text = if (canStart) {
                             if (selectedMode.isEndless) stringResource(R.string.quiz_start_blitz, selectedMode.totalTimeSeconds ?: 0)
-                            else stringResource(R.string.quiz_start_quiz, questionCount)
+                            else pluralStringResource(R.plurals.quiz_start_quiz, questionCount, questionCount)
                         } else {
                             stringResource(R.string.quiz_needs_countries, QuizEngine.MIN_POOL)
                         },
@@ -548,7 +550,8 @@ fun QuizScreen(
         BackHandler { showQuitConfirm = true }
 
         // The clocks only run while the quiz is on screen: a call, a tab switch or the app going to the background
-        // pauses the question and the blitz where they stand, and they go on with the time they had left.
+        // pauses the question and the blitz where they stand, and they go on with the time they had left. A paused
+        // quiz cannot time out or end by its clock (see QuizSession.timeOut and finish).
         val lifecycleOwner = LocalLifecycleOwner.current
         DisposableEffect(lifecycleOwner) {
             val observer = LifecycleEventObserver { _, event ->
@@ -571,19 +574,23 @@ fun QuizScreen(
         val limitMs = timerPace.limit(mode.timeLimitSeconds)?.let { it * 1000L }
         var remainingMs by remember(active.currentIndex, active.questionStartedAt) { mutableLongStateOf(limitMs ?: 0L) }
         if (limitMs != null) {
-            // Time is measured from when the question was shown, so rotating or switching tabs neither
-            // pauses nor restarts it.
-            LaunchedEffect(active.currentIndex, active.questionStartedAt, active.hasAnswered, active.isPaused) {
-                // Coming back to the screen, the first frame still shows the paused session: its clock must not run
-                // (and time the question out) before the resumed session arrives and restarts this loop.
-                if (active.isPaused) return@LaunchedEffect
-                while (!active.hasAnswered) {
-                    val left = limitMs - (viewModel.clockMillis() - active.questionStartedAt)
-                    remainingMs = left.coerceIn(0L, limitMs)
-                    if (left <= 0L) {
-                        answerFeedback(false)
-                        viewModel.timeOutQuiz()
-                        break
+            // Time is measured from when the question was shown, less the time the quiz was paused (see above):
+            // a rotation does not restart it, and a tab switch stops it where it stands.
+            LaunchedEffect(active.currentIndex, active.questionStartedAt, active.hasAnswered) {
+                while (true) {
+                    // The view model's session, not the one this screen last drew: while the activity is stopped
+                    // nothing is collected or recomposed but this loop goes on, and only the live session knows the
+                    // quiz was paused. A paused question waits; once resumed it has the time it had left.
+                    val live = viewModel.quizSession.value
+                    if (live == null || live.isFinished || live.hasAnswered || live.currentIndex != active.currentIndex) break
+                    if (!live.isPaused) {
+                        val left = limitMs - (viewModel.clockMillis() - live.questionStartedAt)
+                        remainingMs = left.coerceIn(0L, limitMs)
+                        if (left <= 0L) {
+                            answerFeedback(false)
+                            viewModel.timeOutQuiz()
+                            break
+                        }
                     }
                     delay(100)
                 }
@@ -593,14 +600,18 @@ fun QuizScreen(
         val totalMs = mode.totalTimeSeconds?.let { it * 1000L }
         var totalRemainingMs by remember(active.startedAt) { mutableLongStateOf(totalMs ?: 0L) }
         if (totalMs != null) {
-            LaunchedEffect(active.startedAt, active.isFinished, active.isPaused) {
-                if (active.isPaused) return@LaunchedEffect
-                while (!active.isFinished) {
-                    val left = totalMs - (viewModel.clockMillis() - active.startedAt)
-                    totalRemainingMs = left.coerceIn(0L, totalMs)
-                    if (left <= 0L) {
-                        viewModel.finishQuiz()
-                        break
+            LaunchedEffect(active.startedAt, active.isFinished) {
+                while (true) {
+                    // The live session, as for the question's clock: the minute stands still while the quiz is paused.
+                    val live = viewModel.quizSession.value
+                    if (live == null || live.isFinished) break
+                    if (!live.isPaused) {
+                        val left = totalMs - (viewModel.clockMillis() - live.startedAt)
+                        totalRemainingMs = left.coerceIn(0L, totalMs)
+                        if (left <= 0L) {
+                            viewModel.finishQuiz()
+                            break
+                        }
                     }
                     delay(100)
                 }
@@ -729,8 +740,9 @@ fun QuizScreen(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
+                // The column spans the card, so a flag or a question narrower than it sits in the middle.
                 Column(
-                    modifier = Modifier.padding(16.dp),
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     if (mode.showsMap) {
@@ -845,7 +857,7 @@ fun QuizScreen(
                             // The text yields to the result icon, so a long name wraps instead of pushing
                             // the icon out of the card.
                             Text(
-                                text = optionText,
+                                text = optionLabel(mode, optionText),
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = textColor,
@@ -867,15 +879,15 @@ fun QuizScreen(
         val afterAnswer: @Composable () -> Unit = {
             if (active.hasAnswered) {
                 // For "pick the flag" the options are country codes, so say the country instead.
-                val answerText = if (mode.answersAreFlags) q.targetCountry.name else q.options[q.correctAnswerIndex]
+                val answerText = if (mode.answersAreFlags) q.targetCountry.name else optionLabel(mode, q.options[q.correctAnswerIndex])
                 val picked = active.selectedAnswerIndex
                 val result = when {
                     active.timedOut -> stringResource(R.string.quiz_result_timeout, answerText)
                     picked == q.correctAnswerIndex ->
-                        stringResource(R.string.quiz_result_correct, QuizEngine.pointsForCorrectAnswer(active.streak - 1))
+                        QuizEngine.pointsForCorrectAnswer(active.streak - 1).let { pluralStringResource(R.plurals.quiz_result_correct, it, it) }
                     // A country on two continents: the other continent counts, and the line says why.
                     picked != null && picked in q.acceptedIndices ->
-                        stringResource(R.string.quiz_result_also_counted, q.options[picked], answerText)
+                        stringResource(R.string.quiz_result_also_counted, optionLabel(mode, q.options[picked]), answerText)
                     else -> stringResource(R.string.quiz_result_wrong, answerText)
                 }
                 // The country whose flag or name was picked by mistake, when there is one: a continent has no flag,

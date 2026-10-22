@@ -1,6 +1,7 @@
 package com.example.ui.screens
 
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -55,7 +56,7 @@ import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -70,7 +71,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -85,12 +86,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.R
 import com.example.data.model.Country
 import com.example.data.model.SortOption
 import com.example.flashcards.FlashcardDeck
 import com.example.flashcards.StudySession
+import com.example.learn.LearnSession
 import com.example.progress.Grade
 import com.example.progress.PracticeStreak
 import com.example.progress.Skill
@@ -104,6 +108,7 @@ import com.example.ui.components.readingWidth
 import com.example.ui.components.rememberCompactNumberFormat
 import com.example.ui.continentLabel
 import com.example.ui.nounRes
+import com.example.ui.regionLabel
 import com.example.ui.scopeLabel
 import com.example.ui.standingFilterLabel
 import com.example.speech.Speech
@@ -133,9 +138,10 @@ fun FlashcardScreen(
     val speechAvailable by viewModel.speechAvailable.collectAsStateWithLifecycle()
     val speechState by viewModel.speechState.collectAsStateWithLifecycle()
     val onInstallVoiceData = { viewModel.installVoiceData(); Unit }
-    val resources = LocalResources.current
-    // Bind the speech engine only once a screen that can speak is shown.
-    LaunchedEffect(Unit) { viewModel.prepareSpeech() }
+    val context = LocalContext.current
+    // Bind the speech engine only once a screen that can speak is shown, and again on every return to it, as from the
+    // voice-data installer, which lets the engine go (prepare is a no-op while the engine is up).
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.prepareSpeech() }
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val selectedContinent by viewModel.selectedContinent.collectAsStateWithLifecycle()
     val showOnlyBookmarks by viewModel.showOnlyBookmarks.collectAsStateWithLifecycle()
@@ -154,6 +160,12 @@ fun FlashcardScreen(
 
     val session = study
     if (session != null) {
+        // The summary keeps the final grade pending for its Undo until the player moves on: leaving the screen (another
+        // tab, the app in the background) settles it, but a rotation does not, so Undo is still there after one.
+        val activity = LocalActivity.current
+        val settle = { if (activity?.isChangingConfigurations != true) viewModel.settleStudy() }
+        LifecycleEventEffect(Lifecycle.Event.ON_STOP) { settle() }
+        DisposableEffect(viewModel) { onDispose { settle() } }
         // Back on the summary means Done; mid-session it ends the session, writing the pending grade, as End does.
         BackHandler {
             viewModel.stopSpeaking()
@@ -167,7 +179,7 @@ fun FlashcardScreen(
             speechState = speechState,
             onInstallVoiceData = onInstallVoiceData,
             onFlip = { viewModel.flipStudyCard() },
-            onSpeak = { code -> countriesByCode[code]?.let { viewModel.speakCountryDetails(it, CountrySummary.spoken(resources, it)) } },
+            onSpeak = { code -> countriesByCode[code]?.let { viewModel.speakCountryDetails(it, CountrySummary.spoken(context, it)) } },
             onGrade = { grade ->
                 viewModel.stopSpeaking()
                 viewModel.gradeStudyCard(grade)
@@ -178,10 +190,12 @@ fun FlashcardScreen(
                 viewModel.endStudy()
             },
             onStudyAgain = {
+                // The final grade is written as the next session starts: its card is graded, so no longer due.
+                val graded = setOfNotNull(session.pending?.code)
                 val codes = when (session.source) {
-                    StudySession.DUE -> due.map { it.code }
+                    StudySession.DUE -> due.map { it.code } - graded
                     StudySession.WEAK -> weak.map { it.code }
-                    StudySession.CAPITALS_DUE -> capitalsDue.map { it.code }
+                    StudySession.CAPITALS_DUE -> capitalsDue.map { it.code } - graded
                     else -> session.cards
                 }
                 viewModel.startStudy(session.source, codes.ifEmpty { session.cards }, session.skill)
@@ -324,7 +338,7 @@ fun FlashcardScreen(
                 speechState = speechState,
                 onInstallVoiceData = onInstallVoiceData,
                 onFlip = { flippedCode = if (isFlipped) null else currentCountry.code },
-                onSpeak = { viewModel.speakCountryDetails(currentCountry, CountrySummary.spoken(resources, currentCountry)) },
+                onSpeak = { viewModel.speakCountryDetails(currentCountry, CountrySummary.spoken(context, currentCountry)) },
                 modifier = cardModifier
             )
         },
@@ -536,7 +550,7 @@ private fun StudyChooser(
                 StudyOption(
                     StudySession.WEAK,
                     scopeLabel(StudySession.WEAK),
-                    stringResource(R.string.study_weak_detail, weakCount),
+                    pluralStringResource(R.plurals.study_weak_detail, weakCount, weakCount),
                     weakCount > 0,
                     "study_weak_btn"
                 ) { onPick(it) }
@@ -549,7 +563,7 @@ private fun StudyChooser(
                 ) { onPick(it) }
                 StudyOption(
                     LEARN_OPTION,
-                    stringResource(R.string.learn_title),
+                    stringResource(R.string.learn_title, LearnSession.CARDS_PER_SESSION),
                     pluralStringResource(R.plurals.learn_option_detail, unseenCount, unseenCount),
                     unseenCount > 0,
                     "study_learn_btn"
@@ -615,7 +629,7 @@ private fun StudyView(
     val code = session.current
     val country = code?.let { countriesByCode[it] }
     if (session.isOver || country == null) {
-        StudySummary(session, outcome, onStudyAgain, onDone, modifier)
+        StudySummary(session, outcome, onUndo, onStudyAgain, onDone, modifier)
         return
     }
     val rotation = key(code) {
@@ -723,11 +737,12 @@ private fun GradeButton(label: String, color: Color, contentColor: Color, enable
     }
 }
 
-/** What the session did: cards remembered, the grades, the streak, and the ways on. */
+/** What the session did: cards remembered, the grades, the streak, and the ways on, with Undo while the final grade is pending. */
 @Composable
 private fun StudySummary(
     session: StudySession,
     outcome: PracticeStreak.Outcome?,
+    onUndo: () -> Unit,
     onStudyAgain: () -> Unit,
     onDone: () -> Unit,
     modifier: Modifier = Modifier
@@ -788,7 +803,7 @@ private fun StudySummary(
             PracticeStreak.Kind.KEPT -> pluralStringResource(R.plurals.streak_kept, outcome.days, outcome.days)
             // 0 days: the session was too small to meet the day's goal, and the day is not counted yet.
             PracticeStreak.Kind.ALREADY_COUNTED ->
-                if (outcome.days == 0) stringResource(R.string.streak_goal_short) else stringResource(R.string.study_streak_already_counted, outcome.days)
+                if (outcome.days == 0) stringResource(R.string.streak_goal_short) else pluralStringResource(R.plurals.study_streak_already_counted, outcome.days, outcome.days)
             null ->
                 if (session.gradedCards < StudySession.MIN_FOR_STREAK) {
                     stringResource(R.string.study_streak_short, StudySession.MIN_FOR_STREAK, session.gradedCards)
@@ -826,6 +841,18 @@ private fun StudySummary(
                 .testTag("flashcard_summary_done_btn")
         ) {
             Text(stringResource(R.string.action_done), fontWeight = FontWeight.Bold)
+        }
+        if (session.pending != null) {
+            TextButton(
+                onClick = onUndo,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("study_summary_undo_btn")
+            ) {
+                Icon(imageVector = Icons.AutoMirrored.Filled.Undo, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(stringResource(R.string.study_undo), fontWeight = FontWeight.Bold)
+            }
         }
     }
     }
@@ -977,7 +1004,7 @@ private fun FlipCard(
                             modifier = Modifier.testTag("flashcard_continent_chip")
                         ) {
                             Text(
-                                text = country.regionLabel,
+                                text = regionLabel(country),
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,
                                 style = MaterialTheme.typography.labelLarge,

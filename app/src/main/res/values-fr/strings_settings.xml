@@ -36,7 +36,7 @@
     <string name="settings_haptics_detail">Une brève vibration pour une bonne ou mauvaise réponse</string>
     <string name="settings_section_speech">Lecture à voix haute</string>
     <string name="settings_speech_loading">Démarrage du moteur vocal…</string>
-    <string name="settings_speech_ready">Prêt. Le haut-parleur sur la fiche d\'un pays et sur les cartes mémoire lit le pays à voix haute.</string>
+    <string name="settings_speech_ready">Prêt. Le haut-parleur sur la fiche d\'un pays et sur les cartes mémoire lit le pays à voix haute, en anglais.</string>
     <string name="settings_speech_missing_data">Le moteur vocal n\'a pas de données vocales en anglais, rien ne peut donc être lu pour l\'instant.</string>
     <string name="settings_speech_unavailable">Cet appareil n\'a pas de moteur vocal, rien ne peut donc être lu à voix haute.</string>
     <string name="settings_speech_install">Installer des données vocales</string>
@@ -103,12 +103,12 @@
 
     <!-- À propos : d'où viennent les faits -->
     <string name="about_sources_title">D\'où viennent les faits</string>
-    <string name="about_sources_text">Chaque fiche de pays a été établie à partir de sources publiques, surtout Wikipédia, les constitutions nationales et les sites officiels, puis vérifiée une seconde fois par deux relecteurs indépendants qui ne pouvaient modifier un fait que s\'ils pouvaient tous deux le sourcer. Les chiffres de population sont les estimations 2024 des Perspectives de la population mondiale des Nations unies, arrondies à trois chiffres significatifs ; les autres faits ont été vérifiés en 2026. Les notes de recherche, l\'audit et les décisions du propriétaire sont dans le dépôt, et la fiche de chaque pays liste les pages avec lesquelles ses faits ont été vérifiés.</string>
+    <string name="about_sources_text">Chaque fiche de pays a été établie à partir de sources publiques, surtout Wikipédia, les constitutions nationales et les sites officiels, puis vérifiée une seconde fois par deux relecteurs indépendants qui ne pouvaient modifier un fait que s\'ils pouvaient tous deux le sourcer. Les chiffres de population sont les estimations 2024 des Perspectives de la population mondiale des Nations unies, arrondies à trois chiffres significatifs, sauf celui de la Palestine : l\'estimation, par le Bureau central palestinien de statistique, des Palestiniens qui vivaient dans la Palestine historique à la mi-2025. Les autres faits ont été vérifiés en 2026. Les notes de recherche, l\'audit et les décisions du propriétaire sont dans le dépôt, et la fiche de chaque pays liste les pages avec lesquelles ses faits ont été vérifiés.</string>
     <string name="about_open_repository">Ouvrir le dépôt</string>
 
     <!-- À propos : ce que contient le catalogue -->
     <string name="about_catalog_title">Ce que contient le catalogue</string>
-    <string name="about_catalog_text">Les 196 États souverains largement reconnus, plus l\'Antarctique à parcourir. Les drapeaux sont dessinés aux proportions propres à chaque pays. Quand la signification d\'un drapeau est contestée ou légendaire, le texte le dit au lieu de trancher ; un fait impossible à établir a été laissé de côté plutôt que deviné.</string>
+    <string name="about_catalog_text">Les 196 États souverains largement reconnus, plus l\'Antarctique à parcourir. Tous les drapeaux sont dessinés au même format 4:3, si bien que leurs proportions peuvent différer de celles du vrai drapeau (celui de la Suisse, par exemple, est carré). Quand la signification d\'un drapeau est contestée ou légendaire, le texte le dit au lieu de trancher ; un fait impossible à établir a été laissé de côté plutôt que deviné.</string>
 
     <!-- À propos : confidentialité -->
     <string name="about_translations_title">Traductions</string>

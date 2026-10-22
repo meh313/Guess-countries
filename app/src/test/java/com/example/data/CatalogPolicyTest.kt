@@ -88,6 +88,10 @@ class CatalogPolicyTest {
         assertEquals("Al Quds (Jerusalem)", palestine.capital)
         assertEquals("Al Quds", palestine.quizCapital)
         assertTrue(palestine.currency.startsWith("No currency of its own"))
+        // All of Palestine as it was before 1948, and the Palestinians living there: PCBS's figures, for mid-2025.
+        assertEquals(7_400_000L, palestine.population)
+        assertEquals(2025, palestine.populationYear)
+        assertEquals(27_000.0, palestine.areaSqKm, 0.0)
         assertEquals("Kuala Lumpur", country("MY").quizCapital)
         assertTrue(country("MY").capital.contains("Putrajaya"))
         assertEquals("Sri Jayawardenepura Kotte", country("LK").quizCapital)

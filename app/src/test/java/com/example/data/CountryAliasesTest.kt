@@ -26,6 +26,8 @@ class CountryAliasesTest {
     @Test
     fun everyAliasBelongsToOneCatalogCountry_andRepeatsNoName() {
         val names = allCountries.map { searchKey(it.name) }.toSet()
+        // An alias may restate its own country's official name, never another's ("Republic of Congo" is not the DRC's).
+        val officialNames = allCountries.groupBy({ searchKey(it.officialName) }, { it.code })
         val seen = HashMap<String, String>()
         for ((code, aliases) in CountryAliases.byCode) {
             assertTrue("$code is not in the catalog", code in codes)
@@ -33,6 +35,8 @@ class CountryAliasesTest {
             for (alias in aliases) {
                 val key = searchKey(alias)
                 assertTrue("$code: '$alias' is already a country name", key !in names)
+                val others = officialNames[key].orEmpty() - code
+                assertTrue("$code: '$alias' is the official name of $others", others.isEmpty())
                 assertTrue("'$alias' is listed under both ${seen[key]} and $code", seen.put(key, code) == null)
             }
         }
@@ -49,7 +53,10 @@ class CountryAliasesTest {
 
     @Test
     fun shortFormsFindTheCountryFirst() {
-        val short = mapOf("KSA" to "SA", "Aotearoa" to "NZ", "UAE" to "AE", "DRC" to "CD", "Czechia" to "CZ", "Holy See" to "VA")
+        val short = mapOf(
+            "KSA" to "SA", "Aotearoa" to "NZ", "UAE" to "AE", "DRC" to "CD", "Czechia" to "CZ", "Holy See" to "VA",
+            "The Gambia" to "GM", "The Bahamas" to "BS", "Naoero" to "NR"
+        )
         for ((query, code) in short) assertEquals(query, code, found(query).first())
     }
 

@@ -1,5 +1,6 @@
 package com.example.widget
 
+import android.content.Context
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.glance.appwidget.testing.unit.runGlanceAppWidgetUnitTest
@@ -15,11 +16,15 @@ import org.robolectric.annotation.Config
 @Config(sdk = [36])
 class TodayWidgetTest {
 
+    private val context: Context get() = ApplicationProvider.getApplicationContext()
+
+    private fun lines(state: WidgetState) = WidgetLines.of(state, context)
+
     @Test
     fun showsTheDueCountTheStreakAndThePractiseButton() = runGlanceAppWidgetUnitTest {
-        setContext(ApplicationProvider.getApplicationContext())
+        setContext(context)
         setAppWidgetSize(DpSize(220.dp, 120.dp))
-        provideComposable { Content(WidgetState(due = 3, streak = 4, today = 6, goal = 10)) }
+        provideComposable { Content(lines(WidgetState(due = 3, streak = 4, today = 6, goal = 10))) }
 
         onNode(hasText("3 reviews due")).assertExists()
         onNode(hasText("Streak 4 · today 6/10")).assertExists()
@@ -28,17 +33,17 @@ class TodayWidgetTest {
 
     @Test
     fun oneReviewIsSingular_andNoneReadsNothingDue() = runGlanceAppWidgetUnitTest {
-        setContext(ApplicationProvider.getApplicationContext())
+        setContext(context)
         setAppWidgetSize(DpSize(220.dp, 120.dp))
-        provideComposable { Content(WidgetState(due = 1, streak = 0, today = 0, goal = 10)) }
+        provideComposable { Content(lines(WidgetState(due = 1, streak = 0, today = 0, goal = 10))) }
         onNode(hasText("1 review due")).assertExists()
     }
 
     @Test
     fun nothingDue() = runGlanceAppWidgetUnitTest {
-        setContext(ApplicationProvider.getApplicationContext())
+        setContext(context)
         setAppWidgetSize(DpSize(220.dp, 120.dp))
-        provideComposable { Content(WidgetState(due = 0, streak = 12, today = 10, goal = 10)) }
+        provideComposable { Content(lines(WidgetState(due = 0, streak = 12, today = 10, goal = 10))) }
         onNode(hasText("Nothing due")).assertExists()
         onNode(hasText("Streak 12 · today 10/10")).assertExists()
     }

@@ -51,7 +51,7 @@
     <string name="mode_type_name_hint">Keine Auswahl: tippe den Ländernamen ein</string>
     <string name="mode_speed_round">Schnellrunde</string>
     <string name="mode_speed_round_hint">10 Sekunden pro Frage</string>
-    <string name="mode_blitz">60-Sekunden-Blitz</string>
+    <string name="mode_blitz">%1$d-Sekunden-Blitz</string>
     <string name="mode_blitz_hint">So viele Flaggen wie möglich in einer Minute</string>
     <string name="mode_flashcards">Lernkarten</string>
 
@@ -86,6 +86,8 @@
     <string name="continent_europe">Europa</string>
     <string name="continent_oceania">Ozeanien</string>
     <string name="continent_antarctica">Antarktis</string>
+    <string name="continent_americas_in_sentence">Amerika</string>
+    <string name="continent_antarctica_in_sentence">der Antarktis</string>
 
     <!-- Sort orders -->
     <string name="sort_by_name">Nach Name sortieren</string>
@@ -141,11 +143,6 @@
 
     <!-- Shown once when a database write failed (see WriteErrors) -->
     <string name="write_error">Deine letzte Änderung konnte nicht gespeichert werden. Exportiere deinen Fortschritt in den Einstellungen und versuche es später noch einmal.</string>
-
-    <!-- The spoken country summary -->
-    <string name="speech_name">%1$s.</string>
-    <string name="speech_capital_and_continent">Die Hauptstadt ist %1$s, es liegt in %2$s.</string>
-    <string name="speech_continent">Liegt in %1$s.</string>
 
     <!-- The home-screen widget. -->
     <string name="widget_label">Heutige Wiederholungen</string>

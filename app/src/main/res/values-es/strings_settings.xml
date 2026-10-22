@@ -36,7 +36,7 @@
     <string name="settings_haptics_detail">Una vibración breve al acertar o fallar</string>
     <string name="settings_section_speech">Leer en voz alta</string>
     <string name="settings_speech_loading">Iniciando el motor de voz…</string>
-    <string name="settings_speech_ready">Listo. El altavoz en la ficha de un país y en las tarjetas lee el país en voz alta.</string>
+    <string name="settings_speech_ready">Listo. El altavoz en la ficha de un país y en las tarjetas lee el país en voz alta, en inglés.</string>
     <string name="settings_speech_missing_data">El motor de voz no tiene datos de voz en inglés, así que aún no se puede leer nada en voz alta.</string>
     <string name="settings_speech_unavailable">Este dispositivo no tiene motor de voz, así que no se puede leer nada en voz alta.</string>
     <string name="settings_speech_install">Instalar datos de voz</string>
@@ -48,7 +48,7 @@
     <string name="settings_export">Exportar</string>
     <string name="settings_import">Importar</string>
     <string name="settings_transfer_hint">Exportar escribe un archivo con tu progreso y ajustes; Importar reemplaza todo con un archivo así.</string>
-    <string name="settings_export_done">Exportado a %1$s.</string>
+    <string name="settings_export_done">Exportación guardada en %1$s.</string>
     <string name="settings_export_fallback_name">el archivo elegido</string>
     <string name="settings_export_write_error">No se pudo abrir el archivo para escribir.</string>
     <string name="settings_export_failed">Error al exportar: %1$s</string>
@@ -103,12 +103,12 @@
 
     <!-- About: where the facts come from -->
     <string name="about_sources_title">De dónde salen los datos</string>
-    <string name="about_sources_text">Cada entrada de país se investigó en fuentes públicas, sobre todo Wikipedia, constituciones nacionales y sitios oficiales, y luego la comprobaron por segunda vez dos revisores independientes que solo podían cambiar un dato si ambos lo podían documentar. Las cifras de población son las estimaciones de World Population Prospects 2024 de las Naciones Unidas, redondeadas a tres cifras significativas; los demás datos se comprobaron en 2026. Las notas de investigación, la auditoría y las decisiones del responsable están en el repositorio, y la ficha de cada país lista las páginas con las que se comprobaron sus datos.</string>
+    <string name="about_sources_text">Cada entrada de país se investigó en fuentes públicas, sobre todo Wikipedia, constituciones nacionales y sitios oficiales, y luego la comprobaron por segunda vez dos revisores independientes que solo podían cambiar un dato si ambos lo podían documentar. Las cifras de población son las estimaciones de World Population Prospects 2024 de las Naciones Unidas, redondeadas a tres cifras significativas, salvo la de Palestina: la estimación de la Oficina Central Palestina de Estadística de los palestinos que vivían en la Palestina histórica a mediados de 2025. Los demás datos se comprobaron en 2026. Las notas de investigación, la auditoría y las decisiones del responsable están en el repositorio, y la ficha de cada país lista las páginas con las que se comprobaron sus datos.</string>
     <string name="about_open_repository">Abrir el repositorio</string>
 
     <!-- About: what is in the catalogue -->
     <string name="about_catalog_title">Qué contiene el catálogo</string>
-    <string name="about_catalog_text">Los 196 estados soberanos de reconocimiento amplio, más la Antártida para explorar. Las banderas se dibujan con las proporciones propias de cada país. Cuando el significado de una bandera es discutido o legendario, el texto lo dice en lugar de tomar partido; un dato que no se pudo confirmar se omitió en vez de adivinarlo.</string>
+    <string name="about_catalog_text">Los 196 estados soberanos de reconocimiento amplio, más la Antártida para explorar. Todas las banderas se dibujan con el mismo formato 4:3, así que sus proporciones pueden diferir de las de la bandera real (la de Suiza, por ejemplo, es cuadrada). Cuando el significado de una bandera es discutido o legendario, el texto lo dice en lugar de tomar partido; un dato que no se pudo confirmar se omitió en vez de adivinarlo.</string>
 
     <!-- About: privacy -->
     <string name="about_translations_title">Traducciones</string>

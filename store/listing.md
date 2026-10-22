@@ -32,14 +32,17 @@ Private by design: no network permission, no account, no ads. Your progress stay
 
 Works offline, in light and dark, with TalkBack, on phones and tablets.
 
-**What's new (3.1)**
-• The app speaks French, Spanish, German and Arabic (Settings › Language).
-• New quiz mode: Flag → Typed name. No options: type the name; short forms count and one typo is forgiven.
-• Every Learn quiz ends with a map question; every country sheet lists its land borders.
-• Sound effects and vibration for answers, each with a switch; a home-screen widget with what is due.
+**What's new (3.2)**
+• Reviews are due all day on the day they fall due; the Today card counts capitals and map reviews too.
+• A truer map: other land drawn, enclaves cut out, Crimea in Ukraine, the Golan in Syria, Palestine as one country.
+• Fairer quizzes: another country's name is never a typo; Indonesia and Monaco are never offered for each other.
+• Timed quizzes stop in the background; a new daily goal keeps your streak; undo a session's last grade.
+• Plurals and continents read right in every language.
 
 **Category:** Education. **Content rating:** Everyone. **Contains ads:** No. **In-app purchases:** No.
 
 **Data safety:** No data collected. No data shared. Data is encrypted in transit: not applicable (no network). Users can request data deletion: data is deleted on uninstall or with Reset progress.
 
-**Screenshots:** `store/screenshots/`: phone 1080×2400 in light (`01_explore` … `07_sheet_map`) and dark (`dark_01_explore`, `dark_06_progress`), tablet 1600×2560 (`tablet_01_explore`, `tablet_06_progress`). The `storePhone()`, `storePhoneDark()` and `storeTablet()` tests of `ScreenshotsTest` write them to `app/build/screenshots/store/`; that folder is copied into `store/screenshots/` after the tests have run.
+**Screenshots:** `store/screenshots/`: phone 1080×2160 in light (`01_explore` … `07_sheet_map`) and dark (`dark_01_explore`), eight in all, the most Play takes for one kind of device; tablet 1600×2560 (`tablet_01_explore`, `tablet_06_progress`). All are 24-bit PNGs, with no alpha channel. The `storePhone()`, `storePhoneDark()` and `storeTablet()` tests of `ScreenshotsTest` write them to `app/build/screenshots/store/`; that folder is copied into `store/screenshots/` after the tests have run.
+
+**Feature graphic and icon:** `store/feature-graphic.png` (1024×500, 24-bit PNG) and `store/icon-512.png` (512×512, 32-bit PNG), drawn from the launcher icon's flag ring and navy by the `storeFeatureGraphic()` and `storeIcon()` tests of `StoreGraphicsTest`, which write them to `app/build/screenshots/store-graphics/`; the two files are copied into `store/`. `python3 tools/store-check.py --check` checks the screenshots, the graphic, the icon and the lengths of the texts above against Play's rules (CI runs it).

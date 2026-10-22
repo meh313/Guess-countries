@@ -2,7 +2,9 @@
 <!--
    What Android 12+ backs up to the cloud and moves to a new device: the progress database (with its WAL and
    shared-memory files) and the settings file. Nothing else: WorkManager's own database is not listed, because the
-   app plans the reminder again at every start from the setting it keeps.
+   app plans the reminder again at every start from the setting it keeps, and neither is language_handover.xml,
+   which remembers that the app ran on this phone before Android 13 and that this phone's system was given the
+   stored language (AppLanguage.reconcile): on a new phone the language is handed over again.
 -->
 <data-extraction-rules>
     <cloud-backup>

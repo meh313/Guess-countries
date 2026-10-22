@@ -347,6 +347,19 @@
    "from": "content-review"
   },
   {
+   "code": "FR",
+   "field": "population",
+   "current": "68800000",
+   "value": "66500000",
+   "reason": "The About text and the \"2024 est.\" label name the UN WPP 2024 estimates, but France carried 68.8 million, about 3% above the UN figure. The UN WPP 2024 mid-2024 medium-variant estimate for France is 66,548,530, which rounds to 66,500,000 at three significant figures. First-catalog entry with no research note: the figure was read from the WPP 2024 total-population file and agrees with Worldometers' table of the same revision. Territory: the same file lists Guadeloupe (375,106), Martinique (343,195), French Guiana (308,522), Réunion (878,591) and Mayotte (326,505) as areas of their own, so WPP's France leaves out the five overseas regions (with them it is 68,780,449, the 68.8 million France carried before), while the area, 643,801 km2, counts them (the critic's note on areas, from Wikipedia's list of countries by area). The app follows its population rule, each country's own WPP 2024 entry, rather than adding the regions back, so for France the population and the area do not cover the same territory.",
+   "sources": [
+    "https://population.un.org/wpp/assets/Excel%20Files/1_Indicator%20(Standard)/CSV_FILES/WPP2024_TotalPopulationBySex.csv.gz",
+    "https://www.worldometers.info/world-population/france-population/"
+   ],
+   "confidence": "high",
+   "from": "content-review"
+  },
+  {
    "code": "CZ",
    "field": "officialName",
    "current": "Czech Republic (Czechia)",

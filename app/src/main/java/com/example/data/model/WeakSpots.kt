@@ -2,6 +2,7 @@ package com.example.data.model
 
 import com.example.progress.SkillMastery
 import com.example.progress.SkillState
+import java.util.TimeZone
 
 /**
  * The countries a player has practiced in a skill but not yet mastered (or let lapse), weakest first, and the ones
@@ -21,11 +22,14 @@ object WeakSpots {
             .map { it.first }
             .toList()
 
-    /** Sovereign countries whose review is due at [now], the longest overdue first, then the lowest score, then the code. */
-    fun due(skills: Map<String, SkillState>, countries: List<Country>, now: Long): List<Country> =
+    /**
+     * Sovereign countries whose review is due today at [now] in [zone] (overdue, or due later today:
+     * [SkillMastery.isDue]), the longest overdue first, then the lowest score, then the code.
+     */
+    fun due(skills: Map<String, SkillState>, countries: List<Country>, now: Long, zone: TimeZone): List<Country> =
         countries.asSequence()
             .filter { it.isSovereign }
-            .mapNotNull { country -> skills[country.code]?.takeIf { SkillMastery.isDue(it, now) }?.let { country to it } }
+            .mapNotNull { country -> skills[country.code]?.takeIf { SkillMastery.isDue(it, now, zone) }?.let { country to it } }
             .sortedWith(compareBy<Pair<Country, SkillState>> { it.second.dueAt }.thenBy { it.second.score }.thenBy { it.first.code })
             .map { it.first }
             .toList()

@@ -11,6 +11,7 @@ import com.example.data.transfer.ProgressSnapshot
 import com.example.progress.Skill
 import com.example.progress.SkillMastery
 import com.example.progress.SkillState
+import java.util.TimeZone
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -76,8 +77,11 @@ abstract class UserProgressDao {
     @Query("SELECT timestamp FROM quiz_scores")
     abstract suspend fun quizTimestamps(): List<Long>
 
-    /** When each finished quiz or study session was saved and how big it was; the practice streak is worked out from these. */
-    @Query("SELECT timestamp, total, questionCount FROM quiz_scores")
+    /**
+     * When each finished quiz or study session was saved and how big it was; the practice streak is worked out from
+     * these. A blitz row from before the count was recorded counts its right answers, as [QuizScoreEntity.practiceItems].
+     */
+    @Query("SELECT timestamp, total, COALESCE(questionCount, CASE WHEN mode = 'BLITZ' THEN correct END) AS questionCount FROM quiz_scores")
     abstract suspend fun practiceSessions(): List<PracticeRow>
 
     /**
@@ -171,15 +175,15 @@ abstract class UserProgressDao {
         flipFavorite(code)
     }
 
-    /** Records one quiz answer about [code] in [skill] and returns the skill's new state. */
+    /** Records one quiz answer about [code] in [skill] at [now] (a day in [zone]) and returns the skill's new state. */
     @Transaction
-    open suspend fun recordAnswer(code: String, skill: Skill, correct: Boolean, evidence: Evidence, now: Long): SkillState =
-        updateSkill(code, skill, now) { SkillMastery.afterAnswer(it, correct, evidence, now) }
+    open suspend fun recordAnswer(code: String, skill: Skill, correct: Boolean, evidence: Evidence, now: Long, zone: TimeZone): SkillState =
+        updateSkill(code, skill, now) { SkillMastery.afterAnswer(it, correct, evidence, now, zone) }
 
-    /** Records one flashcard grade for [code] in [skill] and returns the skill's new state. */
+    /** Records one flashcard grade for [code] in [skill] at [now] (a day in [zone]) and returns the skill's new state. */
     @Transaction
-    open suspend fun recordGrade(code: String, skill: Skill, grade: Grade, now: Long): SkillState =
-        updateSkill(code, skill, now) { SkillMastery.afterGrade(it, grade, now) }
+    open suspend fun recordGrade(code: String, skill: Skill, grade: Grade, now: Long, zone: TimeZone): SkillState =
+        updateSkill(code, skill, now) { SkillMastery.afterGrade(it, grade, now, zone) }
 
     private suspend fun updateSkill(code: String, skill: Skill, now: Long, rule: (SkillState) -> SkillState): SkillState {
         createIfMissing(code, now)

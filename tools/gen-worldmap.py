@@ -3,20 +3,32 @@
 
     python3 tools/gen-worldmap.py [--cache DIR] [--tolerance 0.05] [--check]
 
-Source: Natural Earth (public domain), the 1:50m admin-0 countries and the 1:10m populated places, downloaded from
-the GitHub mirror into --cache (default ~/.cache/natural-earth, outside the repository: the files are data, never run).
+Source: Natural Earth (public domain), the 1:50m admin-0 countries, the 1:50m breakaway and disputed areas (for the
+one polygon CARVE takes) and the 1:10m populated places, downloaded from the GitHub mirror into --cache (default
+~/.cache/natural-earth, outside the repository: the files are data, never run).
 Every entry of the catalog (tools/catalog_codes.py: 196 states plus Antarctica) gets one country record, and nothing
 else does: features are matched by ISO_A2_EH, then ISO_A2, then HAND_A3 for the rest (Somaliland and Northern
-Cyprus are merged into Somalia and Cyprus; Western Sahara, the dependencies and the other non-catalog features are
-dropped). Each outer ring (holes are dropped) is simplified with Douglas-Peucker at --tolerance degrees, keeps at
-least four points, and is dropped when its simplified area is under MIN_RING_AREA square degrees unless it is the
-country's largest; coordinates are rounded to two decimals. A country whose largest ring is under POINT_AREA square
-degrees (Monaco, the Vatican, the atoll states) is instead a square of POINT_SIDE degrees around its capital, marked
-"point": true, so every code has a polygon. The label is Natural Earth's LABEL_X/LABEL_Y; the capital is the
-populated-places "Admin-0 capital" whose name matches the catalog's quizCapital (accents, case and punctuation
-folded; "Admin-0 capital alt" or any other place of the country when only that matches), else the first "Admin-0
-capital", else the label point. A point square is labelled at its centre; a Natural Earth label that falls outside
-the frame (a few island states; Kiribati's sits on Kiritimati) is replaced by the centroid of the largest ring.
+Cyprus are merged into Somalia and Cyprus, Åland into Finland, and the ISR feature, by the owner's rule, into
+Palestine, which is one outline bordering Egypt, Jordan, Lebanon and Syria). The countries file draws the de facto
+lines; where the UN does not recognise one for a catalog country, and the catalog's area counts the recognised line,
+a rule sets it (see their comment): REASSIGN puts Crimea in Ukraine, CLIP_SOUTH stops Morocco at 27°40' N and CARVE
+puts the Golan Heights in Syria. Lines in dispute that no UN resolution settles (Kashmir, the Kurils) stay as drawn.
+A ring that comes to a country from another feature is joined to every ring it shares a stretch of border with, so no
+seam is drawn where the features met. Western Sahara, the dependencies and the other non-catalog features get no
+record: their rings go into "background", land drawn in the land colour that is no country (so Greenland or Puerto
+Rico is not shown as sea), simplified like a country's. Each outer ring is simplified with Douglas-Peucker at
+--tolerance degrees, keeps at least four points, and is dropped when its simplified area is under MIN_RING_AREA
+square degrees unless it is the country's largest or the one that holds (or is nearest) its capital (Tarawa, Abu
+Dhabi's island); coordinates are rounded to two decimals. A hole (an enclave: Lesotho in South Africa) is kept as the
+enclave's own drawn ring, so both outlines are one line and a renderer that cuts the holes out of the rings leaves
+the enclave out of its host; a hole whose enclave is not drawn is dropped. A country whose largest ring is under
+POINT_AREA square degrees (Monaco, the Vatican, the atoll states) is instead a square of POINT_SIDE degrees around
+its capital, marked "point": true, so every code has a polygon. The label is Natural Earth's LABEL_X/LABEL_Y; the
+capital is the point in HAND_CAPITALS (Palestine's), else the populated-places "Admin-0 capital" whose name matches
+the catalog's quizCapital (accents, case and punctuation folded; "Admin-0 capital alt" or any other place of the
+country when only that matches), else the first "Admin-0 capital", else the label point. A point square is labelled
+at its centre; a Natural Earth label that falls outside the frame (a few island states; Kiribati's sits on
+Kiritimati) is replaced by the centroid of the largest ring.
 
 The bbox is [west, south, east, north]. A country whose rings span more than 180 degrees of longitude (Russia, Fiji,
 Kiribati, the United States, New Zealand) has it computed with the western hemisphere shifted by +360, so east may
@@ -29,11 +41,11 @@ out; at 10 degrees the chain would pull in Alaska and Hawaii through the panhand
 Madeira. It uses the same shifted frame as the bbox when the country spans the antimeridian, and comes back to
 -180..180 when the rings it kept all lie west of it. For a point square and Antarctica the frame is the bbox.
 
-Format of world.json (compact, countries sorted by code):
+Format of world.json (compact, countries sorted by code; format 1 had no holes and no background):
 
-    {"format":1,"source":"Natural Earth 50m (public domain)","countries":{"FR":{"polys":[[[lon,lat],...],...],
-     "bbox":[west,south,east,north],"frame":[west,south,east,north],"label":[lon,lat],"capital":[lon,lat] or null,
-     "point":false},...}}
+    {"format":2,"source":"Natural Earth 50m (public domain)","countries":{"FR":{"polys":[[[lon,lat],...],...],
+     "holes":[[[lon,lat],...],...],"bbox":[west,south,east,north],"frame":[west,south,east,north],"label":[lon,lat],
+     "capital":[lon,lat] or null,"point":false,"neighbours":["AD",...]},...},"background":[[[lon,lat],...],...]}
 
 Geo.kt carries the same bbox, frame, label, capital and point flag per code, for the screens that need them without
 reading the asset. When the asset comes out over MAX_ASSET_BYTES the tolerance is raised to FALLBACK_TOLERANCE.
@@ -42,14 +54,19 @@ Land borders: each record also carries "neighbours", the codes of the catalog co
 with, sorted. Two countries border each other when their Natural Earth outlines (before simplification) share at
 least MIN_SHARED_VERTICES points (holes included, so an enclave meets its host): the 50m countries are cut from one
 set of boundary lines, so a shared border has the same points on both sides, while two countries that only touch
-at a corner (Namibia and Zimbabwe at the Kazungula quadripoint) share one. HAND_NEIGHBOURS adds the borders the data
-cannot show (the microstates drawn as point squares, the 150 m Botswana–Zambia border, Ceuta and Melilla, Saint
-Martin); DENY_NEIGHBOURS removes any false positive. Neighbours.kt carries the
-same lists, generated from the asset like Geo.kt.
+at a corner (Namibia and Zimbabwe at the Kazungula quadripoint) share one. Which land counts follows one rule, the
+CIA World Factbook's: a state's land borders are those of its integral territory (France's include French Guiana's
+with Brazil and Suriname, Spain's those of Ceuta and Melilla with Morocco) and not those of its dependencies or the
+other countries of its realm (Gibraltar, Saint Martin / Sint Maarten, Greenland, the Sovereign Base Areas on
+Cyprus), so the Netherlands borders Belgium and Germany only and the United Kingdom Ireland only. HAND_NEIGHBOURS
+adds the borders the data cannot show (the microstates drawn as point squares, the 150 m Botswana–Zambia border,
+Ceuta and Melilla); DENY_NEIGHBOURS removes any false positive. Neighbours.kt carries the same lists, generated from
+the asset like Geo.kt.
 
---check needs no download (CI runs it): it fails when the asset does not parse, is not format 1, misses a catalog
-code or lacks polygons for one, or when Geo.kt or Neighbours.kt is not what this script writes from the asset.
-Whether the asset itself is current is checked by regenerating it and looking at `git diff`.
+--check needs no download (CI runs it): it fails when the asset does not parse, is not format 2, misses a catalog
+code or lacks polygons or a holes list for one, has no background land, or when Geo.kt or Neighbours.kt is not what
+this script writes from the asset. Whether the asset itself is current is checked by regenerating it and looking at
+`git diff`.
 """
 import argparse
 import json
@@ -69,35 +86,65 @@ OUT_NEIGHBOURS_KT = REPO / 'app/src/main/java/com/example/data/model/Neighbours.
 DEFAULT_CACHE = Path.home() / '.cache' / 'natural-earth'   # outside the repository: the files are data, never run
 MIRROR = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/'
 COUNTRIES_FILE = 'ne_50m_admin_0_countries.geojson'
+DISPUTED_FILE = 'ne_50m_admin_0_breakaway_disputed_areas.geojson'
 PLACES_FILE = 'ne_10m_populated_places_simple.geojson'
 SOURCE = 'Natural Earth 50m (public domain)'
-FORMAT = 1
+FORMAT = 2
 
 TOLERANCE = 0.05            # Douglas-Peucker tolerance in degrees
 FALLBACK_TOLERANCE = 0.08   # used when the asset comes out over MAX_ASSET_BYTES
 MAX_ASSET_BYTES = 700 * 1024
-MIN_RING_AREA = 0.01        # square degrees; smaller simplified rings are dropped unless they are the largest
+MIN_RING_AREA = 0.01        # square degrees; smaller simplified rings are dropped unless largest or the capital's
 POINT_AREA = 0.01           # a country whose largest ring is under this is drawn as a point square
 POINT_SIDE = 0.08           # side of that square, degrees
 MIN_RING_POINTS = 4
 FRAME_GAP = 3               # degrees; a ring joins the frame when its bbox comes within this of the frame, both axes
 DECIMALS = 2
+SNAP = 0.01                 # degrees; a point of a disputed area this close to a point of an outline lies on it
 
 # Features whose ISO codes do not name a catalog country: ADM0_A3 -> catalog code. In the current file ISO_A2_EH
 # (or ISO_A2 for Taiwan, whose EH value is "CN-TW") already covers France, Norway, Kosovo, Palestine, South Sudan
-# and Taiwan; the entries are kept for older copies. Somaliland and Northern Cyprus are merged into their state.
+# and Taiwan; the entries are kept for older copies. Somaliland and Northern Cyprus are merged into their state, and
+# Åland, an autonomous part of Finland that the file draws as a feature of its own, into Finland (whose catalog area
+# counts it). The ISR feature, whose ISO codes name no catalog country, is merged into Palestine by the owner's rule
+# (the app names no other state there; CatalogPolicyTest records the exclusion): its ring lies between
+# Palestine's two, Gaza and the West Bank, and is joined to both along their shared lines, so Palestine is one
+# outline from Gaza to the Lebanese border with no seam. The Golan Heights, which that feature also holds, still go
+# to Syria (see CARVE).
 HAND_A3 = {
     'KOS': 'XK', 'FRA': 'FR', 'NOR': 'NO', 'PSX': 'PS', 'SDS': 'SS', 'TWN': 'TW',
-    'SOL': 'SO', 'CYN': 'CY',
+    'SOL': 'SO', 'CYN': 'CY', 'ALD': 'FI', 'ISR': 'PS',
 }
+# Natural Earth's default admin-0 file is its de facto view; its point-of-view files exist at 1:10m only. Besides the
+# merges above, the three places where the UN does not recognise the line the 50m file draws for a catalog country,
+# and the catalog's area counts the recognised one, are set here, by geometry, and checked by GeoTest:
+# REASSIGN moves a whole polygon of a feature (the one holding the point) to a catalog country: Crimea, a polygon of
+# its own in the RUS feature, to Ukraine (General Assembly resolution 68/262; it is joined to Ukraine's mainland ring
+# along their shared line).
+# CLIP_SOUTH cuts a country's rings at a parallel; the part south of it goes to the background feature named: Morocco
+# stops at 27°40' N, its line with Western Sahara (a non-self-governing territory on the UN's list), and the part
+# south of it is Western Sahara's background land.
+# CARVE takes an area, Natural Earth's own polygon in DISPUTED_FILE named by its BRK_NAME, out of the ring of the
+# feature that holds it (and the point) and adds it to a catalog country along their shared line: the Golan Heights,
+# which the ISR feature holds up to the 1974 line, to Syria (Security Council resolution 497); by then that feature's
+# ring is part of Palestine's (see HAND_A3), and the area is cut out of it there.
+# Lines in dispute that no UN resolution settles (Kashmir, the Kurils) stay as the 50m file draws them, and the
+# Siachen Glacier, a feature that India and Pakistan both claim, is background land.
+REASSIGN = [('RUS', 'UA', (34.10, 44.95))]     # (ADM0_A3 it is in, catalog code, a point in the polygon: Simferopol)
+CLIP_SOUTH = [('MA', 27 + 40 / 60, 'SAH')]     # (catalog code, latitude, ADM0_A3 of the background feature)
+CARVE = [('ISR', 'Golan Heights', 'SY', (35.69, 32.99))]  # (ADM0_A3 it is in, BRK_NAME, catalog code, a point: Katzrin)
 # Populated places use other ADM0_A3 values than the countries file for a few states.
 CAPITAL_A3 = {'SS': ['SSD', 'SDS'], 'PS': ['PSX'], 'XK': ['KOS']}
+# Capitals the populated places cannot give: the catalog's capital for Palestine is Al Quds (Jerusalem), which the
+# places list under no Palestinian code, so the point is set by hand, in East Jerusalem.
+HAND_CAPITALS = {'PS': (35.23, 31.78)}
 ANTARCTICA = 'AQ'
 
 MIN_SHARED_VERTICES = 2     # outline points two countries must share to count as bordering
 # Borders the outlines cannot show (see the module docstring): the point-square microstates; Botswana–Zambia's 150 m
-# at Kazungula; Spain–Morocco at Ceuta and Melilla and France–Netherlands on Saint Martin (not in the 50m outlines).
-HAND_NEIGHBOURS = ['VA IT', 'MC FR', 'SM IT', 'BW ZM', 'ES MA', 'FR NL']
+# at Kazungula; Spain–Morocco at Ceuta and Melilla, integral parts of Spain too small for the 50m outlines. No pair
+# for a dependency's border (Saint Martin / Sint Maarten, Gibraltar): the Factbook's rule leaves those out.
+HAND_NEIGHBOURS = ['VA IT', 'MC FR', 'SM IT', 'BW ZM', 'ES MA']
 DENY_NEIGHBOURS = []        # pairs the outlines wrongly join, as 'XX YY'
 ANTARCTICA_LABEL = (0.0, -80.0)
 
@@ -215,7 +262,8 @@ def bbox_of(polys, wrap=True):
 
 def frame_of(polys, bbox, capital):
     """The box of the largest ring and the capital's, plus every ring whose bbox comes within FRAME_GAP of it,
-    grown until stable; widened to the capital point when that still lies outside (Tarawa's atoll is too thin)."""
+    grown until stable; widened to the capital point when that still lies outside (Kingstown, just off its rounded
+    island)."""
     shifted = bbox[2] > 180
 
     def shift(lon):
@@ -255,6 +303,139 @@ def frame_of(polys, bbox, capital):
     if frame[0] >= 180:   # every ring kept lies west of the antimeridian: back to the plain frame
         frame = [frame[0] - 360, frame[1], frame[2] - 360, frame[3]]
     return frame
+
+
+def ring_contains(ring, lon, lat):
+    """Whether the point lies inside the ring (ray casting; closed or not)."""
+    hit = False
+    j = len(ring) - 1
+    for i in range(len(ring)):
+        (xi, yi), (xj, yj) = ring[i][:2], ring[j][:2]
+        if (yi > lat) != (yj > lat) and lon < (xj - xi) * (lat - yi) / (yj - yi) + xi:
+            hit = not hit
+        j = i
+    return hit
+
+
+def _open(ring):
+    """The ring's points without the closing repeat of the first."""
+    pts = [list(p[:2]) for p in ring]
+    return pts[:-1] if len(pts) > 1 and pts[0] == pts[-1] else pts
+
+
+def join_rings(a, b):
+    """Two rings that share one stretch of border (the same points, run the other way round in each, as Natural
+    Earth's neighbours are cut from one line) as one closed ring without it; None when they share no single stretch
+    of at least MIN_SHARED_VERTICES points."""
+    pa, pb = _open(a), _open(b)
+    n, m = len(pa), len(pb)
+
+    def key(p):
+        return round(p[0], 6), round(p[1], 6)
+    in_b = {key(p): j for j, p in enumerate(pb)}
+    shared = {i for i, p in enumerate(pa) if key(p) in in_b}
+    if len(shared) < MIN_SHARED_VERTICES or len(shared) == n:
+        return None
+    starts = [i for i in shared if (i - 1) % n not in shared]
+    if len(starts) != 1:
+        return None
+    first = last = starts[0]
+    while (last + 1) % n in shared:
+        last = (last + 1) % n
+    j_last, j_first = in_b[key(pa[last])], in_b[key(pa[first])]
+    # b runs the stretch from a's last point to its first: check it does, point for point.
+    if (j_first - j_last) % m + 1 != len(shared) or any(
+            key(pb[(j_last + k) % m]) != key(pa[(last - k) % n]) for k in range(len(shared))):
+        return None
+    out = [pa[(last + k) % n] for k in range((first - last) % n + 1)]       # a, from the stretch's end to its start
+    out += [pb[(j_first + k) % m] for k in range(1, (j_last - j_first) % m)]  # b, round the other side
+    return out + [out[0]]
+
+
+def add_rings(rings, new):
+    """Adds the rings of another feature to a country's: one that shares a stretch of border with rings already
+    there is joined to each of them in turn, so no seam is drawn where the features met, whichever feature the file
+    has first (the ISR feature lies between Palestine's two rings and meets both). The union takes the place of the
+    first ring it was joined to. Returns how many joins were made."""
+    joined = 0
+    there = len(rings)
+    for ring in new:
+        hits = []
+        for i in range(there):
+            union = join_rings(rings[i], ring)
+            if union is not None:
+                ring = union
+                hits.append(i)
+        if not hits:
+            rings.append(ring)
+            continue
+        rings[hits[0]] = ring
+        for i in reversed(hits[1:]):    # in place: rings_of holds the list
+            del rings[i]
+        there -= len(hits) - 1
+        joined += len(hits)
+    return joined
+
+
+def parallel_crossings(ring, lat):
+    """How many times the ring crosses the parallel; touching it at a point is no crossing."""
+    sides = [p[1] > lat for p in _open(ring) if p[1] != lat]
+    return sum(a != b for a, b in zip(sides, sides[1:] + sides[:1]))
+
+
+def split_at_parallel(ring, lat):
+    """The parts of the ring north and south of the parallel (Sutherland-Hodgman against each half; a point on it
+    goes to both), each closed, or [] for a side the ring does not reach. A ring the parallel crosses twice gives two
+    simple rings; one it crosses more often gives a side in pieces joined by edges along the parallel, which a renderer
+    would stroke, so CLIP_SOUTH takes only rings that parallel_crossings says cross it twice or not at all."""
+    pts = _open(ring)
+    north, south = [], []
+    for i, p in enumerate(pts):
+        q = pts[(i + 1) % len(pts)]
+        if p[1] >= lat:
+            north.append(p)
+        if p[1] <= lat:
+            south.append(p)
+        if (p[1] - lat) * (q[1] - lat) < 0:
+            cut = [p[0] + (lat - p[1]) * (q[0] - p[0]) / (q[1] - p[1]), lat]
+            north.append(cut)
+            south.append(cut)
+    return [r + [r[0]] if len(r) >= 3 else [] for r in (north, south)]
+
+
+def replace_stretch(ring, area):
+    """The ring with the stretch of its outline that the area runs along replaced by the rest of the area's outline:
+    the ring without the area when the area lies inside it, the two as one ring when it lies outside; closed, and
+    running the ring's way round either way. A point of the area lies on the ring when it is within SNAP of one of the
+    ring's points (Natural Earth's disputed areas are cut from nearly, not exactly, the countries' lines). None unless
+    the area leaves the ring's outline once and comes back once."""
+    pts, edge = _open(ring), _open(area)
+    n, m = len(pts), len(edge)
+
+    def on_ring(p):
+        i = min(range(n), key=lambda k: (pts[k][0] - p[0]) ** 2 + (pts[k][1] - p[1]) ** 2)
+        return i if math.hypot(pts[i][0] - p[0], pts[i][1] - p[1]) <= SNAP else None
+    at = [on_ring(p) for p in edge]
+    starts = [k for k in range(m) if at[k] is None and at[k - 1] is not None]
+    if len(starts) != 1:
+        return None
+    k = starts[0]
+    run = []    # the area's outline away from the ring, from where it leaves the ring to where it comes back
+    while at[k % m] is None:
+        run.append(edge[k % m])
+        k += 1
+    a, b = at[starts[0] - 1], at[k % m]
+    along = {i for i in at if i is not None} - {a, b}
+    between = {(a + i) % n for i in range(1, (b - a) % n)}     # the ring's points from a to b, its way round
+    if a == b or not along:
+        return None
+    if along <= between:            # the area runs along a..b: keep b..a, then on from a to b by the run
+        out = [pts[(b + i) % n] for i in range((a - b) % n + 1)] + run
+    elif not along & between:       # along b..a: keep a..b, then back from b to a by the run
+        out = [pts[(a + i) % n] for i in range((b - a) % n + 1)] + run[::-1]
+    else:
+        return None
+    return out + [out[0]]
 
 
 def inside(point, bbox):
@@ -368,29 +549,90 @@ def build(cache, tolerance, report):
     catalog = {e['code']: e for e in entries()}
     codes = set(catalog)
     countries_fc = fetch(cache, COUNTRIES_FILE)
+    disputed_fc = fetch(cache, DISPUTED_FILE)
     places_fc = fetch(cache, PLACES_FILE)
 
-    raw = {}        # code -> {'rings': [...], 'labels': [(area, (x, y))], 'a3': set()}
+    raw = {}        # code -> {'rings': [...], 'holes': [...], 'labels': [(area, (x, y))], 'a3': set()}
+    other_land = {}  # ADM0_A3 -> outer rings of a feature that is no catalog country: the background land
+    rings_of = {}   # ADM0_A3 -> the list its outer rings went into (a country's or the background feature's)
     hand_used = []
     dropped = []
+    moved = []      # (code, polygon) from REASSIGN
+    joined = {}     # code or ADM0_A3 -> rings joined to another feature's along a shared border
     for feature in countries_fc['features']:
         props = feature['properties']
         code, field = catalog_code(props, codes)
+        geometry = feature['geometry']
+        polygons = [geometry['coordinates']] if geometry['type'] == 'Polygon' else geometry['coordinates']
+        for source, target, (lon, lat) in REASSIGN:
+            if props.get('ADM0_A3') == source:
+                hits = [p for p in polygons if p and ring_contains(p[0], lon, lat)]
+                if len(hits) != 1:
+                    raise SystemExit(f'REASSIGN: {len(hits)} polygons of {source} hold {lon}, {lat}; expected one')
+                moved.append((target, hits[0]))
+                polygons = [p for p in polygons if p is not hits[0]]
+        rings = [polygon[0] for polygon in polygons if polygon]
         if code is None:
             dropped.append(f"{props.get('ADM0_A3')} {props.get('NAME')}")
+            a3 = props['ADM0_A3']
+            rings_of[a3] = other_land.setdefault(a3, [])
+            joined[a3] = joined.get(a3, 0) + add_rings(other_land[a3], rings)
             continue
         if field == 'ADM0_A3':
             hand_used.append(f"{props['ADM0_A3']} -> {code}")
-        geometry = feature['geometry']
-        polygons = [geometry['coordinates']] if geometry['type'] == 'Polygon' else geometry['coordinates']
-        rings = [polygon[0] for polygon in polygons if polygon]
         entry = raw.setdefault(code, {'rings': [], 'holes': [], 'labels': [], 'a3': set()})
-        entry['rings'].extend(rings)
-        # The holes are kept for the borders only: an enclave (Lesotho) shares its outline with its host's hole.
+        rings_of[props['ADM0_A3']] = entry['rings']
+        joined[code] = joined.get(code, 0) + add_rings(entry['rings'], rings)
+        # An enclave (Lesotho) shares its outline with its host's hole: the holes count for the borders, and the
+        # ones whose enclave is drawn are cut out of the host (see holes_of).
         entry['holes'].extend(hole for polygon in polygons for hole in polygon[1:])
         entry['a3'].add(props['ADM0_A3'])
         if props.get('LABEL_X') is not None and props.get('LABEL_Y') is not None:
             entry['labels'].append((max((ring_area(r) for r in rings), default=0), (props['LABEL_X'], props['LABEL_Y'])))
+
+    # The recognised lines (see REASSIGN and CLIP_SOUTH), after every feature is read so the order does not matter.
+    for target, polygon in moved:
+        joined[target] = joined.get(target, 0) + add_rings(raw[target]['rings'], [polygon[0]])
+        raw[target]['holes'].extend(polygon[1:])
+    for code, lat, a3 in CLIP_SOUTH:
+        kept, cut = [], []
+        for ring in raw[code]['rings']:
+            crossings = parallel_crossings(ring, lat)
+            if crossings not in (0, 2):
+                raise SystemExit(f'CLIP_SOUTH: a ring of {code} crosses {lat:.4f} N {crossings} times; expected 0 or 2')
+            north, south = split_at_parallel(ring, lat)
+            if north:
+                kept.append(north)
+            if south:
+                cut.append(south)
+        if not kept or not cut:
+            raise SystemExit(f'CLIP_SOUTH: {lat} does not cut {code}')
+        raw[code]['rings'][:] = kept    # in place: rings_of holds the list
+        joined[a3] = joined.get(a3, 0) + add_rings(other_land.setdefault(a3, []), cut)
+    for source, name, target, (lon, lat) in CARVE:
+        areas = [f for f in disputed_fc['features'] if f['properties'].get('BRK_NAME') == name]
+        if len(areas) != 1 or areas[0]['geometry']['type'] != 'Polygon':
+            raise SystemExit(f'CARVE: {len(areas)} features of {DISPUTED_FILE} are named {name}; expected a polygon')
+        area = areas[0]['geometry']['coordinates'][0]
+        holder = rings_of[source]
+        hits = [i for i, ring in enumerate(holder) if ring_contains(ring, lon, lat)]
+        if not ring_contains(area, lon, lat) or len(hits) != 1:
+            raise SystemExit(f'CARVE: {name} or not exactly one ring of {source} holds {lon}, {lat}')
+        rest = replace_stretch(holder[hits[0]], area)
+        # The target's ring that the area runs along: the one with the most of its points.
+        rings = raw[target]['rings']
+        best = max(range(len(rings)), key=lambda i: sum(
+            min(math.hypot(p[0] - q[0], p[1] - q[1]) for q in rings[i]) <= SNAP for p in area))
+        grown = replace_stretch(rings[best], area)
+        if rest is None or grown is None or ring_contains(rest, lon, lat) or not ring_contains(grown, lon, lat):
+            raise SystemExit(f'CARVE: {name} does not leave {source} and join {target} along one stretch each')
+        holder[hits[0]] = rest
+        rings[best] = grown
+    merged = {s: f' (merged into {HAND_A3[s]})' if s in HAND_A3 else '' for s, _, _, _ in CARVE}
+    report.append(f'recognised lines: {", ".join(f"{s} polygon at {p} -> {t}" for s, t, p in REASSIGN)}; '
+                  f'{", ".join(f"{c} cut at {lat:.4f} N, the rest to {a3}" for c, lat, a3 in CLIP_SOUTH)}; '
+                  f'{", ".join(f"{n} out of {s}{merged[s]}, into {t}" for s, n, t, _ in CARVE)}')
+    report.append(f'rings joined along a shared border: {", ".join(f"{k} {v}" for k, v in sorted(joined.items()) if v) or "none"}')
 
     capitals = {}   # code -> [candidate]
     for feature in places_fc['features']:
@@ -407,30 +649,41 @@ def build(cache, tolerance, report):
 
     neighbours = adjacency(raw, report)
     countries = {}
-    point_codes, fallback_capitals, inexact, relabelled = [], [], [], []
+    drawn = {}      # code -> {index of a raw ring: the ring drawn for it}
+    point_codes, fallback_capitals, inexact, relabelled, by_hand, capital_rings = [], [], [], [], [], []
     for code in sorted(codes):
         if code == ANTARCTICA:
-            rings = raw[code]['rings']
-            polys = simplify_country(rings, tolerance)
+            drawn[code] = simplify_rings(raw[code]['rings'], tolerance)
             # Its ring goes round the pole, so the plain box (the whole band) is the right one.
-            countries[code] = record(polys, list(ANTARCTICA_LABEL), None, False, wrap=False)
+            countries[code] = record(list(drawn[code].values()), list(ANTARCTICA_LABEL), None, False, wrap=False)
             countries[code]['neighbours'] = []
             continue
         if code not in raw:
             raise SystemExit(f'{code} ({catalog[code]["name"]}) has no feature in {COUNTRIES_FILE}')
         data = raw[code]
         label = list(max(data['labels'])[1]) if data['labels'] else None
-        picked = pick_capital(catalog[code], capitals.get(code, []))
-        if picked and not picked[2] == 'matched':
-            inexact.append(f'{code} {picked[2]}')
+        if code in HAND_CAPITALS:
+            picked = (*HAND_CAPITALS[code], 'by hand')
+            by_hand.append(f'{code} {catalog[code]["capital"]}')
+        else:
+            picked = pick_capital(catalog[code], capitals.get(code, []))
+            if picked and not picked[2] == 'matched':
+                inexact.append(f'{code} {picked[2]}')
         largest = max(ring_area(r) for r in data['rings'])
         if largest < POINT_AREA:
             centre = picked[:2] if picked else label
-            polys = [point_square(*centre)]
+            square = point_square(*centre)
+            drawn[code] = {i: square for i in range(len(data['rings']))}   # every ring of it is the square
+            polys = [square]
             point = True
             point_codes.append(code)
         else:
-            polys = simplify_country(data['rings'], tolerance)
+            keep = capital_ring(data['rings'], picked[:2]) if picked else None
+            drawn[code] = simplify_rings(data['rings'], tolerance, keep)
+            areas = [ring_area(r) for r in drawn[code].values()]
+            if keep is not None and ring_area(drawn[code][keep]) < min(MIN_RING_AREA, max(areas)):
+                capital_rings.append(code)
+            polys = list(drawn[code].values())
             point = False
         if point:
             label = list(centre)
@@ -446,21 +699,77 @@ def build(cache, tolerance, report):
         countries[code] = record(polys, label, capital, point)
         countries[code]['neighbours'] = neighbours.get(code, [])
 
+    holes_of(raw, drawn, countries, report)
+    background = []
+    for a3 in sorted(other_land):
+        background.extend(simplify_country(other_land[a3], tolerance))
+
     report.append(f'hand map used: {", ".join(sorted(set(hand_used))) or "none"}')
-    report.append(f'dropped {len(dropped)} non-catalog features: {", ".join(dropped)}')
+    report.append(f'dropped {len(dropped)} non-catalog features, drawn as background land in {len(background)} rings: '
+                  f'{", ".join(dropped)}')
     report.append(f'countries: {len(countries)} ({len(countries) - len(point_codes)} from 50m outlines, '
                   f'{len(point_codes)} point squares: {", ".join(point_codes)})')
     report.append(f'capitals matched inexactly: {"; ".join(inexact) or "none"}')
+    report.append(f'capitals set by hand: {"; ".join(by_hand) or "none"}')
+    report.append(f"capital's ring kept under MIN_RING_AREA: {', '.join(capital_rings) or 'none'}")
     report.append(f'label point outside the outline, centroid used: {", ".join(relabelled) or "none"}')
     report.append(f'capitals missing, label used: {", ".join(fallback_capitals) or "none"}')
-    return countries
+    return countries, background
 
 
-def simplify_country(rings, tolerance):
+def holes_of(raw, drawn, countries, report):
+    """Gives each record its "holes": for each Natural Earth hole, the drawn ring of the enclave that fills it (the
+    outer ring of another country that has most of the hole's points), so the two outlines are one line. A hole whose
+    enclave is not drawn (too small, like Malawi's islands in Mozambique's part of the lake) is left out."""
+    owners = {}     # raw outline vertex -> {(code, ring index)}
+    for code, entry in raw.items():
+        for i, ring in enumerate(entry['rings']):
+            for point in ring:
+                owners.setdefault((round(point[0], 6), round(point[1], 6)), set()).add((code, i))
+    kept, left_out = [], []
+    for code in sorted(countries):
+        holes = []
+        for hole in raw.get(code, {}).get('holes', []):
+            counts = {}
+            for point in hole:
+                for owner in owners.get((round(point[0], 6), round(point[1], 6)), ()):
+                    if owner[0] != code:
+                        counts[owner] = counts.get(owner, 0) + 1
+            best = max(counts, key=lambda owner: (counts[owner], owner), default=None)   # ties by code, not set order
+            if best is not None and counts[best] * 2 >= len(hole) and best[1] in drawn.get(best[0], {}):
+                holes.append(drawn[best[0]][best[1]])
+                kept.append(f'{best[0]} in {code}')
+            else:
+                left_out.append(f'{best[0] if best else "?"} in {code}')
+        countries[code]['holes'] = holes
+    report.append(f'holes cut for their enclave: {", ".join(kept) or "none"}; '
+                  f'left out (enclave not drawn): {", ".join(left_out) or "none"}')
+
+
+def capital_ring(rings, capital):
+    """The index of the raw ring that holds the capital, or of the one nearest to it (a coastal capital can sit just
+    off its outline)."""
+    lon, lat = capital
+    for i, ring in enumerate(rings):
+        if ring_contains(ring, lon, lat):
+            return i
+
+    def distance(ring):
+        return min(_segment_distance((lon, lat), ring[k][:2], ring[(k + 1) % len(ring)][:2]) for k in range(len(ring)))
+    return min(range(len(rings)), key=lambda i: distance(rings[i]))
+
+
+def simplify_rings(rings, tolerance, keep=None):
+    """Raw ring index -> simplified ring, for the rings kept: the largest, every one of at least MIN_RING_AREA, and
+    the one at index [keep] whatever its size (the capital's: Tarawa, Abu Dhabi's island)."""
     simplified = [simplify_ring(r, tolerance) for r in rings]
     areas = [ring_area(r) for r in simplified]
     largest = areas.index(max(areas))
-    return [r for i, r in enumerate(simplified) if i == largest or areas[i] >= MIN_RING_AREA]
+    return {i: r for i, r in enumerate(simplified) if i in (largest, keep) or areas[i] >= MIN_RING_AREA}
+
+
+def simplify_country(rings, tolerance):
+    return list(simplify_rings(rings, tolerance).values())
 
 
 def record(polys, label, capital, point, wrap=True):
@@ -469,6 +778,7 @@ def record(polys, label, capital, point, wrap=True):
     bbox = bbox_of(polys, wrap)
     return {
         'polys': polys,
+        'holes': [],
         'bbox': [rnd(v) for v in bbox],
         'frame': [rnd(v) for v in (bbox if point or not wrap else frame_of(polys, bbox, capital))],
         'label': [rnd(label[0]), rnd(label[1])],
@@ -479,8 +789,8 @@ def record(polys, label, capital, point, wrap=True):
 
 # ---------------------------------------------------------------------------------------------------- outputs
 
-def asset_text(countries):
-    return json.dumps({'format': FORMAT, 'source': SOURCE, 'countries': countries},
+def asset_text(countries, background):
+    return json.dumps({'format': FORMAT, 'source': SOURCE, 'countries': countries, 'background': background},
                       separators=(',', ':'), ensure_ascii=False) + '\n'
 
 
@@ -585,6 +895,11 @@ def check():
             problems.append(f'{code} has no bbox or frame')
         elif not isinstance(c.get('neighbours'), list):
             problems.append(f'{code} has no neighbours list')
+        elif not isinstance(c.get('holes'), list) or any(len(ring) < MIN_RING_POINTS for ring in c['holes']):
+            problems.append(f'{code} has no usable holes list')
+    background = data.get('background')
+    if not isinstance(background, list) or not background or any(len(ring) < MIN_RING_POINTS for ring in background):
+        problems.append('the background land is missing or has a ring of fewer than four points')
     for code in codes:
         for other in countries.get(code, {}).get('neighbours', []):
             if other not in countries:
@@ -619,24 +934,25 @@ def main():
 
     tolerance = args.tolerance
     report = []
-    countries = build(args.cache, tolerance, report)
-    text = asset_text(countries)
+    countries, background = build(args.cache, tolerance, report)
+    text = asset_text(countries, background)
     if len(text.encode('utf-8')) > MAX_ASSET_BYTES and tolerance < FALLBACK_TOLERANCE:
         print(f'asset would be {len(text.encode("utf-8"))} bytes at {tolerance} degrees; '
               f'retrying at {FALLBACK_TOLERANCE}')
         tolerance = FALLBACK_TOLERANCE
         report = []
-        countries = build(args.cache, tolerance, report)
-        text = asset_text(countries)
+        countries, background = build(args.cache, tolerance, report)
+        text = asset_text(countries, background)
     OUT_JSON.parent.mkdir(parents=True, exist_ok=True)
     OUT_JSON.write_text(text, encoding='utf-8')
     OUT_KT.write_text(kotlin_text(countries), encoding='utf-8')
     OUT_NEIGHBOURS_KT.write_text(neighbours_text(countries), encoding='utf-8')
     for line in report:
         print(line)
-    points = sum(len(ring) for c in countries.values() for ring in c['polys'])
-    rings = sum(len(c['polys']) for c in countries.values())
-    print(f'tolerance {tolerance} degrees: {rings} rings, {points} points')
+    points = sum(len(ring) for c in countries.values() for ring in c['polys'] + c['holes'])
+    rings = sum(len(c['polys']) + len(c['holes']) for c in countries.values())
+    print(f'tolerance {tolerance} degrees: {rings} rings, {points} points in the countries; '
+          f'{len(background)} rings, {sum(len(ring) for ring in background)} points of background land')
     print(f'wrote {OUT_JSON.relative_to(REPO)}: {OUT_JSON.stat().st_size} bytes; {OUT_KT.relative_to(REPO)}; {OUT_NEIGHBOURS_KT.relative_to(REPO)}')
     return 0
 

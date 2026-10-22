@@ -1,15 +1,31 @@
 package com.example.progress
 
 import com.example.quiz.QuizMode
+import java.util.TimeZone
 
 /**
  * What a country can be known by. A flag quiz, a capital quiz, a continent quiz and a map quiz measure different
  * things; the continent is its own skill so that a right continent pick never marks a flag as learning, and the
  * location (Map → Country) its own so that knowing where a country is never counts as knowing its flag. The UI shows
  * FLAG and CAPITAL on the cards and LOCATION on the detail sheet and Progress; CONTINENT rows are stored like the
- * others. The names are stored in the skill rows.
+ * others and shown on the detail sheet. The names are stored in the skill rows.
  */
-enum class Skill { FLAG, CAPITAL, CONTINENT, LOCATION }
+enum class Skill {
+    FLAG, CAPITAL, CONTINENT, LOCATION;
+
+    /**
+     * Whether this skill's reviews fall due: every skill but the continent. A continent pick is light evidence, which
+     * never moves a due date on, and the continent quiz always asks the whole world (it has no Due scope), so nothing
+     * could ever clear a continent review: its rows keep a score and a box, and no due count, list or forecast
+     * includes them.
+     */
+    val hasReviews: Boolean get() = this != CONTINENT
+
+    companion object {
+        /** The skills whose reviews fall due ([hasReviews]): what the Due tile, the Today card, the widget and the forecast count. */
+        val REVIEWED: List<Skill> = entries.filter { it.hasReviews }
+    }
+}
 
 /**
  * How much an answer says. A quiz answer among four countries is FULL evidence; one given against a clock (Speed
@@ -50,6 +66,10 @@ data class SkillState(
  * (before the item is due) raises the score but does not promote the box, so nothing is mastered in one sitting,
  * and light evidence alone (continent picks, flashcards) tops out below the mastery line. A miss drops boxes
  * rather than resetting: a long-known flag missed once is reviewed sooner, not relearned from scratch.
+ *
+ * A review falls due on a local day, not at a minute: the intervals are counted from the answer, and the item is
+ * due from the start of the day its due time falls on ([endOfToday]), so a flag learnt on Monday evening is due all
+ * of Tuesday, and answering it on Tuesday morning is its due review.
  */
 object SkillMastery {
     const val MAX_BOX = 5
@@ -92,24 +112,24 @@ object SkillMastery {
 
     fun intervalMillis(box: Int): Long = INTERVAL_DAYS[box.coerceIn(0, MAX_BOX)] * DAY_MILLIS
 
-    /** The state after one quiz answer about the country, right or wrong, at [now]. */
-    fun afterAnswer(state: SkillState, correct: Boolean, evidence: Evidence, now: Long): SkillState = when (evidence) {
+    /** The state after one quiz answer about the country, right or wrong, at [now]; [zone] says which day that is. */
+    fun afterAnswer(state: SkillState, correct: Boolean, evidence: Evidence, now: Long, zone: TimeZone): SkillState = when (evidence) {
         Evidence.FULL ->
-            if (correct) promoteIfDue(state, now, newScore = minOf(100, state.score + FULL_RIGHT))
+            if (correct) promoteIfDue(state, now, zone, newScore = minOf(100, state.score + FULL_RIGHT))
             else demote(state, now, by = 2, newScore = maxOf(0, state.score - FULL_WRONG))
         Evidence.TIMED ->
-            if (correct) promoteIfDue(state, now, newScore = minOf(100, state.score + FULL_RIGHT))
+            if (correct) promoteIfDue(state, now, zone, newScore = minOf(100, state.score + FULL_RIGHT))
             else demote(state, now, by = 1, newScore = maxOf(0, state.score - TIMED_WRONG))
         Evidence.LIGHT ->
-            if (correct) seen(state, now, newScore = lightAdd(state.score, LIGHT_RIGHT))
+            if (correct) seen(state, now, zone, newScore = lightAdd(state.score, LIGHT_RIGHT))
             else demote(state, now, by = 1, newScore = maxOf(0, state.score - LIGHT_WRONG))
     }
 
-    /** The state after a flashcard grade at [now]. */
-    fun afterGrade(state: SkillState, grade: Grade, now: Long): SkillState = when (grade) {
+    /** The state after a flashcard grade at [now]; [zone] says which day that is. */
+    fun afterGrade(state: SkillState, grade: Grade, now: Long, zone: TimeZone): SkillState = when (grade) {
         Grade.AGAIN -> demote(state, now, by = 2, newScore = maxOf(0, state.score - AGAIN_WRONG))
-        Grade.GOOD -> seen(state, now, newScore = lightAdd(state.score, LIGHT_RIGHT), rescheduleDue = true)
-        Grade.EASY -> promoteIfDue(state, now, newScore = lightAdd(state.score, EASY_RIGHT), maxBox = SELF_GRADE_MAX_BOX)
+        Grade.GOOD -> seen(state, now, zone, newScore = lightAdd(state.score, LIGHT_RIGHT), rescheduleDue = true)
+        Grade.EASY -> promoteIfDue(state, now, zone, newScore = lightAdd(state.score, EASY_RIGHT), maxBox = SELF_GRADE_MAX_BOX)
     }
 
     /** Known well and kept up: box 3 or higher, score at the line, and not left for longer than twice its interval. */
@@ -117,8 +137,20 @@ object SkillMastery {
         state != null && state.box >= MASTERED_BOX && state.score >= MASTERED_SCORE &&
             now <= state.dueAt + intervalMillis(state.box)
 
-    /** Reviewed before and ready for the next review. A country never reviewed is unseen, not due. */
-    fun isDue(state: SkillState?, now: Long): Boolean = state != null && !state.isNew && state.dueAt <= now
+    /**
+     * Where "due today" ends: the local midnight that closes the day of [now] in [zone] (a 23- or 25-hour day across
+     * a clock change, the current zone after a time-zone change). Every review due before it is due today, whatever
+     * the hour; the Coming up forecast starts at it, so each review is in exactly one of the two.
+     */
+    fun endOfToday(now: Long, zone: TimeZone): Long = DueForecast.startOfDay(now, zone, daysAhead = 1)
+
+    /**
+     * Reviewed before and due today or overdue ([endOfToday]): the one rule behind every due count and list (the Due
+     * tile, the Today card, the quiz's Due scope, the study chooser, the widget) and behind promotion, so an answer to
+     * a review due this evening counts as the due review. A country never reviewed is unseen, not due.
+     */
+    fun isDue(state: SkillState?, now: Long, zone: TimeZone): Boolean =
+        state != null && !state.isNew && state.dueAt < endOfToday(now, zone)
 
     /** Reviewed before and not (or no longer) mastered. */
     fun isWeak(state: SkillState?, now: Long): Boolean = state != null && !state.isNew && !isMastered(state, now)
@@ -130,8 +162,8 @@ object SkillMastery {
      * A right answer: one box up (never past [maxBox]) and a longer interval when the item was due; an early answer
      * keeps its schedule. An item already at or above [maxBox] when due is rescheduled at its box, not moved down.
      */
-    private fun promoteIfDue(state: SkillState, now: Long, newScore: Int, maxBox: Int = MAX_BOX): SkillState {
-        val due = state.isNew || state.dueAt <= now
+    private fun promoteIfDue(state: SkillState, now: Long, zone: TimeZone, newScore: Int, maxBox: Int = MAX_BOX): SkillState {
+        val due = state.isNew || isDue(state, now, zone)
         val box = if (due && state.box < maxBox) state.box + 1 else state.box
         return state.copy(
             score = newScore,
@@ -148,9 +180,9 @@ object SkillMastery {
      * Light evidence of knowing: counts as seen and keeps the schedule (a new item becomes due tomorrow). With
      * [rescheduleDue], a due item is rescheduled at its current box, so studying it clears it from the due list.
      */
-    private fun seen(state: SkillState, now: Long, newScore: Int, rescheduleDue: Boolean = false): SkillState {
+    private fun seen(state: SkillState, now: Long, zone: TimeZone, newScore: Int, rescheduleDue: Boolean = false): SkillState {
         val box = maxOf(1, state.box)
-        val reschedule = state.isNew || (rescheduleDue && isDue(state, now))
+        val reschedule = state.isNew || (rescheduleDue && isDue(state, now, zone))
         return state.copy(
             score = newScore,
             box = box,

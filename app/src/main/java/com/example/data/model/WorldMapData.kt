@@ -31,6 +31,12 @@ data class MapCountry(
      * repeated its first point at the end had it dropped). A ring with fewer than three points is left out.
      */
     val polys: List<FloatArray>,
+    /**
+     * Rings cut out of [polys], flattened the same way: the enclaves inside the country (Lesotho in South Africa, San
+     * Marino and the Vatican in Italy), each the very ring the enclave is drawn with. The highlight is [polys] less
+     * these, so the enclave keeps its own colour when this country is highlighted. Empty for most countries.
+     */
+    val holes: List<FloatArray>,
     /** The box of every ring, far-flung territories included. */
     val bbox: Bbox,
     /**
@@ -49,8 +55,12 @@ data class MapCountry(
 /**
  * The outlines of every country, from the asset `world.json` (Natural Earth, 50m). About 197 countries and some
  * tens of thousands of points, so it is read once per process ([loadShared]) and off the main thread.
+ *
+ * [background] is the rest of the land, the places that are not in the catalog (Greenland, Western Sahara, Puerto
+ * Rico, Hong Kong…), as bare rings: drawn in the land colour so they are not sea, but no country, so they are never
+ * highlighted, looked up or counted.
  */
-class WorldMapData(val countries: Map<String, MapCountry>) {
+class WorldMapData(val countries: Map<String, MapCountry>, val background: List<FloatArray> = emptyList()) {
 
     operator fun get(code: String): MapCountry? = countries[code]
 
@@ -73,7 +83,7 @@ class WorldMapData(val countries: Map<String, MapCountry>) {
                 shared ?: withContext(Dispatchers.IO) { load(context.applicationContext) }.also { shared = it }
             }
 
-        /** Whether the asset ships in this build: tests against the real data skip without it. */
+        /** Whether the asset ships in this build: the tests against the real data fail without it. */
         fun isBundled(context: Context): Boolean =
             try {
                 context.assets.open(ASSET).close()
@@ -91,23 +101,21 @@ class WorldMapData(val countries: Map<String, MapCountry>) {
             }
 
         /**
-         * Parses the asset format: `{"format":1,"countries":{"FR":{"polys":[[[lon,lat],…],…],"bbox":[w,s,e,n],
-         * "frame":[w,s,e,n],"label":[lon,lat],"capital":[lon,lat] or null,"point":false},…}}`. `frame` is optional.
+         * Parses the asset format: `{"format":2,"countries":{"FR":{"polys":[[[lon,lat],…],…],"holes":[[[lon,lat],…],…],
+         * "bbox":[w,s,e,n],"frame":[w,s,e,n],"label":[lon,lat],"capital":[lon,lat] or null,"point":false},…},
+         * "background":[[[lon,lat],…],…]}`. `holes`, `frame` and `background` are optional (format 1 had none of them).
          */
         fun parse(json: String): WorldMapData {
-            val countries = JSONObject(json).getJSONObject("countries")
+            val root = JSONObject(json)
+            val countries = root.getJSONObject("countries")
             val map = LinkedHashMap<String, MapCountry>(countries.length() * 2)
             for (code in countries.keys()) {
                 val entry = countries.getJSONObject(code)
-                val rings = entry.getJSONArray("polys")
-                val polys = ArrayList<FloatArray>(rings.length())
-                for (i in 0 until rings.length()) {
-                    ring(rings.getJSONArray(i))?.let(polys::add)
-                }
                 val bbox = bbox(entry.getJSONArray("bbox"))
                 map[code] = MapCountry(
                     code = code,
-                    polys = polys,
+                    polys = rings(entry.getJSONArray("polys")),
+                    holes = entry.optJSONArray("holes")?.let(::rings).orEmpty(),
                     bbox = bbox,
                     frame = entry.optJSONArray("frame")?.let(::bbox) ?: bbox,
                     label = lonLat(entry.getJSONArray("label")),
@@ -116,7 +124,16 @@ class WorldMapData(val countries: Map<String, MapCountry>) {
                     point = entry.optBoolean("point", false)
                 )
             }
-            return WorldMapData(map)
+            return WorldMapData(map, root.optJSONArray("background")?.let(::rings).orEmpty())
+        }
+
+        /** Each ring of the list flattened ([ring]); the ones without area left out. */
+        private fun rings(list: JSONArray): List<FloatArray> {
+            val out = ArrayList<FloatArray>(list.length())
+            for (i in 0 until list.length()) {
+                ring(list.getJSONArray(i))?.let(out::add)
+            }
+            return out
         }
 
         private fun lonLat(pair: JSONArray) = LonLat(pair.getDouble(0).toFloat(), pair.getDouble(1).toFloat())

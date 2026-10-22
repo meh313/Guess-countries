@@ -7,6 +7,7 @@ import androidx.work.WorkerParameters
 import com.example.data.local.AppDatabase
 import com.example.data.settings.AppLanguage
 import com.example.data.settings.PrefsUserSettings
+import com.example.data.settings.goalHistory
 import com.example.progress.PracticeStreak
 import com.example.widget.TodayWidget
 import java.util.TimeZone
@@ -54,12 +55,12 @@ class ReminderWorker(
     private suspend fun notifyIfNothingPracticed(at: Long) {
         val sessions = AppDatabase.getDatabase(applicationContext).userProgressDao().practiceSessions().map { it.toPracticeSession() }
         val settings = PrefsUserSettings(applicationContext)
-        val goal = settings.dailyGoal
+        val goals = settings.goalHistory
         val allowed = ReminderNotifier.areNotificationsAllowed(applicationContext)
-        if (ReminderSchedule.shouldNotify(enabled = true, allowed, sessions, goal, at, zone())) {
+        if (ReminderSchedule.shouldNotify(enabled = true, allowed, sessions, goals.current, at, zone())) {
             // In the language the screens use, not the phone's, before Android 13 (from 13 the system does it).
             val localised = AppLanguage.wrap(applicationContext, settings.language)
-            ReminderNotifier.show(localised, ReminderSchedule.message(PracticeStreak.summary(sessions, goal, at, zone())))
+            ReminderNotifier.show(localised, ReminderSchedule.message(PracticeStreak.summary(sessions, goals, at, zone())))
         }
     }
 

@@ -5,9 +5,11 @@ import android.database.sqlite.SQLiteDatabase
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.example.data.local.AppDatabase
+import com.example.progress.PracticeStreak
 import com.example.progress.Skill
 import com.example.support.inMemoryDatabase
 import java.io.File
+import java.util.TimeZone
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
@@ -24,7 +26,7 @@ import org.robolectric.annotation.Config
 /**
  * Upgrading a version 1 database (v1.9 and earlier) to version 2. The old database is built from the committed
  * schema file, so the fixture is the real one, and opened through Room, whose own validation throws on any table
- * that does not match what the entities declare.
+ * that does not match what the entities declare; once through the app's own [AppDatabase.getDatabase] as well.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
@@ -47,11 +49,11 @@ class AppDatabaseMigrationTest {
         context.deleteDatabase(name)
     }
 
-    /** Creates the version 1 database exactly as Room 1 did, from app/schemas, and seeds it. */
-    private fun createVersion1() {
+    /** Creates the version 1 database [file] exactly as Room 1 did, from app/schemas, and seeds it. */
+    private fun createVersion1(file: String = name) {
         val schema = JSONObject(File("schemas/com.example.data.local.AppDatabase/1.json").readText()).getJSONObject("database")
         assertEquals(1, schema.getInt("version"))
-        val db = SQLiteDatabase.openOrCreateDatabase(context.getDatabasePath(name), null)
+        val db = SQLiteDatabase.openOrCreateDatabase(context.getDatabasePath(file), null)
         try {
             val entities = schema.getJSONArray("entities")
             for (i in 0 until entities.length()) {
@@ -146,7 +148,9 @@ class AppDatabaseMigrationTest {
         val blitz = quizzes.getValue("BLITZ")
         assertEquals(14, blitz.correct)
         assertEquals(0, blitz.total)
-        assertNull(blitz.questionCount)
+        // At least as many questions were answered as were right: the streak counts the blitz by them.
+        assertEquals(14, blitz.questionCount)
+        assertEquals(14, blitz.practiceItems)
         assertNull(blitz.difficulty)
 
         val flag = quizzes.getValue("FLAG_NAME")
@@ -156,6 +160,47 @@ class AppDatabaseMigrationTest {
 
         assertEquals(6, quizzes.getValue("CAPITAL").questionCount)
         assertEquals(90, quizzes.getValue("CAPITAL").total)
+    }
+
+    @Test
+    fun aDayOfBlitzesOnly_stillCountsForTheStreak() {
+        createVersion1()
+        // Two more days in 1970 on which only a blitz was played, with 12 right answers each.
+        val raw = SQLiteDatabase.openDatabase(context.getDatabasePath(name).path, null, SQLiteDatabase.OPEN_READWRITE)
+        try {
+            for (d in 5..6) raw.execSQL("INSERT INTO quiz_scores (mode, score, total, continentFilter, timestamp) VALUES ('BLITZ', 290, 12, 'Global', ${d * day})")
+        } finally {
+            raw.close()
+        }
+        val db = openMigrated()
+
+        val sessions = runBlocking { db.userProgressDao().practiceSessions() }.map { it.toPracticeSession() }
+
+        assertEquals(listOf(14, 10, 6, 12, 12), sessions.sortedBy { it.at }.map { it.items })
+        val utc = TimeZone.getTimeZone("UTC")
+        assertEquals(
+            PracticeStreak.Summary(current = 2, best = 2, practicedToday = true),
+            PracticeStreak.summary(sessions, PracticeStreak.DEFAULT_GOAL, 6 * day + 1_000L, utc)
+        )
+    }
+
+    @Test
+    fun theProductionDatabase_opensAVersion1FileThroughItsMigration() {
+        // The real file name and the app's own builder: a migration dropped from getDatabase fails here.
+        AppDatabase.closeAndReset()
+        context.deleteDatabase(AppDatabase.NAME)
+        createVersion1(AppDatabase.NAME)
+        try {
+            val db = AppDatabase.getDatabase(context)
+
+            val skills = runBlocking { db.userProgressDao().getAllSkills().first() }
+            assertEquals(setOf("FR", "DE", "JP", "IT"), skills.map { it.countryCode }.toSet())
+            assertEquals(3, runBlocking { db.userProgressDao().getQuizHistory().first() }.size)
+            assertEquals(2, db.openHelper.readableDatabase.version)
+        } finally {
+            AppDatabase.closeAndReset()
+            context.deleteDatabase(AppDatabase.NAME)
+        }
     }
 
     @Test

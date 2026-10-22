@@ -51,7 +51,8 @@
     <string name="mode_type_name_hint">No options: type the country\'s name</string>
     <string name="mode_speed_round">Speed round</string>
     <string name="mode_speed_round_hint">10 seconds per question</string>
-    <string name="mode_blitz">60-second blitz</string>
+    <!-- "60-second blitz": the number is the blitz's length (QuizMode.totalTimeSeconds) -->
+    <string name="mode_blitz">%1$d-second blitz</string>
     <string name="mode_blitz_hint">As many flags as you can in one minute</string>
     <string name="mode_flashcards">Flashcards</string>
 
@@ -86,6 +87,13 @@
     <string name="continent_europe">Europe</string>
     <string name="continent_oceania">Oceania</string>
     <string name="continent_antarctica">Antarctica</string>
+    <!-- Two continents inside a sentence, after a preposition or a noun ("No countries in the Americas", "the
+         countries still to learn in the Americas", "Map: Antarctica, in Antarctica"). English adds "the" to the
+         Americas, French says them in the singular after "en" ("en Amérique") and Arabic puts their dual in the
+         genitive; German and Spanish give Antarctica its article ("in der Antarktis", "en la Antártida"). The other
+         continents read the same inside a sentence as on their own in these five languages. -->
+    <string name="continent_americas_in_sentence">the Americas</string>
+    <string name="continent_antarctica_in_sentence">Antarctica</string>
 
     <!-- Sort orders -->
     <string name="sort_by_name">Sort by name</string>
@@ -141,11 +149,6 @@
 
     <!-- Shown once when a database write failed (see WriteErrors) -->
     <string name="write_error">Your last change could not be saved. Export your progress from Settings and try again later.</string>
-
-    <!-- The spoken country summary -->
-    <string name="speech_name">%1$s.</string>
-    <string name="speech_capital_and_continent">Capital is %1$s, located in %2$s.</string>
-    <string name="speech_continent">Located in %1$s.</string>
 
     <!-- The home-screen widget. -->
     <string name="widget_label">Today\'s reviews</string>

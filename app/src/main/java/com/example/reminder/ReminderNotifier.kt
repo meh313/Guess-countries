@@ -48,6 +48,11 @@ object ReminderNotifier {
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
             .putExtra(MainActivity.EXTRA_OPEN_TAB, MainActivity.TAB_QUIZ)
 
+    /**
+     * Posts the day's reminder under [NOTIFICATION_ID], so one reminder is on screen however many days went by. It is
+     * not marked alert-once: yesterday's may still be in the shade, and an alert-once update of it would replace it
+     * without a sound, on exactly the days the player is drifting away.
+     */
     // The permission is checked just above (areNotificationsAllowed), which lint cannot follow through the call.
     @SuppressLint("MissingPermission")
     fun show(context: Context, message: ReminderSchedule.Message) {
@@ -69,7 +74,6 @@ object ReminderNotifier {
             )
             .setContentIntent(open)
             .setAutoCancel(true)
-            .setOnlyAlertOnce(true)
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .build()
         manager.notify(NOTIFICATION_ID, notification)

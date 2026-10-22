@@ -53,7 +53,7 @@
     <string name="mode_type_name_hint">Sin opciones: escribe el nombre del país</string>
     <string name="mode_speed_round">Ronda rápida</string>
     <string name="mode_speed_round_hint">10 segundos por pregunta</string>
-    <string name="mode_blitz">Blitz de 60 segundos</string>
+    <string name="mode_blitz">Blitz de %1$d segundos</string>
     <string name="mode_blitz_hint">Tantas banderas como puedas en un minuto</string>
     <string name="mode_flashcards">Tarjetas</string>
 
@@ -88,6 +88,8 @@
     <string name="continent_europe">Europa</string>
     <string name="continent_oceania">Oceanía</string>
     <string name="continent_antarctica">Antártida</string>
+    <string name="continent_americas_in_sentence">América</string>
+    <string name="continent_antarctica_in_sentence">la Antártida</string>
 
     <!-- Sort orders -->
     <string name="sort_by_name">Ordenar por nombre</string>
@@ -144,11 +146,6 @@
 
     <!-- Shown once when a database write failed (see WriteErrors) -->
     <string name="write_error">No se pudo guardar tu último cambio. Exporta tu progreso desde Ajustes e inténtalo más tarde.</string>
-
-    <!-- The spoken country summary -->
-    <string name="speech_name">%1$s.</string>
-    <string name="speech_capital_and_continent">Su capital es %1$s y está en %2$s.</string>
-    <string name="speech_continent">Está en %1$s.</string>
 
     <!-- The home-screen widget. -->
     <string name="widget_label">Repasos de hoy</string>

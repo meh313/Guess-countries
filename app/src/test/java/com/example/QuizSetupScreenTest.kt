@@ -31,6 +31,7 @@ import com.example.support.awaitWeakSpots
 import com.example.ui.screens.QuizScreen
 import com.example.ui.theme.WorldFlagsTheme
 import com.example.ui.viewmodel.CountryViewModel
+import java.util.TimeZone
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -193,7 +194,7 @@ class QuizSetupScreenTest {
     /** Gives four countries of the small world a wrong review each, so four weak spots exist before the screen opens. */
     private fun fourWeakSpots(): List<String> {
         val codes = smallWorld.take(4).map { it.code }
-        runBlocking { codes.forEachIndexed { i, code -> db.userProgressDao().recordAnswer(code, Skill.FLAG, false, Evidence.FULL, 100L + i) } }
+        runBlocking { codes.forEachIndexed { i, code -> db.userProgressDao().recordAnswer(code, Skill.FLAG, false, Evidence.FULL, 100L + i, TimeZone.getDefault()) } }
         return codes
     }
 
@@ -216,7 +217,7 @@ class QuizSetupScreenTest {
 
     @Test
     fun theWeakSpotsChip_countsTheCountriesItIsStillShortOf() {
-        runBlocking { smallWorld.take(3).forEachIndexed { i, c -> db.userProgressDao().recordAnswer(c.code, Skill.FLAG, false, Evidence.FULL, 100L + i) } }
+        runBlocking { smallWorld.take(3).forEachIndexed { i, c -> db.userProgressDao().recordAnswer(c.code, Skill.FLAG, false, Evidence.FULL, 100L + i, TimeZone.getDefault()) } }
 
         showWithWeakSpots(3)
 

@@ -7,7 +7,6 @@ import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.platform.LocalResources
 import com.example.R
 import com.example.data.model.Country
-import com.example.data.model.CountryCatalog
 import java.math.BigDecimal
 import java.util.Locale
 
@@ -30,21 +29,36 @@ fun rememberCompactNumberFormat(): android.icu.text.NumberFormat {
     return remember(locale) { compactNumberFormat(locale) }
 }
 
-/** "68.3M (2024 est.)": the catalog holds rounded estimates for one year, not exact counts. */
-fun formatPopulation(resources: Resources, compact: android.icu.text.NumberFormat, population: Long): String =
-    resources.getString(R.string.population_estimate, compact.format(population), CountryCatalog.DATA_YEAR)
+/** "68.3M (2024 est.)": the catalog holds rounded estimates, each for the [year] it gives, not exact counts. */
+fun formatPopulation(resources: Resources, compact: android.icu.text.NumberFormat, population: Long, year: Int): String =
+    resources.getString(R.string.population_estimate, compact.format(population), year)
 
 /**
- * [formatPopulation] for a catalog entry: Antarctica's figure is the people wintering at its stations, not a
- * population estimate, and says so.
+ * [formatPopulation] for a catalog entry, with the year of its figure ([Country.populationYear]): Antarctica's
+ * figure is the people wintering at its stations, not a population estimate, and says so.
  */
 @Composable
 fun formatPopulation(compact: android.icu.text.NumberFormat, country: Country): String {
     val resources = LocalResources.current
-    return if (country.isSovereign) formatPopulation(resources, compact, country.population)
+    return if (country.isSovereign) formatPopulation(resources, compact, country.population, country.populationYear)
     else resources.getString(R.string.population_winter, compact.format(country.population))
 }
 
-/** "640K km²". */
+/** "640K km²", the unit from the resources ("كم²" in Arabic). */
+fun formatArea(resources: Resources, compact: android.icu.text.NumberFormat, areaSqKm: Double): String =
+    resources.getString(R.string.area_km2, compact.format(areaSqKm))
+
+/** [formatArea] in composition. */
+@Composable
 fun formatArea(compact: android.icu.text.NumberFormat, areaSqKm: Double): String =
-    "${compact.format(areaSqKm)} km²"
+    formatArea(LocalResources.current, compact, areaSqKm)
+
+/**
+ * A count on its own, in [locale]'s digits, as the `%d` of a string resource prints it: Arabic-Indic in Arabic, so a
+ * figure built in code matches the ratios formatted beside it. A Kotlin template ("$count") always gives Latin digits.
+ */
+fun formatCount(locale: Locale, count: Int): String = String.format(locale, "%d", count)
+
+/** [formatCount] in the user's locale. */
+@Composable
+fun formatCount(count: Int): String = formatCount(LocalLocale.current.platformLocale, count)

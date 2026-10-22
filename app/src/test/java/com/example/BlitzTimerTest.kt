@@ -1,5 +1,6 @@
 package com.example
 
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -11,12 +12,14 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.data.local.AppDatabase
 import com.example.data.model.CountryRepository
 import com.example.data.settings.InMemoryUserSettings
 import com.example.data.settings.TimerPace
 import com.example.quiz.QuizMode
 import com.example.support.FakeSpeech
+import com.example.support.HandMovedLifecycle
 import com.example.support.awaitPendingWrites
 import com.example.support.closeWhenIdle
 import com.example.support.inMemoryDatabase
@@ -263,6 +266,36 @@ class BlitzTimerTest {
         assertFalse(session.isFinished)
         countdown("45s left").assertIsDisplayed()
         clockAt(100_000 + 45_000)
+        assertTrue(session.isFinished)
+    }
+
+    @Test
+    fun theAppGoingToTheBackground_withTheBlitzStillComposed_stopsTheMinute_andItGoesOnWhereItStopped() {
+        vm.startQuiz(QuizMode.BLITZ, "Global")
+        val activity = HandMovedLifecycle()
+        rule.setContent { CompositionLocalProvider(LocalLifecycleOwner provides activity) { WorldFlagsTheme { QuizScreen(vm) } } }
+        rule.mainClock.advanceTimeBy(200)
+        clockAt(15_000)
+        countdown("45s left").assertIsDisplayed()
+
+        // Home, or the screen locked, for longer than the minute had left: nothing ends and nothing is saved.
+        onUi { activity.stop() }
+        rule.mainClock.advanceTimeBy(250)
+        assertTrue(session.isPaused)
+        clockAt(100_000)
+        clockAt(100_500)
+
+        assertFalse("finished in the background", session.isFinished)
+        db.awaitPendingWrites()
+        assertTrue("saved in the background", runBlocking { db.userProgressDao().getQuizHistory().first() }.isEmpty())
+
+        onUi { activity.resume() }
+        rule.mainClock.advanceTimeBy(250)
+        assertFalse(session.isPaused)
+        countdown("45s left").assertIsDisplayed()
+        clockAt(100_500 + 44_900)
+        assertFalse(session.isFinished)
+        clockAt(100_500 + 45_000)
         assertTrue(session.isFinished)
     }
 

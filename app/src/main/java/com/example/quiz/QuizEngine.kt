@@ -134,6 +134,16 @@ object QuizEngine {
     )
 
     /**
+     * Flags the app's artwork cannot tell apart, each with the other: Indonesia's and Monaco's are both red over white
+     * in the same 4:3 box (the real flags differ in shape and a shade of red). A question that hangs on the picture
+     * never offers one for the other; they stay look-alikes for study and the tell-apart tips ([FlagLookAlikes]).
+     */
+    val SAME_ARTWORK: Map<String, String> = mapOf(
+        "ID" to "MC",
+        "MC" to "ID"
+    )
+
+    /**
      * The scope a quiz of [mode] actually uses: [requested], except modes that always cover the world, the weak
      * spots once there are too few of them left to ask about, and the due countries once there are none.
      */
@@ -281,7 +291,8 @@ object QuizEngine {
     /**
      * Countries whose answer text differs from the target's and from each other, so no two options can look identical.
      * Up to [lookAlikes] of them have flags that look like the target's (only those inside [pool], so a Europe quiz
-     * never offers Chad); the rest are random members of [pool].
+     * never offers Chad); the rest are random members of [pool]. The flag the artwork cannot tell from the target's
+     * ([SAME_ARTWORK]) is never one of them.
      */
     private fun wrongCountries(
         pool: List<Country>,
@@ -291,12 +302,14 @@ object QuizEngine {
         answerOf: (Country) -> String
     ): List<Country> {
         val answer = answerOf(target)
+        val twin = SAME_ARTWORK[target.code]
         val similar =
             if (lookAlikes <= 0) {
                 emptyList()
             } else {
                 val byCode = pool.associateBy { it.code }
                 FlagLookAlikes.of(target.code).asSequence()
+                    .filter { it != twin }
                     .mapNotNull { byCode[it] }
                     .filter { answerOf(it) != answer }
                     .distinctBy(answerOf)
@@ -306,7 +319,7 @@ object QuizEngine {
             }
         val taken = similar.map(answerOf).toSet()
         val rest = pool.asSequence()
-            .filter { it != target }
+            .filter { it != target && it.code != twin }
             .filter { answerOf(it) != answer && answerOf(it) !in taken }
             .distinctBy(answerOf)
             .toList()

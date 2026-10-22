@@ -100,7 +100,7 @@ def srgb_to_lab(rgb):
 
 
 def lab_pixels(image):
-    return [srgb_to_lab(p) for p in image.convert('RGB').getdata()]
+    return [srgb_to_lab(p) for p in image.convert('RGB').get_flattened_data()]
 
 
 def variants(small):

@@ -3,7 +3,11 @@
   The quiz tab: the setup screen (`quiz_`), the question screen (`quiz_`) and the score screen (`result_`). The mode,
   difficulty, scope and skill labels are shared and live in strings.xml.
 -->
-<!-- Counts whose wording does not change with the number, or that are never 1, stay plain strings. -->
+<!--
+  A count is a plurals wherever a word next to it changes with the number in one of the five languages. The plain
+  strings hold a fixed number (QuizEngine.MIN_POOL, the length of the blitz), a count one form covers in every
+  language (the 4 to 10 weak spots) or a count no word agrees with ("Question 3 of 10", "Score: 40").
+-->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="PluralsCandidate">
     <!-- Setup: header -->
     <string name="quiz_title">اختبار الجغرافيا والأعلام</string>
@@ -53,7 +57,14 @@
 
     <!-- Setup: start button -->
     <string name="quiz_start_blitz">ابدأ بليتز %1$d ثانية</string>
-    <string name="quiz_start_quiz">ابدأ اختبارًا من %1$d أسئلة</string>
+    <plurals name="quiz_start_quiz">
+        <item quantity="zero">ابدأ اختبارًا بلا أسئلة</item>
+        <item quantity="one">ابدأ اختبارًا من سؤال واحد</item>
+        <item quantity="two">ابدأ اختبارًا من سؤالين</item>
+        <item quantity="few">ابدأ اختبارًا من %d أسئلة</item>
+        <item quantity="many">ابدأ اختبارًا من %d سؤالًا</item>
+        <item quantity="other">ابدأ اختبارًا من %d سؤال</item>
+    </plurals>
     <string name="quiz_needs_countries">يتطلب %1$d دول على الأقل</string>
 
     <!-- Play: status bar -->
@@ -88,7 +99,14 @@
 
     <!-- Play: after the answer -->
     <string name="quiz_result_timeout">انتهى الوقت! الإجابة هي %1$s</string>
-    <string name="quiz_result_correct">صحيح! +%1$d نقاط</string>
+    <plurals name="quiz_result_correct">
+        <item quantity="zero">صحيح! +%d نقطة</item>
+        <item quantity="one">صحيح! +نقطة واحدة</item>
+        <item quantity="two">صحيح! +نقطتان</item>
+        <item quantity="few">صحيح! +%d نقاط</item>
+        <item quantity="many">صحيح! +%d نقطة</item>
+        <item quantity="other">صحيح! +%d نقطة</item>
+    </plurals>
     <string name="quiz_result_wrong">ليس تمامًا. الإجابة هي %1$s</string>
     <string name="quiz_result_also_counted">صحيح: %1$s مقبولة أيضًا، وإن كان الفهرس يدرجها تحت %2$s</string>
     <string name="quiz_capital_and_country">%1$s, %2$s</string>
@@ -109,7 +127,15 @@
     <!-- Score screen: header and numbers -->
     <string name="result_times_up">انتهى الوقت!</string>
     <string name="result_complete">اكتمل الاختبار!</string>
-    <string name="result_blitz_score">%1$d صحيحة · %2$d نقطة</string>
+    <string name="result_blitz_score">%1$s · %2$s</string>
+    <plurals name="result_correct_count">
+        <item quantity="zero">لا إجابات صحيحة</item>
+        <item quantity="one">إجابة صحيحة واحدة</item>
+        <item quantity="two">إجابتان صحيحتان</item>
+        <item quantity="few">%d إجابات صحيحة</item>
+        <item quantity="many">%d إجابة صحيحة</item>
+        <item quantity="other">%d إجابة صحيحة</item>
+    </plurals>
     <plurals name="result_blitz_flags">
         <item quantity="zero">لا أعلام في %2$d ثانية</item>
         <item quantity="one">علم واحد في %2$d ثانية</item>
@@ -118,11 +144,24 @@
         <item quantity="many">%1$d علمًا في %2$d ثانية</item>
         <item quantity="other">%1$d علم في %2$d ثانية</item>
     </plurals>
-    <string name="result_correct_ratio">%1$d من %2$d صحيحة</string>
-    <string name="result_points">%1$d نقطة</string>
+    <string name="result_correct_ratio">الإجابات الصحيحة: %1$d من %2$d</string>
+    <plurals name="result_points">
+        <item quantity="zero">لا نقاط</item>
+        <item quantity="one">نقطة واحدة</item>
+        <item quantity="two">نقطتان</item>
+        <item quantity="few">%d نقاط</item>
+        <item quantity="many">%d نقطة</item>
+        <item quantity="other">%d نقطة</item>
+    </plurals>
     <string name="result_answers">الإجابات: %1$s</string>
-    <string name="result_streak_already_counted">سلسلة %1$d يوم، احتُسبت اليوم بالفعل</string>
-    <string name="result_streak_days">سلسلة %1$d يوم</string>
+    <plurals name="result_streak_already_counted">
+        <item quantity="zero">لا سلسلة بعد</item>
+        <item quantity="one">سلسلة يوم واحد، احتُسبت اليوم بالفعل</item>
+        <item quantity="two">سلسلة يومين، احتُسبت اليوم بالفعل</item>
+        <item quantity="few">سلسلة %d أيام، احتُسبت اليوم بالفعل</item>
+        <item quantity="many">سلسلة %d يومًا، احتُسبت اليوم بالفعل</item>
+        <item quantity="other">سلسلة %d يوم، احتُسبت اليوم بالفعل</item>
+    </plurals>
 
     <!-- Score screen: the misses -->
     <string name="result_perfect">كل الإجابات صحيحة!</string>

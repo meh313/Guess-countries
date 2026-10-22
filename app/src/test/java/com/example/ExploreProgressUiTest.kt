@@ -1,5 +1,6 @@
 package com.example
 
+import android.app.LocaleManager
 import android.net.Uri
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivityResultRegistryOwner
@@ -10,6 +11,8 @@ import androidx.activity.result.contract.ActivityResultContract
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
@@ -34,6 +37,8 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.core.app.ActivityOptionsCompat
+import android.speech.tts.TextToSpeech
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.core.app.ApplicationProvider
 import com.example.data.local.AppDatabase
@@ -50,6 +55,8 @@ import com.example.progress.DueForecast
 import com.example.progress.Evidence
 import com.example.progress.Skill
 import com.example.progress.SkillState
+import com.example.quiz.QuizEngine
+import com.example.quiz.QuizMode
 import com.example.quiz.allCountries
 import com.example.speech.Speech
 import com.example.support.boundsOf
@@ -65,10 +72,12 @@ import com.example.ui.screens.SettingsScreen
 import com.example.ui.theme.WorldFlagsTheme
 import com.example.ui.viewmodel.CountryViewModel
 import java.io.File
+import java.util.Locale
 import java.util.TimeZone
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -76,7 +85,9 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowTextToSpeech
 
 /** Per-country progress on Explore and in the detail sheet, and the way there from Progress, in the real activity. */
 @RunWith(RobolectricTestRunner::class)
@@ -99,7 +110,7 @@ class ExploreProgressUiTest {
         dao.upsertSkill(SkillProgressEntity.of(code, skill, SkillState(score = 80, box = 4, dueAt = System.currentTimeMillis() + 12 * day, reviews = 4, correct = 4, lastResult = 1)))
     }
 
-    private fun learning(code: String, skill: Skill = Skill.FLAG) = runBlocking { dao.recordAnswer(code, skill, false, Evidence.FULL, System.currentTimeMillis()) }
+    private fun learning(code: String, skill: Skill = Skill.FLAG) = runBlocking { dao.recordAnswer(code, skill, false, Evidence.FULL, System.currentTimeMillis(), TimeZone.getDefault()) }
 
     /** Makes the flags of [codes] due for review: reviewed before, due date long passed. */
     private fun due(vararg codes: String) = runBlocking {
@@ -112,6 +123,9 @@ class ExploreProgressUiTest {
         rule.onNode(hasTestTag("progress_pips") and androidx.compose.ui.test.hasAnyAncestor(hasTestTag(card(code))), useUnmergedTree = true)
 
     private fun describedAs(text: String) = SemanticsMatcher.expectValue(SemanticsProperties.ContentDescription, listOf(text))
+
+    private fun clickLabelIs(label: String) =
+        SemanticsMatcher("click label \"$label\"") { it.config.getOrNull(SemanticsActions.OnClick)?.label == label }
 
     @Test
     fun countryCards_showTwoPipsForTheFlagAndTheCapital() {
@@ -167,6 +181,12 @@ class ExploreProgressUiTest {
         rule.onNodeWithTag("continent_chip_asia").performClick()
         rule.eventually("nothing mastered in Asia") { rule.onNodeWithText("No countries found").assertIsDisplayed() }
         rule.onNodeWithTag("explore_empty_hint").assert(hasText("No countries mastered in Asia. Clear the filters?"))
+        // Inside the sentence the Americas take "the" (and the Arabic dual its genitive).
+        rule.onNodeWithTag("continent_chips").performScrollToNode(hasTestTag("continent_chip_americas"))
+        rule.onNodeWithTag("continent_chip_americas").performClick()
+        rule.eventually("nothing mastered in the Americas") {
+            rule.onNodeWithTag("explore_empty_hint").assert(hasText("No countries mastered in the Americas. Clear the filters?"))
+        }
         rule.onNodeWithTag("explore_clear_filters_btn").performClick()
         rule.eventually("everyone again") { rule.onNodeWithText("197 countries").assertIsDisplayed() }
     }
@@ -192,6 +212,26 @@ class ExploreProgressUiTest {
         rule.onNode(hasScrollAction() and hasTestTag("country_detail_sheet_fr")).performScrollToNode(hasTestTag("sheet_progress"))
         rule.onNodeWithText("Flag: Mastered · step 4 of 5 · next review in 12 days · last answer right").assertIsDisplayed()
         rule.onNodeWithText("Capital: Learning · step 1 of 5 · next review tomorrow · last answer wrong").assertIsDisplayed()
+    }
+
+    @Test
+    fun theDetailSheet_givesTheContinentNoDueDate_andARowWithNoLastAnswerNoVerdict() {
+        // A continent pick long ago: the continent has no reviews, so it is never "due now".
+        runBlocking {
+            dao.upsertSkill(SkillProgressEntity.of("DE", Skill.CONTINENT, SkillState(score = 16, box = 1, dueAt = 0L, reviews = 2, correct = 2, lastResult = 1)))
+            // A flag row migrated from version 1: reviewed, but with no last answer recorded.
+            dao.upsertSkill(SkillProgressEntity.of("DE", Skill.FLAG, SkillState(score = 50, box = 2, dueAt = System.currentTimeMillis() + 3 * day, reviews = 5, correct = 4, lastResult = 0)))
+        }
+        rule.eventually("the states") { assertEquals(1, viewModel.skills.value[Skill.CONTINENT]?.size) }
+
+        rule.onNodeWithTag("explore_grid").performScrollToNode(hasTestTag(card("DE")))
+        rule.onNodeWithTag(card("DE")).performClick()
+        rule.waitForIdle()
+
+        rule.onNode(hasScrollAction() and hasTestTag("country_detail_sheet_de")).performScrollToNode(hasTestTag("sheet_progress"))
+        rule.onNodeWithText("Continent: Learning · step 1 of 5 · last answer right").assertIsDisplayed()
+        rule.onNodeWithText("Flag: Learning · step 2 of 5 · next review in 3 days").assertIsDisplayed()
+        rule.onAllNodesWithText("last answer wrong", substring = true).assertCountEquals(0)
     }
 
     @Test
@@ -231,6 +271,33 @@ class ExploreProgressUiTest {
         rule.waitForIdle()
         rule.onNodeWithTag("speak_country_btn").assertIsEnabled()
         rule.onNodeWithContentDescription("Read country summary aloud").assertIsDisplayed()
+    }
+
+    @Test
+    fun backFromTheVoiceDataInstaller_theSheetsSpeakerWorks() {
+        rule.onNodeWithTag("explore_grid").performScrollToNode(hasTestTag(card("FR")))
+        rule.onNodeWithTag(card("FR")).performClick()
+        rule.waitForIdle()
+        // An engine with no English voice data: the sheet offers the installer in the speaker's place.
+        val first = ShadowTextToSpeech.getLastTextToSpeechInstance()
+        shadowOf(first).onInitListener.onInit(TextToSpeech.SUCCESS)
+        rule.waitForIdle()
+        rule.onNodeWithTag("speak_country_install_btn").performClick()
+        rule.waitForIdle()
+        assertTrue("the engine is let go while the installer runs", shadowOf(first).isShutdown)
+
+        // The installer covers the app, the data is installed, the player comes back to the open sheet.
+        rule.activityRule.scenario.moveToState(Lifecycle.State.STARTED)
+        ShadowTextToSpeech.addLanguageAvailability(Locale.US)
+        rule.activityRule.scenario.moveToState(Lifecycle.State.RESUMED)
+        rule.waitForIdle()
+
+        val second = ShadowTextToSpeech.getLastTextToSpeechInstance()
+        assertTrue("coming back binds a fresh engine", second !== first)
+        shadowOf(second).onInitListener.onInit(TextToSpeech.SUCCESS)
+        rule.waitForIdle()
+        rule.onNodeWithTag("speak_country_btn").assertIsEnabled()
+        rule.onAllNodesWithTag("speak_country_install_btn").assertCountEquals(0)
     }
 
     @Test
@@ -301,6 +368,43 @@ class ExploreProgressUiTest {
         rule.onAllNodesWithTag("sheet_neighbour_fr").assertCountEquals(0)
     }
 
+    /** How far the sheet of [code] is scrolled, in pixels. */
+    private fun sheetScroll(code: String): Float =
+        rule.onNode(hasScrollAction() and hasTestTag("country_detail_sheet_$code")).fetchSemanticsNode()
+            .config[SemanticsProperties.VerticalScrollAxisRange].value()
+
+    @Test
+    fun aNeighboursSheet_opensAtTheTopWithItsSourcesClosed_andStopsReadingTheCountryBefore() {
+        ShadowTextToSpeech.addLanguageAvailability(Locale.US)
+        rule.onNodeWithTag("explore_grid").performScrollToNode(hasTestTag(card("BE")))
+        rule.onNodeWithTag(card("BE")).performClick()
+        rule.waitForIdle()
+        val engine = shadowOf(ShadowTextToSpeech.getLastTextToSpeechInstance())
+        engine.onInitListener.onInit(TextToSpeech.SUCCESS)
+        rule.waitForIdle()
+        rule.onNodeWithTag("speak_country_btn").performClick()
+        assertFalse("Belgium is being read", engine.isStopped)
+
+        // Belgium's sources open, then down to its borders.
+        val belgium = rule.onNode(hasScrollAction() and hasTestTag("country_detail_sheet_be"))
+        rule.eventually("Belgium's sources") { belgium.performScrollToNode(hasTestTag("sheet_sources_btn")) }
+        rule.onNodeWithTag("sheet_sources_btn").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithTag("sheet_sources").assertExists()
+        belgium.performScrollToNode(hasTestTag("sheet_neighbour_lu"))
+        assertTrue("scrolled down to the chips", sheetScroll("be") > 0f)
+
+        rule.onNodeWithTag("sheet_neighbour_lu").performClick()
+        rule.waitForIdle()
+
+        // Luxembourg's sheet starts at its flag and name, its own sources closed, and Belgium is no longer read.
+        assertEquals(0f, sheetScroll("lu"))
+        rule.onAllNodesWithTag("sheet_sources").assertCountEquals(0)
+        rule.onNode(hasScrollAction() and hasTestTag("country_detail_sheet_lu")).performScrollToNode(hasTestTag("sheet_sources_btn"))
+        rule.onAllNodesWithTag("sheet_sources").assertCountEquals(0)
+        assertTrue("the reading of Belgium stops under Luxembourg's name", engine.isStopped)
+    }
+
     @Test
     fun aContinentOnProgress_opensExploreOnItsCountriesStillToLearn() {
         learning("FR")
@@ -309,7 +413,11 @@ class ExploreProgressUiTest {
         learning("JP")
         rule.eventually("the states") { assertEquals(4, viewModel.skills.value[Skill.FLAG]?.size) }
         rule.openTab("stats")
+        // What TalkBack says a tap does; the Americas take "the" inside the sentence.
+        rule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("stats_continent_americas"))
+        rule.onNodeWithTag("stats_continent_americas").assert(clickLabelIs("Show the countries still to learn in the Americas"))
         rule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("stats_continent_europe"))
+        rule.onNodeWithTag("stats_continent_europe").assert(clickLabelIs("Show the countries still to learn in Europe"))
 
         rule.onNodeWithTag("stats_continent_europe").performClick()
         rule.waitForIdle()
@@ -482,6 +590,21 @@ class ExploreProgressUiTest {
     }
 
     @Test
+    fun aReviewDueLaterToday_isOnTheDueTileAndTheTodayCard_notComingUp() {
+        rule.runOnUiThread { viewModel.setTodayCardDismissedDay("") }
+        // A minute before midnight: today's review, whatever the hour the test runs at.
+        dueAt("FR", Skill.FLAG, startOfDay(1) - 60_000L)
+        rule.openTab("stats")
+
+        rule.eventually("due today") { rule.onNodeWithTag("today_card").assert(hasText("1 due · 0 new today · goal 10")) }
+        rule.onNodeWithTag("today_action_btn").assert(hasText("Review 1 flag"))
+        rule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("stats_due"))
+        rule.onNodeWithTag("stats_due").assert(describedAs("Due today: 1"))
+        assertTrue(viewModel.forecast.value.isEmpty)
+        rule.onAllNodesWithTag("stats_forecast").assertCountEquals(0)
+    }
+
+    @Test
     fun theForecastLine_countsTheCountriesDueTomorrowAndThisWeek_eachOnce() {
         val tomorrow = startOfDay(1) + 3_600_000L
         val inFiveDays = startOfDay(5) + 3_600_000L
@@ -634,7 +757,7 @@ class ExploreProgressUiTest {
         rule.runOnUiThread { viewModel.chooseFocus("All") }
         rule.eventually("the due count") { rule.onNodeWithTag("today_card").assert(hasText("2 due · 0 new today · goal 10")) }
         rule.onNodeWithTag("today_card").assert(describedAs("Today: 0 of 10 items done, 2 due, 0 new today."))
-        rule.onNodeWithTag("today_action_btn").assert(hasText("Review 2 due"))
+        rule.onNodeWithTag("today_action_btn").assert(hasText("Review 2 flags"))
 
         rule.onNodeWithTag("today_action_btn").performClick()
         rule.waitForIdle()
@@ -643,6 +766,115 @@ class ExploreProgressUiTest {
         rule.onNodeWithText("Study · Due today").assertIsDisplayed()
         assertEquals(StudySession.DUE, viewModel.studySession.value?.source)
         assertEquals(setOf("FR", "DE"), viewModel.studySession.value?.cards?.toSet())
+    }
+
+    @Test
+    fun theCard_countsTheCapitalAndMapReviewsToo_andReviewsTheFlagsFirst() {
+        rule.runOnUiThread {
+            viewModel.setTodayCardDismissedDay("")
+            viewModel.chooseFocus("All")
+        }
+        due("FR")
+        dueAt("DE", Skill.CAPITAL, 0L)
+        dueAt("IT", Skill.CAPITAL, 0L)
+        dueAt("JP", Skill.LOCATION, 0L)
+        // The continent has no reviews, however old its row: not counted.
+        dueAt("BR", Skill.CONTINENT, 0L)
+
+        // The Due tile's figure: one flag, two capitals, one on the map.
+        rule.eventually("every skill's reviews") { rule.onNodeWithTag("today_card").assert(hasText("4 due · 0 new today · goal 10")) }
+        rule.onNodeWithTag("today_action_btn").assert(hasText("Review 1 flag"))
+        rule.onNodeWithTag("today_action_btn").performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithTag("nav_tab_flashcards").assertIsSelected()
+        assertEquals(StudySession.DUE, viewModel.studySession.value?.source)
+        assertEquals(listOf("FR"), viewModel.studySession.value?.cards)
+    }
+
+    @Test
+    fun withOnlyCapitalsDue_theButtonStudiesTheCapitals() {
+        rule.runOnUiThread {
+            viewModel.setTodayCardDismissedDay("")
+            viewModel.chooseFocus("All")
+        }
+        dueAt("DE", Skill.CAPITAL, 0L)
+        dueAt("IT", Skill.CAPITAL, 0L)
+
+        rule.eventually("two capitals due") { rule.onNodeWithTag("today_card").assert(hasText("2 due · 0 new today · goal 10")) }
+        rule.onNodeWithTag("today_action_btn").assert(hasText("Review 2 capitals"))
+        rule.onNodeWithTag("today_action_btn").performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithTag("nav_tab_flashcards").assertIsSelected()
+        assertEquals(StudySession.CAPITALS_DUE, viewModel.studySession.value?.source)
+        assertEquals(Skill.CAPITAL, viewModel.studySession.value?.skill)
+        assertEquals(setOf("DE", "IT"), viewModel.studySession.value?.cards?.toSet())
+    }
+
+    @Test
+    fun withOnlyMapReviewsDue_theButtonPlaysTheMapQuizOverThem() {
+        rule.runOnUiThread {
+            viewModel.setTodayCardDismissedDay("")
+            viewModel.chooseFocus("All")
+        }
+        dueAt("JP", Skill.LOCATION, 0L)
+
+        rule.eventually("one on the map") { rule.onNodeWithTag("today_card").assert(hasText("1 due · 0 new today · goal 10")) }
+        rule.onNodeWithTag("today_action_btn").assert(hasText("Review 1 country on the map"))
+        rule.onNodeWithTag("today_action_btn").performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithTag("nav_tab_quiz").assertIsSelected()
+        val quiz = viewModel.quizSession.value
+        assertEquals(QuizMode.LOCATE, quiz?.mode)
+        assertEquals(QuizEngine.DUE, quiz?.scope)
+        assertEquals(listOf("JP"), quiz?.questions?.map { it.targetCountry.code })
+    }
+
+    @Test
+    fun withMapReviewsDue_andAnotherQuizUnderWay_theButtonSaysItGoesBackToThatQuiz() {
+        rule.runOnUiThread {
+            viewModel.setTodayCardDismissedDay("")
+            viewModel.chooseFocus("All")
+            viewModel.startQuiz(QuizMode.CAPITAL, "Europe")
+        }
+        dueAt("JP", Skill.LOCATION, 0L)
+        val open = viewModel.quizSession.value!!
+
+        // The capital quiz introduced a few new countries, so the line counts them; the button is the map review's.
+        rule.eventually("one on the map") { rule.onNodeWithTag("today_card").assert(hasText("1 due · ", substring = true)) }
+        rule.onNodeWithTag("today_action_btn").assert(hasText("Back to your quiz"))
+        rule.onNodeWithTag("today_action_btn").performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithTag("nav_tab_quiz").assertIsSelected()
+        assertEquals("the quiz under way, not a map quiz", open.questions, viewModel.quizSession.value?.questions)
+
+        // Once that quiz is over, the button offers the map review again.
+        rule.runOnUiThread { viewModel.endQuiz() }
+        rule.openTab("explore")
+        rule.eventually("the map review") { rule.onNodeWithTag("today_action_btn").assert(hasText("Review 1 country on the map")) }
+    }
+
+    @Test
+    fun onceEveryFlagHasBeenSeen_theCardOffersAQuiz_notLearn() {
+        rule.runOnUiThread {
+            viewModel.setTodayCardDismissedDay("")
+            viewModel.chooseFocus("All")
+        }
+        val sovereign = viewModel.repository.allCountries.filter { it.isSovereign }
+        // Every flag reviewed, none due today.
+        sovereign.forEach { dueAt(it.code, Skill.FLAG, startOfDay(3)) }
+        rule.eventually("every flag seen") { assertEquals(sovereign.size, viewModel.skills.value[Skill.FLAG]?.size) }
+
+        rule.eventually("a quiz") { rule.onNodeWithTag("today_action_btn").assert(hasText("Take a quiz")) }
+        rule.onNodeWithTag("today_action_btn").performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithTag("nav_tab_quiz").assertIsSelected()
+        // The Quiz tab opens on its setup screen: nothing was started for the player.
+        assertNull(viewModel.quizSession.value)
     }
 
     @Test
@@ -698,12 +930,12 @@ class ExploreProgressUiTest {
 
         assertEquals("Asia", prefs.focusContinent)
         rule.eventually("one due on Progress") { rule.onNodeWithTag("today_card").assert(hasText("1 due · 0 new today · goal 10")) }
-        rule.onNodeWithTag("today_action_btn").assert(hasText("Review 1 due"))
+        rule.onNodeWithTag("today_action_btn").assert(hasText("Review 1 flag"))
         rule.onNodeWithTag("stats_streak").assertIsDisplayed()
 
         rule.openTab("explore")
         rule.eventually("the same card on Explore") { rule.onNodeWithTag("today_card").assert(hasText("1 due · 0 new today · goal 10")) }
-        rule.onNodeWithTag("today_action_btn").assert(hasText("Review 1 due"))
+        rule.onNodeWithTag("today_action_btn").assert(hasText("Review 1 flag"))
     }
 
     // --- Export and import through the Settings screen, with a stand-in for the system file picker --------------------
@@ -729,7 +961,7 @@ class ExploreProgressUiTest {
         val settings = InMemoryUserSettings(themeMode = ThemeMode.DARK)
         val vm = CountryViewModel(CountryRepository(db.userProgressDao()), FakeSpeech(), settings = settings)
         runBlocking {
-            db.userProgressDao().recordAnswer("FR", Skill.FLAG, true, Evidence.FULL, 1_000L)
+            db.userProgressDao().recordAnswer("FR", Skill.FLAG, true, Evidence.FULL, 1_000L, TimeZone.getDefault())
             db.userProgressDao().toggleFavorite("DE", 1_000L)
             db.userProgressDao().insertQuizScore(QuizScoreEntity(mode = "FLAG_NAME", score = 10, total = 190, continentFilter = "Global", timestamp = 5L))
         }
@@ -753,7 +985,7 @@ class ExploreProgressUiTest {
             // Change things, then import the file: the old state comes back.
             runBlocking {
                 db.userProgressDao().clearAll()
-                db.userProgressDao().recordAnswer("JP", Skill.FLAG, false, Evidence.FULL, 2_000L)
+                db.userProgressDao().recordAnswer("JP", Skill.FLAG, false, Evidence.FULL, 2_000L, TimeZone.getDefault())
             }
             vm.setThemeMode(ThemeMode.LIGHT)
             rule.onNodeWithTag("settings_import_btn").performClick()
@@ -773,6 +1005,76 @@ class ExploreProgressUiTest {
         }
     }
 
+    /**
+     * Exports a file whose language is French from a Settings screen over [settings], switches the stored language
+     * back to System and imports the file through the screen, confirming it. Returns once the import note is shown
+     * (or [whenImported] says the import is done another way); the view model is released afterwards.
+     */
+    private fun importAFrenchFile(settings: com.example.data.settings.UserSettings, whenImported: () -> Unit) {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val file = File(context.cacheDir, "french.json")
+        val picker = PickerStandIn(Uri.fromFile(file))
+        val db = inMemoryDatabase()
+        val vm = CountryViewModel(CountryRepository(db.userProgressDao()), FakeSpeech(), settings = settings)
+        try {
+            vm.setLanguage("fr")
+            file.writeText(runBlocking { vm.exportJson() })
+            vm.setLanguage("")
+            rule.activityRule.scenario.onActivity { activity ->
+                (activity as ComponentActivity).setContent {
+                    CompositionLocalProvider(LocalActivityResultRegistryOwner provides picker) {
+                        WorldFlagsTheme { SettingsScreen(vm, onBack = {}, onAbout = {}) }
+                    }
+                }
+            }
+            rule.waitForIdle()
+            rule.onNodeWithTag("settings_language_system").performScrollTo().assertIsSelected()
+
+            rule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("settings_import_btn"))
+            rule.onNodeWithTag("settings_import_btn").performClick()
+            rule.eventually("the import question") { rule.onNodeWithText("Import this file?").assertIsDisplayed() }
+            rule.onNodeWithTag("settings_import_confirm_btn").performClick()
+            whenImported()
+            assertEquals("fr", settings.language)
+        } finally {
+            file.delete()
+            db.closeWhenIdle(vm)
+        }
+    }
+
+    @Test
+    fun anImportedLanguage_goesToTheSystem_likeATapOnItsChip() {
+        val manager = ApplicationProvider.getApplicationContext<android.content.Context>().getSystemService(LocaleManager::class.java)
+        assertTrue(manager.applicationLocales.isEmpty)
+
+        importAFrenchFile(InMemoryUserSettings()) {
+            // The note is in the file's language, which the screen comes back in on a phone (and keeps the note through).
+            rule.eventually("the import note") {
+                rule.onNodeWithTag("settings_transfer_note").assert(hasText("Importé : 0 quiz, 0 fiche de compétence et 0 pays."))
+            }
+            // The system holds the file's language (and, on a phone, recreates the activity in it); its chip is lit.
+            assertEquals("fr", manager.applicationLocales.toLanguageTags())
+            rule.onNodeWithTag("settings_language_fr").performScrollTo().assertIsSelected()
+        }
+    }
+
+    @Test
+    @Config(sdk = [32])
+    fun beforeAndroid13_anImportedLanguage_recreatesTheActivityInIt() {
+        val before = rule.activity
+        assertEquals("Explore", before.getString(R.string.nav_explore))
+
+        // The app's own settings, which the recreated activity reads in attachBaseContext.
+        importAFrenchFile(PrefsUserSettings(ApplicationProvider.getApplicationContext())) {
+            rule.eventually("the activity recreated in French") {
+                val now = rule.activity
+                assertTrue("the activity was recreated", now !== before)
+                assertEquals("fr", now.resources.configuration.locales[0].language)
+                rule.onNodeWithTag("nav_tab_explore").assert(hasText("Explorer"))
+            }
+        }
+    }
+
     @Test
     fun importingSomethingElse_isRefused_andNothingChanges() {
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
@@ -780,7 +1082,7 @@ class ExploreProgressUiTest {
         val picker = PickerStandIn(Uri.fromFile(file))
         val db = inMemoryDatabase()
         val vm = CountryViewModel(CountryRepository(db.userProgressDao()), FakeSpeech())
-        runBlocking { db.userProgressDao().recordAnswer("FR", Skill.FLAG, true, Evidence.FULL, 1_000L) }
+        runBlocking { db.userProgressDao().recordAnswer("FR", Skill.FLAG, true, Evidence.FULL, 1_000L, TimeZone.getDefault()) }
         try {
             rule.activityRule.scenario.onActivity { activity ->
                 (activity as ComponentActivity).setContent {

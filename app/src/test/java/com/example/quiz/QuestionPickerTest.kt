@@ -1,8 +1,12 @@
 package com.example.quiz
 
 import com.example.data.model.Country
+import com.example.progress.Evidence
 import com.example.progress.SkillMastery
 import com.example.progress.SkillState
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.util.TimeZone
 import kotlin.random.Random
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -11,7 +15,8 @@ import org.junit.Test
 class QuestionPickerTest {
 
     private val day = SkillMastery.DAY_MILLIS
-    private val now = 1_000_000_000_000L
+    private val now = 1_000_000_000_000L // 2001-09-09 01:46:40 UTC
+    private val utc: TimeZone = TimeZone.getTimeZone("UTC")
 
     private val unseen = SkillState()
     private val due = SkillState(score = 40, box = 2, dueAt = now - 1, reviews = 2, correct = 1)
@@ -22,46 +27,47 @@ class QuestionPickerTest {
 
     @Test
     fun aCountryNeverReviewed_weighsAsUnseen_withOrWithoutARow() {
-        assertEquals(QuestionPicker.UNSEEN, QuestionPicker.weight(null, now, recent = false), 0.0)
-        assertEquals(QuestionPicker.UNSEEN, QuestionPicker.weight(unseen, now, recent = false), 0.0)
+        assertEquals(QuestionPicker.UNSEEN, QuestionPicker.weight(null, now, utc, recent = false), 0.0)
+        assertEquals(QuestionPicker.UNSEEN, QuestionPicker.weight(unseen, now, utc, recent = false), 0.0)
     }
 
     @Test
     fun aDueCountry_weighsMoreTheLongerItIsOverdue_upToACap() {
-        assertEquals(4.0, QuestionPicker.weight(due, now, recent = false), 0.0)
-        assertEquals(4.0, QuestionPicker.weight(due.copy(dueAt = now - 6 * day), now, recent = false), 0.0)
-        assertEquals(5.0, QuestionPicker.weight(due.copy(dueAt = now - 7 * day), now, recent = false), 0.0)
-        assertEquals(7.0, QuestionPicker.weight(due.copy(dueAt = now - 21 * day), now, recent = false), 0.0)
-        assertEquals(8.0, QuestionPicker.weight(due.copy(dueAt = now - 28 * day), now, recent = false), 0.0)
-        assertEquals(8.0, QuestionPicker.weight(due.copy(dueAt = now - 365 * day), now, recent = false), 0.0)
+        assertEquals(4.0, QuestionPicker.weight(due, now, utc, recent = false), 0.0)
+        assertEquals(4.0, QuestionPicker.weight(due.copy(dueAt = now - 6 * day), now, utc, recent = false), 0.0)
+        assertEquals(5.0, QuestionPicker.weight(due.copy(dueAt = now - 7 * day), now, utc, recent = false), 0.0)
+        assertEquals(7.0, QuestionPicker.weight(due.copy(dueAt = now - 21 * day), now, utc, recent = false), 0.0)
+        assertEquals(8.0, QuestionPicker.weight(due.copy(dueAt = now - 28 * day), now, utc, recent = false), 0.0)
+        assertEquals(8.0, QuestionPicker.weight(due.copy(dueAt = now - 365 * day), now, utc, recent = false), 0.0)
     }
 
     @Test
     fun aWeakCountry_weighsHalfAnUnseenOne_andAMasteredOneAnEighth() {
-        assertEquals(QuestionPicker.WEAK, QuestionPicker.weight(weak, now, recent = false), 0.0)
-        assertEquals(QuestionPicker.MASTERED, QuestionPicker.weight(mastered, now, recent = false), 0.0)
-        assertEquals(2.0, QuestionPicker.weight(weak, now, recent = false), 0.0)
-        assertEquals(0.5, QuestionPicker.weight(mastered, now, recent = false), 0.0)
+        assertEquals(QuestionPicker.WEAK, QuestionPicker.weight(weak, now, utc, recent = false), 0.0)
+        assertEquals(QuestionPicker.MASTERED, QuestionPicker.weight(mastered, now, utc, recent = false), 0.0)
+        assertEquals(2.0, QuestionPicker.weight(weak, now, utc, recent = false), 0.0)
+        assertEquals(0.5, QuestionPicker.weight(mastered, now, utc, recent = false), 0.0)
     }
 
     @Test
     fun aMasteredCountryWhoseReviewIsDue_weighsAsDue() {
-        assertEquals(4.0, QuestionPicker.weight(mastered.copy(dueAt = now), now, recent = false), 0.0)
+        assertEquals(4.0, QuestionPicker.weight(mastered.copy(dueAt = now), now, utc, recent = false), 0.0)
     }
 
     @Test
     fun aRecentTarget_keepsATenthOfItsWeight() {
-        assertEquals(0.4, QuestionPicker.weight(unseen, now, recent = true), 1e-9)
-        assertEquals(0.4, QuestionPicker.weight(null, now, recent = true), 1e-9)
-        assertEquals(0.2, QuestionPicker.weight(weak, now, recent = true), 1e-9)
-        assertEquals(0.05, QuestionPicker.weight(mastered, now, recent = true), 1e-9)
+        assertEquals(0.4, QuestionPicker.weight(unseen, now, utc, recent = true), 1e-9)
+        assertEquals(0.4, QuestionPicker.weight(null, now, utc, recent = true), 1e-9)
+        assertEquals(0.2, QuestionPicker.weight(weak, now, utc, recent = true), 1e-9)
+        assertEquals(0.05, QuestionPicker.weight(mastered, now, utc, recent = true), 1e-9)
     }
 
     @Test
-    fun aDueCountry_keepsItsFullWeightEvenWhenRecent() {
-        assertEquals(4.0, QuestionPicker.weight(due, now, recent = true), 0.0)
-        assertEquals(8.0, QuestionPicker.weight(due.copy(dueAt = now - 28 * day), now, recent = true), 0.0)
-        assertEquals(4.0, QuestionPicker.weight(mastered.copy(dueAt = now), now, recent = true), 0.0)
+    fun aDueCountryJustAsked_keepsATenthOfItsWeightToo() {
+        // Due again at midnight after an answer just before it: the review waits for the next sitting.
+        assertEquals(0.4, QuestionPicker.weight(due, now, utc, recent = true), 1e-9)
+        assertEquals(0.8, QuestionPicker.weight(due.copy(dueAt = now - 28 * day), now, utc, recent = true), 1e-9)
+        assertEquals(0.4, QuestionPicker.weight(mastered.copy(dueAt = now), now, utc, recent = true), 1e-9)
     }
 
     @Test
@@ -78,12 +84,12 @@ class QuestionPickerTest {
     private val states = weakCodes.associateWith { weak } + masteredCodes.associateWith { mastered }
 
     private fun firstTen(seed: Int, countries: List<Country> = pool, recent: Set<String> = emptySet()) =
-        QuestionPicker.order(countries, states, recent, now, Random(seed)).take(10).map { it.code }
+        QuestionPicker.order(countries, states, recent, now, utc, Random(seed)).take(10).map { it.code }
 
     @Test
     fun order_listsEveryCountryOfThePoolOnce() {
         for (seed in 1..20) {
-            val ordered = QuestionPicker.order(pool, states, emptySet(), now, Random(seed))
+            val ordered = QuestionPicker.order(pool, states, emptySet(), now, utc, Random(seed))
             assertEquals(pool.map { it.code }.toSet(), ordered.map { it.code }.toSet())
             assertEquals(pool.size, ordered.size)
         }
@@ -125,13 +131,13 @@ class QuestionPickerTest {
     }
 
     @Test
-    fun recentDueCountries_comeUpAsOftenAsBefore() {
+    fun recentDueCountries_comeUpFarLessOftenToo() {
         val dueStates = pool.take(10).associate { it.code to due }
         val recent = dueStates.keys
         val seeds = 1..300
-        val withRecent = seeds.map { seed -> QuestionPicker.order(pool, dueStates, recent, now, Random(seed)).take(10).count { it.code in recent } }.average()
-        val without = seeds.map { seed -> QuestionPicker.order(pool, dueStates, emptySet(), now, Random(seed)).take(10).count { it.code in recent } }.average()
-        assertEquals("due per quiz, recent: $withRecent, not recent: $without", without, withRecent, 0.0)
+        val withRecent = seeds.map { seed -> QuestionPicker.order(pool, dueStates, recent, now, utc, Random(seed)).take(10).count { it.code in recent } }.average()
+        val without = seeds.map { seed -> QuestionPicker.order(pool, dueStates, emptySet(), now, utc, Random(seed)).take(10).count { it.code in recent } }.average()
+        assertTrue("due per quiz, recent: $withRecent, not recent: $without", withRecent < without / 3)
     }
 
     @Test
@@ -139,7 +145,7 @@ class QuestionPickerTest {
         val longOverdue = pool.take(5).associate { it.code to due.copy(dueAt = now - 30 * day) }
         val justDue = pool.drop(5).take(5).associate { it.code to due }
         val states = longOverdue + justDue
-        val firsts = (1..300).map { seed -> QuestionPicker.order(pool.take(10), states, emptySet(), now, Random(seed)).first().code }
+        val firsts = (1..300).map { seed -> QuestionPicker.order(pool.take(10), states, emptySet(), now, utc, Random(seed)).first().code }
         val overdueFirst = firsts.count { it in longOverdue }
         // Weights 8 against 4: the overdue ones open about two quizzes in three.
         assertTrue("overdue first in $overdueFirst of 300", overdueFirst in 170..230)
@@ -148,13 +154,13 @@ class QuestionPickerTest {
     @Test
     fun aPoolOfFour_isOrderedLikeAnyOther() {
         val four = pool.take(4)
-        val ordered = QuestionPicker.order(four, states, emptySet(), now, Random(3))
+        val ordered = QuestionPicker.order(four, states, emptySet(), now, utc, Random(3))
         assertEquals(four.map { it.code }.toSet(), ordered.map { it.code }.toSet())
     }
 
     @Test
     fun anEmptyPool_givesAnEmptyOrder() {
-        assertTrue(QuestionPicker.order(emptyList(), states, emptySet(), now, Random(1)).isEmpty())
+        assertTrue(QuestionPicker.order(emptyList(), states, emptySet(), now, utc, Random(1)).isEmpty())
     }
 
     // --- select -------------------------------------------------------------------------------------------------------
@@ -168,7 +174,7 @@ class QuestionPickerTest {
             everyone.drop(dueCount + weakCount).take(masteredCount).associate { it.code to mastered }
 
     private fun group(state: SkillState?): String = when {
-        SkillMastery.isDue(state, now) -> "due"
+        SkillMastery.isDue(state, now, utc) -> "due"
         SkillMastery.isMastered(state, now) -> "mastered"
         SkillMastery.isWeak(state, now) -> "weak"
         else -> "new"
@@ -177,7 +183,7 @@ class QuestionPickerTest {
     private fun groups(picked: List<Country>, standings: Map<String, SkillState>): List<String> = picked.map { group(standings[it.code]) }
 
     private fun select(standings: Map<String, SkillState>, allowance: Int, seed: Int = 1, countries: List<Country> = everyone, count: Int = 10) =
-        QuestionPicker.select(countries, standings, emptySet(), now, Random(seed), allowance, count)
+        QuestionPicker.select(countries, standings, emptySet(), now, utc, Random(seed), allowance, count)
 
     private fun List<String>.counts(): Map<String, Int> = groupingBy { it }.eachCount()
 
@@ -195,13 +201,13 @@ class QuestionPickerTest {
     fun select_drawsThePreferredUnseenCountriesBeforeTheRest() {
         val europe = everyone.filter { it.continent == "Europe" }.mapTo(HashSet()) { it.code }
         for (seed in 1..20) {
-            val picked = QuestionPicker.select(everyone, emptyMap(), emptySet(), now, Random(seed), 3, 10, preferred = europe)
+            val picked = QuestionPicker.select(everyone, emptyMap(), emptySet(), now, utc, Random(seed), 3, 10, preferred = europe)
             assertEquals(10, picked.size)
             assertTrue("all from Europe with seed $seed: ${picked.map { it.code }}", picked.all { it.code in europe })
         }
         // Once the preferred ones run out, the rest of the world fills the quiz.
         val twoEuropean = everyone.filter { it.continent == "Europe" }.take(2).mapTo(HashSet()) { it.code }
-        val picked = QuestionPicker.select(everyone, emptyMap(), emptySet(), now, Random(1), 3, 10, preferred = twoEuropean)
+        val picked = QuestionPicker.select(everyone, emptyMap(), emptySet(), now, utc, Random(1), 3, 10, preferred = twoEuropean)
         assertEquals(10, picked.size)
         assertEquals(twoEuropean, picked.take(2).mapTo(HashSet()) { it.code })
     }
@@ -270,6 +276,65 @@ class QuestionPickerTest {
             assertEquals(picked.size, picked.distinctBy { it.code }.size)
             assertTrue(picked.all { it in everyone })
         }
+    }
+
+    @Test
+    fun select_rightAfterAFirstQuizOfTenNewCountries_movesOnToOthers_insteadOfAskingTheSameTenAgain() {
+        // A newcomer's first quiz leaves ten countries reviewed once, in box 1 and due tomorrow: weak, and just asked.
+        val askedState = SkillState(score = 20, box = 1, dueAt = now + day, reviews = 1, correct = 1)
+        for (seed in 1..20) {
+            val first = QuestionPicker.select(everyone, emptyMap(), emptySet(), now, utc, Random(seed), newAllowance = 15)
+            val asked = first.mapTo(HashSet()) { it.code }
+            val standings = first.associate { it.code to askedState }
+            assertTrue(standings.values.all { SkillMastery.isWeak(it, now) })
+
+            val second = QuestionPicker.select(everyone, standings, asked, now, utc, Random(seed + 100), newAllowance = 5)
+
+            assertEquals(10, second.size)
+            assertEquals("seed=$seed: ${second.map { it.code }}", emptyList<String>(), second.filter { it.code in asked }.map { it.code })
+        }
+    }
+
+    @Test
+    fun select_takesTheCountriesJustAskedOnlyWhenNothingElseIsLeft_dueOnesToo() {
+        val twelve = everyone.take(12)
+        // Eight weak ones and two due ones, all just asked; two never seen.
+        val standings = twelve.take(8).associate { it.code to weak } + twelve.drop(8).take(2).associate { it.code to due }
+        val recent = twelve.take(10).mapTo(HashSet()) { it.code }
+        for (seed in 1..20) {
+            val picked = QuestionPicker.select(twelve, standings, recent, now, utc, Random(seed), newAllowance = 3)
+            assertEquals(listOf("new", "new"), groups(picked, standings).take(2))
+            assertTrue("seed=$seed", picked.drop(2).all { it.code in recent })
+        }
+        // With only the weak ones just asked, the due ones come first, then the new ones, then the weak ones.
+        val weakOnly = twelve.take(8).mapTo(HashSet()) { it.code }
+        val held = QuestionPicker.select(twelve, standings, weakOnly, now, utc, Random(1), newAllowance = 3)
+        assertEquals(listOf("due", "due", "new", "new") + List(6) { "weak" }, groups(held, standings))
+        // With none just asked, the weak ones come before the new ones again.
+        val picked = QuestionPicker.select(twelve, standings, emptySet(), now, utc, Random(1), newAllowance = 3)
+        assertEquals(listOf("due", "due") + List(8) { "weak" }, groups(picked, standings))
+    }
+
+    @Test
+    fun select_aFlagFirstAnsweredJustBeforeMidnight_isNotAskedAgainJustAfterIt() {
+        // Ten new flags answered right at 23:50: box 1, due at 23:50 tomorrow, so due from midnight on.
+        val berlin = TimeZone.getTimeZone("Europe/Berlin")
+        val answeredAt = ZonedDateTime.of(2026, 10, 20, 23, 50, 0, 0, ZoneId.of("Europe/Berlin")).toInstant().toEpochMilli()
+        val first = everyone.take(10)
+        val standings = first.associate { it.code to SkillMastery.afterAnswer(SkillState(), true, Evidence.FULL, answeredAt, berlin) }
+        val asked = first.mapTo(HashSet()) { it.code }
+        val fivepast = answeredAt + 15 * 60 * 1000L
+        assertTrue(standings.values.all { SkillMastery.isDue(it, fivepast, berlin) })
+
+        for (seed in 1..20) {
+            val picked = QuestionPicker.select(everyone, standings, asked, fivepast, berlin, Random(seed), newAllowance = 15)
+            assertEquals(10, picked.size)
+            assertEquals("seed=$seed", emptyList<String>(), picked.filter { it.code in asked }.map { it.code })
+        }
+        // In the morning they are no longer just asked: reviews like any other, up to seven of them first.
+        val morning = answeredAt + 9 * 60 * 60 * 1000L
+        val picked = QuestionPicker.select(everyone, standings, emptySet(), morning, berlin, Random(1), newAllowance = 15)
+        assertEquals(QuestionPicker.DUE_SHARE, picked.count { it.code in asked })
     }
 
     @Test

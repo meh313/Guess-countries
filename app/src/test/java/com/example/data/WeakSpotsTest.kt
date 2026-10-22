@@ -3,6 +3,7 @@ package com.example.data
 import com.example.data.model.WeakSpots
 import com.example.progress.SkillState
 import com.example.quiz.allCountries
+import java.util.TimeZone
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -10,7 +11,8 @@ import org.junit.Test
 class WeakSpotsTest {
 
     private val day = 86_400_000L
-    private val now = 1_000_000_000_000L
+    private val now = 1_000_000_000_000L // 2001-09-09 01:46:40 UTC
+    private val utc: TimeZone = TimeZone.getTimeZone("UTC")
 
     /** A reviewed, not mastered state: box 1 unless given, due tomorrow unless given. */
     private fun weak(score: Int, dueAt: Long = now + day, box: Int = 1) =
@@ -20,7 +22,7 @@ class WeakSpotsTest {
 
     private fun codes(vararg rows: Pair<String, SkillState>, at: Long = now) = WeakSpots.select(rows.toMap(), allCountries, at).map { it.code }
 
-    private fun due(vararg rows: Pair<String, SkillState>, at: Long = now) = WeakSpots.due(rows.toMap(), allCountries, at).map { it.code }
+    private fun due(vararg rows: Pair<String, SkillState>, at: Long = now) = WeakSpots.due(rows.toMap(), allCountries, at, utc).map { it.code }
 
     @Test
     fun theLowestScoreComesFirst() {
@@ -80,8 +82,14 @@ class WeakSpotsTest {
     fun due_listsTheReviewedCountriesPastTheirDate_longestOverdueFirst() {
         assertEquals(
             listOf("DE", "FR"),
-            due("FR" to weak(20, dueAt = now - day), "DE" to weak(80, dueAt = now - 3 * day, box = 3), "JP" to weak(0, dueAt = now + 1))
+            due("FR" to weak(20, dueAt = now - day), "DE" to weak(80, dueAt = now - 3 * day, box = 3), "JP" to weak(0, dueAt = now + day))
         )
+    }
+
+    @Test
+    fun due_includesWhatFallsDueLaterToday_butNotAfterMidnight() {
+        val midnight = 1_000_080_000_000L // the end of the day of [now] in UTC
+        assertEquals(listOf("FR", "DE"), due("FR" to weak(20, dueAt = now + 1), "DE" to weak(20, dueAt = midnight - 1), "JP" to weak(20, dueAt = midnight)))
     }
 
     @Test

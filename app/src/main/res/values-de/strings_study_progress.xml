@@ -4,7 +4,11 @@
   log and the daily reminder card). Shared words (Done, Clear filters, scopes, continents, standings…) live in
   strings.xml.
 -->
-<!-- Counts whose wording does not change with the number, or that are never 1, stay plain strings. -->
+<!--
+  A count is a plurals wherever a word next to it changes with the number in one of the five languages. The plain
+  strings hold a fixed number (StudySession.MIN_FOR_STREAK, the study size) or a count no word agrees with ("Card 3
+  of 20", "4 of 54 mastered").
+-->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="PluralsCandidate">
     <!-- Flashcards: the deck header, the filter notice and the empty deck -->
     <string name="flashcards_title">Lernkarten</string>
@@ -55,7 +59,10 @@
         <item quantity="one">%1$d Hauptstadt zur Wiederholung fällig</item>
         <item quantity="other">%1$d Hauptstädte zur Wiederholung fällig</item>
     </plurals>
-    <string name="study_weak_detail">%1$d wiederholt, nicht gemeistert</string>
+    <plurals name="study_weak_detail">
+        <item quantity="one">%1$d wiederholt, nicht gemeistert</item>
+        <item quantity="other">%1$d wiederholt, nicht gemeistert</item>
+    </plurals>
     <plurals name="study_deck_detail">
         <item quantity="one">die nächste %1$d Karte ab hier</item>
         <item quantity="other">die nächsten %1$d Karten ab hier</item>
@@ -76,7 +83,10 @@
     <string name="study_summary_title">Sitzung abgeschlossen</string>
     <string name="study_summary_remembered">%1$d von %2$d gewusst</string>
     <string name="study_summary_grades">Nochmal %1$d · Gut %2$d · Leicht %3$d</string>
-    <string name="study_streak_already_counted">Serie von %1$d Tagen, heute schon gezählt</string>
+    <plurals name="study_streak_already_counted">
+        <item quantity="one">Serie von %d Tag, heute schon gezählt</item>
+        <item quantity="other">Serie von %d Tagen, heute schon gezählt</item>
+    </plurals>
     <string name="study_streak_short">Bewerte mindestens %1$d Karten, damit es für dein Ziel zählt (du hast %2$d bewertet)</string>
     <string name="study_again">Nochmal lernen</string>
 
@@ -115,7 +125,10 @@
     <string name="stats_saved">Gemerkt</string>
     <string name="stats_quizzes_finished">Abgeschlossene Quizze</string>
     <string name="stats_highest_score">Höchste Punktzahl</string>
-    <string name="stats_points">%1$d Pkt.</string>
+    <plurals name="stats_points">
+        <item quantity="one">%d Pkt.</item>
+        <item quantity="other">%d Pkt.</item>
+    </plurals>
     <string name="stats_blitz_best">Blitz-Rekord: %1$d</string>
     <!-- What TalkBack reads for a tile: title, value and (when there is one) the detail line -->
     <string name="stat_badge_description">%1$s: %2$s</string>
@@ -123,7 +136,10 @@
 
     <!-- Progress: the week ahead, under the tiles ("Coming up: 4 due tomorrow · 12 this week"); hidden when nothing is coming -->
     <string name="stats_forecast">Demnächst: %1$s · %2$s</string>
-    <string name="stats_forecast_tomorrow">%1$d morgen fällig</string>
+    <plurals name="stats_forecast_tomorrow">
+        <item quantity="one">%d morgen fällig</item>
+        <item quantity="other">%d morgen fällig</item>
+    </plurals>
     <string name="stats_forecast_week">%1$d diese Woche</string>
 
     <!-- Progress: the pairs of countries mixed up most often, each row opening how to tell them apart -->
@@ -146,8 +162,8 @@
     <string name="stats_log_heading">Letzte Quizze</string>
     <string name="stats_log_empty">Noch keine Quizze. Schließe ein Quiz oder eine Lernsitzung ab und es erscheint hier.</string>
     <string name="stats_log_entry">%1$s · %2$s</string>
-    <string name="stats_log_result">%1$d/%2$d · %3$d Pkt.</string>
-    <string name="stats_log_blitz">%1$d richtig · %2$d Pkt.</string>
+    <string name="stats_log_result">%1$d/%2$d · %3$s</string>
+    <string name="stats_log_blitz">%1$s · %2$s</string>
     <string name="stats_log_show_all">Alle anzeigen</string>
     <!-- A log row with stored answers is a button that opens its result screen again -->
     <string name="stats_log_open">Ergebnis dieses Quiz öffnen</string>

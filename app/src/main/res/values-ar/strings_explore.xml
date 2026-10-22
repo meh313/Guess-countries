@@ -9,6 +9,7 @@
     <!-- Numbers on cards and in the sheet. The number after the figure is the year of the estimate, not a count. -->
     <string name="population_estimate" tools:ignore="PluralsCandidate">%1$s (تقدير %2$d)</string>
     <string name="population_winter">%1$s يقضون الشتاء في المحطات</string>
+    <string name="area_km2">%1$s كم²</string>
     <string name="card_no_capital">لا عاصمة</string>
 
     <!-- Explore: the banner -->
@@ -24,27 +25,54 @@
     <string name="today_line">‏%1$s · %2$s · %3$s</string>
     <plurals name="today_due">
         <item quantity="zero">لا شيء مستحق</item>
-        <item quantity="one">واحدة مستحقة</item>
-        <item quantity="two">اثنتان مستحقتان</item>
+        <item quantity="one">مستحقة واحدة</item>
+        <item quantity="two">مستحقتان</item>
         <item quantity="few">%d مستحقة</item>
         <item quantity="many">%d مستحقة</item>
         <item quantity="other">%d مستحقة</item>
     </plurals>
     <plurals name="today_new">
         <item quantity="zero">لا جديد اليوم</item>
-        <item quantity="one">واحدة جديدة اليوم</item>
-        <item quantity="two">اثنتان جديدتان اليوم</item>
+        <item quantity="one">جديدة واحدة اليوم</item>
+        <item quantity="two">جديدتان اليوم</item>
         <item quantity="few">%d جديدة اليوم</item>
         <item quantity="many">%d جديدة اليوم</item>
         <item quantity="other">%d جديدة اليوم</item>
     </plurals>
     <string name="today_goal">الهدف %1$d</string>
     <!-- The card as one sentence for a screen reader: "Today: 3 of 10 items done, 2 due, 4 new today." -->
-    <!-- "items" and "due" are not nouns the number inflects here: "1 of 10 items done", "Review 1 due". -->
-    <string name="today_description" tools:ignore="PluralsCandidate">اليوم: أُنجز %1$d من %2$d عنصرًا، %3$s، %4$s.</string>
-    <string name="today_review_due" tools:ignore="PluralsCandidate">راجع %1$d مستحقة</string>
-    <string name="today_learn_new">تعلّم 5 جديدة</string>
-    <string name="today_learn_more">تعلّم 5 أخرى</string>
+    <!-- "items" is not a noun the number inflects here: "1 of 10 items done". -->
+    <string name="today_description" tools:ignore="PluralsCandidate">اليوم: أُنجز %1$d من %2$d، %3$s، %4$s.</string>
+    <!-- The button names the skill it reviews, flags first, then capitals, then the map (the Map → Country quiz) -->
+    <plurals name="today_review_flags">
+        <item quantity="zero">لا أعلام للمراجعة</item>
+        <item quantity="one">راجع علمًا واحدًا</item>
+        <item quantity="two">راجع علمين</item>
+        <item quantity="few">راجع %d أعلام</item>
+        <item quantity="many">راجع %d علمًا</item>
+        <item quantity="other">راجع %d علم</item>
+    </plurals>
+    <plurals name="today_review_capitals">
+        <item quantity="zero">لا عواصم للمراجعة</item>
+        <item quantity="one">راجع عاصمة واحدة</item>
+        <item quantity="two">راجع عاصمتين</item>
+        <item quantity="few">راجع %d عواصم</item>
+        <item quantity="many">راجع %d عاصمة</item>
+        <item quantity="other">راجع %d عاصمة</item>
+    </plurals>
+    <plurals name="today_review_map">
+        <item quantity="zero">لا دول للمراجعة على الخريطة</item>
+        <item quantity="one">راجع دولة واحدة على الخريطة</item>
+        <item quantity="two">راجع دولتين على الخريطة</item>
+        <item quantity="few">راجع %d دول على الخريطة</item>
+        <item quantity="many">راجع %d دولة على الخريطة</item>
+        <item quantity="other">راجع %d دولة على الخريطة</item>
+    </plurals>
+    <string name="today_back_to_quiz">عُد إلى اختبارك</string>
+    <string name="today_learn_new" tools:ignore="PluralsCandidate">تعلّم %1$d جديدة</string>
+    <string name="today_learn_more" tools:ignore="PluralsCandidate">تعلّم %1$d أخرى</string>
+    <!-- Every flag has been seen, so there is nothing left for Learn: the button opens the Quiz tab instead -->
+    <string name="today_take_quiz">ابدأ اختبارًا</string>
     <string name="today_dismiss">إخفاء لليوم</string>
     <!-- The first run: the card asks for a focus continent before anything else -->
     <string name="today_start_title">ابدأ من هنا</string>
@@ -85,6 +113,8 @@
     <string name="sheet_skill_standing">‏%1$s: %2$s</string>
     <string name="sheet_standing_not_reviewed">لم يُراجع بعد</string>
     <string name="sheet_standing_line">‏%1$s · %2$s · %3$s · %4$s</string>
+    <string name="sheet_standing_line_three">‏%1$s · %2$s · %3$s</string>
+    <string name="sheet_standing_line_two">‏%1$s · %2$s</string>
     <string name="sheet_standing_step">الخطوة %1$d من %2$d</string>
     <string name="sheet_due_now">مستحق الآن</string>
     <string name="sheet_next_review_tomorrow">المراجعة التالية غدًا</string>

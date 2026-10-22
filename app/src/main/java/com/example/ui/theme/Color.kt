@@ -34,6 +34,14 @@ val StreakColor = AfricaColor
 val NeedsPracticeColor = AsiaColor
 val MasteredColor = AmericasColor
 
+// The "You picked" and "Correct" labels of a miss, on the primary container: the answer list's red and green are too
+// light for the light container and far too dark for the dark one, so each container gets a pair of its own (both at
+// least 4.5:1 there, ThemeContrastTest).
+val MissPickedOnLight = Color(0xFFB3261E)
+val MissCorrectOnLight = Color(0xFF146C2E)
+val MissPickedOnDark = Color(0xFFFFB4AB)
+val MissCorrectOnDark = Color(0xFFA5D6A7)
+
 // Container roles, so Material does not fall back to its default lavender palette
 val LightPrimaryContainer = Color(0xFFD7E5F8)
 val LightOnPrimaryContainer = Color(0xFF0B2A52)

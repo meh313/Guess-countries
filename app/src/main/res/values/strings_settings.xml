@@ -35,7 +35,7 @@
     <string name="settings_haptics_detail">A short buzz for a right or wrong answer</string>
     <string name="settings_section_speech">Read aloud</string>
     <string name="settings_speech_loading">Starting the speech engine…</string>
-    <string name="settings_speech_ready">Ready. The speaker on a country\'s detail sheet and on the flashcards reads the country aloud.</string>
+    <string name="settings_speech_ready">Ready. The speaker on a country\'s detail sheet and on the flashcards reads the country aloud in English.</string>
     <string name="settings_speech_missing_data">The speech engine has no English voice data, so nothing can be read aloud yet.</string>
     <string name="settings_speech_unavailable">This device has no speech engine, so nothing can be read aloud.</string>
     <string name="settings_speech_install">Install voice data</string>
@@ -99,12 +99,12 @@
 
     <!-- About: where the facts come from -->
     <string name="about_sources_title">Where the facts come from</string>
-    <string name="about_sources_text">Each country entry was researched against public sources, mostly Wikipedia, national constitutions and official sites, and then checked a second time by two independent reviewers who could only change a fact they could both source. Population figures are the United Nations World Population Prospects 2024 estimates, rounded to three significant figures; the other facts were checked in 2026. The research notes, the audit and the owner\'s decisions are in the repository, and a country\'s detail sheet lists the pages its facts were checked against.</string>
+    <string name="about_sources_text">Each country entry was researched against public sources, mostly Wikipedia, national constitutions and official sites, and then checked a second time by two independent reviewers who could only change a fact they could both source. Population figures are the United Nations World Population Prospects 2024 estimates, rounded to three significant figures, except Palestine\'s: the Palestinian Central Bureau of Statistics\' estimate of the Palestinians living in historic Palestine in mid-2025. The other facts were checked in 2026. The research notes, the audit and the owner\'s decisions are in the repository, and a country\'s detail sheet lists the pages its facts were checked against.</string>
     <string name="about_open_repository">Open the repository</string>
 
     <!-- About: what is in the catalogue -->
     <string name="about_catalog_title">What is in the catalogue</string>
-    <string name="about_catalog_text">The 196 sovereign states as widely recognised, plus Antarctica to browse. Flags are drawn to each country\'s own proportions. Where the meaning of a flag is disputed or legendary, the text says so instead of picking a side; a fact that could not be settled was left out rather than guessed.</string>
+    <string name="about_catalog_text">The 196 sovereign states as widely recognised, plus Antarctica to browse. Every flag is drawn in the same 4:3 shape, so its proportions can differ from the real flag\'s (Switzerland\'s, for one, is square). Where the meaning of a flag is disputed or legendary, the text says so instead of picking a side; a fact that could not be settled was left out rather than guessed.</string>
 
     <!-- About: privacy -->
     <string name="about_translations_title">Translations</string>

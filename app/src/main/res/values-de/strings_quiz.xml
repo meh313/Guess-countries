@@ -3,7 +3,11 @@
   The quiz tab: the setup screen (`quiz_`), the question screen (`quiz_`) and the score screen (`result_`). The mode,
   difficulty, scope and skill labels are shared and live in strings.xml.
 -->
-<!-- Counts whose wording does not change with the number, or that are never 1, stay plain strings. -->
+<!--
+  A count is a plurals wherever a word next to it changes with the number in one of the five languages. The plain
+  strings hold a fixed number (QuizEngine.MIN_POOL, the length of the blitz), a count one form covers in every
+  language (the 4 to 10 weak spots) or a count no word agrees with ("Question 3 of 10", "Score: 40").
+-->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="PluralsCandidate">
     <!-- Setup: header -->
     <string name="quiz_title">Geografie- &amp; Flaggenquiz</string>
@@ -41,7 +45,10 @@
 
     <!-- Setup: start button -->
     <string name="quiz_start_blitz">%1$d-Sekunden-Blitz starten</string>
-    <string name="quiz_start_quiz">Quiz mit %1$d Fragen starten</string>
+    <plurals name="quiz_start_quiz">
+        <item quantity="one">Quiz mit %d Frage starten</item>
+        <item quantity="other">Quiz mit %d Fragen starten</item>
+    </plurals>
     <string name="quiz_needs_countries">Braucht mindestens %1$d Länder</string>
 
     <!-- Play: status bar -->
@@ -68,7 +75,10 @@
 
     <!-- Play: after the answer -->
     <string name="quiz_result_timeout">Zeit ist um! Die Antwort ist %1$s</string>
-    <string name="quiz_result_correct">Richtig! +%1$d Punkte</string>
+    <plurals name="quiz_result_correct">
+        <item quantity="one">Richtig! +%d Punkt</item>
+        <item quantity="other">Richtig! +%d Punkte</item>
+    </plurals>
     <string name="quiz_result_wrong">Nicht ganz. Die Antwort ist %1$s</string>
     <string name="quiz_result_also_counted">Richtig: %1$s zählt auch, der Katalog führt es aber unter %2$s</string>
     <string name="quiz_capital_and_country">%1$s, %2$s</string>
@@ -89,16 +99,25 @@
     <!-- Score screen: header and numbers -->
     <string name="result_times_up">Zeit ist um!</string>
     <string name="result_complete">Quiz geschafft!</string>
-    <string name="result_blitz_score">%1$d richtig · %2$d Punkte</string>
+    <string name="result_blitz_score">%1$s · %2$s</string>
+    <plurals name="result_correct_count">
+        <item quantity="one">%d richtig</item>
+        <item quantity="other">%d richtig</item>
+    </plurals>
     <plurals name="result_blitz_flags">
         <item quantity="one">%1$d Flagge in %2$d Sekunden</item>
         <item quantity="other">%1$d Flaggen in %2$d Sekunden</item>
     </plurals>
     <string name="result_correct_ratio">%1$d / %2$d richtig</string>
-    <string name="result_points">%1$d Punkte</string>
+    <plurals name="result_points">
+        <item quantity="one">%d Punkt</item>
+        <item quantity="other">%d Punkte</item>
+    </plurals>
     <string name="result_answers">Antworten: %1$s</string>
-    <string name="result_streak_already_counted">Serie von %1$d Tagen, heute schon gezählt</string>
-    <string name="result_streak_days">Serie von %1$d Tagen</string>
+    <plurals name="result_streak_already_counted">
+        <item quantity="one">Serie von %d Tag, heute schon gezählt</item>
+        <item quantity="other">Serie von %d Tagen, heute schon gezählt</item>
+    </plurals>
 
     <!-- Score screen: the misses -->
     <string name="result_perfect">Alles richtig!</string>

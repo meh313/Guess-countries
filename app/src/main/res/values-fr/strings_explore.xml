@@ -9,6 +9,7 @@
     <!-- Chiffres sur les cartes et dans la fiche. Le nombre après le chiffre est l'année de l'estimation, pas un compte. -->
     <string name="population_estimate" tools:ignore="PluralsCandidate">%1$s (est. %2$d)</string>
     <string name="population_winter">%1$s en hivernage dans les stations</string>
+    <string name="area_km2">%1$s km²</string>
     <string name="card_no_capital">Pas de capitale</string>
 
     <!-- Explorer : la bannière -->
@@ -34,11 +35,29 @@
     </plurals>
     <string name="today_goal">objectif %1$d</string>
     <!-- La carte en une phrase pour un lecteur d'écran : « Aujourd'hui : 3 sur 10 éléments faits, 2 à réviser, 4 nouveaux aujourd'hui. » -->
-    <!-- Le nombre n'accorde pas « éléments » ni « révision » ici : « 1 sur 10 éléments faits », « Révision 1 à faire ». -->
+    <!-- Le nombre n'accorde pas « éléments » ici : « 1 sur 10 éléments faits ». -->
     <string name="today_description" tools:ignore="PluralsCandidate">Aujourd\'hui : %1$d sur %2$d éléments faits, %3$s, %4$s.</string>
-    <string name="today_review_due" tools:ignore="PluralsCandidate">Révision %1$d à faire</string>
-    <string name="today_learn_new">Apprendre 5 nouveaux</string>
-    <string name="today_learn_more">Apprendre 5 de plus</string>
+    <!-- Le bouton nomme la compétence qu'il révise : les drapeaux, puis les capitales, puis la carte (le quiz Carte → Pays) -->
+    <plurals name="today_review_flags">
+        <item quantity="one">Réviser %d drapeau</item>
+        <item quantity="other">Réviser %d drapeaux</item>
+        <item quantity="many">Réviser %d drapeaux</item>
+    </plurals>
+    <plurals name="today_review_capitals">
+        <item quantity="one">Réviser %d capitale</item>
+        <item quantity="other">Réviser %d capitales</item>
+        <item quantity="many">Réviser %d capitales</item>
+    </plurals>
+    <plurals name="today_review_map">
+        <item quantity="one">Réviser %d pays sur la carte</item>
+        <item quantity="other">Réviser %d pays sur la carte</item>
+        <item quantity="many">Réviser %d pays sur la carte</item>
+    </plurals>
+    <string name="today_back_to_quiz">Reprendre votre quiz</string>
+    <string name="today_learn_new" tools:ignore="PluralsCandidate">Apprendre %1$d nouveaux</string>
+    <string name="today_learn_more" tools:ignore="PluralsCandidate">Apprendre %1$d de plus</string>
+    <!-- Tous les drapeaux ont été vus, Apprendre n'a plus rien à montrer : le bouton ouvre l'onglet Quiz -->
+    <string name="today_take_quiz">Faire un quiz</string>
     <string name="today_dismiss">Masquer pour aujourd\'hui</string>
     <!-- Le premier lancement : la carte demande un continent prioritaire avant tout -->
     <string name="today_start_title">Commencez ici</string>
@@ -55,9 +74,9 @@
     <string name="explore_empty_saved_hint">Touchez le marque-page d\'un pays pour l\'enregistrer ici</string>
     <string name="explore_empty_title">Aucun pays trouvé</string>
     <string name="explore_empty_hint">Essayez de modifier votre recherche ou le filtre de continent</string>
-    <!-- Avec des filtres actifs, l'indice les nomme : « Aucun pays encore à apprendre sur le continent Europe. Effacer les filtres ? » -->
+    <!-- Avec des filtres actifs, l'indice les nomme : « Aucun pays encore à apprendre en Europe. Effacer les filtres ? » -->
     <string name="explore_empty_hint_filtered">Aucun pays %1$s. Effacer les filtres ?</string>
-    <string name="explore_empty_scope_continent">sur le continent %1$s</string>
+    <string name="explore_empty_scope_continent">en %1$s</string>
     <string name="explore_empty_scope_search">correspondant à « %1$s »</string>
     <string name="explore_empty_scope_saved">parmi vos pays enregistrés</string>
 
@@ -79,6 +98,8 @@
     <string name="sheet_skill_standing">%1$s: %2$s</string>
     <string name="sheet_standing_not_reviewed">Pas encore révisé</string>
     <string name="sheet_standing_line">%1$s · %2$s · %3$s · %4$s</string>
+    <string name="sheet_standing_line_three">%1$s · %2$s · %3$s</string>
+    <string name="sheet_standing_line_two">%1$s · %2$s</string>
     <string name="sheet_standing_step">étape %1$d sur %2$d</string>
     <string name="sheet_due_now">à réviser maintenant</string>
     <string name="sheet_next_review_tomorrow">prochaine révision demain</string>
@@ -92,12 +113,12 @@
 
     <!-- Fiche détail : le drapeau, les lieux célèbres et l'anecdote -->
     <string name="sheet_flag_title">Symbolique &amp; histoire du drapeau</string>
-    <!-- La carte géographique, et ce que TalkBack entend pour toute carte : « Carte : France (Europe · Europe de l'Ouest) » -->
+    <!-- La carte géographique, et ce que TalkBack entend pour toute carte : « Carte : France, en Europe · Western Europe » ; le continent est traduit, la sous-région reste celle du catalogue, en anglais -->
     <string name="sheet_where_title">Où c\'est</string>
     <string name="sheet_borders_title">Frontières</string>
     <string name="sheet_no_borders">Pas de frontière terrestre</string>
     <string name="sheet_open_country">Ouvrir %1$s</string>
-    <string name="map_description">Carte : %1$s (%2$s)</string>
+    <string name="map_description">Carte : %1$s, en %2$s</string>
     <!-- La carte de la question Carte → Pays : le nom du pays est la réponse, TalkBack entend donc ceci à la place -->
     <string name="map_to_identify">Carte avec un pays surligné</string>
     <string name="sheet_landmarks_title">Lieux célèbres</string>

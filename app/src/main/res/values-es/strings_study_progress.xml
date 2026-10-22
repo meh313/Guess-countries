@@ -4,7 +4,11 @@
   log and the daily reminder card). Shared words (Done, Clear filters, scopes, continents, standings…) live in
   strings.xml.
 -->
-<!-- Counts whose wording does not change with the number, or that are never 1, stay plain strings. -->
+<!--
+  A count is a plurals wherever a word next to it changes with the number in one of the five languages. The plain
+  strings hold a fixed number (StudySession.MIN_FOR_STREAK, the study size) or a count no word agrees with ("Card 3
+  of 20", "4 of 54 mastered").
+-->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="PluralsCandidate">
     <!-- Flashcards: the deck header, the filter notice and the empty deck -->
     <string name="flashcards_title">Tarjetas</string>
@@ -58,7 +62,11 @@
         <item quantity="other">%1$d capitales pendientes de repaso</item>
         <item quantity="many">%1$d capitales pendientes de repaso</item>
     </plurals>
-    <string name="study_weak_detail">%1$d repasadas, no dominadas</string>
+    <plurals name="study_weak_detail">
+        <item quantity="one">%1$d repasada, no dominada</item>
+        <item quantity="other">%1$d repasadas, no dominadas</item>
+        <item quantity="many">%1$d repasadas, no dominadas</item>
+    </plurals>
     <plurals name="study_deck_detail">
         <item quantity="one">la siguiente %1$d tarjeta desde aquí</item>
         <item quantity="other">las siguientes %1$d tarjetas desde aquí</item>
@@ -78,9 +86,13 @@
 
     <!-- Study: the summary (the quiz log reuses study_summary_remembered) -->
     <string name="study_summary_title">Sesión completada</string>
-    <string name="study_summary_remembered">%1$d de %2$d recordadas</string>
+    <string name="study_summary_remembered">Recordadas: %1$d de %2$d</string>
     <string name="study_summary_grades">Otra vez %1$d · Bien %2$d · Fácil %3$d</string>
-    <string name="study_streak_already_counted">Racha de %1$d días, ya contada hoy</string>
+    <plurals name="study_streak_already_counted">
+        <item quantity="one">Racha de %d día, ya contada hoy</item>
+        <item quantity="other">Racha de %d días, ya contada hoy</item>
+        <item quantity="many">Racha de %d días, ya contada hoy</item>
+    </plurals>
     <string name="study_streak_short">Califica al menos %1$d tarjetas para que cuente para tu meta (calificaste %2$d)</string>
     <string name="study_again">Estudiar de nuevo</string>
 
@@ -121,7 +133,11 @@
     <string name="stats_saved">Guardados</string>
     <string name="stats_quizzes_finished">Quizzes terminados</string>
     <string name="stats_highest_score">Mejor puntuación</string>
-    <string name="stats_points">%1$d ptos</string>
+    <plurals name="stats_points">
+        <item quantity="one">%d pto</item>
+        <item quantity="other">%d ptos</item>
+        <item quantity="many">%d ptos</item>
+    </plurals>
     <string name="stats_blitz_best">Mejor Blitz: %1$d</string>
     <!-- What TalkBack reads for a tile: title, value and (when there is one) the detail line -->
     <string name="stat_badge_description">%1$s: %2$s</string>
@@ -129,7 +145,11 @@
 
     <!-- Progress: the week ahead, under the tiles ("Coming up: 4 due tomorrow · 12 this week"); hidden when nothing is coming -->
     <string name="stats_forecast">Próximamente: %1$s · %2$s</string>
-    <string name="stats_forecast_tomorrow">%1$d mañana</string>
+    <plurals name="stats_forecast_tomorrow">
+        <item quantity="one">%d mañana</item>
+        <item quantity="other">%d mañana</item>
+        <item quantity="many">%d mañana</item>
+    </plurals>
     <string name="stats_forecast_week">%1$d esta semana</string>
 
     <!-- Progress: the pairs of countries mixed up most often, each row opening how to tell them apart -->
@@ -146,15 +166,15 @@
     <!-- Progress: continent mastery -->
     <string name="stats_continent_heading">Dominio por continente</string>
     <string name="stats_continent_open">Mostrar los países de %1$s por aprender</string>
-    <string name="stats_mastered_of">%1$d de %2$d dominados</string>
+    <string name="stats_mastered_of">Dominados: %1$d de %2$d</string>
     <string name="stats_capitals_count">Capitales: %1$d de %2$d</string>
 
     <!-- Progress: the quiz log -->
     <string name="stats_log_heading">Quizzes recientes</string>
     <string name="stats_log_empty">Aún no hay quizzes. Termina un quiz o una sesión de estudio y aparecerá aquí.</string>
     <string name="stats_log_entry">%1$s · %2$s</string>
-    <string name="stats_log_result">%1$d/%2$d · %3$d ptos</string>
-    <string name="stats_log_blitz">%1$d correctas · %2$d ptos</string>
+    <string name="stats_log_result">%1$d/%2$d · %3$s</string>
+    <string name="stats_log_blitz">%1$s · %2$s</string>
     <string name="stats_log_show_all">Mostrar todo</string>
     <!-- A log row with stored answers is a button that opens its result screen again -->
     <string name="stats_log_open">Abrir el resultado de este quiz</string>

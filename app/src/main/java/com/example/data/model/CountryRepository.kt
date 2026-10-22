@@ -15,6 +15,7 @@ import com.example.progress.Skill
 import com.example.progress.SkillState
 import com.example.quiz.QuizReview
 import com.example.quiz.QuizSession
+import java.util.TimeZone
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
@@ -110,11 +111,13 @@ class CountryRepository(
     // (the player left the screen) must not lose the review or the score it had just started saving.
     suspend fun toggleFavorite(code: String) = withContext(NonCancellable) { progressDao.toggleFavorite(code, now()) }
 
-    suspend fun recordAnswer(code: String, skill: Skill, correct: Boolean, evidence: Evidence): SkillState =
-        withContext(NonCancellable) { progressDao.recordAnswer(code, skill, correct, evidence, now()) }
+    /** A quiz answer, now; [zone] is where the screens count their days, which decides whether the review was due. */
+    suspend fun recordAnswer(code: String, skill: Skill, correct: Boolean, evidence: Evidence, zone: TimeZone): SkillState =
+        withContext(NonCancellable) { progressDao.recordAnswer(code, skill, correct, evidence, now(), zone) }
 
-    suspend fun recordGrade(code: String, skill: Skill, grade: Grade): SkillState =
-        withContext(NonCancellable) { progressDao.recordGrade(code, skill, grade, now()) }
+    /** A flashcard grade, now; [zone] as for [recordAnswer]. */
+    suspend fun recordGrade(code: String, skill: Skill, grade: Grade, zone: TimeZone): SkillState =
+        withContext(NonCancellable) { progressDao.recordGrade(code, skill, grade, now(), zone) }
 
     /**
      * Saves a finished quiz with every answer and returns the sessions saved before it (when each finished and how
@@ -165,6 +168,9 @@ class CountryRepository(
             emptyList()
         ).map { it.toPracticeSession() }
     }
+
+    /** Every logged quiz and study session as the streak reads it, for what a session not yet logged would do. */
+    suspend fun practiceSessions(): List<PracticeStreak.Session> = progressDao.practiceSessions().map { it.toPracticeSession() }
 
     /** Everything in the database, for an export file. */
     suspend fun exportSnapshot(): ProgressSnapshot = progressDao.snapshot(now())

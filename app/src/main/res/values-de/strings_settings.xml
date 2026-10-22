@@ -35,7 +35,7 @@
     <string name="settings_haptics_detail">Ein kurzes Vibrieren bei richtiger oder falscher Antwort</string>
     <string name="settings_section_speech">Vorlesen</string>
     <string name="settings_speech_loading">Sprachausgabe wird gestartet…</string>
-    <string name="settings_speech_ready">Bereit. Der Lautsprecher im Länder-Infoblatt und auf den Lernkarten liest das Land vor.</string>
+    <string name="settings_speech_ready">Bereit. Der Lautsprecher im Länder-Infoblatt und auf den Lernkarten liest das Land auf Englisch vor.</string>
     <string name="settings_speech_missing_data">Die Sprachausgabe hat keine englischen Stimmdaten, darum kann noch nichts vorgelesen werden.</string>
     <string name="settings_speech_unavailable">Dieses Gerät hat keine Sprachausgabe, darum kann nichts vorgelesen werden.</string>
     <string name="settings_speech_install">Stimmdaten installieren</string>
@@ -99,12 +99,12 @@
 
     <!-- About: where the facts come from -->
     <string name="about_sources_title">Woher die Fakten stammen</string>
-    <string name="about_sources_text">Jeder Ländereintrag wurde anhand öffentlicher Quellen recherchiert, vor allem Wikipedia, nationale Verfassungen und offizielle Websites, und dann ein zweites Mal von zwei unabhängigen Prüfern kontrolliert, die einen Fakt nur ändern durften, wenn beide ihn belegen konnten. Die Einwohnerzahlen sind die Schätzungen der World Population Prospects 2024 der Vereinten Nationen, auf drei signifikante Stellen gerundet; die übrigen Fakten wurden 2026 geprüft. Die Rechercheprotokolle, das Audit und die Entscheidungen des Betreibers liegen im Repository, und das Infoblatt eines Landes nennt die Seiten, gegen die seine Fakten geprüft wurden.</string>
+    <string name="about_sources_text">Jeder Ländereintrag wurde anhand öffentlicher Quellen recherchiert, vor allem Wikipedia, nationale Verfassungen und offizielle Websites, und dann ein zweites Mal von zwei unabhängigen Prüfern kontrolliert, die einen Fakt nur ändern durften, wenn beide ihn belegen konnten. Die Einwohnerzahlen sind die Schätzungen der World Population Prospects 2024 der Vereinten Nationen, auf drei signifikante Stellen gerundet, mit Ausnahme Palästinas: Für Palästina gilt die Schätzung des Palästinensischen Zentralbüros für Statistik zur Zahl der Palästinenser, die Mitte 2025 im historischen Palästina lebten. Die übrigen Fakten wurden 2026 geprüft. Die Rechercheprotokolle, das Audit und die Entscheidungen des Betreibers liegen im Repository, und das Infoblatt eines Landes nennt die Seiten, gegen die seine Fakten geprüft wurden.</string>
     <string name="about_open_repository">Repository öffnen</string>
 
     <!-- About: what is in the catalogue -->
     <string name="about_catalog_title">Was im Katalog steht</string>
-    <string name="about_catalog_text">Die 196 allgemein anerkannten souveränen Staaten, dazu die Antarktis zum Stöbern. Die Flaggen sind in den jeweiligen Seitenverhältnissen des Landes gezeichnet. Wo die Bedeutung einer Flagge umstritten oder legendär ist, sagt der Text das, statt Partei zu ergreifen; ein Fakt, der sich nicht klären ließ, wurde lieber weggelassen als geraten.</string>
+    <string name="about_catalog_text">Die 196 allgemein anerkannten souveränen Staaten, dazu die Antarktis zum Stöbern. Alle Flaggen sind im selben Seitenverhältnis 4:3 gezeichnet, ihre Proportionen können also von denen der echten Flagge abweichen (die der Schweiz zum Beispiel ist quadratisch). Wo die Bedeutung einer Flagge umstritten oder legendär ist, sagt der Text das, statt Partei zu ergreifen; ein Fakt, der sich nicht klären ließ, wurde lieber weggelassen als geraten.</string>
 
     <!-- About: privacy -->
     <string name="about_translations_title">Übersetzungen</string>

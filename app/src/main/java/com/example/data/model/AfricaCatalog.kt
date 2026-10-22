@@ -309,7 +309,7 @@ object AfricaCatalog {
             areaSqKm = 17363.0,
             flagEmoji = "🇸🇿",
             flagColors = listOf("Blue", "Yellow", "Red", "Black", "White"),
-            flagDescription = "The flag comes from a banner King Sobhuza II gave in 1941 to Swazi soldiers in the World War II; first raised in 1967, it became the national flag in October 1968, just after independence. Officially red stands for past battles, blue for peace and yellow for resources. The black and white ox-hide shield shows black and white people living in peace, two spears mean protection, and the stick carries feather tassels that only the king may use.",
+            flagDescription = "The flag comes from a banner King Sobhuza II gave in 1941 to Swazi soldiers in World War II; first raised in 1967, it became the national flag in October 1968, just after independence. Officially red stands for past battles, blue for peace and yellow for resources. The black and white ox-hide shield shows black and white people living in peace, two spears mean protection, and the stick carries feather tassels that only the king may use.",
             languages = listOf("Swati", "English"),
             currency = "Swazi Lilangeni (SZL)",
             landmarks = listOf("Hlane Royal National Park", "Mlilwane Wildlife Sanctuary", "Sibebe Rock"),

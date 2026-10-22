@@ -7,6 +7,7 @@ import androidx.room.PrimaryKey
 import com.example.progress.PracticeStreak
 import com.example.progress.Skill
 import com.example.progress.SkillState
+import com.example.quiz.QuizMode
 
 /** One row per country the player touched: the bookmark and when it was last reviewed in any skill. */
 @Entity(tableName = "user_country_progress")
@@ -67,14 +68,18 @@ data class QuizScoreEntity(
     /**
      * The items of this session as the daily goal counts them: the questions answered of a quiz, the cards graded of
      * a study session (both kept in [questionCount]). A quiz row from before the count was recorded falls back to
-     * [total], its best possible score, so it still counts as a full day's practice.
+     * [total], its best possible score, so it still counts as a full day's practice; a blitz row from then (its
+     * total is 0) to its right answers, as many as were answered at least.
      */
-    val practiceItems: Int get() = questionCount ?: total
+    val practiceItems: Int get() = questionCount ?: if (mode == QuizMode.BLITZ.name) correct ?: 0 else total
 
     fun toPracticeSession(): PracticeStreak.Session = PracticeStreak.Session(timestamp, practiceItems)
 }
 
-/** The columns of a `quiz_scores` row the streak reads: when it was saved and how big it was; see [QuizScoreEntity.practiceItems]. */
+/**
+ * The columns of a `quiz_scores` row the streak reads: when it was saved and how big it was, [questionCount] already
+ * falling back as [QuizScoreEntity.practiceItems] does for a blitz (see [UserProgressDao.practiceSessions]).
+ */
 data class PracticeRow(val timestamp: Long, val total: Int, val questionCount: Int?) {
     fun toPracticeSession(): PracticeStreak.Session = PracticeStreak.Session(timestamp, questionCount ?: total)
 }

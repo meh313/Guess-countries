@@ -20,7 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -79,6 +79,7 @@ import androidx.core.net.toUri
 import com.example.R
 import com.example.data.local.UserProgressEntity
 import com.example.data.model.Country
+import com.example.progress.PracticeStreak
 import com.example.progress.Skill
 import com.example.progress.SkillMastery
 import com.example.progress.SkillState
@@ -89,11 +90,13 @@ import com.example.ui.components.formatArea
 import com.example.ui.components.formatPopulation
 import com.example.ui.components.rememberCompactNumberFormat
 import com.example.ui.labelRes
+import com.example.ui.regionLabel
 import androidx.compose.ui.text.style.TextOverflow
 import com.example.ui.components.FlagView
 import com.example.ui.components.WorldMap
 import com.example.ui.components.rememberWorldMapData
 import com.example.ui.components.getContinentColor
+import java.util.TimeZone
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -107,11 +110,13 @@ fun CountryDetailSheet(
     /** Where the speech engine stands: a spinner while it loads, an install action when it lacks voice data. */
     speechState: Speech.State = if (speechAvailable) Speech.State.READY else Speech.State.IDLE,
     onInstallVoiceData: () -> Unit = {},
-    /** The web pages this country's facts were checked against; empty for the first catalog's countries. */
+    /** The web pages this country's facts were checked against; empty when none are on record. */
     sources: List<String> = emptyList(),
     /** The player's state per skill (null where never reviewed); empty hides the progress row (Antarctica). */
     skillStates: Map<Skill, SkillState?> = emptyMap(),
     now: Long = System.currentTimeMillis(),
+    /** Whose days the due dates are counted in: the device's, as everywhere else. */
+    zone: TimeZone = TimeZone.getDefault(),
     /** The countries this one shares a land border with (see [com.example.data.model.Neighbours]), as chips under the map. */
     neighbours: List<Country> = emptyList(),
     /** Opens a bordering country's sheet in place of this one; null leaves the chips inert. */
@@ -120,7 +125,9 @@ fun CountryDetailSheet(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val context = LocalContext.current
     val resources = LocalResources.current
-    var sourcesOpen by rememberSaveable { mutableStateOf(false) }
+    // A neighbour's chip swaps the country in the same sheet: it opens at its top, its Sources closed, like a new sheet.
+    var sourcesOpen by rememberSaveable(country.code) { mutableStateOf(false) }
+    val scroll = rememberSaveable(country.code, saver = ScrollState.Saver) { ScrollState(initial = 0) }
     val isFavorite = progress?.isFavorite == true
     val compactNumbers = rememberCompactNumberFormat()
     val continentColor = getContinentColor(country.continent)
@@ -135,7 +142,7 @@ fun CountryDetailSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp, vertical = 10.dp)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scroll)
                 .testTag("country_detail_sheet_${country.code.lowercase()}")
         ) {
             // Header Row with Title, Speak Button & Close
@@ -224,7 +231,7 @@ fun CountryDetailSheet(
                             color = continentColor
                         ) {
                             Text(
-                                text = country.regionLabel,
+                                text = regionLabel(country),
                                 color = Color.White,
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
@@ -342,7 +349,7 @@ fun CountryDetailSheet(
                         Skill.entries.forEach { skill ->
                             val state = skillStates[skill]
                             Text(
-                                text = stringResource(R.string.sheet_skill_standing, stringResource(skill.labelRes), describeStanding(resources, state, now)),
+                                text = stringResource(R.string.sheet_skill_standing, stringResource(skill.labelRes), describeStanding(resources, skill, state, now, zone)),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
@@ -576,20 +583,37 @@ fun CountryDetailSheet(
     }
 }
 
-/** One line on a skill: "Mastered · step 4 of 5 · next review in 12 days", "Learning · step 1 of 5 · due now", or "Not reviewed yet". */
-internal fun describeStanding(resources: Resources, state: SkillState?, now: Long): String {
+/**
+ * One line on a skill: "Mastered · step 4 of 5 · next review in 12 days · last answer right", "Learning · step 1 of
+ * 5 · due now", or "Not reviewed yet". The due part counts local days in [zone], by the rule of the Due counts
+ * ([SkillMastery.isDue]: a review due this evening is due now, one due after midnight tomorrow's); the continent,
+ * which has no reviews ([Skill.hasReviews]), has no due part, and a row that records no last answer (one migrated
+ * from version 1, or imported without it) says nothing about the last answer.
+ */
+internal fun describeStanding(resources: Resources, skill: Skill, state: SkillState?, now: Long, zone: TimeZone): String {
     if (state == null || state.isNew) return resources.getString(R.string.sheet_standing_not_reviewed)
     val standing = Standing.of(state, now)
-    val head = resources.getString(standing.chipLabelRes)
-    // Rounded up: a review 23 hours away is tomorrow's.
-    val days = ((state.dueAt - now + SkillMastery.DAY_MILLIS - 1) / SkillMastery.DAY_MILLIS).toInt()
-    val due = when {
-        state.dueAt <= now -> resources.getString(R.string.sheet_due_now)
-        days <= 1 -> resources.getString(R.string.sheet_next_review_tomorrow)
-        else -> resources.getQuantityString(R.plurals.sheet_next_review_days, days, days)
+    val due = if (!skill.hasReviews) {
+        null
+    } else if (SkillMastery.isDue(state, now, zone)) {
+        resources.getString(R.string.sheet_due_now)
+    } else {
+        // Local days from today to the due date's day: a review due at 08:00 tomorrow is tomorrow's.
+        val days = (PracticeStreak.localDay(state.dueAt, zone) - PracticeStreak.localDay(now, zone)).toInt()
+        if (days <= 1) resources.getString(R.string.sheet_next_review_tomorrow)
+        else resources.getQuantityString(R.plurals.sheet_next_review_days, days, days)
     }
-    val last = resources.getString(if (state.lastResult > 0) R.string.sheet_last_answer_right else R.string.sheet_last_answer_wrong)
-    return resources.getString(R.string.sheet_standing_line, head, resources.getString(R.string.sheet_standing_step, state.box, SkillMastery.MAX_BOX), due, last)
+    val last = when {
+        state.lastResult > 0 -> resources.getString(R.string.sheet_last_answer_right)
+        state.lastResult < 0 -> resources.getString(R.string.sheet_last_answer_wrong)
+        else -> null
+    }
+    val parts = listOfNotNull(resources.getString(standing.chipLabelRes), resources.getString(R.string.sheet_standing_step, state.box, SkillMastery.MAX_BOX), due, last)
+    return when (parts.size) {
+        4 -> resources.getString(R.string.sheet_standing_line, parts[0], parts[1], parts[2], parts[3])
+        3 -> resources.getString(R.string.sheet_standing_line_three, parts[0], parts[1], parts[2])
+        else -> resources.getString(R.string.sheet_standing_line_two, parts[0], parts[1])
+    }
 }
 
 /**

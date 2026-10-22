@@ -2,6 +2,7 @@ package com.example.data
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.example.data.settings.AppLanguage
 import com.example.data.settings.InMemoryUserSettings
 import com.example.data.settings.PrefsUserSettings
 import com.example.data.settings.ThemeMode
@@ -138,6 +139,8 @@ class UserSettingsTest {
         assertEquals("", PrefsUserSettings(context).newItemsDay)
         assertEquals(0, InMemoryUserSettings().newItemsToday)
         assertEquals("", InMemoryUserSettings().newItemsDay)
+        assertEquals(0, PrefsUserSettings(context).learntToday)
+        assertEquals(0, InMemoryUserSettings().learntToday)
     }
 
     @Test
@@ -145,17 +148,22 @@ class UserSettingsTest {
         PrefsUserSettings(context).apply {
             newItemsToday = 7
             newItemsDay = "2026-10-14"
+            learntToday = 5
         }
 
         val next = PrefsUserSettings(context)
         assertEquals(7, next.newItemsToday)
         assertEquals("2026-10-14", next.newItemsDay)
+        assertEquals(5, next.learntToday)
         val prefs = context.getSharedPreferences(PrefsUserSettings.FILE, Context.MODE_PRIVATE)
         assertEquals(7, prefs.getInt("new_items_today", -1))
         assertEquals("2026-10-14", prefs.getString("new_items_day", null))
+        assertEquals(5, prefs.getInt("learnt_today", -1))
         // A negative count makes no sense and is held at zero.
         next.newItemsToday = -3
+        next.learntToday = -1
         assertEquals(0, PrefsUserSettings(context).newItemsToday)
+        assertEquals(0, PrefsUserSettings(context).learntToday)
     }
 
     @Test
@@ -238,7 +246,7 @@ class UserSettingsTest {
     }
 
     @Test
-    fun theBackupRules_nameTheDatabaseAndTheSettings_andLeaveWorkManagerOut() {
+    fun theBackupRules_nameTheDatabaseAndTheSettings_andLeaveWorkManagerAndTheLanguageHandOverOut() {
         for (resource in listOf(com.example.R.xml.backup_rules, com.example.R.xml.data_extraction_rules)) {
             val parser = context.resources.getXml(resource)
             val included = mutableListOf<String>()
@@ -258,6 +266,8 @@ class UserSettingsTest {
             // An explicit include list keeps WorkManager's database out by itself (lint rejects excluding an unlisted path).
             assertEquals(resource.toString(), emptyList<String>(), excluded)
             assertEquals(resource.toString(), false, included.any { it.contains("work") })
+            // The language hand-over flag belongs to the phone: a restore elsewhere hands the language over again.
+            assertEquals(resource.toString(), false, "sharedpref/${AppLanguage.HANDOVER_FILE}.xml" in included)
         }
         // The names the rules use are the real ones.
         assertEquals("world_flags_db", com.example.data.local.AppDatabase.NAME)

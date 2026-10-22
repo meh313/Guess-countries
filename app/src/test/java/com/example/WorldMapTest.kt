@@ -2,6 +2,8 @@ package com.example
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -12,6 +14,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.asAndroidPath
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -33,12 +37,12 @@ import com.example.support.WorldMapFixture
 import com.example.support.crop
 import com.example.support.drawWindow
 import com.example.ui.components.LocalWorldMapData
+import com.example.ui.components.MapPaths
 import com.example.ui.components.WorldMap
 import com.example.ui.components.mapViewport
 import com.example.ui.theme.WorldFlagsTheme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
-import org.junit.Assume.assumeTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -63,6 +67,7 @@ class WorldMapTest {
 
     private var primary = 0
     private var sea = 0
+    private var land = 0
 
     /** What is on screen; content is set once per test and follows these. */
     private var shownCountry by mutableStateOf<Country?>(null)
@@ -84,6 +89,7 @@ class WorldMapTest {
                 WorldFlagsTheme {
                     primary = MaterialTheme.colorScheme.primary.toArgb()
                     sea = MaterialTheme.colorScheme.surfaceContainerLow.toArgb()
+                    land = MaterialTheme.colorScheme.surfaceVariant.toArgb()
                     CompositionLocalProvider(LocalWorldMapData provides shownData) {
                         Box(Modifier.size(340.dp, 420.dp)) {
                             shownCountry?.let { WorldMap(it, Modifier.width(300.dp), aspectRatio = aspect, zoom = shownZoom, showCapital = shownCapital) }
@@ -196,12 +202,134 @@ class WorldMapTest {
     }
 
     @Test
+    fun aHostsHole_leavesItsEnclaveInTheLandColour_itsOverlappingRingsDoNot_andTheEnclaveIsHighlightedOnItsOwn() {
+        val viewport = mapViewport(WorldMapFixture.data["HH"]!!, zoom = true, aspect = aspect)
+        show(mapped("HH"))
+        var map = mapPixels()
+        // EE fills HH's hole, 26..34 × -34..-26; HH's own band runs from 20 to 26 on the west.
+        val hole = listOf(viewport.fx(28f), viewport.fy(-28f), viewport.fx(32f), viewport.fy(-32f))
+        assertTrue("the enclave is land", map.share(land, hole[0], hole[1], hole[2], hole[3]) > 0.95f)
+        assertTrue("the enclave is not the host's", map.share(primary, hole[0], hole[1], hole[2], hole[3]) < 0.01f)
+        assertTrue("the host round it", map.share(primary, viewport.fx(21f), viewport.fy(-28f), viewport.fx(25f), viewport.fy(-32f)) > 0.95f)
+        // HH's two rings overlap at 20..24 × -38..-22: that is the host's too, not a second hole (an even-odd fill of
+        // rings and holes together would leave it out).
+        assertTrue("where its rings overlap", map.share(primary, viewport.fx(20.5f), viewport.fy(-24f), viewport.fx(23.5f), viewport.fy(-36f)) > 0.95f)
+
+        show(mapped("EE"))
+        map = mapPixels()
+        val own = mapViewport(WorldMapFixture.data["EE"]!!, zoom = true, aspect = aspect)
+        assertTrue("the enclave highlighted", map.share(primary, own.fx(28f), own.fy(-28f), own.fx(32f), own.fy(-32f)) > 0.95f)
+    }
+
+    /** Pixels a degree in a [raster]. */
+    private val px = 4
+
+    /** [path], in the map's degree space (y = −latitude), filled without antialiasing from [west], [north] on. */
+    private fun raster(path: Path, west: Float, north: Float, widthDeg: Int, heightDeg: Int): Bitmap {
+        val bitmap = Bitmap.createBitmap(widthDeg * px, heightDeg * px, Bitmap.Config.ARGB_8888)
+        Canvas(bitmap).apply {
+            scale(px.toFloat(), px.toFloat())
+            translate(-west, north)
+            drawPath(path.asAndroidPath(), Paint().apply { color = android.graphics.Color.BLACK })
+        }
+        return bitmap
+    }
+
+    /** Whether the point at [lon], [lat] is filled in a [raster] drawn from [west], [north]. */
+    private fun Bitmap.filledAt(lon: Float, lat: Float, west: Float, north: Float): Boolean =
+        getPixel(((lon - west) * px).toInt(), ((north - lat) * px).toInt()) ushr 24 != 0
+
+    @Test
+    fun whenThePathOpFails_theHostsFillStillLeavesItsHoleOut_andFillsWhereItsRingsOverlap() {
+        // Skia's path op can fail on some geometry; the paths are built during composition, so that must not throw.
+        val fallback = MapPaths.build(WorldMapFixture.data) { _, _ -> null }.byCode.getValue("HH")
+        val difference = MapPaths.build(WorldMapFixture.data).byCode.getValue("HH")
+
+        // HH's rings, 20..40 and 16..24 × -40..-20, are stored anticlockwise, and so is its hole at 26..34 × -34..-26.
+        val (west, north) = 10f to -15f
+        val drawn = raster(fallback.fill, west, north, 35, 30)
+        assertTrue("the hole is left out", !drawn.filledAt(30f, -30f, west, north))
+        assertTrue("the host round it", drawn.filledAt(37f, -30f, west, north))
+        assertTrue("where its two rings overlap", drawn.filledAt(22f, -30f, west, north))
+        assertTrue("its second ring alone", drawn.filledAt(17f, -30f, west, north))
+        assertTrue("past it", !drawn.filledAt(12f, -30f, west, north) && !drawn.filledAt(42f, -30f, west, north))
+        assertTrue("the same pixels as the difference", drawn.sameAs(raster(difference.fill, west, north, 35, 30)))
+    }
+
+    @Test
+    fun whenThePathOpFails_theBundledSouthAfrica_stillLeavesLesothoOut() {
+        // The asset's rings run clockwise, the fixture's anticlockwise: the fallback winds them by their area either way.
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        assertTrue("world.json must be bundled", WorldMapData.isBundled(context))
+        val za = MapPaths.build(WorldMapData.load(context)) { _, _ -> null }.byCode.getValue("ZA")
+
+        val (west, north) = 15f to -20f
+        val drawn = raster(za.fill, west, north, 20, 20)
+        assertTrue("Lesotho is not South Africa", !drawn.filledAt(28.3f, -29.5f, west, north))
+        assertTrue("the Karoo is", drawn.filledAt(23f, -32f, west, north))
+        assertTrue("the Free State, north of Lesotho, is", drawn.filledAt(27f, -28f, west, north))
+    }
+
+    @Test
+    fun theBackgroundLand_isLandNotSea_andNoCountry() {
+        // The fixture's background ring, -170..-150 × 30..50, on the whole-world map: land colour, never highlighted.
+        show(mapped("AA"), zoom = false)
+        val map = mapPixels()
+        val viewport = mapViewport(WorldMapFixture.data["AA"]!!, zoom = false, aspect = aspect)
+        val (l, t, r, b) = listOf(viewport.fx(-167f), viewport.fy(47f), viewport.fx(-153f), viewport.fy(33f))
+        assertTrue("land", map.share(land, l, t, r, b) > 0.95f)
+        assertTrue("not sea", map.share(sea, l, t, r, b) < 0.01f)
+        assertTrue("not a country", WorldMapFixture.data.countries.values.none { it.bbox.west <= -167f && it.bbox.east >= -153f && it.bbox.north >= 47f })
+    }
+
+    @Test
     fun theMapIsAnImageDescribedByTheCountryAndItsRegion() {
         show(france.copy(code = "AA"))
 
         rule.onNodeWithTag("world_map")
-            .assertContentDescriptionEquals("Map: France, in ${france.regionLabel}")
+            .assertContentDescriptionEquals("Map: France, in Europe · Western Europe")
             .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Image))
+    }
+
+    @Test
+    fun theDescription_saysTheAmericasInASentence() {
+        show(france.copy(code = "AA", continent = "Americas", subregion = "South America"))
+
+        rule.onNodeWithTag("world_map").assertContentDescriptionEquals("Map: France, in the Americas · South America")
+    }
+
+    @Test
+    @Config(qualifiers = "fr-w360dp-h640dp-xxhdpi")
+    fun theDescription_namesTheContinentInTheLanguageOfTheScreens() {
+        // The continent is the one the cards and chips show; the subregion, like the name, is the catalog's English.
+        show(france.copy(code = "AA", continent = "Africa", subregion = "Western Africa"))
+
+        rule.onNodeWithTag("world_map").assertContentDescriptionEquals("Carte\u00a0: France, en Afrique · Western Africa")
+    }
+
+    @Test
+    @Config(qualifiers = "fr-w360dp-h640dp-xxhdpi")
+    fun theFrenchDescription_putsTheAmericasInTheSingularAfterEn() {
+        show(france.copy(code = "AA", continent = "Americas", subregion = "South America"))
+
+        rule.onNodeWithTag("world_map").assertContentDescriptionEquals("Carte\u00a0: France, en Amérique · South America")
+    }
+
+    @Test
+    @Config(qualifiers = "ar-w360dp-h640dp-xxhdpi")
+    fun theArabicDescription_putsTheAmericasInTheGenitiveAfterIn() {
+        show(france.copy(code = "AA", continent = "Americas", subregion = "South America"))
+
+        rule.onNodeWithTag("world_map").assertContentDescriptionEquals("خريطة: France، في الأمريكتين · South America")
+    }
+
+    @Test
+    @Config(qualifiers = "de-w360dp-h640dp-xxhdpi")
+    fun theGermanDescription_givesAntarcticaItsArticleAfterIn() {
+        // Antarctica's subregion repeats its continent, so the region is the continent alone.
+        show(france.copy(code = "AA", name = "Antarctica", continent = "Antarctica", subregion = "Antarctica"))
+
+        rule.onNodeWithTag("world_map").assertContentDescriptionEquals("Karte: Antarctica, in der Antarktis")
     }
 
     @Test
@@ -245,7 +373,8 @@ class WorldMapTest {
     @Test
     fun theBundledAsset_rendersTheAwkwardCountries_andKeepsBrazilInsideItsBox() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        assumeTrue("world.json is not bundled yet", WorldMapData.isBundled(context))
+        // A failure, not a skip: without the asset in the build the app would ship with empty maps.
+        assertTrue("world.json must be bundled", WorldMapData.isBundled(context))
         val data = WorldMapData.load(context)
 
         // France (a far-flung territory), the Vatican (a point), Kiribati (astride the antimeridian) and Antarctica.
@@ -268,5 +397,63 @@ class WorldMapTest {
         assertTrue("left", map.share(primary, 0f, 0f, l - m, 0.8f) < 0.003f)
         assertTrue("right", map.share(primary, r + m, 0f, 1f, 0.8f) < 0.003f)
         assertTrue("below", map.share(primary, 0f, b + m, 0.65f, 1f) < 0.003f)
+    }
+
+    @Test
+    fun theBundledAsset_leavesLesothoOutOfSouthAfrica_andDrawsGreenlandAsLand() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        assertTrue("world.json must be bundled", WorldMapData.isBundled(context))
+        val data = WorldMapData.load(context)
+
+        // South Africa highlighted: Lesotho, its enclave, stays land; the Karoo round it is South Africa's colour.
+        val za = mapViewport(data["ZA"]!!, zoom = true, aspect = aspect)
+        show(mapped("ZA"), data = data)
+        var map = mapPixels()
+        val lesotho = listOf(za.fx(28.0f), za.fy(-29.3f), za.fx(28.6f), za.fy(-29.8f))
+        assertTrue("Lesotho is land", map.share(land, lesotho[0], lesotho[1], lesotho[2], lesotho[3]) > 0.9f)
+        assertTrue("Lesotho is not South Africa", map.share(primary, lesotho[0], lesotho[1], lesotho[2], lesotho[3]) < 0.02f)
+        assertTrue("the Karoo is", map.share(primary, za.fx(22.5f), za.fy(-31.5f), za.fx(23.5f), za.fy(-32.5f)) > 0.9f)
+
+        // The whole world: Greenland, which is no catalog country, is land and not sea.
+        val world = mapViewport(data["BR"]!!, zoom = false, aspect = aspect)
+        show(mapped("BR"), zoom = false, data = data)
+        map = mapPixels()
+        val greenland = listOf(world.fx(-45f), world.fy(75f), world.fx(-38f), world.fy(70f))
+        assertTrue("Greenland is land", map.share(land, greenland[0], greenland[1], greenland[2], greenland[3]) > 0.9f)
+        assertTrue("Greenland is not sea", map.share(sea, greenland[0], greenland[1], greenland[2], greenland[3]) < 0.02f)
+    }
+
+    @Test
+    fun theBundledAsset_highlightsCrimeaWithUkraine_theGolanWithSyria_andStopsMoroccoAt27Degrees40() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        assertTrue("world.json must be bundled", WorldMapData.isBundled(context))
+        val data = WorldMapData.load(context)
+
+        val ua = mapViewport(data["UA"]!!, zoom = true, aspect = aspect)
+        show(mapped("UA"), data = data)
+        var map = mapPixels()
+        assertTrue("Simferopol is Ukraine's colour", map.share(primary, ua.fx(33.9f), ua.fy(45.1f), ua.fx(34.5f), ua.fy(44.8f)) > 0.9f)
+
+        val ru = mapViewport(data["RU"]!!, zoom = true, aspect = aspect)
+        show(mapped("RU"), data = data)
+        map = mapPixels()
+        // Russia's frame is some 240° wide, so a degree is under four pixels: the box is most of Crimea, too small to
+        // tell land from coast stroke, but it would be mostly Russia's colour if Crimea were drawn in Russia.
+        val crimea = listOf(ru.fx(33.2f), ru.fy(45.6f), ru.fx(35.2f), ru.fy(44.9f))
+        assertTrue("Crimea is not Russia's colour", map.share(primary, crimea[0], crimea[1], crimea[2], crimea[3]) < 0.05f)
+
+        val sy = mapViewport(data["SY"]!!, zoom = true, aspect = aspect)
+        show(mapped("SY"), data = data)
+        map = mapPixels()
+        assertTrue("Katzrin is Syria's colour", map.share(primary, sy.fx(35.66f), sy.fy(33.1f), sy.fx(35.78f), sy.fy(32.9f)) > 0.9f)
+        assertTrue("Tiberias is not", map.share(primary, sy.fx(35.45f), sy.fy(32.85f), sy.fx(35.53f), sy.fy(32.75f)) < 0.02f)
+
+        val ma = mapViewport(data["MA"]!!, zoom = true, aspect = aspect)
+        show(mapped("MA"), data = data)
+        map = mapPixels()
+        val laayoune = listOf(ma.fx(-12.8f), ma.fy(27.4f), ma.fx(-12.0f), ma.fy(26.9f))
+        assertTrue("Laayoune's land is not Morocco's colour", map.share(primary, laayoune[0], laayoune[1], laayoune[2], laayoune[3]) < 0.02f)
+        assertTrue("but it is land", map.share(land, laayoune[0], laayoune[1], laayoune[2], laayoune[3]) > 0.9f)
+        assertTrue("Morocco north of the line is", map.share(primary, ma.fx(-6.5f), ma.fy(33.5f), ma.fx(-5.5f), ma.fy(33.0f)) > 0.9f)
     }
 }

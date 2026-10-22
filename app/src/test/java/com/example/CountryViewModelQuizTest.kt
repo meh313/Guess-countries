@@ -23,12 +23,14 @@ import com.example.quiz.QuestionPicker
 import com.example.quiz.QuizEngine
 import com.example.quiz.QuizMode
 import com.example.quiz.QuizSession
+import com.example.quiz.QuizSnapshot
 import com.example.support.FakeSpeech
 import com.example.support.awaitPendingWrites
 import com.example.support.closeWhenIdle
 import com.example.support.inMemoryDatabase
 import com.example.ui.viewmodel.CountryViewModel
 import com.example.ui.viewmodel.QuizPlan
+import com.example.ui.viewmodel.QuizSnapshotBundle
 import com.example.ui.viewmodel.QuizStateHolder
 import java.util.TimeZone
 import kotlin.random.Random
@@ -352,6 +354,31 @@ class CountryViewModelQuizTest {
     }
 
     @Test
+    fun aPausedQuiz_isNeitherTimedOutNorFinishedByItsClock_andNothingIsSaved() {
+        // The clocks are stopped (the app in the background), so a time-out or the end of the minute cannot come.
+        val vm = newViewModel()
+        vm.startQuiz(QuizMode.SPEED_MATCH, "Global")
+        vm.pauseQuiz()
+        vm.timeOutQuiz()
+        assertFalse(vm.quizSession.value!!.hasAnswered)
+
+        vm.endQuiz()
+        vm.startQuiz(QuizMode.BLITZ, "Global")
+        vm.pauseQuiz()
+        vm.finishQuiz()
+        assertFalse(vm.quizSession.value!!.isFinished)
+
+        db.awaitPendingWrites()
+        assertTrue(runBlocking { db.userProgressDao().getAllSkills().first() }.isEmpty())
+        assertTrue(runBlocking { db.userProgressDao().getQuizHistory().first() }.isEmpty())
+
+        // Back on screen, the clock can run out again.
+        vm.resumeQuiz()
+        vm.finishQuiz()
+        assertTrue(vm.quizSession.value!!.isFinished)
+    }
+
+    @Test
     fun clearFilters_resetsSearchContinentBookmarksAndSort() {
         val vm = newViewModel()
         vm.onSearchQueryChange("fra")
@@ -481,7 +508,7 @@ class CountryViewModelQuizTest {
     private fun reviewWrong(codes: List<String>) {
         codes.forEach { code ->
             now += 10
-            runBlocking { db.userProgressDao().recordAnswer(code, Skill.FLAG, false, Evidence.FULL, now) }
+            runBlocking { db.userProgressDao().recordAnswer(code, Skill.FLAG, false, Evidence.FULL, now, TimeZone.getDefault()) }
         }
     }
 
@@ -507,12 +534,12 @@ class CountryViewModelQuizTest {
     fun weakSpots_listsReviewedCountriesBelowMasteryWeakestFirst() {
         runBlocking {
             val dao = db.userProgressDao()
-            dao.recordAnswer("FR", Skill.FLAG, true, Evidence.FULL, 10L)
-            dao.recordAnswer("FR", Skill.FLAG, true, Evidence.FULL, 11L) // 40
-            dao.recordAnswer("DE", Skill.FLAG, false, Evidence.FULL, 12L) // 0
-            dao.recordAnswer("JP", Skill.FLAG, true, Evidence.FULL, 13L) // 20
+            dao.recordAnswer("FR", Skill.FLAG, true, Evidence.FULL, 10L, TimeZone.getDefault())
+            dao.recordAnswer("FR", Skill.FLAG, true, Evidence.FULL, 11L, TimeZone.getDefault()) // 40
+            dao.recordAnswer("DE", Skill.FLAG, false, Evidence.FULL, 12L, TimeZone.getDefault()) // 0
+            dao.recordAnswer("JP", Skill.FLAG, true, Evidence.FULL, 13L, TimeZone.getDefault()) // 20
             dao.upsertSkill(SkillProgressEntity.of("BR", Skill.FLAG, SkillState(score = 80, box = 3, dueAt = System.currentTimeMillis() + 7 * 86_400_000L, reviews = 3, correct = 3))) // mastered
-            dao.recordAnswer("AQ", Skill.FLAG, false, Evidence.FULL, 20L) // not a country
+            dao.recordAnswer("AQ", Skill.FLAG, false, Evidence.FULL, 20L, TimeZone.getDefault()) // not a country
         }
         val vm = newViewModel()
 
@@ -856,6 +883,39 @@ class CountryViewModelQuizTest {
     }
 
     @Test
+    fun theContinentSkill_hasNoReviewsDue_howeverOldItsRows() {
+        reviewedRow("FR", Skill.CONTINENT)
+        reviewedRow("DE", Skill.FLAG)
+        val vm = newViewModel()
+        vm.awaitPlan("one flag due") { it.due(Skill.FLAG).size == 1 }
+
+        assertTrue(vm.quizPlan.value.due(Skill.CONTINENT).isEmpty())
+        assertEquals("still learning, as the detail sheet says", listOf("FR"), vm.quizPlan.value.weak(Skill.CONTINENT).map { it.code })
+    }
+
+    @Test
+    fun aFlagLearntLastEvening_isInThisMorningsDueQuiz_andTheRightAnswerIsItsDueReview() {
+        val paris = TimeZone.getTimeZone("Europe/Paris")
+        fun at(day: Int, hour: Int) = java.util.Calendar.getInstance(paris).apply { clear(); set(2026, 9, day, hour, 0) }.timeInMillis
+        // Learnt on Monday at 19:00, so due on Tuesday at 19:00; the quiz is played on Tuesday at 09:00.
+        runBlocking { db.userProgressDao().recordAnswer("FR", Skill.FLAG, true, Evidence.FULL, at(19, 19), paris) }
+        val tuesday = at(20, 9)
+        val vm = CountryViewModel(CountryRepository(db.userProgressDao(), now = { tuesday }), FakeSpeech(), clock = { now }, zone = { paris })
+            .also { created += it }
+        vm.awaitPlan("France due this morning") { plan -> plan.due(Skill.FLAG).map { it.code } == listOf("FR") }
+
+        vm.startQuiz(QuizMode.FLAG_NAME, QuizEngine.DUE)
+
+        val session = vm.quizSession.value!!
+        assertEquals(QuizEngine.DUE, session.scope)
+        assertEquals(listOf("FR"), session.targets())
+        vm.answerQuiz(session.current.correctAnswerIndex)
+        awaitCondition("the review to be saved") { skillRow("FR")?.reviews == 2 }
+        assertEquals("the due review moves one box up", 2, skillRow("FR")!!.box)
+        assertEquals(tuesday + 3 * day, skillRow("FR")!!.dueAt)
+    }
+
+    @Test
     fun startQuiz_dueToday_withNothingDueFallsBackToGlobal() {
         reviewedRow("FR", Skill.FLAG, dueAt = System.currentTimeMillis() + day)
         val vm = newViewModel()
@@ -946,6 +1006,13 @@ class CountryViewModelQuizTest {
     }
 
     @Test
+    fun newItemsToday_addsTheFlagsLearntToTheCountriesTheQuizzesIntroduced_forTodayOnly() {
+        val today = QuizStateHolder.dayStamp(System.currentTimeMillis(), TimeZone.getDefault())
+        assertEquals(5, newViewModel(settings = InMemoryUserSettings(newItemsToday = 2, newItemsDay = today, learntToday = 3)).newItemsToday.value)
+        assertEquals(0, newViewModel(settings = InMemoryUserSettings(newItemsToday = 2, newItemsDay = "2000-01-01", learntToday = 3)).newItemsToday.value)
+    }
+
+    @Test
     fun startQuiz_global_introducesTheFocusContinentsCountriesFirst() {
         // A fresh database: every country is new, so a Global quiz is ten never-seen countries, all from the focus.
         val settings = InMemoryUserSettings(focusContinent = "Europe")
@@ -1028,6 +1095,24 @@ class CountryViewModelQuizTest {
         assertEquals(asked, plan.recent(Skill.CAPITAL, now))
         assertTrue("a capital quiz leaves no recent flags", plan.recent(Skill.FLAG, now).isEmpty())
         assertTrue(plan.recent.all { it.mode == QuizMode.CAPITAL.name && it.at <= now })
+    }
+
+    @Test
+    fun aSecondGlobalQuizStraightAfterTheFirst_asksOtherCountries() {
+        // A newcomer's first quiz: ten new flags, each then reviewed once, weak and not due until tomorrow.
+        val first = newViewModel(random = Random(3))
+        first.startQuiz(QuizMode.FLAG_NAME, "Global")
+        val asked = first.quizSession.value!!.targets().toSet()
+        first.playMissingAllBut(setOf(0, 2, 4, 6, 8))
+        db.awaitPendingWrites()
+
+        val vm = newViewModel(random = Random(4))
+        vm.awaitPlan("the first quiz's ten, reviewed and recent") { it.recent.size >= 10 && it.skills[Skill.FLAG]?.size == 10 }
+        vm.startQuiz(QuizMode.FLAG_NAME, "Global")
+
+        val second = vm.quizSession.value!!.targets()
+        assertEquals(10, second.size)
+        assertEquals("asked again: $second", emptyList<String>(), second.filter { it in asked })
     }
 
     @Test
@@ -1203,6 +1288,7 @@ class CountryViewModelQuizTest {
 
         val after = revived.quizSession.value!!
         assertTrue(after.reasked)
+        assertEquals(10, after.reaskedFrom)
         assertEquals(before.questions, after.questions)
         assertEquals(before.answers, after.answers)
         assertEquals(10, after.currentIndex)
@@ -1244,7 +1330,7 @@ class CountryViewModelQuizTest {
         val bundle = state.getBundle(QuizStateHolder.SAVED_QUIZ)!!
         bundle.remove("accepted")
         bundle.remove("light")
-        bundle.remove("reasked")
+        bundle.remove("reaskedFrom")
 
         val revived = newViewModel(savedState = SavedStateHandle.createHandle(state, null))
 
@@ -1253,6 +1339,74 @@ class CountryViewModelQuizTest {
         assertFalse(after.reasked)
         assertTrue(after.questions.none { it.light })
         assertTrue(after.questions.all { it.acceptedIndices == setOf(it.correctAnswerIndex) })
+    }
+
+    @Test
+    fun aSavedQuizThatKeptOnlyThatItReasked_stillReadsAsReasked_andNeverAsksItsMissesAgain() {
+        val handle = SavedStateHandle()
+        val vm = newViewModel(random = Random(24), savedState = handle)
+        vm.startQuiz(QuizMode.FLAG_NAME, "Global")
+        var n = 0
+        while (!vm.quizSession.value!!.reasked) {
+            val q = vm.quizSession.value!!.current
+            vm.answerQuiz(if (n < 2) (q.correctAnswerIndex + 1) % q.options.size else q.correctAnswerIndex)
+            vm.nextQuizQuestion()
+            check(++n <= 10)
+        }
+        val before = vm.quizSession.value!!
+        // As the version before wrote it: whether the misses were asked again, not where they begin.
+        val state = handle.savedStateProvider().saveState()
+        val bundle = state.getBundle(QuizStateHolder.SAVED_QUIZ)!!
+        bundle.remove("reaskedFrom")
+        bundle.putBoolean("reasked", true)
+
+        val revived = newViewModel(random = Random(27), savedState = SavedStateHandle.createHandle(state, null))
+
+        val after = revived.quizSession.value!!
+        assertEquals(10, after.reaskedFrom)
+        assertEquals(before.questions, after.questions)
+        // Both misses missed again: the quiz ends after them, with no third round.
+        while (revived.quizSession.value?.isFinished == false) {
+            val q = revived.quizSession.value!!.current
+            revived.answerQuiz((q.correctAnswerIndex + 1) % q.options.size)
+            revived.nextQuizQuestion()
+            check(++n <= 14) { "the quiz never finished" }
+        }
+        assertEquals(12, revived.quizSession.value!!.questions.size)
+    }
+
+    @Test
+    fun whereAnOlderReaskBegins_isWhereTheQuestionsLeftAreTheMissesBeforeIt() {
+        // Each question answered 0 (right) or 1 (wrong), its options plain letters; the "reasked" flag only.
+        fun legacy(targets: List<String>, picks: List<Int?>): Int? {
+            val snapshot = QuizSnapshot(
+                mode = QuizMode.FLAG_NAME,
+                scope = QuizEngine.LEARN,
+                difficulty = QuizDifficulty.NORMAL,
+                questions = targets.map { QuizSnapshot.Question(it, listOf("a", "b", "c", "d"), List(4) { null }, correctAnswerIndex = 0) },
+                currentIndex = targets.lastIndex,
+                score = 0,
+                streak = 0,
+                selectedAnswerIndex = null,
+                isFinished = false,
+                correct = 0,
+                picks = picks,
+                times = picks.map { 1_000L },
+                questionElapsedMs = 0L,
+                totalElapsedMs = 0L
+            )
+            val bundle = QuizSnapshotBundle.write(snapshot).apply {
+                remove("reaskedFrom")
+                putBoolean("reasked", true)
+            }
+            return QuizSnapshotBundle.read(bundle)!!.reaskedFrom
+        }
+        // A Learn quiz asks each flag twice: France missed first, so France alone was asked again, after the four.
+        assertEquals(4, legacy(listOf("FR", "DE", "FR", "DE", "FR"), listOf(1, 0, 0, 0)))
+        // Two misses, a time-out among them: both asked again, in the order missed.
+        assertEquals(3, legacy(listOf("FR", "DE", "IT", "FR", "IT"), listOf(1, 0, null)))
+        // Nothing fits (a damaged state): the last question counts as the re-ask, so it is not asked a second time.
+        assertEquals(2, legacy(listOf("FR", "DE", "IT"), listOf(0, 0)))
     }
 
     @Test

@@ -7,6 +7,7 @@ import com.example.data.model.CountryRepository
 import com.example.data.model.Geo
 import com.example.data.settings.ALL_CONTINENTS
 import com.example.data.settings.UserSettings
+import com.example.data.settings.goalHistory
 import com.example.progress.Evidence
 import com.example.progress.PracticeStreak
 import com.example.progress.SkillMastery
@@ -36,7 +37,7 @@ import kotlinx.coroutines.launch
 class QuizStateHolder(
     private val repository: CountryRepository,
     private val progress: ProgressStateHolder,
-    /** Keeps the day's count of new countries (at most [NEW_PER_DAY] a day), the focus continent and the daily goal. */
+    /** Keeps the day's counts of new countries (the quizzes', see [NEW_PER_DAY], and Learn's), the focus continent and the daily goal. */
     private val settings: UserSettings,
     private val scope: CoroutineScope,
     /** Monotonic milliseconds, used to time questions. */
@@ -59,11 +60,12 @@ class QuizStateHolder(
     /** What the quiz that just finished did to the streak, for its score screen; null until it is known. */
     val finishOutcome: StateFlow<PracticeStreak.Outcome?> = _finishOutcome
 
-    private val _newItemsToday = MutableStateFlow(settings.newItemsToday)
+    private val _newItemsToday = MutableStateFlow(settings.newItemsToday + settings.learntToday)
 
     /**
-     * How many never-seen countries the quizzes have introduced on [UserSettings.newItemsDay], as of the last quiz
-     * started; the Today card shows it. Compare the day with the current one before reading it as today's.
+     * How many never-seen countries the quizzes and Learn 5 new have introduced on [UserSettings.newItemsDay], as of
+     * the last quiz started or Learn card shown; the Today card shows it. Compare the day with the current one before
+     * reading it as today's.
      */
     val newItemsToday: StateFlow<Int> = _newItemsToday
 
@@ -79,8 +81,9 @@ class QuizStateHolder(
 
     /**
      * Starts a quiz; does nothing if the scope has nothing to ask about. A fixed-length quiz over a place fills its
-     * ten questions by group, due reviews first and at most a few never-seen countries (see [QuestionPicker.select]
-     * and [NEW_PER_DAY]), in a shuffled order; the blitz runs through the place's countries, the likeliest first
+     * ten questions by group, due reviews first, then a few never-seen countries, more only when nothing is left but
+     * them and the countries just asked about (see [QuestionPicker.select] and [NEW_PER_DAY]), in a shuffled order;
+     * the blitz runs through the place's countries, the likeliest first
      * ([QuestionPicker.order]). The weak-spots scope asks about the ten weakest in the mode's skill (every weak spot
      * in the endless blitz), the due scope about the ten longest due; both take the wrong answers, look-alike flags
      * included, from the whole world.
@@ -95,7 +98,7 @@ class QuizStateHolder(
         val now = repository.now()
         val states = plan.skills[skill].orEmpty()
         val recent = plan.recent(skill, now)
-        val order: (List<Country>) -> List<Country> = { QuestionPicker.order(it, states, recent, now, random) }
+        val order: (List<Country>) -> List<Country> = { QuestionPicker.order(it, states, recent, now, zone(), random) }
         val world = QuizEngine.poolFor(QuizEngine.GLOBAL, repository.allCountries)
         var introduces = false
         val questions = when (effectiveScope) {
@@ -123,7 +126,7 @@ class QuizStateHolder(
                     // The focus continent's never-seen flags come before the rest of the world's; see UserSettings.focusContinent.
                     val focus = settings.focusContinent
                     val preferred = if (focus == ALL_CONTINENTS) emptySet() else pool.filter { it.continent == focus }.mapTo(HashSet()) { it.code }
-                    val targets = QuestionPicker.select(pool, states, recent, now, random, newAllowance(now), preferred = preferred)
+                    val targets = QuestionPicker.select(pool, states, recent, now, zone(), random, newAllowance(now), preferred = preferred)
                     QuizEngine.generate(targets, mode, random, difficulty, answerPool = pool, order = { it.shuffled(random) })
                 }
             }
@@ -132,7 +135,7 @@ class QuizStateHolder(
         if (introduces) {
             settings.newItemsToday += questions.count { states[it.targetCountry.code].let { state -> state == null || state.isNew } }
         }
-        _newItemsToday.value = settings.newItemsToday
+        _newItemsToday.value = settings.newItemsToday + settings.learntToday
         _finishOutcome.value = null
         _session.value = QuizSession(
             mode = mode,
@@ -149,12 +152,28 @@ class QuizStateHolder(
      * what the day's earlier quizzes brought in. The count starts over on the first quiz of a new local day.
      */
     private fun newAllowance(now: Long): Int {
+        startDay(now)
+        return (NEW_PER_DAY - settings.newItemsToday).coerceAtLeast(0)
+    }
+
+    /**
+     * A never-seen flag Learn 5 new showed: one more new today on the Today card, but none of the quizzes' allowance
+     * ([newAllowance]), which limits what the quizzes bring in unasked.
+     */
+    fun countLearnt() {
+        startDay(repository.now())
+        settings.learntToday += 1
+        _newItemsToday.value = settings.newItemsToday + settings.learntToday
+    }
+
+    /** The day's counts of new countries start over on the first quiz or Learn card of a new local day, at [now]. */
+    private fun startDay(now: Long) {
         val today = dayStamp(now, zone())
         if (settings.newItemsDay != today) {
             settings.newItemsDay = today
             settings.newItemsToday = 0
+            settings.learntToday = 0
         }
-        return (NEW_PER_DAY - settings.newItemsToday).coerceAtLeast(0)
     }
 
     /** The clock timed questions run on, so the screen can show how much time is left. */
@@ -174,7 +193,7 @@ class QuizStateHolder(
         if (updated !== session) _session.value = updated
     }
 
-    /** Called when a timed question runs out of time: counts as a wrong answer. */
+    /** Called when a timed question runs out of time: counts as a wrong answer. Nothing happens while paused. */
     fun timeOut() {
         val session = _session.value ?: return
         val updated = session.timeOut(clock())
@@ -226,7 +245,7 @@ class QuizStateHolder(
         if (updated.isFinished) onFinished(updated)
     }
 
-    /** The clock of an endless quiz ran out: end it where it stands and keep the score. */
+    /** The clock of an endless quiz ran out: end it where it stands and keep the score. Nothing happens while paused. */
     fun finish() {
         val session = _session.value ?: return
         val updated = session.finish()
@@ -241,14 +260,13 @@ class QuizStateHolder(
     }
 
     /**
-     * The finished quiz again from the top: the same questions (the misses re-asked at the end left out), each with
-     * its options in a new order, and every answer light evidence, since the answers were just shown. Saved again
-     * when finished.
+     * The finished quiz again from the top: the same questions ([QuizSession.plannedQuestions]: the misses re-asked at
+     * the end left out, a Learn quiz's second pass and map question kept), each with its options in a new order, and
+     * every answer light evidence, since the answers were just shown. Saved again when finished.
      */
     fun retry() {
         val session = _session.value?.takeIf { it.isFinished } ?: return
-        val base = if (session.mode.isEndless) session.questions else session.questions.distinctBy { it.targetCountry.code }
-        val questions = base.map { QuizEngine.reshuffle(it, random).copy(light = true) }
+        val questions = session.plannedQuestions.map { QuizEngine.reshuffle(it, random).copy(light = true) }
         _finishOutcome.value = null
         _session.value = QuizSession(
             mode = session.mode,
@@ -341,7 +359,7 @@ class QuizStateHolder(
             val earlier = repository.saveQuiz(session)
             val now = repository.now()
             val finished = PracticeStreak.Session(now, session.answers.size)
-            _finishOutcome.value = PracticeStreak.outcome(earlier, finished, settings.dailyGoal, now, zone())
+            _finishOutcome.value = PracticeStreak.outcome(earlier, finished, settings.goalHistory, now, zone())
             afterSave()
         }
     }
@@ -350,7 +368,10 @@ class QuizStateHolder(
         /** The key of the saved quiz in the [SavedStateHandle]. */
         const val SAVED_QUIZ = "quiz"
 
-        /** How many never-seen countries the quizzes introduce in a day at most; see [UserSettings.newItemsToday]. */
+        /**
+         * How many never-seen countries the quizzes introduce in a day, unless nothing is left to ask but them and the
+         * countries just asked about (see [QuestionPicker.select]); see [UserSettings.newItemsToday].
+         */
         const val NEW_PER_DAY = 15
 
         /** How many missed countries a fixed-length quiz asks again at its end. */
@@ -389,13 +410,14 @@ internal object QuizSnapshotBundle {
         putStringArrayList("typed", ArrayList(snapshot.typed.map { it ?: "" }))
         putLong("questionElapsed", snapshot.questionElapsedMs)
         putLong("totalElapsed", snapshot.totalElapsedMs)
-        putBoolean("reasked", snapshot.reasked)
+        putInt("reaskedFrom", snapshot.reaskedFrom ?: NONE)
     }
 
     /**
      * The snapshot in [bundle], or null when it holds none or is not one this version wrote. A bundle from before
      * the accepted alternatives, the light marks, the re-ask, the per-question kinds and the typed answers reads as
-     * having none of them.
+     * having none of them. One from before the re-ask kept where it begins (a "reasked" flag) still reads as having
+     * re-asked, from where its last questions are the misses asked again ([legacyReaskedFrom]).
      */
     fun read(bundle: Bundle): QuizSnapshot? {
         val mode = bundle.getString("mode")?.let { name -> QuizMode.entries.firstOrNull { it.name == name } } ?: return null
@@ -438,8 +460,26 @@ internal object QuizSnapshotBundle {
             typed = typed,
             questionElapsedMs = bundle.getLong("questionElapsed"),
             totalElapsedMs = bundle.getLong("totalElapsed"),
-            reasked = bundle.getBoolean("reasked", false)
+            reaskedFrom = bundle.getInt("reaskedFrom", NONE).takeIf { it != NONE }
+                ?: if (bundle.getBoolean("reasked")) legacyReaskedFrom(questions, picks) else null
         )
+    }
+
+    /**
+     * Where the re-ask begins in a bundle that kept only whether it had happened: the re-ask appended the first
+     * [QuizStateHolder.REASK_LIMIT] countries missed, each once, so it begins where the questions left are exactly
+     * the misses before it (at most one place fits). Should none fit, the last question is taken for the re-ask, so
+     * the quiz still never asks its misses twice.
+     */
+    private fun legacyReaskedFrom(questions: List<QuizSnapshot.Question>, picks: List<Int?>): Int {
+        for (asked in 1..QuizStateHolder.REASK_LIMIT) {
+            val from = questions.size - asked
+            if (from < 1 || from > picks.size) continue
+            val missed = (0 until from).filter { i -> picks[i].let { it == null || it !in questions[i].acceptedIndices } }
+                .map { questions[it].targetCode }.distinct().take(QuizStateHolder.REASK_LIMIT)
+            if (missed == questions.drop(from).map { it.targetCode }) return from
+        }
+        return questions.size - 1
     }
 
     /** Stands for null in an int array; no option index and no time-out marker is this low. */

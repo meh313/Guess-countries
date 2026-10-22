@@ -41,6 +41,8 @@ class CountrySourcesTest {
         assertTrue("${sources.codes.size} countries", sources.codes.size >= 164)
         assertTrue("AL" in sources.codes && "ZW" in sources.codes)
         assertTrue("a first-catalog country never researched", sources.of("AQ").isEmpty())
+        // An owner's fix cites its sources too: Palestine's population and area are PCBS's.
+        assertTrue(sources.of("PS").toString(), sources.of("PS").any { it.startsWith("https://www.pcbs.gov.ps/") })
     }
 
     @Test

@@ -14,6 +14,7 @@ import com.example.data.local.QuizScoreEntity
 import com.example.data.local.AppDatabase
 import androidx.compose.ui.test.assertIsDisplayed
 import android.graphics.Bitmap
+import android.speech.tts.TextToSpeech
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -27,15 +28,19 @@ import com.example.support.FreshDatabaseRule
 import com.example.support.SettledTodayRule
 import com.example.support.awaitDelivered
 import com.example.support.awaitWeakSpotsWhere
+import com.example.support.drawLatestDialogOverWindow
 import com.example.support.drawWindow
+import com.example.support.writePng
 import com.example.support.openTab
 import java.io.File
+import java.util.Locale
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.shadows.ShadowDialog
+import org.robolectric.shadows.ShadowTextToSpeech
 import android.view.View
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
@@ -50,8 +55,10 @@ import com.example.ui.viewmodel.CountryViewModel
  * Saves a picture of each screen under app/build/screenshots so a change can be looked at without a
  * device (CI uploads the folder). Not an assertion suite: a screen that fails to render fails the test.
  *
- * The `store*` tests write the Play Store screenshots to the subfolder `store/` (phone 1080x2400 light and dark,
- * tablet 1600x2560); after a run, that folder is copied into `store/screenshots/` in the repository.
+ * The `store*` tests write the Play Store screenshots to the subfolder `store/` (phone 1080x2160 light and dark,
+ * tablet 1600x2560) as 24-bit PNGs, with no alpha channel, the only PNGs Play takes for a screenshot; after a run,
+ * that folder is copied into `store/screenshots/` in the repository, where `tools/store-check.py` checks them against
+ * Play's rules.
  */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -65,16 +72,22 @@ class ScreenshotsTest {
 
     private val rule get() = composeRule
 
-    /** Writes the window to `build/screenshots/<folder>/<name>.png` (`folder` empty: straight into `build/screenshots`). */
-    private fun save(name: String, folder: String = "") = saveBitmap(name, rule.drawWindow(), folder)
+    /** Writes the window to `build/screenshots/<name>.png`. */
+    private fun save(name: String) = saveBitmap(name, rule.drawWindow())
 
-    private fun saveBitmap(name: String, bitmap: Bitmap, folder: String = "") {
-        val dir = File("build/screenshots", folder).apply { mkdirs() }
-        File(dir, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    private fun saveBitmap(name: String, bitmap: Bitmap) = bitmap.writePng(File("build/screenshots", "$name.png"))
+
+    /**
+     * Writes a Play Store screenshot, the window unless [bitmap] is given, to `build/screenshots/store/<name>.png`
+     * with no alpha channel; that folder is copied to `store/screenshots/` in the repository. A sheet is passed drawn
+     * over the screen beneath it ([drawLatestDialogOverWindow]), so its scrim and the corners beside it are opaque.
+     * Play refuses a screenshot whose long side is more than twice its short one, so such a window fails the test.
+     */
+    private fun saveStore(name: String, bitmap: Bitmap = rule.drawWindow()) {
+        val (short, long) = listOf(bitmap.width, bitmap.height).sorted()
+        check(long <= 2 * short) { "$name is ${bitmap.width}x${bitmap.height}, longer than 2:1" }
+        bitmap.writePng(File("build/screenshots/store", "$name.png"), alpha = false)
     }
-
-    /** The Play Store subfolder; its files are copied to `store/screenshots/` in the repository. */
-    private val store = "store"
 
     /**
      * A player a few days in: one finished quiz today, a quiz on each of the two days before, three days of streak.
@@ -109,18 +122,21 @@ class ScreenshotsTest {
         rule.openTab("stats")
         rule.awaitDelivered { viewModel.streak.value.current == 3 }
         rule.onNodeWithText("3-day streak").assertIsDisplayed()
-        save(name, store)
+        saveStore(name)
     }
 
     /**
-     * The phone screenshots for the store listing, at 1080x2400 (the class default). Numbered in the order they are
-     * shown on the store page: Explore, a Learn card, the map quiz, a wrong answer with the two flags and the map,
-     * the back of a flashcard, Progress, a country sheet scrolled to its map.
+     * The phone screenshots for the store listing, at 1080x2160: Play refuses a screenshot whose long side is more than
+     * twice its short one, as the class default's 1080x2400 is. Numbered in the order they are shown on the store page:
+     * Explore, a Learn card, the map quiz, a wrong answer with the two flags and the map, the back of a flashcard,
+     * Progress, a country sheet scrolled to its map.
      */
     @Test
+    @Config(qualifiers = "w360dp-h720dp-xxhdpi")
     fun storePhone() {
+        ShadowTextToSpeech.addLanguageAvailability(Locale.US)
         rule.waitForIdle()
-        save("01_explore", store)
+        saveStore("01_explore")
 
         val viewModel = ViewModelProvider(rule.activity)[CountryViewModel::class.java]
         rule.openTab("flashcards")
@@ -129,7 +145,9 @@ class ScreenshotsTest {
         rule.onNodeWithTag("study_learn_btn").performClick()
         rule.waitForIdle()
         rule.onNodeWithTag("learn_card").assertIsDisplayed()
-        save("02_learn_card", store)
+        rule.awaitDelivered { WorldMapData.peek() != null }
+        rule.waitForIdle()
+        saveStore("02_learn_card")
         rule.onNodeWithTag("learn_back_btn").performClick()
         rule.waitForIdle()
 
@@ -138,7 +156,7 @@ class ScreenshotsTest {
         rule.waitForIdle()
         rule.awaitDelivered { WorldMapData.peek() != null }
         rule.waitForIdle()
-        save("03_quiz_locate", store)
+        saveStore("03_quiz_locate")
         viewModel.endQuiz()
         rule.waitForIdle()
 
@@ -148,19 +166,18 @@ class ScreenshotsTest {
         viewModel.answerQuiz((europe.correctAnswerIndex + 1) % europe.options.size)
         rule.waitForIdle()
         rule.onNodeWithTag("quiz_miss_comparison").performScrollTo()
-        save("04_quiz_answered", store)
+        saveStore("04_quiz_answered")
         viewModel.endQuiz()
         rule.waitForIdle()
 
         rule.openTab("flashcards")
         rule.onNodeWithTag("flashcard_flip_card").performClick()
         rule.waitForIdle()
-        rule.awaitDelivered { WorldMapData.peek() != null }
-        if (rule.onAllNodesWithTag("flashcard_map", useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()) {
-            rule.onNodeWithTag("flashcard_map", useUnmergedTree = true).performScrollTo()
-            rule.waitForIdle()
-        }
-        save("05_flashcard_back", store)
+        // The engine starts as the screen shows; without its answer the read-aloud button would be a spinner.
+        ShadowTextToSpeech.getLastTextToSpeechInstance()?.let { shadowOf(it).onInitListener.onInit(TextToSpeech.SUCCESS) }
+        rule.waitForIdle()
+        // The top of the back, the name with its capital and population: the map has two shots of its own.
+        saveStore("05_flashcard_back")
 
         seedProgress(viewModel)
         saveProgress("06_progress", viewModel)
@@ -172,20 +189,20 @@ class ScreenshotsTest {
         rule.awaitDelivered { WorldMapData.peek() != null }
         rule.onNode(hasScrollAction() and hasTestTag("country_detail_sheet_fr")).performScrollToNode(hasTestTag("sheet_map"))
         rule.waitForIdle()
-        saveBitmap("07_sheet_map", drawLatestDialog(), store)
+        saveStore("07_sheet_map", rule.drawLatestDialogOverWindow())
         rule.onNodeWithContentDescription("Close").performClick()
         rule.waitForIdle()
     }
 
-    /** Two of the phone screenshots in the dark theme. */
+    /**
+     * Explore in the dark theme, the eighth phone screenshot: Play takes at most eight for each kind of device, so the
+     * dark theme gets one.
+     */
     @Test
-    @Config(qualifiers = "+night")
+    @Config(qualifiers = "w360dp-h720dp-night-xxhdpi")
     fun storePhoneDark() {
         rule.waitForIdle()
-        save("dark_01_explore", store)
-        val viewModel = ViewModelProvider(rule.activity)[CountryViewModel::class.java]
-        seedProgress(viewModel)
-        saveProgress("dark_06_progress", viewModel)
+        saveStore("dark_01_explore")
     }
 
     /** Two of the screenshots on a 1600x2560 tablet: the rail on the start edge, the columns at their reading width. */
@@ -193,7 +210,7 @@ class ScreenshotsTest {
     @Config(qualifiers = "w800dp-h1280dp-xhdpi")
     fun storeTablet() {
         rule.waitForIdle()
-        save("tablet_01_explore", store)
+        saveStore("tablet_01_explore")
         val viewModel = ViewModelProvider(rule.activity)[CountryViewModel::class.java]
         seedProgress(viewModel)
         saveProgress("tablet_06_progress", viewModel)

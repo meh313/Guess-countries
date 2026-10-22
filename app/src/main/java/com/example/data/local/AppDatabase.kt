@@ -27,7 +27,8 @@ abstract class AppDatabase : RoomDatabase() {
          * Every reviewed country becomes a FLAG row: the old reviews cannot be split by skill, so capitals start fresh.
          * The score carries over, the box follows the old thresholds (100 -> 3, 75 -> 2, else 1) and the next review is
          * due from the upgrade, so nothing lapses on day one. Blitz rows kept their right-answer count in `total`; it
-         * moves to `correct`. A fixed-length row's question count is the inverse of QuizEngine.maxScore.
+         * moves to `correct`, and stands for the questions answered too (at least that many were), so a day of blitzes
+         * still counts for the streak. A fixed-length row's question count is the inverse of QuizEngine.maxScore.
          */
         val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
@@ -59,6 +60,7 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("ALTER TABLE quiz_scores ADD COLUMN questionCount INTEGER")
                 db.execSQL("ALTER TABLE quiz_scores ADD COLUMN difficulty TEXT")
                 db.execSQL("UPDATE quiz_scores SET correct = total, total = 0 WHERE mode = 'BLITZ'")
+                db.execSQL("UPDATE quiz_scores SET questionCount = correct WHERE mode = 'BLITZ'")
                 db.execSQL(
                     "UPDATE quiz_scores SET questionCount = CASE total WHEN 52 THEN 4 WHEN 70 THEN 5 WHEN 90 THEN 6 " +
                         "WHEN 112 THEN 7 WHEN 136 THEN 8 WHEN 162 THEN 9 WHEN 190 THEN 10 END WHERE mode != 'BLITZ'"

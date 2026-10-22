@@ -9,16 +9,26 @@ import com.example.data.settings.InMemoryUserSettings
 import com.example.data.settings.ThemeMode
 import com.example.data.transfer.ImportProblem
 import com.example.data.transfer.ProgressTransfer
+import com.example.flashcards.StudySession
+import com.example.progress.DueForecast
 import com.example.progress.Evidence
+import com.example.progress.GoalHistory
+import com.example.progress.Grade
 import com.example.progress.Skill
 import com.example.quiz.QuizDifficulty
 import com.example.quiz.QuizMode
 import com.example.reminder.ReminderScheduler
 import com.example.support.FakeSpeech
+import com.example.support.awaitPendingWrites
 import com.example.support.closeWhenIdle
 import com.example.support.inMemoryDatabase
 import com.example.ui.viewmodel.CountryViewModel
+import com.example.widget.WidgetRefresher
+import java.util.TimeZone
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
 import org.junit.After
@@ -60,12 +70,13 @@ class CountryViewModelImportTest {
         if (db.isOpen) db.closeWhenIdle(*created.toTypedArray())
     }
 
-    private fun viewModel(database: AppDatabase = db) = CountryViewModel(
+    private fun viewModel(database: AppDatabase = db, widgets: WidgetRefresher = WidgetRefresher.NONE) = CountryViewModel(
         CountryRepository(database.userProgressDao()),
         FakeSpeech(),
         settings = settings,
         reminderScheduler = scheduler,
-        savedStateHandle = SavedStateHandle()
+        savedStateHandle = SavedStateHandle(),
+        widgets = widgets
     ).also { created += it }
 
     private fun idle() = shadowOf(Looper.getMainLooper()).idle()
@@ -86,7 +97,7 @@ class CountryViewModelImportTest {
     @Test
     fun aGoodFile_replacesTheDatabase_appliesTheSettings_andPlansTheReminder() = runBlocking {
         val vm = viewModel()
-        db.userProgressDao().recordAnswer("JP", Skill.FLAG, false, Evidence.FULL, 2_000L)
+        db.userProgressDao().recordAnswer("JP", Skill.FLAG, false, Evidence.FULL, 2_000L, TimeZone.getDefault())
 
         val result = vm.importJson(file())
 
@@ -98,6 +109,38 @@ class CountryViewModelImportTest {
         assertEquals(1140, settings.reminderMinuteOfDay)
         assertEquals(listOf(1140), scheduler.planned)
         assertNull(vm.pendingImport.value)
+    }
+
+    @Test
+    fun anImportDuringAStudySession_dropsItsPendingGrade_insteadOfWritingItIntoTheFile() = runBlocking {
+        val vm = viewModel()
+        // Mid-session: France graded, its grade pending.
+        vm.startStudy(StudySession.DECK, listOf("FR", "JP"))
+        vm.flipStudyCard()
+        vm.gradeStudyCard(Grade.AGAIN)
+        assertEquals("FR", vm.studySession.value?.pending?.code)
+
+        vm.importJson(file()).getOrThrow()
+        db.awaitPendingWrites()
+
+        assertNull(vm.studySession.value)
+        // The file's France, untouched by the Again: box 3, score 80, due at 500.
+        val france = db.userProgressDao().getAllSkills().first().single()
+        assertEquals(listOf("FR", "80", "3", "500"), listOf(france.countryCode, "${france.score}", "${france.box}", "${france.dueAt}"))
+
+        // A finished session on its summary, long enough to log: neither its final grade nor its log row is written
+        // over the file.
+        vm.startStudy(StudySession.DECK, listOf("DE", "IT", "ES", "JP", "BR"))
+        repeat(5) {
+            vm.flipStudyCard()
+            vm.gradeStudyCard(Grade.EASY)
+        }
+        assertTrue(vm.studySession.value!!.isOver)
+        db.awaitPendingWrites()
+        vm.importJson(file()).getOrThrow()
+        db.awaitPendingWrites()
+        assertEquals(listOf("FR"), db.userProgressDao().getAllSkills().first().map { it.countryCode })
+        assertEquals(listOf("FLAG_NAME"), db.userProgressDao().getQuizHistory().first().map { it.mode })
     }
 
     @Test
@@ -119,7 +162,7 @@ class CountryViewModelImportTest {
     @Test
     fun aRefusedFile_changesNothing_andTheQuizGoesOn() = runBlocking {
         val vm = viewModel()
-        db.userProgressDao().recordAnswer("JP", Skill.FLAG, true, Evidence.FULL, 2_000L)
+        db.userProgressDao().recordAnswer("JP", Skill.FLAG, true, Evidence.FULL, 2_000L, TimeZone.getDefault())
         vm.startQuiz(QuizMode.FLAG_NAME, "Europe", QuizDifficulty.NORMAL)
         assertNotNull(vm.quizSession.value)
 
@@ -211,6 +254,147 @@ class CountryViewModelImportTest {
         vm.importJson(json.replace("\"language\":\"fr\"", "\"language\":\"xx\"")).getOrThrow()
         assertEquals("", settings.language)
         assertEquals(com.example.data.settings.Feedback(sound = false, haptics = true), vm.feedback.value)
+    }
+
+    /** Waits until the view model's streak, collected meanwhile, reaches [current] days. */
+    private fun CountryViewModel.awaitStreak(current: Int) {
+        val collector = CoroutineScope(Dispatchers.Default).launch { streak.collect {} }
+        try {
+            awaitCondition("a streak of $current, not ${streak.value.current}") { streak.value.current == current }
+        } finally {
+            collector.cancel()
+        }
+    }
+
+    /** A five-question quiz at noon [daysAgo] days before today: enough for a goal of 5, not for 10 or 20. */
+    private fun fiveItems(daysAgo: Int) = runBlocking {
+        val noon = DueForecast.startOfDay(System.currentTimeMillis(), TimeZone.getDefault(), -daysAgo) + 12 * 3_600_000L
+        db.userProgressDao().insertQuizScore(QuizScoreEntity(mode = "FLAG_NAME", score = 50, total = 95, continentFilter = "Global", timestamp = noon, correct = 5, questionCount = 5))
+    }
+
+    @Test
+    fun raisingTheDailyGoal_keepsTheDaysAlreadyPlayed_andTheChangeIsKept() {
+        settings.dailyGoal = 5
+        (1..3).forEach(::fiveItems)
+        val vm = viewModel()
+        vm.awaitStreak(3)
+
+        vm.setDailyGoal(10)
+
+        assertEquals(10, settings.dailyGoal)
+        assertEquals(listOf(5), GoalHistory.of(10, settings.goalChanges).earlier.map { it.goal })
+        // Not re-judged against 10: the three days stand, here and in a view model that starts from the settings.
+        vm.awaitStreak(3)
+        viewModel().awaitStreak(3)
+        // The same goal again records nothing.
+        val kept = settings.goalChanges
+        vm.setDailyGoal(10)
+        assertEquals(kept, settings.goalChanges)
+    }
+
+    @Test
+    fun theGoalHistory_travelsWithTheExport_andAnImportRestoresItAsItWas() = runBlocking {
+        // 5 until two days ago, 20 since; today's change to 10 is a second one (a day keeps one change).
+        settings.dailyGoal = 20
+        settings.goalChanges = "5@${System.currentTimeMillis() - 2 * 86_400_000L}"
+        val vm = viewModel()
+        vm.setDailyGoal(10)
+        val exported = settings.goalChanges
+        assertEquals(2, GoalHistory.of(10, exported).earlier.size)
+
+        val json = vm.exportJson()
+        val back = ProgressTransfer.fromJson(json).getOrThrow()
+        assertEquals("10", back.settings["dailyGoal"])
+        assertEquals(exported, back.settings["goalHistory"])
+
+        // Changed on this phone since; the file brings its own goals back without counting the import as a change.
+        vm.setDailyGoal(5)
+        vm.importJson(json).getOrThrow()
+        assertEquals(10, settings.dailyGoal)
+        assertEquals(10, vm.dailyGoal.value)
+        assertEquals(exported, settings.goalChanges)
+    }
+
+    @Test
+    fun aFileFromBeforeTheGoalHistory_judgesAllItsDaysByItsGoal() = runBlocking {
+        settings.dailyGoal = 5
+        val vm = viewModel()
+        vm.setDailyGoal(20)
+        assertTrue(settings.goalChanges.isNotEmpty())
+
+        vm.importJson(file().replace("\"themeMode\":\"DARK\"", "\"themeMode\":\"DARK\",\"dailyGoal\":\"10\"")).getOrThrow()
+
+        assertEquals(10, settings.dailyGoal)
+        assertEquals("", settings.goalChanges)
+        // A file with no goal at all leaves the phone's as it is.
+        vm.setDailyGoal(20)
+        val kept = settings.goalChanges
+        vm.importJson(file()).getOrThrow()
+        assertEquals(20, settings.dailyGoal)
+        assertEquals(kept, settings.goalChanges)
+    }
+
+    @Test
+    fun theWidgetIsRedrawn_afterAResetAnImportAndAChangeOfGoalOrLanguage() = runBlocking {
+        // What each redraw would show: the number of skill rows at that moment.
+        val redraws = java.util.Collections.synchronizedList(mutableListOf<Int>())
+        val vm = viewModel(widgets = WidgetRefresher { redraws += db.userProgressDao().getAllSkills().first().size })
+        db.userProgressDao().recordAnswer("JP", Skill.FLAG, true, Evidence.FULL, 2_000L, TimeZone.getDefault())
+
+        vm.setDailyGoal(20)
+        awaitCondition("a redraw for the goal") { redraws.size == 1 }
+        vm.setLanguage("de")
+        awaitCondition("a redraw for the language") { redraws.size == 2 }
+        assertEquals(listOf(1, 1), redraws.toList())
+
+        vm.resetProgress()
+        awaitCondition("a redraw after the reset") { redraws.size == 3 }
+        assertEquals("drawn from the emptied database", 0, redraws.last())
+
+        vm.importJson(file()).getOrThrow()
+        awaitCondition("a redraw after the import") { redraws.size >= 4 }
+        assertEquals("drawn from the imported rows", 1, redraws.last())
+    }
+
+    @Test
+    fun aNewLanguage_redrawsTheWidgetOnceMoreWhenItIsInEffect() = runBlocking {
+        val redraws = java.util.concurrent.atomic.AtomicInteger()
+        val vm = viewModel(widgets = WidgetRefresher { redraws.incrementAndGet() })
+        // The activity comes to the front in English: only noted.
+        vm.onLocalesInEffect("en-US")
+        idle()
+        assertEquals(0, redraws.get())
+
+        // The French chip: a redraw at once, which from Android 13 still renders the English texts.
+        vm.setLanguage("fr")
+        awaitCondition("a redraw for the language") { redraws.get() == 1 }
+        // The system applies French and recreates the activity: one more redraw, now in French.
+        vm.onLocalesInEffect("fr")
+        awaitCondition("a redraw in the new language") { redraws.get() == 2 }
+
+        // Back from the background in the same language, or after a rotation: nothing to redraw.
+        vm.onLocalesInEffect("fr")
+        idle()
+        assertEquals(2, redraws.get())
+        // Another language reached the screens without the app (the phone's own settings): redrawn too.
+        vm.onLocalesInEffect("de-DE")
+        awaitCondition("a redraw for the phone's language") { redraws.get() == 3 }
+    }
+
+    @Test
+    fun aWidgetThatCannotBeRedrawn_failsNothing() = runBlocking {
+        val vm = viewModel(widgets = WidgetRefresher { error("no widget host") })
+
+        assertTrue(vm.importJson(file()).isSuccess)
+        vm.setDailyGoal(5)
+        vm.setLanguage("fr")
+        vm.resetProgress()
+        idle()
+        db.awaitPendingWrites()
+
+        assertEquals(5, settings.dailyGoal)
+        assertFalse("the reset itself went through", vm.writeError.value)
+        assertTrue(db.userProgressDao().getAllSkills().first().isEmpty())
     }
 
     @Test

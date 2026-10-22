@@ -5,11 +5,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import com.example.support.contrastRatio
+import com.example.ui.components.MissLabelColours
+import com.example.ui.screens.HERO_BANNER_ALPHA
 import com.example.ui.theme.AfricaColor
 import com.example.ui.theme.AmericasColor
 import com.example.ui.theme.AntarcticaColor
 import com.example.ui.theme.AsiaColor
 import com.example.ui.theme.EuropeColor
+import com.example.ui.theme.LightPrimaryContainer
 import com.example.ui.theme.MasteredColor
 import com.example.ui.theme.NeedsPracticeColor
 import com.example.ui.theme.OceaniaColor
@@ -18,6 +21,7 @@ import com.example.ui.theme.StreakColor
 import com.example.ui.theme.Typography
 import com.example.ui.theme.WorldFlagsTheme
 import org.junit.Assert.assertTrue
+import kotlin.math.pow
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -31,9 +35,10 @@ class ThemeContrastTest {
 
     @get:Rule val rule = createComposeRule()
 
-    private fun schemeFor(dark: Boolean): ColorScheme {
+    /** The app's scheme, or with [dynamic] the wallpaper's (Android 12+; here the default system palette). */
+    private fun schemeFor(dark: Boolean, dynamic: Boolean = false): ColorScheme {
         lateinit var scheme: ColorScheme
-        rule.setContent { WorldFlagsTheme(darkTheme = dark) { scheme = MaterialTheme.colorScheme } }
+        rule.setContent { WorldFlagsTheme(darkTheme = dark, dynamicColor = dynamic) { scheme = MaterialTheme.colorScheme } }
         rule.waitForIdle()
         return scheme
     }
@@ -154,6 +159,104 @@ class ThemeContrastTest {
     @Test
     fun containerRoles_areReadableInTheDarkTheme() {
         containerPairs(schemeFor(dark = true)).forEach { (name, pair) -> assertReadable("dark $name", pair.first, pair.second) }
+    }
+
+    /** The "You picked" and "Correct" labels after a miss, on the primary container they sit on. */
+    private fun assertMissLabelsReadable(name: String, s: ColorScheme) {
+        val labels = MissLabelColours.on(s.primaryContainer)
+        assertReadable("$name You picked", s.primaryContainer, labels.picked)
+        assertReadable("$name Correct", s.primaryContainer, labels.correct)
+    }
+
+    @Test
+    fun theMissLabels_areReadableInTheLightTheme() = assertMissLabelsReadable("light", schemeFor(dark = false))
+
+    @Test
+    fun theMissLabels_areReadableInTheDarkTheme() = assertMissLabelsReadable("dark", schemeFor(dark = true))
+
+    @Test
+    fun theMissLabels_areReadableWithWallpaperColours_light() = assertMissLabelsReadable("dynamic light", schemeFor(dark = false, dynamic = true))
+
+    @Test
+    fun theMissLabels_areReadableWithWallpaperColours_dark() = assertMissLabelsReadable("dynamic dark", schemeFor(dark = true, dynamic = true))
+
+    /**
+     * A grey of Material's [tone] (CIE L*, 0 black to 100 white). A wallpaper scheme sets each role at a fixed tone
+     * whatever the wallpaper's hue (primary 40 and onPrimary 100 in light, 80 and 20 in dark; primaryContainer 90 and
+     * 30), and the tone alone fixes a colour's luminance, so these greys stand for every wallpaper's colours here.
+     */
+    private fun toneGrey(tone: Double): Color {
+        val luminance = if (tone > 8) ((tone + 16) / 116).pow(3) else tone / 903.3
+        val encoded = if (luminance <= 0.0031308) 12.92 * luminance else 1.055 * luminance.pow(1 / 2.4) - 0.055
+        return Color(encoded.toFloat(), encoded.toFloat(), encoded.toFloat())
+    }
+
+    @Test
+    fun theMissLabels_areReadableOnAnyWallpapersContainer() {
+        for ((name, container) in listOf("light (tone 90)" to toneGrey(90.0), "dark (tone 30)" to toneGrey(30.0))) {
+            val labels = MissLabelColours.on(container)
+            assertReadable("$name You picked", container, labels.picked)
+            assertReadable("$name Correct", container, labels.correct)
+        }
+    }
+
+    @Test
+    fun theAnswerListsRedAndGreen_wouldNotHaveBeenReadableAsMissLabels() {
+        // Documents the bug: the labels used the answer list's red and green, under 4.5:1 on the light container and
+        // under even 3:1 on the dark one.
+        val s = schemeFor(dark = true)
+        assertTrue(contrastRatio(Color(0xFFC62828), s.primaryContainer) < 3.0)
+        assertTrue(contrastRatio(Color(0xFF2E7D32), s.primaryContainer) < 3.0)
+        assertTrue(contrastRatio(Color(0xFFC62828), LightPrimaryContainer) < 4.5)
+        assertTrue(contrastRatio(Color(0xFF2E7D32), LightPrimaryContainer) < 4.5)
+    }
+
+    /**
+     * The Explore hero: its title and subtitle in [text] over [primary] with the world map drawn on it at [alpha]. The
+     * worst place is over a pure white or pure black pixel of the picture; the canvas blends it in sRGB.
+     */
+    private fun heroWorstContrast(primary: Color, text: Color, alpha: Float = HERO_BANNER_ALPHA): Double =
+        listOf(Color.White, Color.Black).minOf { pixel ->
+            val behind = Color(
+                red = primary.red + (pixel.red - primary.red) * alpha,
+                green = primary.green + (pixel.green - primary.green) * alpha,
+                blue = primary.blue + (pixel.blue - primary.blue) * alpha
+            )
+            contrastRatio(text, behind)
+        }
+
+    private fun assertHeroReadable(name: String, primary: Color, text: Color) {
+        val ratio = heroWorstContrast(primary, text)
+        assertTrue("$name hero text is %.2f:1 at worst, needs 4.5:1".format(ratio), ratio >= 4.5)
+    }
+
+    @Test
+    fun theExploreHero_isReadableInTheLightTheme() = schemeFor(dark = false).let { assertHeroReadable("light", it.primary, it.onPrimary) }
+
+    @Test
+    fun theExploreHero_isReadableInTheDarkTheme() = schemeFor(dark = true).let { assertHeroReadable("dark", it.primary, it.onPrimary) }
+
+    @Test
+    fun theExploreHero_isReadableWithWallpaperColours_light() =
+        schemeFor(dark = false, dynamic = true).let { assertHeroReadable("dynamic light", it.primary, it.onPrimary) }
+
+    @Test
+    fun theExploreHero_isReadableWithWallpaperColours_dark() =
+        schemeFor(dark = true, dynamic = true).let { assertHeroReadable("dynamic dark", it.primary, it.onPrimary) }
+
+    @Test
+    fun theExploreHero_isReadableWithAnyWallpapersColours() {
+        assertHeroReadable("wallpaper light (tones 40, 100)", toneGrey(40.0), toneGrey(100.0))
+        assertHeroReadable("wallpaper dark (tones 80, 20)", toneGrey(80.0), toneGrey(20.0))
+    }
+
+    @Test
+    fun theHeroAsItWas_wasNotReadable() {
+        // Documents the bug: white text over the map at 0.45 on the dark theme's pale primary, and even the right
+        // text colour falls short over a light part of the map that strong.
+        val dark = schemeFor(dark = true)
+        assertTrue(heroWorstContrast(dark.primary, Color.White, alpha = 0.45f) < 3.0)
+        assertTrue(heroWorstContrast(dark.primary, dark.onPrimary, alpha = 0.45f) < 4.5)
     }
 
     private fun assertNotMaterialDefaults(s: ColorScheme) {

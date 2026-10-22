@@ -6,7 +6,8 @@ import java.util.TimeZone
 /**
  * How many countries come up for review soon, for the "Coming up" line on Progress: [tomorrow] is the next local
  * day, [week] the next seven local days starting with tomorrow. A country counts once however many of its skills
- * fall due; what is already due (today or overdue) is on the Due tile, not here.
+ * fall due; what is already due (today, at any hour, or overdue: [SkillMastery.isDue]) is on the Due tile, not here.
+ * The forecast starts where "due today" ends ([SkillMastery.endOfToday]), so no review falls between the two.
  */
 data class DueForecast(val tomorrow: Int, val week: Int) {
     val isEmpty: Boolean get() = tomorrow == 0 && week == 0
@@ -16,16 +17,16 @@ data class DueForecast(val tomorrow: Int, val week: Int) {
 
         /**
          * The skills the forecast reads: flags, capitals and locations, each with its own due dates (a country due
-         * in any of them counts once); the continent skill is kept but not shown anywhere.
+         * in any of them counts once); the continent skill has no reviews ([Skill.hasReviews]).
          */
-        private val SHOWN = listOf(Skill.FLAG, Skill.CAPITAL, Skill.LOCATION)
+        private val SHOWN = Skill.REVIEWED
 
         /**
          * The forecast at [now] in [zone] over [skills] (per skill, per country code), counting only the countries
          * in [codes] (the sovereign ones). A skill never reviewed is unseen, not coming up.
          */
         fun of(skills: Map<Skill, Map<String, SkillState>>, codes: Set<String>, now: Long, zone: TimeZone): DueForecast {
-            val startOfTomorrow = startOfDay(now, zone, daysAhead = 1)
+            val startOfTomorrow = SkillMastery.endOfToday(now, zone)
             val endOfTomorrow = startOfDay(now, zone, daysAhead = 2)
             val endOfWeek = startOfDay(now, zone, daysAhead = 8)
             val tomorrow = HashSet<String>()

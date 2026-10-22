@@ -2,6 +2,7 @@ package com.example.ui.viewmodel
 
 import android.app.Application
 import android.os.SystemClock
+import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -27,11 +28,13 @@ import com.example.data.settings.ReminderPrefs
 import com.example.data.settings.ThemeMode
 import com.example.data.settings.TimerPace
 import com.example.data.settings.UserSettings
+import com.example.data.settings.goalHistory
 import com.example.data.transfer.ProgressSnapshot
 import com.example.data.transfer.ProgressTransfer
 import com.example.flashcards.StudySession
 import com.example.learn.LearnSession
 import com.example.progress.DueForecast
+import com.example.progress.GoalHistory
 import com.example.progress.Grade
 import com.example.progress.PracticeStreak
 import com.example.progress.Skill
@@ -154,6 +157,26 @@ class CountryViewModel(
         val clean = AppLanguage.sanitize(tag)
         settings.language = clean
         _language.value = clean
+        // The widget's texts are rendered in the language of the moment.
+        viewModelScope.launch { refreshWidget() }
+    }
+
+    /** The locales the screens were last shown in, as [onLocalesInEffect] heard them; null until it first does. */
+    @VisibleForTesting internal var localesInEffect: String? = null
+        private set
+
+    /**
+     * The activity's locales ([tags], as language tags) each time it comes to the front. From Android 13 a language
+     * picked through [setLanguage] reaches the app's resources only once the system has applied it, after the widget
+     * was redrawn in the old one, and the phone's own language can change while the app is away: when the locales
+     * differ from the last ones heard, the widget is redrawn once more, now in them (after a tap on a chip that redraw
+     * reaches the session Glance still has open from the first one, which [com.example.widget.TodayWidget.refresh] has
+     * draw anew). The first report only notes them.
+     */
+    fun onLocalesInEffect(tags: String) {
+        val previous = localesInEffect
+        localesInEffect = tags
+        if (previous != null && previous != tags) viewModelScope.launch { refreshWidget() }
     }
 
     private val _timerPace = MutableStateFlow(settings.timerPace)
@@ -171,10 +194,21 @@ class CountryViewModel(
     /** How many items make a day count for the streak (one of [PracticeStreak.GOALS]), remembered across restarts. */
     val dailyGoal: StateFlow<Int> = _dailyGoal
 
+    /** The daily goal and the goals it replaced: the streak judges each past day by the one in force on it. */
+    private val goals = MutableStateFlow(settings.goalHistory)
+
+    /** Picks [goal] from today on; the days before keep the goal they were played under. The widget shows it. */
     fun setDailyGoal(goal: Int) {
         if (goal !in PracticeStreak.GOALS) return
-        settings.dailyGoal = goal
-        _dailyGoal.value = goal
+        setGoals(goals.value.changedTo(goal, repository.now(), zone()))
+        viewModelScope.launch { refreshWidget() }
+    }
+
+    private fun setGoals(history: GoalHistory) {
+        settings.dailyGoal = history.current
+        settings.goalChanges = history.encodeEarlier()
+        _dailyGoal.value = history.current
+        goals.value = history
     }
 
     private val _focusContinent = MutableStateFlow(settings.focusContinent)
@@ -247,7 +281,7 @@ class CountryViewModel(
 
     // --- Progress ---------------------------------------------------------------------------------------------------
 
-    private val progress = ProgressStateHolder(repository, viewModelScope, zone, dailyGoal)
+    private val progress = ProgressStateHolder(repository, viewModelScope, zone, goals)
 
     /** True after a database write failed, until [clearWriteError]; the activity shows it as a snackbar. */
     val writeError: StateFlow<Boolean> get() = progress.writeError
@@ -320,6 +354,7 @@ class CountryViewModel(
             "dynamicColor" to settings.dynamicColor.toString(),
             "timerPace" to settings.timerPace.name,
             "dailyGoal" to settings.dailyGoal.toString(),
+            "goalHistory" to settings.goalChanges,
             "focusContinent" to settings.focusContinent,
             "onboarded" to settings.onboarded.toString(),
             "soundEffects" to settings.soundEffects.toString(),
@@ -347,15 +382,16 @@ class CountryViewModel(
 
     /**
      * Replaces everything with [pendingImport]: the database in one transaction, then the settings the file carries.
-     * The quiz or study session in progress is dropped only once the database write has succeeded; a write that fails
-     * (a damaged file the checks let through) leaves everything as it was and comes back as the failure.
+     * The quiz or study session in progress is dropped only once the database write has succeeded, and without
+     * writing its pending grade, which belongs to the data replaced; a write that fails (a damaged file the checks
+     * let through) leaves everything as it was and comes back as the failure.
      */
     suspend fun applyImport(): Result<ProgressSnapshot> {
         val snapshot = _pendingImport.value ?: return Result.failure(IllegalStateException("nothing to import"))
         _pendingImport.value = null
         return runCatching { repository.importSnapshot(snapshot) }.map {
             quiz.end()
-            study.dismiss()
+            study.discard()
             learn.dismiss()
             snapshot.settings["quizDifficulty"]?.let { name -> QuizDifficulty.entries.firstOrNull { it.name == name } }?.let(::setQuizDifficulty)
             snapshot.settings["themeMode"]?.let { name -> ThemeMode.entries.firstOrNull { it.name == name } }?.let(::setThemeMode)
@@ -363,12 +399,16 @@ class CountryViewModel(
             snapshot.settings["timerPace"]?.let { name -> TimerPace.entries.firstOrNull { it.name == name } }?.let(::setTimerPace)
             snapshot.settings["reminderMinuteOfDay"]?.toIntOrNull()?.let { setReminderTime(it / 60, it % 60) }
             snapshot.settings["reminderEnabled"]?.toBooleanStrictOrNull()?.let(::setReminderEnabled)
-            snapshot.settings["dailyGoal"]?.toIntOrNull()?.let(::setDailyGoal)
+            // The file's goal and the goals it replaced, as they were: an import is no change of goal. A file from
+            // before the history was kept judges all its days by its goal.
+            snapshot.settings["dailyGoal"]?.toIntOrNull()?.takeIf { it in PracticeStreak.GOALS }
+                ?.let { setGoals(GoalHistory.of(it, snapshot.settings["goalHistory"].orEmpty())) }
             snapshot.settings["focusContinent"]?.takeIf { it in FOCUS_CHOICES }?.let(::setFocusContinent)
             snapshot.settings["onboarded"]?.toBooleanStrictOrNull()?.let(::setOnboarded)
             snapshot.settings["soundEffects"]?.toBooleanStrictOrNull()?.let(::setSoundEffects)
             snapshot.settings["haptics"]?.toBooleanStrictOrNull()?.let(::setHaptics)
             snapshot.settings["language"]?.let(::setLanguage)
+            refreshWidget()
             snapshot
         }
     }
@@ -376,18 +416,24 @@ class CountryViewModel(
     /** [prepareImport] and [applyImport] in one step, for callers that need no confirmation. */
     suspend fun importJson(json: String): Result<ProgressSnapshot> = prepareImport(json).mapCatching { applyImport().getOrThrow() }
 
-    /** Forgets every bookmark, skill state and logged quiz, and drops any quiz or study session in progress. */
+    /** Forgets every bookmark, skill state and logged quiz, and drops any quiz or study session in progress unwritten. */
     fun resetProgress() {
         quiz.end()
-        study.dismiss()
+        study.discard()
         learn.dismiss()
         // Under the shared handler like every other write: a failure is reported, not fatal.
-        viewModelScope.launch(progress.writeErrors.handler) { repository.clearProgress() }
+        viewModelScope.launch(progress.writeErrors.handler) {
+            repository.clearProgress()
+            refreshWidget()
+        }
     }
 
     // --- Quiz -------------------------------------------------------------------------------------------------------
 
-    /** The home-screen widget is redrawn once a session is saved (a quiz, a study session): its numbers changed. */
+    /**
+     * The home-screen widget is redrawn once a session is saved (a quiz, a study session), after a reset or an import,
+     * and when the goal or the language changes: what it shows changed. A failed redraw is only a stale widget.
+     */
     private val refreshWidget: suspend () -> Unit = { runCatching { widgets.refresh() } }
 
     private val quiz = QuizStateHolder(repository, progress, settings, viewModelScope, clock, zone, random, savedStateHandle, afterSave = refreshWidget)
@@ -398,10 +444,10 @@ class CountryViewModel(
     /** What the quiz that just finished did to the streak, for its score screen; null until it is known. */
     val finishOutcome: StateFlow<PracticeStreak.Outcome?> get() = quiz.finishOutcome
 
-    /** How many never-seen countries today's quizzes have introduced so far; 0 once a new day begins. */
+    /** How many never-seen countries today's quizzes and Learn 5 new have introduced so far; 0 once a new day begins. */
     val newItemsToday: StateFlow<Int> = combine(quiz.newItemsToday, progress.refreshes) { count, _ ->
         if (settings.newItemsDay == todayStamp()) count else 0
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), if (settings.newItemsDay == todayStamp()) settings.newItemsToday else 0)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), if (settings.newItemsDay == todayStamp()) quiz.newItemsToday.value else 0)
 
     /** Starts a quiz; does nothing if [scope] has nothing to ask about. See [QuizStateHolder.start]. */
     fun startQuiz(mode: QuizMode, scope: String, difficulty: QuizDifficulty = QuizDifficulty.NORMAL) = quiz.start(mode, scope, difficulty)
@@ -437,12 +483,12 @@ class CountryViewModel(
 
     // --- Study ------------------------------------------------------------------------------------------------------
 
-    private val study = StudyStateHolder(repository, viewModelScope, zone, random, progress.writeErrors, savedStateHandle, dailyGoal = { settings.dailyGoal }, afterSave = refreshWidget)
+    private val study = StudyStateHolder(repository, viewModelScope, zone, random, progress.writeErrors, savedStateHandle, goals = { goals.value }, afterSave = refreshWidget)
 
     /** The flashcard study session in progress, or null outside one. */
     val studySession: StateFlow<StudySession?> get() = study.session
 
-    /** What the finished study session did for the streak; null until known, or when it was too short to count. */
+    /** What the finished study session does for the streak; null until known, or when it was too short to count. */
     val studyOutcome: StateFlow<PracticeStreak.Outcome?> get() = study.outcome
 
     /** Starts a study session over [codes] from [source] (one of the [StudySession] sources), graded in [skill]. */
@@ -460,6 +506,9 @@ class CountryViewModel(
 
     /** Leaves the study summary, or an unfinished session. */
     fun dismissStudy() = study.dismiss()
+
+    /** Writes the final grade a study summary still holds and logs the session (the player left the screen). */
+    fun settleStudy() = study.settle()
 
     // --- Learn ------------------------------------------------------------------------------------------------------
 
@@ -569,13 +618,14 @@ class CountryViewModel(
         sortBy.value = SortOption.NAME
     }
 
+    /** Opens [country]'s sheet, or closes it with null. Closing it, or moving it to another country, stops the reading. */
     fun selectCountry(country: Country?) {
-        if (country == null) stopSpeaking()
+        val shown = selectedCountry.value
+        if (country == null || (shown != null && shown.code != country.code)) stopSpeaking()
         selectedCountry.value = country
     }
 
     override fun onCleared() {
-        super.onCleared()
         speech.shutdown()
     }
 

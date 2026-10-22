@@ -53,7 +53,7 @@
     <string name="mode_type_name_hint">Sans options : saisissez le nom du pays</string>
     <string name="mode_speed_round">Manche rapide</string>
     <string name="mode_speed_round_hint">10 secondes par question</string>
-    <string name="mode_blitz">Blitz de 60 secondes</string>
+    <string name="mode_blitz">Blitz de %1$d secondes</string>
     <string name="mode_blitz_hint">Autant de drapeaux que possible en une minute</string>
     <string name="mode_flashcards">Cartes mémoire</string>
 
@@ -88,6 +88,8 @@
     <string name="continent_europe">Europe</string>
     <string name="continent_oceania">Océanie</string>
     <string name="continent_antarctica">Antarctique</string>
+    <string name="continent_americas_in_sentence">Amérique</string>
+    <string name="continent_antarctica_in_sentence">Antarctique</string>
 
     <!-- Ordres de tri -->
     <string name="sort_by_name">Trier par nom</string>
@@ -144,11 +146,6 @@
 
     <!-- Affiché une fois quand une écriture en base a échoué (voir WriteErrors) -->
     <string name="write_error">Votre dernière modification n\'a pas pu être enregistrée. Exportez votre progression depuis les Paramètres et réessayez plus tard.</string>
-
-    <!-- Le résumé du pays lu à voix haute -->
-    <string name="speech_name">%1$s.</string>
-    <string name="speech_capital_and_continent">La capitale est %1$s. Continent : %2$s.</string>
-    <string name="speech_continent">Continent : %1$s.</string>
 
     <!-- Le widget d'écran d'accueil. -->
     <string name="widget_label">Révisions du jour</string>

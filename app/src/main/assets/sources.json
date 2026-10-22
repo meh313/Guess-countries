@@ -510,6 +510,10 @@
 "https://en.wikipedia.org/wiki/Flag_of_the_Federated_States_of_Micronesia",
 "https://www.crwflags.com/fotw/flags/fm.html"
 ],
+"FR":[
+"https://population.un.org/wpp/assets/Excel%20Files/1_Indicator%20(Standard)/CSV_FILES/WPP2024_TotalPopulationBySex.csv.gz",
+"https://www.worldometers.info/world-population/france-population/"
+],
 "GA":[
 "https://en.wikipedia.org/wiki/Gabon",
 "https://www.constituteproject.org/constitution/Gabon_2011",
@@ -1223,7 +1227,12 @@
 "https://en.wikipedia.org/wiki/List_of_countries_and_dependencies_by_area",
 "https://en.wikipedia.org/wiki/Tourism_in_Palestine",
 "https://en.wikipedia.org/wiki/Jericho",
-"https://en.wikipedia.org/wiki/Flag_of_Palestine"
+"https://en.wikipedia.org/wiki/Flag_of_Palestine",
+"https://www.pcbs.gov.ps/portals/_pcbs/PressRelease/Press_En_Nakba772025E.pdf",
+"https://english.wafa.ps/Pages/Details/157272",
+"https://www.pcbs.gov.ps/portals/_pcbs/PressRelease/Press_En_Nakba-e-2018.docx",
+"https://www.pcbs.gov.ps/portals/_pcbs/PressRelease/Press_En_11-5-2017-Nakba-en.pdf",
+"https://www.pcbs.gov.ps/portals/_pcbs/PressRelease/Press_En_Nakba2016E.pdf"
 ],
 "PT":[
 "https://en.wikipedia.org/wiki/Portugal",

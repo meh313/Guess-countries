@@ -274,7 +274,7 @@
    "continent": "Asia",
    "subregion": "Western Asia",
    "leftHand": false,
-   "ownerRules": "name \"Palestine\", officialName \"State of Palestine\". capital EXACTLY \"Al Quds (Jerusalem)\" and quizCapital EXACTLY \"Al Quds\" (owner decision). currency EXACTLY \"No currency of its own (shekel, Jordanian dinar and US dollar are used)\". population: UN WPP 2024 row \"State of Palestine\". areaSqKm 6020 (West Bank and Gaza Strip). Fun fact: an ordinary one (for example Jericho, one of the oldest continuously inhabited cities). Neutral wording throughout; the flag text explains the Pan-Arab colors (Arab Revolt flag of 1916) and the 1964/1988 adoption."
+   "ownerRules": "name \"Palestine\", officialName \"State of Palestine\". capital EXACTLY \"Al Quds (Jerusalem)\" and quizCapital EXACTLY \"Al Quds\" (owner decision). currency EXACTLY \"No currency of its own (shekel, Jordanian dinar and US dollar are used)\". population EXACTLY 7400000 with populationYear 2025: the Palestinians living in all of Palestine as it was before 1948 (PCBS, mid-2025), not the UN WPP 2024 row. areaSqKm EXACTLY 27000: all of Palestine as it was before 1948 (PCBS). Both are the owner's decision of 22 October 2026 and replace the West Bank and Gaza Strip figures. Fun fact: an ordinary one (for example Jericho, one of the oldest continuously inhabited cities). Neutral wording throughout; the flag text explains the Pan-Arab colors (Arab Revolt flag of 1916) and the 1964/1988 adoption."
   },
   {
    "code": "QA",
