@@ -1,6 +1,7 @@
 package com.example
 
 import org.robolectric.Shadows.shadowOf
+import com.example.support.OpenExploreRule
 import com.example.support.setupNode
 import com.example.support.TestWorkManagerRule
 import androidx.test.core.app.ApplicationProvider
@@ -68,7 +69,7 @@ class ScreenshotsTest {
     private val composeRule = createAndroidComposeRule<MainActivity>()
 
     @get:Rule val chain: RuleChain =
-        RuleChain.outerRule(FreshDatabaseRule()).around(SettledTodayRule()).around(TestWorkManagerRule()).around(composeRule)
+        RuleChain.outerRule(FreshDatabaseRule()).around(SettledTodayRule()).around(TestWorkManagerRule()).around(composeRule).around(OpenExploreRule(composeRule))
 
     private val rule get() = composeRule
 

@@ -10,6 +10,7 @@ import com.example.data.model.SortOption
 import com.example.data.settings.ThemeMode
 import com.example.data.settings.TimerPace
 import com.example.flashcards.StudySession
+import com.example.progress.Rewards
 import com.example.progress.Skill
 import com.example.quiz.QuizDifficulty
 import com.example.quiz.QuizEngine
@@ -190,6 +191,7 @@ fun scopeLabelRes(scope: String): Int? = when (scope) {
     QuizEngine.DUE -> R.string.scope_due_today
     QuizEngine.MISTAKES -> R.string.scope_mistakes
     QuizEngine.LEARN -> R.string.scope_learn
+    QuizEngine.DAILY -> R.string.scope_daily
     StudySession.DECK -> R.string.study_source_deck
     StudySession.CAPITALS_DUE -> R.string.study_source_capitals_due
     else -> continentLabelRes(scope)
@@ -245,3 +247,35 @@ fun optionLabel(mode: QuizMode, option: String): String = if (mode == QuizMode.C
 
 /** [continentInSentence] outside composition (the sentence read aloud about a country). */
 fun Resources.continentInSentence(name: String): String = continentInSentenceRes(name)?.let { getString(it) } ?: name
+
+/** The title of a badge. */
+@StringRes
+fun badgeTitleRes(badge: Rewards.Badge): Int = when (badge) {
+    Rewards.Badge.FIRST_QUIZ -> R.string.badge_first_quiz_title
+    Rewards.Badge.QUIZ_10 -> R.string.badge_quiz_10_title
+    Rewards.Badge.QUIZ_50 -> R.string.badge_quiz_50_title
+    Rewards.Badge.PERFECT -> R.string.badge_perfect_title
+    Rewards.Badge.BLITZ_20 -> R.string.badge_blitz_20_title
+    Rewards.Badge.EXPLORER -> R.string.badge_explorer_title
+    Rewards.Badge.STUDIOUS -> R.string.badge_studious_title
+    Rewards.Badge.DAILY_FIRST -> R.string.badge_daily_first_title
+    Rewards.Badge.DAILY_STREAK -> R.string.badge_daily_streak_title
+    Rewards.Badge.LEVEL_5 -> R.string.badge_level_5_title
+    Rewards.Badge.LEVEL_10 -> R.string.badge_level_10_title
+}
+
+/** What earns a badge, in a sentence. */
+@StringRes
+fun badgeHintRes(badge: Rewards.Badge): Int = when (badge) {
+    Rewards.Badge.FIRST_QUIZ -> R.string.badge_first_quiz_hint
+    Rewards.Badge.QUIZ_10 -> R.string.badge_quiz_10_hint
+    Rewards.Badge.QUIZ_50 -> R.string.badge_quiz_50_hint
+    Rewards.Badge.PERFECT -> R.string.badge_perfect_hint
+    Rewards.Badge.BLITZ_20 -> R.string.badge_blitz_20_hint
+    Rewards.Badge.EXPLORER -> R.string.badge_explorer_hint
+    Rewards.Badge.STUDIOUS -> R.string.badge_studious_hint
+    Rewards.Badge.DAILY_FIRST -> R.string.badge_daily_first_hint
+    Rewards.Badge.DAILY_STREAK -> R.string.badge_daily_streak_hint
+    Rewards.Badge.LEVEL_5 -> R.string.badge_level_5_hint
+    Rewards.Badge.LEVEL_10 -> R.string.badge_level_10_hint
+}

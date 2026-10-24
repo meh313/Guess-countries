@@ -40,6 +40,7 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.semantics.SemanticsActions
 import com.example.data.model.CountryRepository
 import com.example.quiz.byName
+import com.example.support.OpenExploreRule
 import com.example.support.setupNode
 import com.example.support.FreshDatabaseRule
 import com.example.support.SettledTodayRule
@@ -74,7 +75,7 @@ class LayoutAndSemanticsUiTest {
     private val composeRule = createAndroidComposeRule<MainActivity>()
 
     // The app database is a singleton, so reset it before the activity starts to keep tests independent.
-    @get:Rule val chain: RuleChain = RuleChain.outerRule(FreshDatabaseRule()).around(SettledTodayRule()).around(composeRule)
+    @get:Rule val chain: RuleChain = RuleChain.outerRule(FreshDatabaseRule()).around(SettledTodayRule()).around(composeRule).around(OpenExploreRule(composeRule))
 
     private val rule get() = composeRule
 

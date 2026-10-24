@@ -2,6 +2,7 @@ package com.example.ui.viewmodel
 
 import android.os.Bundle
 import androidx.lifecycle.SavedStateHandle
+import com.example.data.local.QuizScoreEntity
 import com.example.data.model.Country
 import com.example.data.model.CountryRepository
 import com.example.data.model.Geo
@@ -10,7 +11,9 @@ import com.example.data.settings.UserSettings
 import com.example.data.settings.goalHistory
 import com.example.progress.Evidence
 import com.example.progress.PracticeStreak
+import com.example.progress.Rewards
 import com.example.progress.SkillMastery
+import com.example.quiz.DailyChallenge
 import com.example.quiz.QuestionPicker
 import com.example.quiz.QuizDifficulty
 import com.example.quiz.QuizEngine
@@ -60,6 +63,11 @@ class QuizStateHolder(
     /** What the quiz that just finished did to the streak, for its score screen; null until it is known. */
     val finishOutcome: StateFlow<PracticeStreak.Outcome?> = _finishOutcome
 
+    private val _reward = MutableStateFlow<Rewards.Reward?>(null)
+
+    /** What the quiz that just finished earned (XP, a level, badges), for its score screen; null until it is known. */
+    val reward: StateFlow<Rewards.Reward?> = _reward
+
     private val _newItemsToday = MutableStateFlow(settings.newItemsToday + settings.learntToday)
 
     /**
@@ -74,6 +82,11 @@ class QuizStateHolder(
         savedState?.setSavedStateProvider(SAVED_QUIZ) {
             _session.value?.let { QuizSnapshotBundle.write(QuizSnapshot.of(it, clock())) } ?: Bundle()
         }
+    }
+
+    private fun clearOutcome() {
+        _finishOutcome.value = null
+        _reward.value = null
     }
 
     private fun restored(): QuizSession? =
@@ -136,12 +149,31 @@ class QuizStateHolder(
             settings.newItemsToday += questions.count { states[it.targetCountry.code].let { state -> state == null || state.isNew } }
         }
         _newItemsToday.value = settings.newItemsToday + settings.learntToday
-        _finishOutcome.value = null
+        clearOutcome()
         _session.value = QuizSession(
             mode = mode,
             scope = effectiveScope,
             questions = questions,
             difficulty = difficulty,
+            questionStartedAt = clock(),
+            startedAt = clock()
+        )
+    }
+
+    /**
+     * Starts the daily challenge of the local day: the questions [DailyChallenge] makes for it, the same on every
+     * start of the day. A hand-picked scope, so nothing here counts against the day's allowance of new countries.
+     */
+    fun startDaily() {
+        val day = dayStamp(repository.now(), zone())
+        val questions = DailyChallenge.questions(day, repository.allCountries)
+        if (questions.isEmpty()) return
+        clearOutcome()
+        _session.value = QuizSession(
+            mode = DailyChallenge.modeFor(day),
+            scope = QuizEngine.DAILY,
+            questions = questions,
+            difficulty = QuizDifficulty.NORMAL,
             questionStartedAt = clock(),
             startedAt = clock()
         )
@@ -256,7 +288,7 @@ class QuizStateHolder(
 
     fun end() {
         _session.value = null
-        _finishOutcome.value = null
+        clearOutcome()
     }
 
     /**
@@ -267,7 +299,7 @@ class QuizStateHolder(
     fun retry() {
         val session = _session.value?.takeIf { it.isFinished } ?: return
         val questions = session.plannedQuestions.map { QuizEngine.reshuffle(it, random).copy(light = true) }
-        _finishOutcome.value = null
+        clearOutcome()
         _session.value = QuizSession(
             mode = session.mode,
             scope = session.scope,
@@ -291,7 +323,7 @@ class QuizStateHolder(
         val world = QuizEngine.poolFor(QuizEngine.GLOBAL, repository.allCountries)
         val questions = QuizEngine.generate(missed, mode, random, session.difficulty, world, order = { it })
         if (questions.isEmpty()) return
-        _finishOutcome.value = null
+        clearOutcome()
         _session.value = QuizSession(
             mode = mode,
             scope = QuizEngine.MISTAKES,
@@ -329,7 +361,7 @@ class QuizStateHolder(
             if (place == null) emptyList()
             else QuizEngine.generate(listOf(place), QuizMode.LOCATE, random, difficulty, world, order = { it }).map { it.copy(mode = QuizMode.LOCATE) }
         }
-        _finishOutcome.value = null
+        clearOutcome()
         _session.value = QuizSession(
             mode = mode,
             scope = QuizEngine.LEARN,
@@ -360,6 +392,9 @@ class QuizStateHolder(
             val now = repository.now()
             val finished = PracticeStreak.Session(now, session.answers.size)
             _finishOutcome.value = PracticeStreak.outcome(earlier, finished, settings.goalHistory, now, zone())
+            // The row just saved is the newest of the log; what the quiz earned is what it adds to the rest.
+            val logged = repository.quizHistory.first()
+            logged.maxByOrNull { it.id }?.let { row -> _reward.value = Rewards.reward(logged - row, row, zone()) }
             afterSave()
         }
     }

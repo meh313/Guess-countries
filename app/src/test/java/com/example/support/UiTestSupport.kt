@@ -95,3 +95,14 @@ fun ComposeTestRule.awaitDelivered(timeoutMillis: Long = 10_000, condition: () -
         shadowOf(Looper.getMainLooper()).idle()
         condition()
     }
+
+/**
+ * The app opens on Home; most UI tests were written for the Explore list. Chained inside the compose rule, this opens
+ * the Explore tab as soon as the activity is up.
+ */
+class OpenExploreRule(private val rule: androidx.compose.ui.test.junit4.ComposeTestRule) : org.junit.rules.TestWatcher() {
+    override fun starting(description: org.junit.runner.Description) {
+        rule.onNodeWithTag("nav_tab_explore").performClick()
+        rule.waitForIdle()
+    }
+}

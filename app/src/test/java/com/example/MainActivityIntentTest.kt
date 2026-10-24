@@ -27,7 +27,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/** Which tab the app opens on (Explore on a plain launch, the Quiz when the reminder notification is tapped), and what a tap on the selected tab does. */
+/** Which tab the app opens on (Home on a plain launch, the Quiz when the reminder notification is tapped), and what a tap on the selected tab does. */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36], qualifiers = "w360dp-h800dp-xxhdpi")
 class MainActivityIntentTest {
@@ -46,11 +46,11 @@ class MainActivityIntentTest {
     }
 
     @Test
-    fun aPlainLaunch_opensExplore() = assertSelectedTab("explore")
+    fun aPlainLaunch_opensHome() = assertSelectedTab("home")
 
     @Test
     fun aReminderTapWhileTheAppIsRunning_switchesToTheQuizAndKeepsTheQuizInProgress() {
-        assertSelectedTab("explore")
+        assertSelectedTab("home")
         composeRule.runOnUiThread { viewModel.startQuiz(QuizMode.FLAG_NAME, "Global") }
         composeRule.waitForIdle()
 

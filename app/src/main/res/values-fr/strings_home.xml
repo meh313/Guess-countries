@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The Home tab (the launch screen): the Play button, level and XP, the daily challenge and the badges; the score
+  screen rewards. The badge hints repeat the thresholds in progress/Rewards.kt.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="PluralsCandidate">
+    <string name="nav_home">Accueil</string>
+    <string name="scope_daily">Défi du jour</string>
+    <string name="home_play">Jouer</string>
+    <string name="home_play_hint">10 questions rapides sur les drapeaux</string>
+    <string name="home_continue">Reprendre le quiz</string>
+    <string name="home_continue_hint">Votre quiz est en cours</string>
+    <string name="home_level">Niveau %1$d</string>
+    <string name="home_xp">%1$d / %2$d XP</string>
+    <string name="daily_title">Défi du jour</string>
+    <string name="daily_today_mode">Aujourd\'hui : %1$s</string>
+    <string name="daily_play">Relever le défi du jour</string>
+    <string name="daily_hint">Les mêmes 10 questions pour tout le monde · +%1$d XP de bonus</string>
+    <string name="daily_done">Terminé pour aujourd\'hui</string>
+    <string name="daily_done_hint">Revenez demain pour un nouveau défi</string>
+    <string name="daily_streak">Série de défis : %1$d</string>
+    <string name="home_more_modes">Tous les modes de quiz</string>
+    <string name="home_explore">Explorer le monde</string>
+    <string name="home_badges">Badges</string>
+    <string name="home_badges_count">%1$d sur %2$d obtenus</string>
+    <string name="badge_earned_description">%1$s, obtenu. %2$s</string>
+    <string name="badge_locked_description">%1$s, pas encore obtenu. %2$s</string>
+    <string name="badge_first_quiz_title">Premiers pas</string>
+    <string name="badge_first_quiz_hint">Terminez votre premier quiz</string>
+    <string name="badge_quiz_10_title">Habitué des quiz</string>
+    <string name="badge_quiz_10_hint">Terminez 10 quiz</string>
+    <string name="badge_quiz_50_title">Vétéran des quiz</string>
+    <string name="badge_quiz_50_hint">Terminez 50 quiz</string>
+    <string name="badge_perfect_title">Sans faute</string>
+    <string name="badge_perfect_hint">Répondez juste à toutes les questions d\'un quiz</string>
+    <string name="badge_blitz_20_title">Éclair</string>
+    <string name="badge_blitz_20_hint">Faites 20 bonnes réponses en un blitz</string>
+    <string name="badge_explorer_title">Touche-à-tout</string>
+    <string name="badge_explorer_hint">Jouez à 4 modes de quiz différents</string>
+    <string name="badge_studious_title">Rat de bibliothèque</string>
+    <string name="badge_studious_hint">Retenez 100 cartes</string>
+    <string name="badge_daily_first_title">Challenger</string>
+    <string name="badge_daily_first_hint">Terminez un défi du jour</string>
+    <string name="badge_daily_streak_title">En pleine forme</string>
+    <string name="badge_daily_streak_hint">Terminez le défi du jour 7 jours de suite</string>
+    <string name="badge_level_5_title">Niveau 5</string>
+    <string name="badge_level_5_hint">Atteignez le niveau 5</string>
+    <string name="badge_level_10_title">Niveau 10</string>
+    <string name="badge_level_10_hint">Atteignez le niveau 10</string>
+    <string name="result_xp">+%1$d XP</string>
+    <string name="result_level_up">Niveau supérieur ! Vous avez atteint le niveau %1$d</string>
+    <string name="result_badge">Nouveau badge : %1$s</string>
+    <string name="result_daily_complete">Défi du jour terminé ! +%1$d XP de bonus</string>
+</resources>

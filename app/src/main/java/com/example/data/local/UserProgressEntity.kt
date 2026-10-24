@@ -8,6 +8,7 @@ import com.example.progress.PracticeStreak
 import com.example.progress.Skill
 import com.example.progress.SkillState
 import com.example.quiz.QuizMode
+import com.example.quiz.QuizSession
 
 /** One row per country the player touched: the bookmark and when it was last reviewed in any skill. */
 @Entity(tableName = "user_country_progress")
@@ -74,6 +75,20 @@ data class QuizScoreEntity(
     val practiceItems: Int get() = questionCount ?: if (mode == QuizMode.BLITZ.name) correct ?: 0 else total
 
     fun toPracticeSession(): PracticeStreak.Session = PracticeStreak.Session(timestamp, practiceItems)
+
+    companion object {
+        /** The row a finished [session] is logged as, at [timestamp]; an endless quiz keeps 0 in `total` and its right answers in `correct`. */
+        fun of(session: QuizSession, timestamp: Long): QuizScoreEntity = QuizScoreEntity(
+            mode = session.mode.name,
+            score = session.score,
+            total = if (session.mode.isEndless) 0 else session.maxScore,
+            continentFilter = session.scope,
+            timestamp = timestamp,
+            correct = session.correct,
+            questionCount = session.answers.size,
+            difficulty = session.difficulty.name
+        )
+    }
 }
 
 /**
