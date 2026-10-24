@@ -1,6 +1,6 @@
 # Store listing
 
-**Title (30):** World Flags: learn every flag
+**Title (30):** World Flags, Capitals & Maps
 
 **Short description (80):** Learn every flag, capital and location with spaced reviews that stick.
 
@@ -14,7 +14,7 @@
 
 Learn the flags, capitals and locations of all 196 states and Antarctica, and keep them.
 
-World Flags does not just test you. It teaches first:
+World Flags is a quiz game that also teaches you. It teaches first:
 • **Learn 5 new**: five flags you have not seen yet, each with a one-line cue on what to look for and the flag it is most often confused with.
 • **Spot it** cues on every card, and tell-apart tips for the classic look-alikes: Chad and Romania, Monaco and Indonesia, the Nordic crosses, the Central American blues.
 • **Where it is**: a map of every country, in its sheet, on the flashcard back and after a miss.
@@ -43,6 +43,6 @@ Works offline, in light and dark, with TalkBack, on phones and tablets.
 
 **Data safety:** No data collected. No data shared. Data is encrypted in transit: not applicable (no network). Users can request data deletion: data is deleted on uninstall or with Reset progress.
 
-**Screenshots:** `store/screenshots/`: phone 1080×2160 in light (`01_explore` … `07_sheet_map`) and dark (`dark_01_explore`), eight in all, the most Play takes for one kind of device; tablet 1600×2560 (`tablet_01_explore`, `tablet_06_progress`). All are 24-bit PNGs, with no alpha channel. The `storePhone()`, `storePhoneDark()` and `storeTablet()` tests of `ScreenshotsTest` write them to `app/build/screenshots/store/`; that folder is copied into `store/screenshots/` after the tests have run.
+**Screenshots:** `store/screenshots/`: phone 1080×2160, each with a caption on navy above the screen, the quiz first: `01_quiz_flag`, `02_quiz_locate`, `03_quiz_answered`, `04_learn_card`, `05_flashcard_back`, `06_progress`, `07_sheet_map`, and `dark_01_quiz_flag` in dark, eight in all, the most Play takes for one kind of device; tablet 1600×2560 (`tablet_01_explore`, `tablet_06_progress`). All are 24-bit PNGs, with no alpha channel. The `storePhone()`, `storePhoneDark()` and `storeTablet()` tests of `ScreenshotsTest` write them to `app/build/screenshots/store/`; that folder is copied into `store/screenshots/` after the tests have run. The listing text does not name the screen the app opens on, so a new launch screen needs no text change; retake the screenshots after one lands.
 
 **Feature graphic and icon:** `store/feature-graphic.png` (1024×500, 24-bit PNG) and `store/icon-512.png` (512×512, 32-bit PNG), drawn from the icon's master art (`assets/app-icon-master.webp`, the origami map pin on navy, and the pin cut from it) by the `storeFeatureGraphic()` and `storeIcon()` tests of `StoreGraphicsTest`, which write them to `app/build/screenshots/store-graphics/`; the two files are copied into `store/`. `python3 tools/store-check.py --check` checks the screenshots, the graphic, the icon and the lengths of the texts above against Play's rules (CI runs it).

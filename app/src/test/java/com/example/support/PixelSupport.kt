@@ -3,6 +3,13 @@ package com.example.support
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Path
+import android.graphics.RectF
+import android.graphics.Typeface
+import android.text.Layout
+import android.text.StaticLayout
+import android.text.TextPaint
 import android.os.Looper
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
@@ -100,4 +107,43 @@ fun Bitmap.dominantColour(left: Float, top: Float, right: Float, bottom: Float):
     }
     val best = counts.maxByOrNull { it.value }!!
     return best.key to best.value.toFloat() / total
+}
+
+/**
+ * A store picture: [caption] in white on the brand navy, the screen beneath it in a rounded frame that runs off the
+ * bottom edge, as a phone held in the hand would. The result is as big as the screen and fully opaque.
+ */
+fun Bitmap.captioned(caption: String, navy: Int = Color.rgb(1, 26, 80)): Bitmap {
+    val unit = width / 1080f
+    val out = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(out)
+    canvas.drawColor(navy)
+    val text = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.WHITE
+        typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        textSize = 78 * unit
+    }
+    val layout = StaticLayout.Builder.obtain(caption, 0, caption.length, text, (width - 120 * unit).toInt())
+        .setAlignment(Layout.Alignment.ALIGN_CENTER).setMaxLines(2).build()
+    canvas.save()
+    canvas.translate(60 * unit, 70 * unit)
+    layout.draw(canvas)
+    canvas.restore()
+    val shownWidth = width * 0.84f
+    val shownHeight = shownWidth * height / width
+    val left = (width - shownWidth) / 2
+    val top = 330 * unit
+    val frame = RectF(left, top, left + shownWidth, top + shownHeight)
+    val radius = 56 * unit
+    canvas.save()
+    canvas.clipPath(Path().apply { addRoundRect(frame, radius, radius, Path.Direction.CW) })
+    canvas.drawBitmap(this, null, frame, Paint(Paint.FILTER_BITMAP_FLAG))
+    canvas.restore()
+    val edge = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 6 * unit
+        color = Color.rgb(246, 201, 14)
+    }
+    canvas.drawRoundRect(frame, radius, radius, edge)
+    return out
 }

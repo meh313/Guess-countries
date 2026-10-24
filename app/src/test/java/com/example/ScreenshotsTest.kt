@@ -31,6 +31,7 @@ import com.example.support.awaitWeakSpotsWhere
 import com.example.support.drawLatestDialogOverWindow
 import com.example.support.drawWindow
 import com.example.support.writePng
+import com.example.support.captioned
 import com.example.support.openTab
 import java.io.File
 import java.util.Locale
@@ -83,10 +84,10 @@ class ScreenshotsTest {
      * over the screen beneath it ([drawLatestDialogOverWindow]), so its scrim and the corners beside it are opaque.
      * Play refuses a screenshot whose long side is more than twice its short one, so such a window fails the test.
      */
-    private fun saveStore(name: String, bitmap: Bitmap = rule.drawWindow()) {
+    private fun saveStore(name: String, caption: String, bitmap: Bitmap = rule.drawWindow()) {
         val (short, long) = listOf(bitmap.width, bitmap.height).sorted()
         check(long <= 2 * short) { "$name is ${bitmap.width}x${bitmap.height}, longer than 2:1" }
-        bitmap.writePng(File("build/screenshots/store", "$name.png"), alpha = false)
+        bitmap.captioned(caption).writePng(File("build/screenshots/store", "$name.png"), alpha = false)
     }
 
     /**
@@ -118,27 +119,33 @@ class ScreenshotsTest {
     }
 
     /** Progress with the seeded run on it, drawn once the streak card shows it. */
-    private fun saveProgress(name: String, viewModel: CountryViewModel) {
+    private fun saveProgress(name: String, caption: String, viewModel: CountryViewModel) {
         rule.openTab("stats")
         rule.awaitDelivered { viewModel.streak.value.current == 3 }
         rule.onNodeWithText("3-day streak").assertIsDisplayed()
-        saveStore(name)
+        saveStore(name, caption)
     }
 
     /**
      * The phone screenshots for the store listing, at 1080x2160: Play refuses a screenshot whose long side is more than
      * twice its short one, as the class default's 1080x2400 is. Numbered in the order they are shown on the store page:
-     * Explore, a Learn card, the map quiz, a wrong answer with the two flags and the map, the back of a flashcard,
-     * Progress, a country sheet scrolled to its map.
+     * the flag quiz, the map quiz, a wrong answer with the two flags and the map, a Learn card, the back of a
+     * flashcard, Progress, a country sheet scrolled to its map; each with a caption above it. The quiz leads.
      */
     @Test
     @Config(qualifiers = "w360dp-h720dp-xxhdpi")
     fun storePhone() {
         ShadowTextToSpeech.addLanguageAvailability(Locale.US)
         rule.waitForIdle()
-        saveStore("01_explore")
 
         val viewModel = ViewModelProvider(rule.activity)[CountryViewModel::class.java]
+        rule.openTab("quiz")
+        viewModel.startQuiz(QuizMode.FLAG_NAME, "Europe")
+        rule.waitForIdle()
+        saveStore("01_quiz_flag", "Name the flag. Beat your streak.")
+        viewModel.endQuiz()
+        rule.waitForIdle()
+
         rule.openTab("flashcards")
         rule.onNodeWithTag("flashcard_study_btn").performClick()
         rule.waitForIdle()
@@ -147,7 +154,7 @@ class ScreenshotsTest {
         rule.onNodeWithTag("learn_card").assertIsDisplayed()
         rule.awaitDelivered { WorldMapData.peek() != null }
         rule.waitForIdle()
-        saveStore("02_learn_card")
+        saveStore("04_learn_card", "Learn five new flags at a time")
         rule.onNodeWithTag("learn_back_btn").performClick()
         rule.waitForIdle()
 
@@ -156,7 +163,7 @@ class ScreenshotsTest {
         rule.waitForIdle()
         rule.awaitDelivered { WorldMapData.peek() != null }
         rule.waitForIdle()
-        saveStore("03_quiz_locate")
+        saveStore("02_quiz_locate", "Find every country on the map")
         viewModel.endQuiz()
         rule.waitForIdle()
 
@@ -166,7 +173,7 @@ class ScreenshotsTest {
         viewModel.answerQuiz((europe.correctAnswerIndex + 1) % europe.options.size)
         rule.waitForIdle()
         rule.onNodeWithTag("quiz_miss_comparison").performScrollTo()
-        saveStore("04_quiz_answered")
+        saveStore("03_quiz_answered", "Misses show what you mixed up")
         viewModel.endQuiz()
         rule.waitForIdle()
 
@@ -177,10 +184,10 @@ class ScreenshotsTest {
         ShadowTextToSpeech.getLastTextToSpeechInstance()?.let { shadowOf(it).onInitListener.onInit(TextToSpeech.SUCCESS) }
         rule.waitForIdle()
         // The top of the back, the name with its capital and population: the map has two shots of its own.
-        saveStore("05_flashcard_back")
+        saveStore("05_flashcard_back", "Capital, population and a spot-it cue")
 
         seedProgress(viewModel)
-        saveProgress("06_progress", viewModel)
+        saveProgress("06_progress", "Spaced reviews, your streak, your progress", viewModel)
 
         rule.openTab("explore")
         rule.onNodeWithTag("explore_grid").performScrollToNode(hasTestTag("country_card_fr"))
@@ -189,20 +196,26 @@ class ScreenshotsTest {
         rule.awaitDelivered { WorldMapData.peek() != null }
         rule.onNode(hasScrollAction() and hasTestTag("country_detail_sheet_fr")).performScrollToNode(hasTestTag("sheet_map"))
         rule.waitForIdle()
-        saveStore("07_sheet_map", rule.drawLatestDialogOverWindow())
+        saveStore("07_sheet_map", "196 countries, one offline map", rule.drawLatestDialogOverWindow())
         rule.onNodeWithContentDescription("Close").performClick()
         rule.waitForIdle()
     }
 
     /**
-     * Explore in the dark theme, the eighth phone screenshot: Play takes at most eight for each kind of device, so the
+     * The flag quiz in the dark theme, the eighth phone screenshot: Play takes at most eight for each kind of device, so the
      * dark theme gets one.
      */
     @Test
     @Config(qualifiers = "w360dp-h720dp-night-xxhdpi")
     fun storePhoneDark() {
         rule.waitForIdle()
-        saveStore("dark_01_explore")
+        val viewModel = ViewModelProvider(rule.activity)[CountryViewModel::class.java]
+        rule.openTab("quiz")
+        viewModel.startQuiz(QuizMode.FLAG_NAME, "Europe")
+        rule.waitForIdle()
+        saveStore("dark_01_quiz_flag", "Quiz yourself in light or dark")
+        viewModel.endQuiz()
+        rule.waitForIdle()
     }
 
     /** Two of the screenshots on a 1600x2560 tablet: the rail on the start edge, the columns at their reading width. */
@@ -210,10 +223,10 @@ class ScreenshotsTest {
     @Config(qualifiers = "w800dp-h1280dp-xhdpi")
     fun storeTablet() {
         rule.waitForIdle()
-        saveStore("tablet_01_explore")
+        saveStore("tablet_01_explore", "Every flag, capital and map to explore")
         val viewModel = ViewModelProvider(rule.activity)[CountryViewModel::class.java]
         seedProgress(viewModel)
-        saveProgress("tablet_06_progress", viewModel)
+        saveProgress("tablet_06_progress", "Spaced reviews, your streak, your progress", viewModel)
     }
 
     @Test
