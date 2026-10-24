@@ -59,6 +59,7 @@ import com.example.quiz.QuizEngine
 import com.example.quiz.QuizMode
 import com.example.quiz.allCountries
 import com.example.speech.Speech
+import com.example.support.OpenExploreRule
 import com.example.support.boundsOf
 import com.example.support.FakeSpeech
 import com.example.support.FreshDatabaseRule
@@ -96,7 +97,7 @@ class ExploreProgressUiTest {
 
     private val composeRule = createAndroidComposeRule<MainActivity>()
 
-    @get:Rule val chain: RuleChain = RuleChain.outerRule(FreshDatabaseRule()).around(SettledTodayRule()).around(composeRule)
+    @get:Rule val chain: RuleChain = RuleChain.outerRule(FreshDatabaseRule()).around(SettledTodayRule()).around(composeRule).around(OpenExploreRule(composeRule))
 
     private val rule get() = composeRule
 
