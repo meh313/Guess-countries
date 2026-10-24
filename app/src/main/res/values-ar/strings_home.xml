@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The Home tab (the launch screen): the Play button, level and XP, the daily challenge and the badges; the score
+  screen rewards. The badge hints repeat the thresholds in progress/Rewards.kt.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="PluralsCandidate">
+    <string name="nav_home">الرئيسية</string>
+    <string name="scope_daily">تحدي اليوم</string>
+    <string name="home_play">العب</string>
+    <string name="home_play_hint">١٠ أسئلة سريعة عن الأعلام</string>
+    <string name="home_continue">تابع الاختبار</string>
+    <string name="home_continue_hint">اختبارك ما زال جاريًا</string>
+    <string name="home_level">المستوى %1$d</string>
+    <string name="home_xp">%1$d / %2$d نقطة خبرة</string>
+    <string name="daily_title">تحدي اليوم</string>
+    <string name="daily_today_mode">اليوم: %1$s</string>
+    <string name="daily_play">العب تحدي اليوم</string>
+    <string name="daily_hint">الأسئلة العشرة نفسها للجميع · مكافأة %1$d نقطة خبرة</string>
+    <string name="daily_done">أنجزت تحدي اليوم</string>
+    <string name="daily_done_hint">عد غدًا لتحدٍّ جديد</string>
+    <string name="daily_streak">سلسلة التحديات: %1$d</string>
+    <string name="home_more_modes">كل أنماط الاختبار</string>
+    <string name="home_explore">استكشف العالم</string>
+    <string name="home_badges">الأوسمة</string>
+    <string name="home_badges_count">%1$d من %2$d تم الحصول عليها</string>
+    <string name="badge_earned_description">%1$s، تم الحصول عليه. %2$s</string>
+    <string name="badge_locked_description">%1$s، لم يتم الحصول عليه بعد. %2$s</string>
+    <string name="badge_first_quiz_title">الخطوات الأولى</string>
+    <string name="badge_first_quiz_hint">أنهِ اختبارك الأول</string>
+    <string name="badge_quiz_10_title">مواظب على الاختبارات</string>
+    <string name="badge_quiz_10_hint">أنهِ ١٠ اختبارات</string>
+    <string name="badge_quiz_50_title">محترف الاختبارات</string>
+    <string name="badge_quiz_50_hint">أنهِ ٥٠ اختبارًا</string>
+    <string name="badge_perfect_title">بلا أخطاء</string>
+    <string name="badge_perfect_hint">أجب عن كل أسئلة اختبار إجابة صحيحة</string>
+    <string name="badge_blitz_20_title">خاطف</string>
+    <string name="badge_blitz_20_hint">أجب ٢٠ إجابة صحيحة في بليتز واحد</string>
+    <string name="badge_explorer_title">متعدد المواهب</string>
+    <string name="badge_explorer_hint">العب ٤ أنماط اختبار مختلفة</string>
+    <string name="badge_studious_title">مولع بالقراءة</string>
+    <string name="badge_studious_hint">تذكّر ١٠٠ بطاقة</string>
+    <string name="badge_daily_first_title">متحدٍّ</string>
+    <string name="badge_daily_first_hint">أنهِ تحدي اليوم</string>
+    <string name="badge_daily_streak_title">في تقدم</string>
+    <string name="badge_daily_streak_hint">أنهِ تحدي اليوم ٧ أيام متتالية</string>
+    <string name="badge_level_5_title">المستوى ٥</string>
+    <string name="badge_level_5_hint">بلغ المستوى ٥</string>
+    <string name="badge_level_10_title">المستوى ١٠</string>
+    <string name="badge_level_10_hint">بلغ المستوى ١٠</string>
+    <string name="result_xp">+%1$d نقطة خبرة</string>
+    <string name="result_level_up">ارتقيت! بلغت المستوى %1$d</string>
+    <string name="result_badge">وسام جديد: %1$s</string>
+    <string name="result_daily_complete">اكتمل تحدي اليوم! مكافأة %1$d نقطة خبرة</string>
+</resources>

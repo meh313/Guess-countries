@@ -37,6 +37,7 @@ import com.example.progress.DueForecast
 import com.example.progress.GoalHistory
 import com.example.progress.Grade
 import com.example.progress.PracticeStreak
+import com.example.progress.Rewards
 import com.example.progress.Skill
 import com.example.progress.SkillState
 import com.example.quiz.QuizDifficulty
@@ -333,6 +334,13 @@ class CountryViewModel(
     /** Leaves the review screen: [review] is null again. */
     fun closeReview() = progress.closeReview()
 
+    /** XP, level, badges and the daily challenge as of now, worked out from the quiz log; see [Rewards]. */
+    val rewards: StateFlow<Rewards.Summary> = combine(progress.quizHistory, progress.refreshes) { history, _ ->
+        Rewards.summary(history, repository.now(), zone())
+    }
+        .flowOn(Dispatchers.Default)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), Rewards.Summary.EMPTY)
+
     /** Whether the Today card is shown: always until the first-run choice, then unless it was put away today. */
     val todayCardVisible: StateFlow<Boolean> = combine(_onboarded, _todayCardDismissedDay, progress.refreshes) { onboarded, dismissed, _ ->
         !onboarded || dismissed != todayStamp()
@@ -443,6 +451,12 @@ class CountryViewModel(
 
     /** What the quiz that just finished did to the streak, for its score screen; null until it is known. */
     val finishOutcome: StateFlow<PracticeStreak.Outcome?> get() = quiz.finishOutcome
+
+    /** What the quiz that just finished earned, for its score screen; null until it is known. */
+    val finishReward: StateFlow<Rewards.Reward?> get() = quiz.reward
+
+    /** Starts the daily challenge of today; see [QuizStateHolder.startDaily]. */
+    fun startDailyChallenge() = quiz.startDaily()
 
     /** How many never-seen countries today's quizzes and Learn 5 new have introduced so far; 0 once a new day begins. */
     val newItemsToday: StateFlow<Int> = combine(quiz.newItemsToday, progress.refreshes) { count, _ ->

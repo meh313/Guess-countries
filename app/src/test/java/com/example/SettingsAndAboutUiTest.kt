@@ -33,6 +33,7 @@ import com.example.data.settings.TimerPace
 import com.example.progress.Evidence
 import com.example.progress.Skill
 import com.example.speech.Speech
+import com.example.support.OpenExploreRule
 import com.example.support.FreshDatabaseRule
 import com.example.support.eventually
 import com.example.support.openTab
@@ -62,7 +63,7 @@ class SettingsAndAboutUiTest {
 
     private val composeRule = createAndroidComposeRule<MainActivity>()
 
-    @get:Rule val chain: RuleChain = RuleChain.outerRule(FreshDatabaseRule()).around(composeRule)
+    @get:Rule val chain: RuleChain = RuleChain.outerRule(FreshDatabaseRule()).around(composeRule).around(OpenExploreRule(composeRule))
 
     private val rule get() = composeRule
 

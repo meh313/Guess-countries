@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Style
 import androidx.compose.material3.Icon
@@ -65,6 +66,7 @@ import com.example.ui.screens.ExploreScreen
 import com.example.ui.screens.SettingsScreen
 import com.example.ui.screens.applyNightMode
 import com.example.ui.screens.FlashcardScreen
+import com.example.ui.screens.HomeScreen
 import com.example.ui.screens.LearnScreen
 import com.example.ui.screens.QuizScreen
 import com.example.ui.screens.QuizReviewScreen
@@ -73,6 +75,7 @@ import com.example.ui.theme.WorldFlagsTheme
 import com.example.ui.viewmodel.CountryViewModel
 
 sealed class Screen(val route: String, @StringRes val titleRes: Int, val icon: ImageVector) {
+    object Home : Screen("home", R.string.nav_home, Icons.Default.Home)
     object Explore : Screen("explore", R.string.nav_explore, Icons.Default.Public)
     object Flashcards : Screen("flashcards", R.string.nav_flashcards, Icons.Default.Style)
     object Quiz : Screen("quiz", R.string.nav_quiz, Icons.Default.EmojiEvents)
@@ -176,6 +179,7 @@ fun MainAppScreen(
 ) {
     val navController = rememberNavController()
     val items = listOf(
+        Screen.Home,
         Screen.Explore,
         Screen.Flashcards,
         Screen.Quiz,
@@ -271,8 +275,17 @@ fun MainAppScreen(
             }
             NavHost(
                 navController = navController,
-                startDestination = Screen.Explore.route
+                startDestination = Screen.Home.route
             ) {
+                composable(Screen.Home.route) {
+                    HomeScreen(
+                        viewModel = viewModel,
+                        onOpenQuiz = { open(Screen.Quiz) },
+                        onOpenFlashcards = { open(Screen.Flashcards) },
+                        onLearn = { openLearn() },
+                        onOpenExplore = { open(Screen.Explore) }
+                    )
+                }
                 composable(Screen.Explore.route) {
                     ExploreScreen(
                         viewModel = viewModel,

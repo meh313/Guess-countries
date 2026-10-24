@@ -530,12 +530,15 @@ fun QuizScreen(
         LaunchedEffect(active.startedAt) { sounds?.play(Sound.FINISHED) }
         val streakOutcome by viewModel.finishOutcome.collectAsStateWithLifecycle()
         val streak by viewModel.streak.collectAsStateWithLifecycle()
+        val reward by viewModel.finishReward.collectAsStateWithLifecycle()
         QuizResultScreen(
             session = active,
             outcome = streakOutcome,
             streakDays = streak.current,
             countriesByCode = countriesByCode,
-            onRetry = { viewModel.retryQuiz() },
+            reward = reward,
+            // The daily challenge is played once: a retry would earn its points again.
+            onRetry = if (active.scope == QuizEngine.DAILY) null else ({ viewModel.retryQuiz() }),
             onPractiseMistakes = { viewModel.practiseMistakes() },
             onDone = { viewModel.endQuiz() },
             modifier = modifier
