@@ -32,12 +32,11 @@ Private by design: no network permission, no account, no ads. Your progress stay
 
 Works offline, in light and dark, with TalkBack, on phones and tablets.
 
-**What's new (3.2)**
-• Reviews are due all day on the day they fall due; the Today card counts capitals and map reviews too.
-• A truer map: other land drawn, enclaves cut out, Crimea in Ukraine, the Golan in Syria, Palestine as one country.
-• Fairer quizzes: another country's name is never a typo; Indonesia and Monaco are never offered for each other.
-• Timed quizzes stop in the background; a new daily goal keeps your streak; undo a session's last grade.
-• Plurals and continents read right in every language.
+**What's new (3.3)**
+• A new Home screen with one big Play button, your level and XP.
+• A daily challenge: the same ten questions for everyone, a new mode each day.
+• Confetti, XP, levels and 11 badges to earn.
+• A new app icon: the origami map pin.
 
 **Category:** Education. **Content rating:** Everyone. **Contains ads:** No. **In-app purchases:** No.
 
