@@ -43,6 +43,10 @@ DENSITIES = {'mdpi': 1, 'hdpi': 1.5, 'xhdpi': 2, 'xxhdpi': 3, 'xxxhdpi': 4}
 QUALITY = 92
 LEGACY_CORNER = 0.21  # of the 44 dp square's side, the corner of the icons this replaces
 GAP_DP = 1.25  # between the pieces of the themed outline, in the 108 dp of the layer
+# A piece of the themed outline is dropped when nothing in it is wider than PIECE_DP (a sliver of a fold), and so is
+# any point of a piece narrower than NARROW_DP that runs more than SPIKE_DP beyond the rest (a fold's tail), since
+# in one colour they read as noise, not as folds.
+PIECE_DP, NARROW_DP, SPIKE_DP = 4.0, 1.8, 2.5
 
 # The origami's four colours, for the themed outline's pieces.
 YELLOW, WHITE, ORANGE, BLUE = 1, 2, 3, 4
@@ -159,9 +163,22 @@ def legacy(rgb):
             save(np.asarray(icon), RES / f'mipmap-{density}' / f'{name}.webp', 'RGBA')
 
 
+def trimmed(piece, narrow, spike):
+    """The piece without its points: the parts narrower than `narrow` that reach more than `spike` from the rest."""
+    body = ndi.distance_transform_edt(piece) > narrow / 2
+    near = ndi.distance_transform_edt(~body) <= narrow / 2
+    reach = ndi.distance_transform_edt(~near)
+    points, count = ndi.label(piece & ~near)
+    for i in range(1, count + 1):
+        point = points == i
+        if reach[point].max() > spike:
+            piece &= ~point
+    return piece
+
+
 def outline(pin, kind):
     """The themed icon's pieces as polygons in the layer's 108 units: one per patch of one colour, each shrunk by
-    half the gap, traced and simplified to the straight folds the origami is made of."""
+    half the gap, dropped or trimmed when thin, traced and simplified to the straight folds the origami is made of."""
     n = pin.shape[0]
     per_unit = n / 72  # master pixels per unit of the 108-unit layer
     shrink = GAP_DP * per_unit / 2
@@ -169,9 +186,9 @@ def outline(pin, kind):
     for value in (YELLOW, WHITE, ORANGE, BLUE):
         labels, count = ndi.label(kind == value)
         for i in range(1, count + 1):
-            patch = labels == i
-            if patch.sum() > 0.001 * n * n:
-                pieces |= ndi.distance_transform_edt(patch) > shrink
+            piece = ndi.distance_transform_edt(labels == i) > shrink
+            if piece.any() and ndi.distance_transform_edt(piece).max() * 2 >= PIECE_DP * per_unit:
+                pieces |= trimmed(piece, NARROW_DP * per_unit, SPIKE_DP * per_unit)
     polygons = []
     for contour in measure.find_contours(np.pad(pieces.astype(np.float32), 1), 0.5):
         if len(contour) < 20:
