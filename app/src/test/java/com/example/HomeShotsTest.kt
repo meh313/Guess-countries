@@ -38,7 +38,6 @@ class HomeShotsTest {
         rule.onNodeWithTag("home_badges_count").performScrollTo()
         rule.waitForIdle()
         save("home_new_badges")
-        rule.onNodeWithTag("home_scroll").performScrollTo()
         rule.onNodeWithTag("nav_tab_home").performClick()
         rule.onNodeWithTag("home_daily_btn").performScrollTo().performClick()
         rule.waitForIdle()
