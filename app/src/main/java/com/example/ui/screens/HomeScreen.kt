@@ -1,6 +1,30 @@
 package com.example.ui.screens
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilledTonalButton
+import com.example.ui.theme.GoldAccent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,12 +60,10 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -133,57 +155,12 @@ fun HomeScreen(
                 .testTag("home_scroll"),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = stringResource(R.string.app_name),
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .weight(1f)
-                        .semantics { heading() }
-                )
-                if (streak.current > 0) {
-                    Icon(
-                        imageVector = Icons.Default.LocalFireDepartment,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.tertiary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Text(
-                        text = pluralStringResource(R.plurals.stats_streak_title, streak.current, streak.current),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier
-                            .padding(start = 4.dp)
-                            .testTag("home_streak")
-                    )
-                }
-            }
-
-            LevelCard(rewards)
-
-            Button(
-                onClick = { play() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 88.dp)
-                    .testTag("home_play_btn"),
-                shape = RoundedCornerShape(24.dp)
-            ) {
-                Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(40.dp))
-                Spacer(modifier = Modifier.size(12.dp))
-                Column {
-                    Text(
-                        text = stringResource(if (active != null) R.string.home_continue else R.string.home_play),
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = stringResource(if (active != null) R.string.home_continue_hint else R.string.home_play_hint),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            }
+            Hero(
+                rewards = rewards,
+                streak = streak.current,
+                active = active != null,
+                onPlay = { play() }
+            )
 
             DailyCard(
                 mode = DailyChallenge.modeFor(viewModel.todayStamp()),
@@ -199,7 +176,7 @@ fun HomeScreen(
             BadgesCard(rewards.badges)
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-                OutlinedButton(
+                FilledTonalButton(
                     onClick = onOpenQuiz,
                     modifier = Modifier
                         .weight(1f)
@@ -207,7 +184,7 @@ fun HomeScreen(
                         .testTag("home_modes_btn"),
                     shape = RoundedCornerShape(16.dp)
                 ) { Text(stringResource(R.string.home_more_modes), textAlign = TextAlign.Center) }
-                OutlinedButton(
+                FilledTonalButton(
                     onClick = onOpenExplore,
                     modifier = Modifier
                         .weight(1f)
@@ -242,49 +219,201 @@ fun HomeScreen(
     }
 }
 
-/** The level, how far into it the player is, and the XP behind it. */
+private val HeroTop = Color(0xFF1E56A0)
+private val HeroBottom = Color(0xFF0F2A5E)
+private val PinLight = Color(0xFFFFB074)
+private val PinMid = Color(0xFFE8672B)
+private val PinDark = Color(0xFFB8470F)
+
+/**
+ * The top of Home: a deep-blue banner with the app name, the origami map pin of the app icon floating beside it, the
+ * level (a gold bar filling up to the next one), the streak, and the big gold Play button, which breathes gently.
+ */
 @Composable
-private fun LevelCard(rewards: Rewards.Summary) {
+private fun Hero(rewards: Rewards.Summary, streak: Int, active: Boolean, onPlay: () -> Unit) {
     val level = rewards.level
-    Card(
+    val motion = rememberInfiniteTransition(label = "hero")
+    val bob by motion.animateFloat(
+        initialValue = -6f,
+        targetValue = 6f,
+        animationSpec = infiniteRepeatable(tween(2200, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "bob"
+    )
+    val breathe by motion.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.03f,
+        animationSpec = infiniteRepeatable(tween(1400, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "breathe"
+    )
+    var shown by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { shown = true }
+    val fraction by animateFloatAsState(
+        targetValue = if (shown) level.fraction else 0f,
+        animationSpec = tween(900, easing = FastOutSlowInEasing),
+        label = "xp"
+    )
+
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .testTag("home_level_card"),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            .clip(RoundedCornerShape(28.dp))
+            .background(Brush.linearGradient(listOf(HeroTop, HeroBottom)))
+            .testTag("home_level_card")
     ) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Canvas(modifier = Modifier.matchParentSize()) {
+            // A faint globe: parallels and a meridian ellipse, bleeding off the top-right corner.
+            val c = Offset(size.width * 0.86f, size.height * 0.2f)
+            val r = size.width * 0.5f
+            val line = Color.White.copy(alpha = 0.07f)
+            val st = Stroke(width = 2.dp.toPx())
+            drawCircle(line, radius = r, center = c, style = st)
+            drawCircle(line, radius = r * 0.66f, center = c, style = st)
+            drawCircle(line, radius = r * 0.33f, center = c, style = st)
+            drawLine(line, Offset(c.x - r, c.y), Offset(c.x + r, c.y), strokeWidth = st.width)
+            drawLine(line, Offset(c.x, c.y - r), Offset(c.x, c.y + r), strokeWidth = st.width)
+        }
+        Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.TrendingUp,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
-                )
                 Text(
-                    text = stringResource(R.string.home_level, level.number),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
+                    text = stringResource(R.string.app_name),
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color.White,
                     modifier = Modifier
-                        .padding(start = 8.dp)
                         .weight(1f)
-                        .testTag("home_level")
+                        .semantics { heading() }
                 )
+                Canvas(
+                    modifier = Modifier
+                        .size(88.dp)
+                        .graphicsLayer { translationY = bob.dp.toPx() }
+                ) { drawOrigamiPin() }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Pill {
+                    Icon(Icons.Default.TrendingUp, contentDescription = null, tint = GoldAccent, modifier = Modifier.size(18.dp))
+                    Text(
+                        text = stringResource(R.string.home_level, level.number),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        modifier = Modifier
+                            .padding(start = 4.dp)
+                            .testTag("home_level")
+                    )
+                }
+                if (streak > 0) {
+                    Pill {
+                        Icon(Icons.Default.LocalFireDepartment, contentDescription = null, tint = Color(0xFFFFA45C), modifier = Modifier.size(18.dp))
+                        Text(
+                            text = pluralStringResource(R.plurals.stats_streak_title, streak, streak),
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            modifier = Modifier
+                                .padding(start = 4.dp)
+                                .testTag("home_streak")
+                        )
+                    }
+                }
+            }
+
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(10.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.18f))
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .fillMaxWidth(fraction.coerceIn(0.02f, 1f))
+                            .clip(CircleShape)
+                            .background(Brush.horizontalGradient(listOf(GoldAccent, Color(0xFFFFE38A))))
+                    )
+                }
                 Text(
                     text = stringResource(R.string.home_xp, level.xpIntoLevel, level.xpForLevel),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White.copy(alpha = 0.85f),
                     modifier = Modifier.testTag("home_xp")
                 )
             }
-            LinearProgressIndicator(
-                progress = { level.fraction },
+
+            Button(
+                onClick = onPlay,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(8.dp)
-            )
+                    .heightIn(min = 88.dp)
+                    .scale(breathe)
+                    .testTag("home_play_btn"),
+                shape = RoundedCornerShape(24.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = GoldAccent, contentColor = Color(0xFF111827)),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 6.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(52.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF111827)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.PlayArrow, contentDescription = null, tint = GoldAccent, modifier = Modifier.size(34.dp))
+                }
+                Spacer(modifier = Modifier.size(14.dp))
+                Column {
+                    Text(
+                        text = stringResource(if (active) R.string.home_continue else R.string.home_play),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                    Text(
+                        text = stringResource(if (active) R.string.home_continue_hint else R.string.home_play_hint),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
         }
     }
+}
+
+@Composable
+private fun Pill(content: @Composable () -> Unit) {
+    Row(
+        modifier = Modifier
+            .clip(CircleShape)
+            .background(Color.White.copy(alpha = 0.16f))
+            .padding(horizontal = 10.dp, vertical = 5.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) { content() }
+}
+
+/** The origami map pin of the app icon: a folded teardrop in three oranges with a pale hole. */
+private fun DrawScope.drawOrigamiPin() {
+    val w = size.width
+    val h = size.height
+    fun p(x: Float, y: Float) = Offset(w * x, h * y)
+    val top = p(0.5f, 0.04f)
+    val ul = p(0.2f, 0.2f)
+    val ur = p(0.8f, 0.2f)
+    val ml = p(0.12f, 0.46f)
+    val mr = p(0.88f, 0.46f)
+    val tip = p(0.5f, 0.96f)
+    val mid = p(0.5f, 0.5f)
+    fun tri(a: Offset, b: Offset, c: Offset, color: Color) =
+        drawPath(Path().apply { moveTo(a.x, a.y); lineTo(b.x, b.y); lineTo(c.x, c.y); close() }, color)
+    // A soft shadow under the tip.
+    drawOval(Color.Black.copy(alpha = 0.18f), topLeft = p(0.3f, 0.93f), size = androidx.compose.ui.geometry.Size(w * 0.4f, h * 0.06f))
+    tri(top, ul, mid, PinLight)
+    tri(top, ur, mid, PinMid)
+    tri(ul, ml, mid, PinMid)
+    tri(ur, mr, mid, PinDark)
+    tri(ml, tip, mid, PinDark)
+    tri(mr, tip, mid, PinMid)
+    drawCircle(Color(0xFFFFF3E0), radius = w * 0.13f, center = p(0.5f, 0.38f))
+    drawCircle(Color(0xFF0F2A5E), radius = w * 0.06f, center = p(0.5f, 0.38f))
 }
 
 /** Today's challenge: its mode and a button to play it, or what the player did once it is done. */
@@ -294,24 +423,32 @@ private fun DailyCard(mode: QuizMode, done: Boolean, streak: Int, onPlay: () -> 
         modifier = Modifier
             .fillMaxWidth()
             .testTag("home_daily_card"),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = if (done) Icons.Default.TaskAlt else Icons.Default.CalendarMonth,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                    modifier = Modifier.size(24.dp)
-                )
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(GoldAccent),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = if (done) Icons.Default.TaskAlt else Icons.Default.CalendarMonth,
+                        contentDescription = null,
+                        tint = Color(0xFF111827),
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
                 Text(
                     text = stringResource(R.string.daily_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSecondaryContainer,
                     modifier = Modifier
-                        .padding(start = 8.dp)
+                        .padding(start = 12.dp)
                         .semantics { heading() }
                 )
             }
@@ -383,8 +520,9 @@ private fun BadgesCard(earned: Set<Rewards.Badge>) {
         modifier = Modifier
             .fillMaxWidth()
             .testTag("home_badges"),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -428,11 +566,20 @@ private fun BadgeTile(badge: Rewards.Badge, earned: Boolean, modifier: Modifier 
         colors = CardDefaults.cardColors(containerColor = container, contentColor = content)
     ) {
         Row(modifier = Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = if (earned) badge.icon() else Icons.Default.Lock,
-                contentDescription = null,
-                modifier = Modifier.size(24.dp)
-            )
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(if (earned) GoldAccent else content.copy(alpha = 0.12f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = if (earned) badge.icon() else Icons.Default.Lock,
+                    contentDescription = null,
+                    tint = if (earned) Color(0xFF111827) else content,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
             Column(modifier = Modifier.padding(start = 8.dp)) {
                 Text(text = title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                 Text(text = hint, style = MaterialTheme.typography.bodySmall)
