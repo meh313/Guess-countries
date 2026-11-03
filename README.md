@@ -8,6 +8,12 @@ has no network permission.
 
 ## Features
 
+- **Home** – the screen the app opens on: one big *Play* button (ten flag questions at once, or back to the quiz
+  under way), the level and XP bar, the *daily challenge* (the same ten questions for everyone on a given local day,
+  a different quiz mode each day, +50 XP once a day, played once), the Today card and the badges. A good result
+  rains confetti on the score screen (not when the system's animations are off), with the XP earned, level-ups and
+  new badges under the score. XP, levels and badges are not stored: they are worked out again from the quiz log
+  (`progress/Rewards.kt`), so they follow an import, a reset and the backup.
 - **Explore** – search, filter by continent or Saved, sort by name, population, area or continent, open a detail
   sheet and have it read aloud.
 - **Flashcards** – browse the deck (it follows the Explore filters) with Previous and Next, shuffle it, and
@@ -223,8 +229,8 @@ What a Play Store listing needs is in the repository:
 
 | Path | What lives there |
 | --- | --- |
-| `quiz/` | Pure quiz rules (`QuizEngine`, the weighted `QuestionPicker`), the immutable `QuizSession` and its `QuizSnapshot` for saved state; no Android types. |
-| `progress/` | Pure rules: the practice streak (`PracticeStreak`), computed from when quizzes finished, and per-skill mastery (`SkillMastery`: score, Leitner box, due date). |
+| `quiz/` | Pure quiz rules (`QuizEngine`, the weighted `QuestionPicker`, the day-seeded `DailyChallenge`), the immutable `QuizSession` and its `QuizSnapshot` for saved state; no Android types. |
+| `progress/` | Pure rules: the practice streak (`PracticeStreak`), computed from when quizzes finished, per-skill mastery (`SkillMastery`: score, Leitner box, due date), and the game layer over the quiz log (`Rewards`: XP, levels, badges, how loud a result is celebrated). |
 | `reminder/` | The daily reminder: pure schedule rules, the alarm scheduler, the receiver that turns the alarm (and a reboot or time-zone change) into a run, the worker, the notification. |
 | `data/settings/` | `UserSettings`: the preferences kept in SharedPreferences (answers difficulty, reminder, theme, timer pace, daily goal, focus continent, the day's new-item count, the first-run and Today-card state). |
 | `data/transfer/` | `ProgressTransfer`: the export file format (JSON, format 2) and its reader, which also takes format 1 files. |

@@ -31,9 +31,9 @@ QUANTITIES = {
 PLACEHOLDER = re.compile(r'%(\d+\$)?[sd]')
 # English strings that stay as they are in every language (brand, codes, symbols, units, proper nouns).
 SAME_IS_FINE = {'World Flags', 'OK', 'Blitz', 'GitHub', 'Antarctica', 'UK, USA, DRC', '%1$s · %2$s', '%1$s, %2$s', '%1$s/%2$s',
-                '·', '—', 'Africa', 'Europe', 'Asia', 'Oceania', '%1$s km²'}
+                '·', '—', 'Africa', 'Europe', 'Asia', 'Oceania', '%1$s km²', '%1$d / %2$d XP', '+%1$d XP'}
 # English strings one language words the same way: German says "in %1$s" too ("in Afrika", "in der Antarktis").
-SAME_IN = {'de': {'in %1$s'}}
+SAME_IN = {'de': {'in %1$s', 'Level %1$d', 'Level 5', 'Level 10'}}
 # Languages whose %d prints its own digits (Arabic-Indic in ar): a Latin digit typed into a string would sit beside them.
 NATIVE_DIGITS = {'ar'}
 # Prose with no formatted number beside it: the catalog's 196, the years of the figures, licence versions.

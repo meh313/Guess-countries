@@ -178,7 +178,7 @@ class QuizEngineTest {
 
     @Test
     fun questionCount_inTheHandPickedScopes_runsOverAsFewAsOneCountry() {
-        assertEquals(setOf(QuizEngine.DUE, QuizEngine.MISTAKES, QuizEngine.LEARN), QuizEngine.HAND_PICKED_SCOPES)
+        assertEquals(setOf(QuizEngine.DUE, QuizEngine.MISTAKES, QuizEngine.LEARN, QuizEngine.DAILY), QuizEngine.HAND_PICKED_SCOPES)
         for (scope in QuizEngine.HAND_PICKED_SCOPES) {
             assertEquals(scope, 0, QuizEngine.questionCount(0, scope))
             assertEquals(scope, 1, QuizEngine.questionCount(1, scope))

@@ -1,6 +1,7 @@
 package com.example
 
 import org.robolectric.Shadows.shadowOf
+import com.example.support.OpenExploreRule
 import com.example.support.setupNode
 import com.example.support.TestWorkManagerRule
 import androidx.test.core.app.ApplicationProvider
@@ -69,7 +70,7 @@ class ScreenshotsTest {
     private val composeRule = createAndroidComposeRule<MainActivity>()
 
     @get:Rule val chain: RuleChain =
-        RuleChain.outerRule(FreshDatabaseRule()).around(SettledTodayRule()).around(TestWorkManagerRule()).around(composeRule)
+        RuleChain.outerRule(FreshDatabaseRule()).around(SettledTodayRule()).around(TestWorkManagerRule()).around(composeRule).around(OpenExploreRule(composeRule))
 
     private val rule get() = composeRule
 
@@ -227,6 +228,24 @@ class ScreenshotsTest {
         val viewModel = ViewModelProvider(rule.activity)[CountryViewModel::class.java]
         seedProgress(viewModel)
         saveProgress("tablet_06_progress", "Spaced reviews, your streak, your progress", viewModel)
+    }
+
+    /** The Home tab: a fresh install, then with progress seeded (level, streak, badges), and in the dark theme. */
+    @Test
+    fun home_fresh_and_seeded() {
+        rule.openTab("home")
+        save("home")
+        val viewModel = ViewModelProvider(rule.activity)[CountryViewModel::class.java]
+        seedProgress(viewModel)
+        rule.openTab("home")
+        save("home_progress")
+    }
+
+    @Test
+    @Config(qualifiers = "+night")
+    fun home_dark() {
+        rule.openTab("home")
+        save("home_dark")
     }
 
     @Test

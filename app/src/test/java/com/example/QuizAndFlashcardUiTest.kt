@@ -51,6 +51,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.shadows.ShadowTextToSpeech
+import com.example.support.OpenExploreRule
 import com.example.support.setupNode
 import com.example.support.FreshDatabaseRule
 import com.example.support.SettledTodayRule
@@ -88,7 +89,7 @@ class QuizAndFlashcardUiTest {
     private val composeRule = createAndroidComposeRule<MainActivity>()
 
     // The app database is a singleton, so reset it before the activity starts to keep tests independent.
-    @get:Rule val chain: RuleChain = RuleChain.outerRule(FreshDatabaseRule()).around(SettledTodayRule()).around(composeRule)
+    @get:Rule val chain: RuleChain = RuleChain.outerRule(FreshDatabaseRule()).around(SettledTodayRule()).around(composeRule).around(OpenExploreRule(composeRule))
 
     private val rule get() = composeRule
 

@@ -126,16 +126,7 @@ class CountryRepository(
      * `questionCount`.
      */
     suspend fun saveQuiz(session: QuizSession): List<PracticeStreak.Session> = withContext(NonCancellable) {
-        val score = QuizScoreEntity(
-            mode = session.mode.name,
-            score = session.score,
-            total = if (session.mode.isEndless) 0 else session.maxScore,
-            continentFilter = session.scope,
-            timestamp = now(),
-            correct = session.correct,
-            questionCount = session.answers.size,
-            difficulty = session.difficulty.name
-        )
+        val score = QuizScoreEntity.of(session, now())
         val answers = session.answers.mapIndexed { position, record ->
             QuizAnswerEntity(
                 quizId = 0,

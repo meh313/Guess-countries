@@ -49,10 +49,13 @@ import androidx.compose.ui.unit.dp
 import com.example.R
 import com.example.data.model.Country
 import com.example.progress.PracticeStreak
+import com.example.progress.Rewards
 import com.example.quiz.QuizDifficulty
 import com.example.quiz.QuizMode
 import com.example.quiz.QuizReview
 import com.example.quiz.QuizSession
+import com.example.ui.badgeTitleRes
+import com.example.ui.components.Confetti
 import com.example.ui.components.FlagView
 import com.example.ui.components.readingWidth
 import com.example.ui.modeTitle
@@ -76,10 +79,13 @@ fun QuizResultScreen(
     /** The current streak, shown when [outcome] is not known (the quiz was saved before the process died). */
     streakDays: Int,
     countriesByCode: Map<String, Country>,
-    onRetry: () -> Unit,
+    /** Null hides Retry: the daily challenge is played once. */
+    onRetry: (() -> Unit)?,
     onPractiseMistakes: () -> Unit,
     onDone: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    /** What the quiz earned; null until the save is through. */
+    reward: Rewards.Reward? = null
 ) {
     val streakLine = when (outcome?.kind) {
         PracticeStreak.Kind.STARTED -> stringResource(R.string.streak_started)
@@ -95,6 +101,8 @@ fun QuizResultScreen(
         subtitle = null,
         announced = true,
         streakLine = streakLine,
+        reward = reward,
+        celebrationKey = session.startedAt,
         countriesByCode = countriesByCode,
         onRetry = onRetry,
         onPractiseMistakes = onPractiseMistakes,
@@ -127,6 +135,8 @@ fun QuizReviewScreen(review: QuizReview?, countries: List<Country>, onDone: () -
         subtitle = stringResource(R.string.stats_log_entry, modeTitle(review.entry.mode), scopeLabel(review.entry.continentFilter)),
         announced = false,
         streakLine = null,
+        reward = null,
+        celebrationKey = null,
         countriesByCode = countriesByCode,
         onRetry = null,
         onPractiseMistakes = null,
@@ -191,6 +201,9 @@ private fun ResultBody(
     subtitle: String?,
     announced: Boolean,
     streakLine: String?,
+    reward: Rewards.Reward?,
+    /** Confetti falls once per key; null for a logged quiz, which has none. */
+    celebrationKey: Any?,
     countriesByCode: Map<String, Country>,
     onRetry: (() -> Unit)?,
     onPractiseMistakes: (() -> Unit)?,
@@ -301,6 +314,8 @@ private fun ResultBody(
             )
         }
 
+        if (reward != null) RewardLines(reward)
+
         Spacer(modifier = Modifier.height(20.dp))
 
         // The misses, each with the flag that was picked beside the right one.
@@ -374,6 +389,59 @@ private fun ResultBody(
             Text(stringResource(R.string.action_done), fontWeight = FontWeight.Bold)
         }
     }
+    if (celebrationKey != null) {
+        Confetti(Rewards.celebration(content.correct, content.answered, content.mode.isEndless), celebrationKey)
+    }
+    }
+}
+
+/** What the quiz earned: its XP, a new level, the daily challenge and each new badge; read out as it appears once the save is through. */
+@Composable
+private fun RewardLines(reward: Rewards.Reward) {
+    Column(
+        modifier = Modifier
+            .padding(top = 12.dp)
+            .semantics { liveRegion = LiveRegionMode.Polite },
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.result_xp, reward.xpGained),
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.tertiary,
+            modifier = Modifier.testTag("quiz_reward_xp")
+        )
+        reward.levelUp?.let { level ->
+            Text(
+                text = stringResource(R.string.result_level_up, level),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.testTag("quiz_reward_level_up")
+            )
+        }
+        if (reward.dailyCompleted) {
+            Text(
+                text = stringResource(R.string.result_daily_complete, Rewards.DAILY_BONUS),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.secondary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.testTag("quiz_reward_daily")
+            )
+        }
+        reward.newBadges.forEach { badge ->
+            Text(
+                text = stringResource(R.string.result_badge, stringResource(badgeTitleRes(badge))),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.secondary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.testTag("quiz_reward_badge_${badge.name.lowercase()}")
+            )
+        }
     }
 }
 
