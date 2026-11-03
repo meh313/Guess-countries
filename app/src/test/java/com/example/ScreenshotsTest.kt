@@ -219,14 +219,18 @@ class ScreenshotsTest {
         rule.waitForIdle()
     }
 
-    /** Two of the screenshots on a 1600x2560 tablet: the rail on the start edge, the columns at their reading width. */
+    /** Two of the screenshots on a 1600x2560 tablet, Home with progress on it and Progress: the rail on the start edge, the
+     * columns at their reading width. */
     @Test
     @Config(qualifiers = "w800dp-h1280dp-xhdpi")
     fun storeTablet() {
         rule.waitForIdle()
-        saveStore("tablet_01_explore", "Every flag, capital and map to explore")
         val viewModel = ViewModelProvider(rule.activity)[CountryViewModel::class.java]
         seedProgress(viewModel)
+        rule.openTab("home")
+        rule.awaitDelivered { viewModel.streak.value.current == 3 }
+        rule.waitForIdle()
+        saveStore("tablet_01_home", "Play, learn and keep your streak")
         saveProgress("tablet_06_progress", "Spaced reviews, your streak, your progress", viewModel)
     }
 
