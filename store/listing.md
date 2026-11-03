@@ -32,8 +32,8 @@ Private by design: no network permission, no account, no ads. Your progress stay
 
 Works offline, in light and dark, with TalkBack, on phones and tablets.
 
-**What's new (3.3)**
-• A new Home screen with one big Play button, your level and XP.
+**What's new (3.3.1)**
+• A redesigned Home screen: a hero banner with the origami pin, your level, streak and an animated XP bar above one big gold Play button.
 • A daily challenge: the same ten questions for everyone, a new mode each day.
 • Confetti, XP, levels and 11 badges to earn.
 • A new app icon: the origami map pin.
