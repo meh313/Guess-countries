@@ -217,6 +217,24 @@ class ScreenshotsTest {
         saveProgress("tablet_06_progress", viewModel)
     }
 
+    /** The Home tab: a fresh install, then with progress seeded (level, streak, badges), and in the dark theme. */
+    @Test
+    fun home_fresh_and_seeded() {
+        rule.openTab("home")
+        save("home")
+        val viewModel = ViewModelProvider(rule.activity)[CountryViewModel::class.java]
+        seedProgress(viewModel)
+        rule.openTab("home")
+        save("home_progress")
+    }
+
+    @Test
+    @Config(qualifiers = "+night")
+    fun home_dark() {
+        rule.openTab("home")
+        save("home_dark")
+    }
+
     @Test
     fun explore_flashcards_quiz_and_stats() {
         rule.waitForIdle()
