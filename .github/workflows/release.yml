@@ -147,7 +147,7 @@ jobs:
           SDKMANAGER=$(ls "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager | head -1)
           yes | "$SDKMANAGER" --licenses > /dev/null || true
 
-      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6
 
       # Lint and the unit tests run again here: a release must not depend on remembering to look at CI first.
       - name: Lint, test and build the signed release APK and app bundle
