@@ -33,7 +33,7 @@ jobs:
 
       # The look-alike check decodes the flag WebPs with Pillow, and the distances follow the decoder, so the exact
       # Pillow build that wrote FlagLookAlikes.kt is pinned in tools/requirements.txt.
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: '3.12'
           cache: pip
@@ -55,7 +55,7 @@ jobs:
           python3 tools/strings-audit.py --check
           python3 tools/store-check.py --check
 
-      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6
 
       # Lint, the unit tests (Robolectric, Compose UI), both APKs and the instrumented test APK. Named tasks rather
       # than `build`, which would run the same unit tests a second time for the release variant (they are not
