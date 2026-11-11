@@ -47,7 +47,7 @@
 
     <!-- Settings: Data (export, import, reset) -->
     <string name="settings_section_data">البيانات</string>
-    <string name="settings_data_local">كل شيء يبقى على هذا الجهاز: لا حساب، ولا يملك التطبيق صلاحية الوصول إلى الشبكة. يُضمَّن التقدم في نسخة أندرويد الاحتياطية للتطبيق.</string>
+    <string name="settings_data_local">يبقى تقدمك على هذا الجهاز: لا حساب، والشيء الوحيد الذي يمرّ عبر الإنترنت هو طلبات الإعلانات في التطبيق المجاني. يُضمَّن التقدم في نسخة أندرويد الاحتياطية للتطبيق.</string>
     <string name="settings_export">تصدير</string>
     <string name="settings_import">استيراد</string>
     <string name="settings_transfer_hint">يكتب التصدير ملفًا يحوي تقدمك وإعداداتك؛ ويستبدل الاستيراد كل شيء بملف كهذا.</string>
@@ -90,6 +90,22 @@
     </plurals>
     <string name="settings_reset">إعادة ضبط التقدم</string>
 
+    <!-- الإعدادات: الإعلانات والمشتريات -->
+    <string name="settings_section_ads">الإعلانات والمشتريات</string>
+    <string name="settings_ads_intro">يعرض التطبيق المجاني إعلانًا قصيرًا بعد كل اختبار ثالث، ولا يعرضه أبدًا أثناء سؤال ولا في اليومين الأولين. تأتي الإعلانات من Google AdMob، مقيّدة بتصنيف مناسب لعامة الجمهور مع حظر فئات القمار والكحول والمواعدة؛ ويبيّن بيان الخصوصية تحت «حول» ما تحصل عليه.</string>
+    <string name="settings_remove_ads_title">إزالة الإعلانات</string>
+    <string name="settings_remove_ads_detail">دفعة واحدة: لا إعلانات بعدها، وتلميح ٥٠/٥٠ في الاختبار مجاني.</string>
+    <string name="settings_remove_ads_buy">شراء</string>
+    <string name="settings_remove_ads_buy_price">شراء · %1$s</string>
+    <string name="settings_restore_purchase">استعادة الشراء</string>
+    <string name="settings_store_unavailable">يحتاج الشراء إلى Google Play، وهو غير متوفر على هذا الجهاز أو في هذا التثبيت.</string>
+    <string name="settings_purchase_owned">أُزيلت الإعلانات. شكرًا لك!</string>
+    <string name="settings_purchase_nothing_to_restore">لم يُعثر على شراء «إزالة الإعلانات» في حساب Google هذا.</string>
+    <string name="settings_purchase_pending">طلبك ينتظر الدفع؛ ستختفي الإعلانات حالما يؤكده Google Play.</string>
+    <string name="settings_purchase_unavailable">تعذّر الوصول إلى Google Play. حاول لاحقًا.</string>
+    <string name="settings_purchase_failed">لم تتم عملية الشراء ولم يُخصم أي مبلغ. حاول لاحقًا.</string>
+    <string name="settings_ads_removed">أُزيلت الإعلانات: شكرًا لدعمك World Flags. تلميح ٥٠/٥٠ في الاختبار مجاني.</string>
+    <string name="settings_ad_privacy_options">خيارات خصوصية الإعلانات</string>
     <!-- Settings: About row -->
     <string name="settings_section_about">حول</string>
     <string name="settings_about_title">حول World Flags</string>
@@ -126,7 +142,7 @@
     <string name="about_translations_title">الترجمات</string>
     <string name="about_translations_text">تُرجمت الفرنسية والإسبانية والألمانية والعربية بمساعدة آلية ورُوجعت للاتساق، لا على يد متحدثين أصليين. التصحيحات مرحّب بها على GitHub.</string>
     <string name="about_privacy_title">الخصوصية</string>
-    <string name="about_privacy_text">لا يملك التطبيق صلاحية الشبكة: لا شيء مما تفعله يغادر الجهاز، ولا يوجد حساب. يُخزَّن تقدمك في قاعدة بيانات التطبيق الخاصة ويُضمَّن في نسخة أندرويد الاحتياطية للتطبيق، فينتقل معك إلى هاتف جديد عندما يكون النسخ الاحتياطي مفعّلًا. الإعدادات &gt; إعادة ضبط التقدم يحذف كل ذلك.</string>
+    <string name="about_privacy_text">لا شيء مما تفعله في التطبيق يغادر الجهاز، ولا يوجد حساب. تعرض النسخة المجانية إعلانات من Google AdMob، الذي يحصل على معرّف الإعلانات لجهازك والتفاصيل التقنية التي يحملها طلب الإعلان؛ وشراء «إزالة الإعلانات» عبر Google Play ينهي هذه الطلبات. يُخزَّن تقدمك في قاعدة بيانات التطبيق الخاصة ويُضمَّن في نسخة أندرويد الاحتياطية للتطبيق، فينتقل معك إلى هاتف جديد عندما يكون النسخ الاحتياطي مفعّلًا. الإعدادات &gt; إعادة ضبط التقدم يحذف كل ذلك.</string>
     <!-- A link row under the text: opens PRIVACY.md in the repository in the browser -->
     <string name="about_privacy_link">بيان الخصوصية الكامل</string>
 

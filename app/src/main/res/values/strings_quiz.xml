@@ -73,6 +73,12 @@
     <string name="quiz_option_correct">Correct answer</string>
     <string name="quiz_option_incorrect">Your answer, incorrect</string>
 
+    <!-- Play: the 50/50 hint (two wrong options go, for half the points; free once Remove ads is bought, for a rewarded ad otherwise) -->
+    <string name="quiz_hint_free">50/50 hint</string>
+    <string name="quiz_hint_watch_ad">50/50 hint · watch an ad</string>
+    <string name="quiz_hint_used">Two wrong answers removed: half the points for this question</string>
+    <string name="quiz_option_removed">Removed by the hint</string>
+
     <!-- Play: after the answer -->
     <string name="quiz_result_timeout">Time\'s up! The answer is %1$s</string>
     <plurals name="quiz_result_correct">

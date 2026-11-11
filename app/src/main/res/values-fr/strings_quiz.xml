@@ -80,6 +80,12 @@
     <string name="quiz_option_correct">Bonne réponse</string>
     <string name="quiz_option_incorrect">Votre réponse, incorrecte</string>
 
+    <!-- Jeu : l'indice 50/50 -->
+    <string name="quiz_hint_free">Indice 50/50</string>
+    <string name="quiz_hint_watch_ad">Indice 50/50 · regarder une publicité</string>
+    <string name="quiz_hint_used">Deux mauvaises réponses retirées : la moitié des points pour cette question</string>
+    <string name="quiz_option_removed">Retirée par l\'indice</string>
+
     <!-- Jeu : après la réponse -->
     <string name="quiz_result_timeout">Temps écoulé ! La réponse est %1$s</string>
     <plurals name="quiz_result_correct">

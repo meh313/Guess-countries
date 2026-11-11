@@ -1,6 +1,7 @@
 package com.example.ui.components
 
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.draw.alpha
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -59,7 +60,9 @@ fun FlagOptionGrid(
     answered: Boolean,
     onPick: (Int) -> Unit,
     modifier: Modifier = Modifier,
-    tileMaxWidth: Dp = Dp.Unspecified
+    tileMaxWidth: Dp = Dp.Unspecified,
+    /** The options the 50/50 hint took away: faded, and no longer buttons. */
+    eliminated: Set<Int> = emptySet()
 ) {
     val gridWidth = if (tileMaxWidth.isSpecified) Modifier.widthIn(max = tileMaxWidth * 2 + 10.dp) else Modifier
     Column(modifier = modifier.then(gridWidth).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -78,6 +81,8 @@ fun FlagOptionGrid(
                     }
                     val correctAnswer = stringResource(R.string.option_correct_answer)
                     val yourAnswerIncorrect = stringResource(R.string.option_your_answer_incorrect)
+                    val removedByHint = stringResource(R.string.quiz_option_removed)
+                    val isEliminated = index in eliminated
                     // The card, not the flag inside it, is the button TalkBack lands on: its number, and once
                     // answered the country, are its description.
                     val description =
@@ -86,13 +91,16 @@ fun FlagOptionGrid(
                     Card(
                         modifier = Modifier
                             .weight(1f)
-                            .clickable(enabled = !answered, role = Role.Button) { onPick(index) }
+                            .alpha(if (isEliminated && !answered) ELIMINATED_ALPHA else 1f)
+                            .clickable(enabled = !answered && !isEliminated, role = Role.Button) { onPick(index) }
                             .semantics {
                                 contentDescription = description
                                 if (answered && isCorrect) {
                                     stateDescription = correctAnswer
                                 } else if (answered && isSelected) {
                                     stateDescription = yourAnswerIncorrect
+                                } else if (isEliminated) {
+                                    stateDescription = removedByHint
                                 }
                             }
                             .testTag("quiz_option_$index"),
@@ -152,3 +160,6 @@ fun FlagOptionGrid(
         }
     }
 }
+
+/** How faint an option the 50/50 hint took away is drawn. */
+internal const val ELIMINATED_ALPHA = 0.35f

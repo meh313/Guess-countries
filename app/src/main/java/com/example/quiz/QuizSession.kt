@@ -29,7 +29,9 @@ data class QuizSession(
      * Where the misses asked again at the end begin (see [reask]): how many questions the quiz was built with, or null
      * while they have not been asked; a fixed-length quiz does that once.
      */
-    val reaskedFrom: Int? = null
+    val reaskedFrom: Int? = null,
+    /** The options the 50/50 hint took away from the current question (see [useHint]); empty until it is used, and again at the next question. */
+    val eliminated: Set<Int> = emptySet()
 ) {
     init {
         require(questions.isNotEmpty()) { "A quiz needs at least one question" }
@@ -41,7 +43,14 @@ data class QuizSession(
      * it took. A typed answer keeps its text in [typed]: the text is what the player wrote, the index is 0 (the
      * question's one option, the right name) when it was accepted and null when it was not.
      */
-    data class AnswerRecord(val question: QuizQuestion, val pickedIndex: Int?, val timeMs: Long, val typed: String? = null) {
+    data class AnswerRecord(
+        val question: QuizQuestion,
+        val pickedIndex: Int?,
+        val timeMs: Long,
+        val typed: String? = null,
+        /** True when the 50/50 hint had taken two wrong options away before the answer: half points, light evidence. */
+        val hinted: Boolean = false
+    ) {
         val correct: Boolean get() = pickedIndex != null && pickedIndex in question.acceptedIndices
         val pickedCode: String? get() = pickedIndex?.let { question.optionCodes.getOrNull(it) }
         val pickedText: String? get() = typed ?: pickedIndex?.let { question.options[it] }
@@ -74,17 +83,39 @@ data class QuizSession(
      */
     val misses: List<AnswerRecord> get() = answers.filter { !it.correct }.distinctBy { it.question.targetCountry.code }
 
-    /** Records the player's choice at [now] (the ViewModel's clock). Ignored once this question is answered or the quiz is over. */
+    /**
+     * Records the player's choice at [now] (the ViewModel's clock). Ignored once this question is answered or the quiz
+     * is over, and for an option the hint took away. A right answer after the hint earns half the points.
+     */
     fun answer(index: Int, now: Long = questionStartedAt): QuizSession {
-        if (hasAnswered || isFinished || index !in current.options.indices) return this
+        if (hasAnswered || isFinished || index !in current.options.indices || index in eliminated) return this
         val correct = index in current.acceptedIndices
+        val hinted = eliminated.isNotEmpty()
         return copy(
             selectedAnswerIndex = index,
-            score = if (correct) score + QuizEngine.pointsForCorrectAnswer(streak) else score,
+            score = if (correct) score + QuizEngine.pointsForCorrectAnswer(streak, hinted) else score,
             streak = if (correct) streak + 1 else 0,
             correct = if (correct) this.correct + 1 else this.correct,
-            answers = answers + AnswerRecord(current, index, (now - questionStartedAt).coerceAtLeast(0L))
+            answers = answers + AnswerRecord(current, index, (now - questionStartedAt).coerceAtLeast(0L), hinted = hinted)
         )
+    }
+
+    /**
+     * Whether the 50/50 hint can be used on the current question: not yet answered, not used already, a question with
+     * options (not a typed name) in a quiz that is not a blitz, with at least two wrong options to take away.
+     */
+    val hintAvailable: Boolean
+        get() = !hasAnswered && !isFinished && eliminated.isEmpty() && !currentMode.isTyped && !mode.isEndless &&
+            current.options.indices.count { it !in current.acceptedIndices } >= 2
+
+    /**
+     * The 50/50 hint: takes away every wrong option but one, so the right answer is one of two. The options are
+     * already shuffled, so the wrong one kept is simply the first of them. Ignored unless [hintAvailable].
+     */
+    fun useHint(): QuizSession {
+        if (!hintAvailable) return this
+        val wrong = current.options.indices.filter { it !in current.acceptedIndices }
+        return copy(eliminated = wrong.drop(1).toSet())
     }
 
     /**
@@ -147,7 +178,7 @@ data class QuizSession(
     fun next(now: Long = 0L): QuizSession = when {
         !hasAnswered || isFinished -> this
         isLastQuestion -> copy(isFinished = true)
-        else -> copy(currentIndex = currentIndex + 1, selectedAnswerIndex = null, questionStartedAt = now)
+        else -> copy(currentIndex = currentIndex + 1, selectedAnswerIndex = null, questionStartedAt = now, eliminated = emptySet())
     }
 
     /**
@@ -158,7 +189,7 @@ data class QuizSession(
      */
     fun reask(extra: List<QuizQuestion>, now: Long = 0L): QuizSession {
         if (!hasAnswered || isFinished || extra.isEmpty()) return this
-        return copy(questions = questions + extra, reaskedFrom = questions.size, currentIndex = currentIndex + 1, selectedAnswerIndex = null, questionStartedAt = now)
+        return copy(questions = questions + extra, reaskedFrom = questions.size, currentIndex = currentIndex + 1, selectedAnswerIndex = null, questionStartedAt = now, eliminated = emptySet())
     }
 
     companion object {

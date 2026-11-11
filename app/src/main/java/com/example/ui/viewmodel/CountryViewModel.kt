@@ -29,6 +29,15 @@ import com.example.data.settings.ThemeMode
 import com.example.data.settings.TimerPace
 import com.example.data.settings.UserSettings
 import com.example.data.settings.goalHistory
+import com.example.monetization.AdMobNetwork
+import com.example.monetization.AdNetwork
+import com.example.monetization.ConsentGate
+import com.example.monetization.HintOffer
+import com.example.monetization.Monetization
+import com.example.monetization.PlayStore
+import com.example.monetization.Store
+import com.example.monetization.UmpConsent
+import com.example.BuildConfig
 import com.example.data.transfer.ProgressSnapshot
 import com.example.data.transfer.ProgressTransfer
 import com.example.flashcards.StudySession
@@ -94,9 +103,19 @@ class CountryViewModel(
     private val sourcesLoader: (suspend () -> CountrySources)? = null,
     /** Redraws the home-screen widget once a session is saved; the app passes the Glance one, tests none. */
     private val widgets: WidgetRefresher = WidgetRefresher.NONE,
+    /** The ad network, the consent form and the store; the app passes AdMob, UMP and Play Billing where the device has Google Play, tests fakes or none. */
+    ads: AdNetwork = AdNetwork.NONE,
+    store: Store = Store.UNAVAILABLE,
+    consent: ConsentGate = ConsentGate.NONE,
     /** The server side of playing with friends; the app passes Firebase, tests a fake or none. */
     onlineService: OnlineService = NoOnlineService
 ) : ViewModel() {
+
+    /** The ads and the Remove ads purchase, as the screens see them; see [Monetization]. */
+    val monetization = Monetization(settings, ads, store, consent, viewModelScope)
+
+    /** The 50/50 hint on offer for a quiz question. */
+    val hintOffer: StateFlow<HintOffer> get() = monetization.hintOffer
 
     private val _sources = MutableStateFlow<CountrySources?>(null)
 
@@ -451,7 +470,13 @@ class CountryViewModel(
      */
     private val refreshWidget: suspend () -> Unit = { runCatching { widgets.refresh() } }
 
-    private val quiz = QuizStateHolder(repository, progress, settings, viewModelScope, clock, zone, random, savedStateHandle, afterSave = refreshWidget)
+    /** A quiz saved: the widget is redrawn and the quiz counts towards the next interstitial ad. */
+    private val afterQuizSave: suspend () -> Unit = {
+        monetization.onQuizFinished()
+        refreshWidget()
+    }
+
+    private val quiz = QuizStateHolder(repository, progress, settings, viewModelScope, clock, zone, random, savedStateHandle, afterSave = afterQuizSave)
 
     /** The quiz in progress, or null on the setup screen. Lives here so it survives rotation and tab switches. */
     val quizSession: StateFlow<QuizSession?> get() = quiz.session
@@ -488,6 +513,9 @@ class CountryViewModel(
     fun answerQuiz(index: Int) = quiz.answer(index)
 
     fun answerQuizTyped(text: String) = quiz.answerTyped(text)
+
+    /** The 50/50 hint on the current quiz question: two wrong options go. */
+    fun useQuizHint() = quiz.useHint()
 
     fun nextQuizQuestion() = quiz.next()
 
@@ -718,6 +746,11 @@ class CountryViewModel(
                     savedStateHandle = createSavedStateHandle(),
                     sourcesLoader = { CountrySources.load(app) },
                     widgets = WidgetRefresher.glance(app),
+                    // Without Google Play services (a phone without Google, Robolectric) there are no ads and no
+                    // store: the app runs ad-free, with nothing for sale.
+                    ads = if (Monetization.isSupported(app)) AdMobNetwork(BuildConfig.ADMOB_INTERSTITIAL_ID, BuildConfig.ADMOB_REWARDED_ID) else AdNetwork.NONE,
+                    store = if (Monetization.isSupported(app)) PlayStore() else Store.UNAVAILABLE,
+                    consent = if (Monetization.isSupported(app)) UmpConsent() else ConsentGate.NONE,
                     onlineService = FirebaseOnlineService(app)
                 )
             }

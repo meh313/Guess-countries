@@ -63,6 +63,21 @@ val firebaseResources: Map<String, String> = if (!googleServicesFile.exists()) e
   }
 }
 if (firebaseResources.isEmpty()) logger.lifecycle("Firebase: app/google-services.json not found, online play is off in this build.")
+// The AdMob ids. Google's test ids unless the environment names the app's own (the Release workflow does, from the
+// repository secrets ADMOB_APP_ID, ADMOB_INTERSTITIAL_ID and ADMOB_REWARDED_ID; see docs/monetization.md). Test ids
+// show test ads and earn nothing, so a signed release refuses them unless ALLOW_TEST_ADS=true says a trial is meant.
+// CI's unsigned release build and every debug build take the test ids. The app id goes into the manifest, the ad
+// unit ids into BuildConfig.
+val adMobTestIds = mapOf(
+  "ADMOB_APP_ID" to "ca-app-pub-3940256099942544~3347511713",
+  "ADMOB_INTERSTITIAL_ID" to "ca-app-pub-3940256099942544/1033173712",
+  "ADMOB_REWARDED_ID" to "ca-app-pub-3940256099942544/5224354917"
+)
+val adMobIds: Map<String, String> = adMobTestIds.mapValues { (name, testId) -> System.getenv(name)?.trim()?.takeIf { it.isNotEmpty() } ?: testId }
+val adMobTestIdsInUse = adMobIds.filter { (name, id) -> id == adMobTestIds[name] }.keys
+if (canSignRelease && adMobTestIdsInUse.isNotEmpty() && System.getenv("ALLOW_TEST_ADS") != "true") {
+  error("A signed release with Google's test ad ids would show test ads and earn nothing: set ${adMobTestIdsInUse.joinToString()} (repository secrets, see docs/monetization.md), or ALLOW_TEST_ADS=true for a trial build.")
+}
 
 android {
   namespace = "com.example"
@@ -76,12 +91,15 @@ android {
     applicationId = "com.aistudio.worldexplorer.flags"
     minSdk = 24
     targetSdk = 36
-    versionName = "3.3.1"
+    versionName = "3.4"
     versionCode = versionCodeFromEnv ?: versionCodeOf(versionName!!)
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
     firebaseResources.forEach { (name, value) -> resValue("string", name, value) }
+    manifestPlaceholders["admobAppId"] = adMobIds.getValue("ADMOB_APP_ID")
+    buildConfigField("String", "ADMOB_INTERSTITIAL_ID", "\"${adMobIds.getValue("ADMOB_INTERSTITIAL_ID")}\"")
+    buildConfigField("String", "ADMOB_REWARDED_ID", "\"${adMobIds.getValue("ADMOB_REWARDED_ID")}\"")
   }
 
   signingConfigs {
@@ -123,7 +141,8 @@ android {
   }
   buildFeatures {
     compose = true
-    // Only for AppVersionTest, which checks the version code the build derives (the unit-test manifest has none).
+    // The AdMob ad unit ids, and AppVersionTest, which checks the version code the build derives (the unit-test
+    // manifest has none).
     buildConfig = true
   }
   testOptions {
@@ -183,7 +202,9 @@ dependencies {
   implementation(libs.firebase.auth)
   implementation(libs.firebase.firestore)
   implementation(libs.kotlinx.coroutines.play.services)
-  // implementation(libs.play.services.location)
+  implementation(libs.play.services.ads)
+  implementation(libs.user.messaging.platform)
+  implementation(libs.billing)
   testImplementation(libs.androidx.compose.ui.test.junit4)
   testImplementation(libs.androidx.core)
   testImplementation(libs.androidx.junit)

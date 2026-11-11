@@ -79,6 +79,12 @@
     <string name="quiz_option_correct">Respuesta correcta</string>
     <string name="quiz_option_incorrect">Tu respuesta, incorrecta</string>
 
+    <!-- Juego: la pista 50/50 -->
+    <string name="quiz_hint_free">Pista 50/50</string>
+    <string name="quiz_hint_watch_ad">Pista 50/50 · ver un anuncio</string>
+    <string name="quiz_hint_used">Dos respuestas incorrectas eliminadas: la mitad de los puntos en esta pregunta</string>
+    <string name="quiz_option_removed">Eliminada por la pista</string>
+
     <!-- Play: after the answer -->
     <string name="quiz_result_timeout">¡Se acabó el tiempo! La respuesta es %1$s</string>
     <plurals name="quiz_result_correct">

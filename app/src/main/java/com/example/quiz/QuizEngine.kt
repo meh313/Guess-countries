@@ -187,6 +187,10 @@ object QuizEngine {
 
     fun pointsForCorrectAnswer(streak: Int): Int = POINTS_PER_CORRECT + streak * STREAK_BONUS
 
+    /** The points of a right answer, halved (rounded down, never below one) when the 50/50 hint had been used on it. */
+    fun pointsForCorrectAnswer(streak: Int, hinted: Boolean): Int =
+        pointsForCorrectAnswer(streak).let { if (hinted) (it / 2).coerceAtLeast(1) else it }
+
     /** Best possible score: every answer correct, so the streak runs 0 until [questionCount]. */
     fun maxScore(questionCount: Int): Int =
         POINTS_PER_CORRECT * questionCount + STREAK_BONUS * (questionCount * (questionCount - 1) / 2)

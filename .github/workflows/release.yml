@@ -21,10 +21,15 @@ name: Release
 #   - Push a tag v<version>; it must match versionName, and the tagged commit must be on main.
 #
 # Secrets (Settings > Secrets and variables > Actions > Repository secrets):
-#   KEYSTORE_BASE64       the upload keystore (world-flags-upload.jks) encoded with base64
-#   STORE_PASSWORD        its store password
-#   KEY_PASSWORD          the password of the "upload" key inside it
-#   GOOGLE_SERVICES_JSON  the Firebase google-services.json of the app (optional; without it online play is off)
+#   KEYSTORE_BASE64        the upload keystore (world-flags-upload.jks) encoded with base64
+#   STORE_PASSWORD         its store password
+#   KEY_PASSWORD           the password of the "upload" key inside it
+#   ADMOB_APP_ID           the app's AdMob app id (ca-app-pub-...~...), see docs/monetization.md
+#   ADMOB_INTERSTITIAL_ID  the interstitial ad unit id (ca-app-pub-.../...)
+#   ADMOB_REWARDED_ID      the rewarded ad unit id
+#   GOOGLE_SERVICES_JSON   the Firebase google-services.json of the app (optional; without it online play is off)
+# Without the three AdMob secrets the build takes Google's test ad ids, which show test ads and earn nothing: a
+# release refuses them; a dry run allows them, so the pipeline can be tried before the AdMob account exists.
 #
 # versionCode is derived from the version as major*10000 + minor*100 + patch (1.6 -> 10600,
 # 1.6.1 -> 10601), so it always grows with the version and stays above the hand-numbered codes
@@ -104,6 +109,29 @@ jobs:
           printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/upload.jks"
           echo "KEYSTORE_PATH=$RUNNER_TEMP/upload.jks" >> "$GITHUB_ENV"
 
+      # The AdMob ids go to Gradle as environment variables (app/build.gradle.kts). A release without them would ship
+      # Google's test ads; only a dry run may do that.
+      - name: Check the AdMob secrets
+        env:
+          ADMOB_APP_ID: ${{ secrets.ADMOB_APP_ID }}
+          ADMOB_INTERSTITIAL_ID: ${{ secrets.ADMOB_INTERSTITIAL_ID }}
+          ADMOB_REWARDED_ID: ${{ secrets.ADMOB_REWARDED_ID }}
+        run: |
+          set -euo pipefail
+          missing=""
+          [ -n "$ADMOB_APP_ID" ] || missing="$missing ADMOB_APP_ID"
+          [ -n "$ADMOB_INTERSTITIAL_ID" ] || missing="$missing ADMOB_INTERSTITIAL_ID"
+          [ -n "$ADMOB_REWARDED_ID" ] || missing="$missing ADMOB_REWARDED_ID"
+          if [ -n "$missing" ]; then
+            if [ "$DRY_RUN" = true ]; then
+              echo "::warning::Missing repository secret(s):$missing. This dry run builds with Google's test ad ids (ALLOW_TEST_ADS=true); a release needs the real ones, see docs/monetization.md."
+              echo "ALLOW_TEST_ADS=true" >> "$GITHUB_ENV"
+            else
+              echo "::error::Missing repository secret(s):$missing. A release with Google's test ad ids earns nothing; add them under Settings > Secrets and variables > Actions (see docs/monetization.md), or tick dry run."
+              exit 1
+            fi
+          fi
+
       # Reading the existing releases needs no write access: the token here can only read the repository.
       - name: Work out the version
         id: version
@@ -170,6 +198,9 @@ jobs:
         env:
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          ADMOB_APP_ID: ${{ secrets.ADMOB_APP_ID }}
+          ADMOB_INTERSTITIAL_ID: ${{ secrets.ADMOB_INTERSTITIAL_ID }}
+          ADMOB_REWARDED_ID: ${{ secrets.ADMOB_REWARDED_ID }}
         run: ./gradlew --console=plain lintDebug testDebugUnitTest assembleRelease bundleRelease
 
       - name: Upload reports

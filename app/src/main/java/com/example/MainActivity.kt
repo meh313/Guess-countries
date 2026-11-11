@@ -136,6 +136,9 @@ class MainActivity : ComponentActivity() {
                 AppLanguage.reconcile(this@MainActivity, viewModel.language.value)?.takeIf { it != viewModel.language.value }?.let(viewModel::setLanguage)
                 viewModel.onLocalesInEffect(resources.configuration.locales.toLanguageTags())
             }
+            // The ads of the free app and the store: the consent form where one is required, then the first ads, and
+            // the price and the purchases already made. Once per view model (see Monetization.start).
+            LaunchedEffect(viewModel) { viewModel.monetization.start(this@MainActivity) }
             val appearance by viewModel.appearance.collectAsStateWithLifecycle()
             val darkTheme = appearance.themeMode.isDark(isSystemInDarkTheme())
             // The status and navigation bar icons follow the app's theme, not the system's: before Android 12 the

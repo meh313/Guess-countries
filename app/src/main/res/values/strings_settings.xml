@@ -43,7 +43,7 @@
 
     <!-- Settings: Data (export, import, reset) -->
     <string name="settings_section_data">Data</string>
-    <string name="settings_data_local">Everything stays on this device: there is no account and the app has no network access. Progress is included in Android\'s own backup of the app.</string>
+    <string name="settings_data_local">Your progress stays on this device: there is no account, and the only thing that goes online is the free app\'s ad requests. Progress is included in Android\'s own backup of the app.</string>
     <string name="settings_export">Export</string>
     <string name="settings_import">Import</string>
     <string name="settings_transfer_hint">Export writes a file with your progress and settings; Import replaces everything with such a file.</string>
@@ -74,6 +74,22 @@
     </plurals>
     <string name="settings_reset">Reset progress</string>
 
+    <!-- Settings: Ads and purchases (the free app's ads, and the one-time purchase that removes them) -->
+    <string name="settings_section_ads">Ads and purchases</string>
+    <string name="settings_ads_intro">The free app shows one short ad after every third quiz, never during a question and not in the first two days. The ads come from Google AdMob, limited to a general-audience rating with the gambling, alcohol and dating categories blocked; the privacy statement under About says what they receive.</string>
+    <string name="settings_remove_ads_title">Remove ads</string>
+    <string name="settings_remove_ads_detail">One payment: no more ads, and the 50/50 quiz hint is free.</string>
+    <string name="settings_remove_ads_buy">Buy</string>
+    <string name="settings_remove_ads_buy_price">Buy · %1$s</string>
+    <string name="settings_restore_purchase">Restore purchase</string>
+    <string name="settings_store_unavailable">Buying needs Google Play, which this device or this install does not have.</string>
+    <string name="settings_purchase_owned">Ads removed. Thank you!</string>
+    <string name="settings_purchase_nothing_to_restore">No Remove ads purchase was found on this Google account.</string>
+    <string name="settings_purchase_pending">Your order is waiting for its payment; the ads go as soon as Google Play confirms it.</string>
+    <string name="settings_purchase_unavailable">Google Play could not be reached. Try again later.</string>
+    <string name="settings_purchase_failed">The purchase did not go through and nothing was charged. Try again later.</string>
+    <string name="settings_ads_removed">Ads removed: thank you for supporting World Flags. The 50/50 quiz hint is free.</string>
+    <string name="settings_ad_privacy_options">Ad privacy options</string>
     <!-- Settings: About row -->
     <string name="settings_section_about">About</string>
     <string name="settings_about_title">About World Flags</string>
@@ -110,7 +126,7 @@
     <string name="about_translations_title">Translations</string>
     <string name="about_translations_text">French, Spanish, German and Arabic were translated with machine help and checked for consistency, not by native speakers. Corrections are welcome on GitHub.</string>
     <string name="about_privacy_title">Privacy</string>
-    <string name="about_privacy_text">The app has no network permission: nothing you do leaves the device, and there is no account. Your progress is stored in the app\'s own database and included in Android\'s backup of the app, so it moves with you to a new phone when backup is on. Settings &gt; Reset progress deletes all of it.</string>
+    <string name="about_privacy_text">Nothing you do in the app leaves the device, and there is no account. The free version shows ads from Google AdMob, which receives your device\'s advertising ID and the technical details an ad request carries; the Remove ads purchase, made through Google Play, ends those requests. Your progress is stored in the app\'s own database and included in Android\'s backup of the app, so it moves with you to a new phone when backup is on. Settings &gt; Reset progress deletes all of it.</string>
     <!-- A link row under the text: opens PRIVACY.md in the repository in the browser -->
     <string name="about_privacy_link">Full privacy statement</string>
 

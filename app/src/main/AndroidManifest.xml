@@ -20,6 +20,10 @@
         </intent>
     </queries>
 
+    <!-- The ads of the free app (Google AdMob) read the advertising id, which Android 13 and newer put behind this
+         permission; the Remove ads purchase ends the ad requests. -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -30,6 +34,17 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.WorldFlags">
+        <!-- Google AdMob: the app id (Google's test id unless the build is given the real one, see app/build.gradle.kts)
+             and the flags that keep the SDK's start-up and ad loading off the main thread. -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="${admobAppId}" />
+        <meta-data
+            android:name="com.google.android.gms.ads.flag.OPTIMIZE_INITIALIZATION"
+            android:value="true" />
+        <meta-data
+            android:name="com.google.android.gms.ads.flag.OPTIMIZE_AD_LOADING"
+            android:value="true" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

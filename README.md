@@ -3,8 +3,8 @@
 An offline Android app for learning world geography: the flags, capitals and locations of all 196 countries of the
 world plus Antarctica. It teaches first (five new flags at a time, each with a cue on what to look for and the flag it
 is confused with, and a map of where it is), then reviews what you learnt on a spaced schedule per skill, through
-quizzes and flashcards, and shows you how you are doing against a daily goal. Everything runs on the device; the app
-has no network permission.
+quizzes and flashcards, and shows you how you are doing against a daily goal. Everything runs on the device; the
+network is used for the free version's ads only (see Monetisation).
 
 ## Features
 
@@ -122,11 +122,29 @@ subregions, flag texts, facts) is English, so a region reads "Afrique · Souther
 are matched against English names and short forms. Read aloud is English in every language, like the voice it asks
 the engine for and the facts it reads: the few words around them (`values/speech.xml`) are not translated.
 
+## Monetisation
+
+The free app shows an interstitial ad (Google AdMob) when the player leaves the score screen of every third quiz,
+never during a question, on launch or in Learn and the flashcards, and not in the first two days after the first run
+(`monetization/AdPolicy.kt`). The quiz offers a *50/50 hint* (two wrong options go, for half the points and light
+evidence) in return for a rewarded ad, when one is loaded. A one-time *Remove ads* purchase (`remove_ads`, Google
+Play Billing) ends the interstitials and makes the hint free; *Restore purchase* asks Play again. Consent is gathered
+with Google's User Messaging Platform where the law requires it, and Settings then shows *Ad privacy options*. Every
+ad request asks for the G content rating and is tagged as neither child-directed nor under the age of consent; the
+blocked categories (gambling, alcohol, dating and the rest) are set in the AdMob console. `monetization/` holds the
+rules (`AdPolicy`), the facade the screens use (`Monetization`), the interfaces (`AdNetwork`, `ConsentGate`, `Store`)
+and the Google implementations (`AdMobNetwork`, `UmpConsent`, `PlayStore`); the view model's factory wires the
+Google ones in where the device has Google Play services and the no-op ones elsewhere (and under Robolectric), so the
+tests run with fakes. The build takes Google's test ad ids unless `ADMOB_APP_ID`, `ADMOB_INTERSTITIAL_ID` and
+`ADMOB_REWARDED_ID` are set; a signed release refuses the test ids. [`docs/monetization.md`](docs/monetization.md)
+walks through the AdMob and Play Console set-up the owner does by hand.
+
 ## Privacy
 
-The app has no network permission. Everything stays on the device: progress in the app's own database, a few
+Everything the player does stays on the device: progress in the app's own database, a few
 settings in SharedPreferences, both named in the backup rules (`res/xml/backup_rules.xml`, `data_extraction_rules.xml`)
-and so included in Android's backup of the app. One more SharedPreferences file stays out of it: two flags, that the
+and so included in Android's backup of the app. The only network traffic is the free version's ad requests (and the
+consent form), described in `PRIVACY.md`; the Remove ads purchase ends them. One more SharedPreferences file stays out of it: two flags, that the
 app ran on the phone before Android 13 and that the phone's per-app language setting has been given the stored
 language, so a new phone is given it too.
 Settings > Export writes the same data to a file you keep; Import replaces everything with such a file. There is no
@@ -188,7 +206,8 @@ version code from `versionName`, so a bundle built here carries the code the Rel
 
 Releases are built, signed and published by the **Release** workflow (`.github/workflows/release.yml`),
 which reads the upload keystore and its passwords from the repository secrets `KEYSTORE_BASE64`,
-`STORE_PASSWORD` and `KEY_PASSWORD`. To ship a version:
+`STORE_PASSWORD` and `KEY_PASSWORD`, and the AdMob ids from `ADMOB_APP_ID`, `ADMOB_INTERSTITIAL_ID` and
+`ADMOB_REWARDED_ID` (a signed build refuses Google's test ids; a dry run may use them). To ship a version:
 
 1. Bump `versionName` in `app/build.gradle.kts` (for example `"1.6"`), write `release-notes/1.6.md` and the
    "What's new (1.6)" block of `store/listing.md` (`AppVersionTest` fails until both name the version), and merge it
@@ -244,6 +263,7 @@ What a Play Store listing needs is in the repository:
 | `data/transfer/` | `ProgressTransfer`: the export file format (JSON, format 2) and its reader, which also takes format 1 files. |
 | `widget/` | The home-screen widget (Glance): `WidgetState` (pure numbers from the skill rows and the log) and `TodayWidget`. |
 | `ui/sound/` | The quiz's three chimes through a `SoundPool`; the files are written by `tools/gen-sounds.py`. |
+| `monetization/` | The ads and the Remove ads purchase: `AdPolicy` (when an interstitial is due), `Monetization` (what the screens use), the `AdNetwork`, `ConsentGate` and `Store` interfaces, and their Google implementations `AdMobNetwork`, `UmpConsent` and `PlayStore`. `docs/monetization.md` is the owner's console guide. |
 | `learn/` | The pure `LearnSession`: five never-seen flags as cards with their closest look-alike, then the quiz over them. |
 | `flashcards/` | Deck ordering for the flashcard screen and the immutable `StudySession` (queue, grades, Again re-insertion, undo). |
 | `speech/` | Text-to-speech behind a small `Speech` interface. |
