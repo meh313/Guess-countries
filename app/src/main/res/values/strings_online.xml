@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Online play (online/, ui/viewmodel/OnlineStateHolder.kt): the Friends screen with the friend challenges, the daily
+  leaderboard, the Home card that leads to them, the online lines of the score screen and the Settings section. The
+  names players go by are drawn from English word lists (online/Challenge.kt, PlayerNames) and are not translated.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="PluralsCandidate">
+    <string name="scope_challenge">Friend challenge</string>
+
+    <!-- The Home card and the Friends screen -->
+    <string name="online_friends_title">Play with friends</string>
+    <string name="home_friends_text">Send a friend the same 10 questions and compare, or climb today\'s leaderboard.</string>
+    <string name="home_friends_challenge">Challenge a friend</string>
+    <string name="home_friends_leaderboard">Leaderboard</string>
+    <string name="online_off_title">Online play is off</string>
+    <string name="online_off_text">Challenges and the leaderboard need an internet connection. The app signs you in anonymously and sends a nickname it picks for you, your quiz scores and times, and nothing else. Nothing is sent until you turn it on.</string>
+    <string name="online_turn_on">Turn on online play</string>
+    <string name="online_consent_title">Turn on online play?</string>
+    <string name="online_consent_text">World Flags will create an anonymous account for you on Firebase (a Google service) and send: a nickname picked from a list (you can draw another), the scores, right answers and times of the challenges and daily challenges you play, and the codes of the challenges you share. No name, email address, contacts or location. You can turn it off, or delete this data, in Settings at any time.</string>
+    <string name="online_consent_confirm">Turn on</string>
+    <string name="online_consent_cancel">Not now</string>
+    <string name="online_not_configured">Online play is not available in this build of the app.</string>
+    <string name="online_offline">No internet connection. Try again when you are online.</string>
+    <string name="online_failed">Something went wrong online. Try again in a moment.</string>
+    <string name="online_name_label">You play as %1$s</string>
+    <string name="online_new_name">New name</string>
+    <string name="online_name_hint">Names are picked from a list, so nobody can write anything hurtful.</string>
+
+    <!-- Challenges -->
+    <string name="online_new_challenge">New challenge</string>
+    <string name="online_new_challenge_title">Choose the quiz</string>
+    <string name="online_new_challenge_text">You play 10 questions first, then share the code: your friends get the same questions and the same answers to pick from.</string>
+    <string name="online_enter_code">Enter a code</string>
+    <string name="online_enter_code_title">Join a challenge</string>
+    <string name="online_code_field">Challenge code</string>
+    <string name="online_code_look_up">Look up</string>
+    <string name="online_code_invalid">A code has 6 letters and digits, like %1$s.</string>
+    <string name="online_code_not_found">No challenge has that code. Check it with your friend; challenges expire after %1$d days.</string>
+    <string name="online_preview_from">%1$s challenges you</string>
+    <string name="online_mode_and_scope">%1$s · %2$s</string>
+    <string name="online_play_challenge">Play this challenge</string>
+    <string name="online_already_played">You have already played this one</string>
+    <string name="online_your_challenges">Your challenges</string>
+    <string name="online_no_challenges">No challenges yet. Start one and share its code, or enter a code a friend sent you.</string>
+    <string name="online_challenge_code">Code %1$s</string>
+    <string name="online_share">Share the code</string>
+    <string name="online_share_text">I scored %1$d points in World Flags. Beat me! Open the app, tap Play with friends and enter the code %2$s</string>
+    <string name="online_waiting">Waiting for a friend to play</string>
+    <string name="online_you_lead">You lead</string>
+    <string name="online_behind">%1$s leads</string>
+    <string name="online_tied">Tied</string>
+    <string name="online_not_played">You have not played this one yet</string>
+    <string name="online_made_by">From %1$s</string>
+    <plurals name="online_players">
+        <item quantity="one">%1$d player</item>
+        <item quantity="other">%1$d players</item>
+    </plurals>
+    <string name="online_rank_row">%1$d. %2$s</string>
+    <string name="online_name_you">%1$s (you)</string>
+    <string name="online_time_seconds">%1$d sec</string>
+    <string name="online_speed_bonus">Speed bonus +%1$d</string>
+    <string name="online_total">Challenge score: %1$d</string>
+    <string name="online_refresh">Refresh</string>
+    <string name="online_loading">Loading…</string>
+    <string name="online_posting">Posting your score…</string>
+    <string name="online_result_posted">Your score is posted. Share the code so your friends can play the same quiz.</string>
+    <string name="online_result_not_posted">Your score could not be posted. Check your connection and open the challenge on the Friends screen to try again.</string>
+
+    <!-- The leaderboard -->
+    <string name="online_leaderboard_title">Today\'s leaderboard</string>
+    <string name="online_leaderboard_text">Everyone who finished today\'s daily challenge, best challenge score first (points plus speed bonus).</string>
+    <string name="online_leaderboard_empty">Nobody has posted a score today yet. Be the first!</string>
+    <string name="online_your_rank">You are #%1$d of %2$d today</string>
+    <string name="online_rank_unknown">Finish today\'s challenge to join the leaderboard</string>
+    <string name="online_see_leaderboard">See the leaderboard</string>
+
+    <!-- Settings and About -->
+    <string name="settings_section_online">Online play</string>
+    <string name="settings_online_title">Online play</string>
+    <string name="settings_online_detail">Friend challenges and the daily leaderboard. Sends a nickname and your scores to Firebase; nothing else leaves the device.</string>
+    <string name="settings_online_delete">Delete my online data</string>
+    <string name="settings_online_delete_title">Delete your online data?</string>
+    <string name="settings_online_delete_text">Your nickname, the challenges you made and every score you posted are deleted from the server, and online play is turned off. Your progress on this phone stays as it is.</string>
+    <string name="settings_online_delete_confirm">Delete</string>
+    <string name="settings_online_deleted">Your online data was deleted.</string>
+    <string name="about_privacy_online">Online play is optional and off until you turn it on. It then signs you in anonymously with Firebase (a Google service) and sends a nickname picked from a list and the scores and times of the challenges you play. Settings &gt; Online play turns it off and deletes that data.</string>
+</resources>

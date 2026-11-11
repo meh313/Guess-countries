@@ -107,6 +107,8 @@ fun HomeScreen(
     onOpenFlashcards: () -> Unit,
     onLearn: () -> Unit,
     onOpenExplore: () -> Unit,
+    onOpenFriends: () -> Unit = {},
+    onOpenLeaderboard: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val rewards by viewModel.rewards.collectAsStateWithLifecycle()
@@ -172,6 +174,8 @@ fun HomeScreen(
             if (todayCardVisible) {
                 TodayCard(viewModel = viewModel, onOpenFlashcards = onOpenFlashcards, onLearn = onLearn, onOpenQuiz = onOpenQuiz)
             }
+
+            FriendsCard(onOpenFriends = onOpenFriends, onOpenLeaderboard = onOpenLeaderboard)
 
             BadgesCard(rewards.badges)
 

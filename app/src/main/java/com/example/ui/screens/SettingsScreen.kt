@@ -341,6 +341,8 @@ fun SettingsScreen(
             }
         }
 
+        OnlineSettingsSection(viewModel)
+
         speechState?.let { flow ->
             val state by flow.collectAsStateWithLifecycle()
             // Explore and Flashcards bind the engine when they appear; here it is bound so the row has something to
@@ -552,7 +554,7 @@ internal fun ScreenHeader(title: String, onBack: () -> Unit, backTag: String) {
 }
 
 @Composable
-private fun SettingsSection(title: String, content: @Composable () -> Unit) {
+internal fun SettingsSection(title: String, content: @Composable () -> Unit) {
     Text(
         text = title,
         style = MaterialTheme.typography.titleMedium,
@@ -628,7 +630,7 @@ private fun SettingLabel(text: String) {
 }
 
 @Composable
-private fun SwitchRow(title: String, detail: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit, tag: String) {
+internal fun SwitchRow(title: String, detail: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit, tag: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()

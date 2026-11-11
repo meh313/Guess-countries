@@ -192,6 +192,7 @@ fun scopeLabelRes(scope: String): Int? = when (scope) {
     QuizEngine.MISTAKES -> R.string.scope_mistakes
     QuizEngine.LEARN -> R.string.scope_learn
     QuizEngine.DAILY -> R.string.scope_daily
+    QuizEngine.CHALLENGE -> R.string.scope_challenge
     StudySession.DECK -> R.string.study_source_deck
     StudySession.CAPITALS_DUE -> R.string.study_source_capitals_due
     else -> continentLabelRes(scope)

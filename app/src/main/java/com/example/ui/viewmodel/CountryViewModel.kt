@@ -33,6 +33,11 @@ import com.example.data.transfer.ProgressSnapshot
 import com.example.data.transfer.ProgressTransfer
 import com.example.flashcards.StudySession
 import com.example.learn.LearnSession
+import com.example.online.Challenge
+import com.example.online.FirebaseOnlineService
+import com.example.online.Leaderboard
+import com.example.online.NoOnlineService
+import com.example.online.OnlineService
 import com.example.progress.DueForecast
 import com.example.progress.GoalHistory
 import com.example.progress.Grade
@@ -88,7 +93,9 @@ class CountryViewModel(
     /** Reads the per-country sources (an asset); null when the app has none to show, as in most tests. */
     private val sourcesLoader: (suspend () -> CountrySources)? = null,
     /** Redraws the home-screen widget once a session is saved; the app passes the Glance one, tests none. */
-    private val widgets: WidgetRefresher = WidgetRefresher.NONE
+    private val widgets: WidgetRefresher = WidgetRefresher.NONE,
+    /** The server side of playing with friends; the app passes Firebase, tests a fake or none. */
+    onlineService: OnlineService = NoOnlineService
 ) : ViewModel() {
 
     private val _sources = MutableStateFlow<CountrySources?>(null)
@@ -495,6 +502,61 @@ class CountryViewModel(
     /** A quiz over the countries the finished quiz got wrong; see [QuizStateHolder.practiseMistakes]. */
     fun practiseMistakes() = quiz.practiseMistakes()
 
+    // --- Online play ------------------------------------------------------------------------------------------------
+
+    private val onlinePlay = OnlineStateHolder(onlineService, repository, quiz, settings, viewModelScope, zone, random, savedStateHandle)
+
+    /** Where online play stands: configured, on or off, the player's name, a request under way, the last failure. */
+    val online: StateFlow<OnlineStateHolder.State> get() = onlinePlay.state
+
+    /** The challenges the player made or joined, newest first; see [refreshChallenges]. */
+    val challenges: StateFlow<List<Challenge>> get() = onlinePlay.challenges
+    val challengesLoading: StateFlow<Boolean> get() = onlinePlay.challengesLoading
+
+    /** The challenge a typed code turned out to be; see [lookUpChallenge]. */
+    val challengePreview: StateFlow<Challenge?> get() = onlinePlay.preview
+
+    /** The challenge whose quiz is under way or just finished, with its results; null otherwise. */
+    val currentChallenge: StateFlow<Challenge?> get() = onlinePlay.current
+
+    /** True while the result of a finished quiz is on its way to the server. */
+    val onlinePosting: StateFlow<Boolean> get() = onlinePlay.posting
+
+    /** Today's leaderboard as last loaded; see [refreshLeaderboard]. */
+    val leaderboard: StateFlow<Leaderboard?> get() = onlinePlay.leaderboard
+    val leaderboardLoading: StateFlow<Boolean> get() = onlinePlay.leaderboardLoading
+
+    /** True once the player's online data was deleted, until [clearOnlineDeleted]. */
+    val onlineDeleted: StateFlow<Boolean> get() = onlinePlay.deleted
+
+    /** Turns online play on or off; see [OnlineStateHolder.enable]. */
+    fun setOnlineEnabled(enabled: Boolean) = if (enabled) onlinePlay.enable() else onlinePlay.disable()
+
+    /** Draws another online name. */
+    fun newOnlineName() = onlinePlay.newName()
+
+    /** Makes a challenge of [mode] over [scope] and starts its quiz; [onStarted] runs once it is under way. */
+    fun startChallenge(mode: QuizMode, scope: String, onStarted: () -> Unit = {}) = onlinePlay.startChallenge(mode, scope, onStarted)
+
+    /** Looks a typed challenge code up; the result is [challengePreview] or an error in [online]. */
+    fun lookUpChallenge(typed: String) = onlinePlay.lookUp(typed)
+
+    fun clearChallengePreview() = onlinePlay.clearPreview()
+
+    /** Starts the quiz of [challenge]; [onStarted] runs once it is under way. */
+    fun playChallenge(challenge: Challenge, onStarted: () -> Unit = {}) = onlinePlay.play(challenge, onStarted)
+
+    fun refreshChallenges() = onlinePlay.refreshChallenges()
+
+    fun refreshLeaderboard() = onlinePlay.refreshLeaderboard()
+
+    /** Deletes everything the player put on the server and turns online play off. */
+    fun deleteOnlineData() = onlinePlay.deleteOnlineData()
+
+    fun clearOnlineDeleted() = onlinePlay.clearDeleted()
+
+    fun clearOnlineError() = onlinePlay.clearError()
+
     // --- Study ------------------------------------------------------------------------------------------------------
 
     private val study = StudyStateHolder(repository, viewModelScope, zone, random, progress.writeErrors, savedStateHandle, goals = { goals.value }, afterSave = refreshWidget)
@@ -655,7 +717,8 @@ class CountryViewModel(
                     reminderScheduler = WorkManagerReminderScheduler(app),
                     savedStateHandle = createSavedStateHandle(),
                     sourcesLoader = { CountrySources.load(app) },
-                    widgets = WidgetRefresher.glance(app)
+                    widgets = WidgetRefresher.glance(app),
+                    onlineService = FirebaseOnlineService(app)
                 )
             }
         }

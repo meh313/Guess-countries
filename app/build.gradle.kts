@@ -36,6 +36,34 @@ val versionCodeFromEnv: Int? =
       ?: error("VERSION_CODE must be an integer in 1..2100000000, got '$raw'")
   }
 
+// Firebase (online play: friend challenges and the daily leaderboard) is configured from app/google-services.json,
+// the file the Firebase console hands out for the Android app. It is not committed (see .gitignore): the Release
+// workflow writes it from the GOOGLE_SERVICES_JSON secret. Instead of the google-services Gradle plugin, which fails
+// the build when the file is missing, the few values the Firebase SDK reads at start are put into string resources
+// here, under the names the plugin would use; without the file none are written, FirebaseApp.initializeApp finds
+// nothing, and the app says online play is not available in this build (every test runs that way).
+val googleServicesFile = file("google-services.json")
+val firebaseResources: Map<String, String> = if (!googleServicesFile.exists()) emptyMap() else {
+  @Suppress("UNCHECKED_CAST")
+  val json = groovy.json.JsonSlurper().parse(googleServicesFile) as Map<String, Any?>
+  val projectInfo = json["project_info"] as Map<String, Any?>
+  val clients = json["client"] as List<Map<String, Any?>>
+  val client = clients.firstOrNull { c ->
+    ((c["client_info"] as Map<String, Any?>)["android_client_info"] as Map<String, Any?>)["package_name"] == "com.aistudio.worldexplorer.flags"
+  } ?: clients.first()
+  val clientInfo = client["client_info"] as Map<String, Any?>
+  val apiKey = (client["api_key"] as List<Map<String, Any?>>).firstNotNullOfOrNull { it["current_key"] as String? }
+  buildMap {
+    put("google_app_id", clientInfo["mobilesdk_app_id"] as String)
+    put("project_id", projectInfo["project_id"] as String)
+    projectInfo["project_number"]?.let { put("gcm_defaultSenderId", it.toString()) }
+    projectInfo["storage_bucket"]?.let { put("google_storage_bucket", it.toString()) }
+    projectInfo["firebase_url"]?.let { put("firebase_database_url", it.toString()) }
+    apiKey?.let { put("google_api_key", it); put("google_crash_reporting_api_key", it) }
+  }
+}
+if (firebaseResources.isEmpty()) logger.lifecycle("Firebase: app/google-services.json not found, online play is off in this build.")
+
 android {
   namespace = "com.example"
   compileSdk { version = release(37) }
@@ -52,6 +80,8 @@ android {
     versionCode = versionCodeFromEnv ?: versionCodeOf(versionName!!)
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+    firebaseResources.forEach { (name, value) -> resValue("string", name, value) }
   }
 
   signingConfigs {
@@ -148,6 +178,11 @@ dependencies {
   implementation(libs.androidx.glance.material3)
   implementation(libs.kotlinx.coroutines.android)
   implementation(libs.kotlinx.coroutines.core)
+  // Online play (online/FirebaseOnlineService.kt): anonymous sign-in and the Firestore documents of challenges and leaderboards.
+  implementation(platform(libs.firebase.bom))
+  implementation(libs.firebase.auth)
+  implementation(libs.firebase.firestore)
+  implementation(libs.kotlinx.coroutines.play.services)
   // implementation(libs.play.services.location)
   testImplementation(libs.androidx.compose.ui.test.junit4)
   testImplementation(libs.androidx.core)

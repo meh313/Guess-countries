@@ -28,6 +28,10 @@ And it shows you how you are doing:
 • A Today card with your daily goal, a streak that follows it, an optional reminder, and a home-screen widget with what is due.
 • Progress by continent, what is coming up this week, the pairs you confuse most, and every past quiz you can open again.
 
+And, if you turn it on, play with friends:
+• **Friend challenges**: play 10 questions, share a 6-letter code, and your friends get the same questions and answers to pick from. A speed bonus rewards quick right answers; the ranking shows who leads.
+• **Today's leaderboard**: your place among everyone who played the daily challenge today. Online play is optional and anonymous: a nickname from a list, your scores and times, nothing else.
+
 Private by design: no network permission, no account, no ads. Your progress stays on your phone; export it as a file whenever you like.
 
 Works offline, in light and dark, with TalkBack, on phones and tablets.
@@ -40,7 +44,7 @@ Works offline, in light and dark, with TalkBack, on phones and tablets.
 
 **Category:** Education. **Content rating:** Everyone. **Contains ads:** No. **In-app purchases:** No.
 
-**Data safety:** No data collected. No data shared. Data is encrypted in transit: not applicable (no network). Users can request data deletion: data is deleted on uninstall or with Reset progress.
+**Data safety:** With online play off (the default): no data collected, no data shared. With online play on (optional, the user turns it on): *App activity > Other actions* (quiz scores and times posted to friend challenges and the daily leaderboard) and *Device or other IDs* (an anonymous Firebase user id), collected, not shared, for app functionality, optional. Data is encrypted in transit: yes. Users can request data deletion: Settings > Online play > Delete my online data removes everything from the server; local data is deleted on uninstall or with Reset progress. See `firebase/README.md` step 9 for the form.
 
 **Screenshots:** `store/screenshots/`: phone 1080×2160, each with a caption on navy above the screen, the quiz first: `01_quiz_flag`, `02_quiz_locate`, `03_quiz_answered`, `04_learn_card`, `05_flashcard_back`, `06_progress`, `07_sheet_map`, and `dark_01_quiz_flag` in dark, eight in all, the most Play takes for one kind of device; tablet 1600×2560 (`tablet_01_home`, `tablet_06_progress`). All are 24-bit PNGs, with no alpha channel. The `storePhone()`, `storePhoneDark()` and `storeTablet()` tests of `ScreenshotsTest` write them to `app/build/screenshots/store/`; that folder is copied into `store/screenshots/` after the tests have run.
 

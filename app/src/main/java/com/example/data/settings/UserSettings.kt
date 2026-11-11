@@ -66,6 +66,15 @@ interface UserSettings {
     /** A short buzz for a right or wrong quiz answer; on until switched off. */
     var haptics: Boolean
 
+    /** True once the player turned online play on (friend challenges, the daily leaderboard); off until then, and nothing is sent. */
+    var onlineEnabled: Boolean
+
+    /** The name the player goes by online, one of `PlayerNames`; empty until online play is first turned on. */
+    var onlineName: String
+
+    /** The codes of the challenges the player made or joined, newest first, comma-separated; the Friends screen lists them. */
+    var onlineChallenges: String
+
     /** The language of the screens as a BCP 47 tag from [AppLanguage.CHOICES]; empty ([AppLanguage.SYSTEM]) follows the phone. */
     var language: String
 }
@@ -128,6 +137,9 @@ class InMemoryUserSettings(
     override var onboarded: Boolean = false,
     override var soundEffects: Boolean = true,
     override var haptics: Boolean = true,
+    override var onlineEnabled: Boolean = false,
+    override var onlineName: String = "",
+    override var onlineChallenges: String = "",
     override var language: String = AppLanguage.SYSTEM,
     override var learntToday: Int = 0,
     override var goalChanges: String = ""
@@ -207,6 +219,18 @@ class PrefsUserSettings(context: Context) : UserSettings {
         get() = prefs.getBoolean(KEY_HAPTICS, true)
         set(value) = prefs.edit { putBoolean(KEY_HAPTICS, value) }
 
+    override var onlineEnabled: Boolean
+        get() = prefs.getBoolean(KEY_ONLINE_ENABLED, false)
+        set(value) = prefs.edit { putBoolean(KEY_ONLINE_ENABLED, value) }
+
+    override var onlineName: String
+        get() = prefs.getString(KEY_ONLINE_NAME, null) ?: ""
+        set(value) = prefs.edit { putString(KEY_ONLINE_NAME, value) }
+
+    override var onlineChallenges: String
+        get() = prefs.getString(KEY_ONLINE_CHALLENGES, null) ?: ""
+        set(value) = prefs.edit { putString(KEY_ONLINE_CHALLENGES, value) }
+
     override var language: String
         get() = AppLanguage.sanitize(prefs.getString(KEY_LANGUAGE, null))
         set(value) = prefs.edit { putString(KEY_LANGUAGE, AppLanguage.sanitize(value)) }
@@ -230,6 +254,9 @@ class PrefsUserSettings(context: Context) : UserSettings {
         private const val KEY_ONBOARDED = "onboarded"
         private const val KEY_SOUND_EFFECTS = "sound_effects"
         private const val KEY_HAPTICS = "haptics"
+        private const val KEY_ONLINE_ENABLED = "online_enabled"
+        private const val KEY_ONLINE_NAME = "online_name"
+        private const val KEY_ONLINE_CHALLENGES = "online_challenges"
         private const val KEY_LANGUAGE = "language"
     }
 }

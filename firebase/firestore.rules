@@ -1,0 +1,85 @@
+rules_version = '2';
+
+// Cloud Firestore rules for online play (app/src/main/java/com/example/online/FirebaseOnlineService.kt).
+// Deploy from the Firebase console: Firestore Database > Rules > paste > Publish (see firebase/README.md).
+//
+// Every reader is a signed-in (anonymous) player. A player writes only under their own uid, a challenge is created
+// once and never changed, and a result (a challenge's or a day's) is created once per player, so the first run is the
+// one that counts and no score can be edited afterwards. Every field is checked for type and range.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isMe(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // Two words and two digits, as PlayerNames draws them; at most 32 characters.
+    function validName(name) {
+      return name is string && name.size() <= 32 && name.matches('^[A-Za-z]+ [A-Za-z]+ [0-9]{2}$');
+    }
+
+    // A posted result: the quiz's points, the speed bonus, their total, the counts and the time. A ten-question quiz
+    // scores at most 190 points and 50 bonus points; the bounds leave room for a longer quiz in a later version.
+    function validResult(d) {
+      return validName(d.name)
+        && d.score is int && d.score >= 0 && d.score <= 1000
+        && d.speedBonus is int && d.speedBonus >= 0 && d.speedBonus <= 200
+        && d.total is int && d.total == d.score + d.speedBonus
+        && d.correct is int && d.correct >= 0 && d.correct <= 50
+        && d.answered is int && d.answered >= d.correct && d.answered <= 50
+        && d.timeMs is int && d.timeMs >= 0
+        && d.finishedAt == request.time
+        && d.expiresAt is timestamp;
+    }
+
+    match /players/{uid} {
+      allow read: if signedIn();
+      allow create, update: if isMe(uid)
+        && request.resource.data.keys().hasOnly(['name', 'updatedAt'])
+        && validName(request.resource.data.name)
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if isMe(uid);
+    }
+
+    match /challenges/{code} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && code.matches('^[A-HJ-NP-Z2-9]{6}$')
+        && request.resource.data.keys().hasOnly(['owner', 'ownerName', 'mode', 'scope', 'difficulty', 'seed', 'targets', 'createdAt', 'expiresAt'])
+        && request.resource.data.owner == request.auth.uid
+        && validName(request.resource.data.ownerName)
+        && request.resource.data.mode in ['FLAG_NAME', 'PICK_FLAG', 'CAPITAL', 'CONTINENT', 'LOCATE']
+        && request.resource.data.scope in ['Global', 'Africa', 'Americas', 'Asia', 'Europe', 'Oceania']
+        && request.resource.data.difficulty in ['NORMAL', 'HARD']
+        && request.resource.data.seed is int
+        && request.resource.data.targets is list
+        && request.resource.data.targets.size() >= 1 && request.resource.data.targets.size() <= 10
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.expiresAt is timestamp;
+      // Never updated; the owner may take it down.
+      allow delete: if signedIn() && resource.data.owner == request.auth.uid;
+
+      match /results/{uid} {
+        allow read: if signedIn();
+        allow create: if isMe(uid)
+          && exists(/databases/$(database)/documents/challenges/$(code))
+          && request.resource.data.keys().hasOnly(['name', 'score', 'speedBonus', 'total', 'correct', 'answered', 'timeMs', 'finishedAt', 'expiresAt'])
+          && validResult(request.resource.data);
+        allow delete: if isMe(uid);
+      }
+    }
+
+    match /daily/{day}/scores/{uid} {
+      allow read: if signedIn();
+      allow create: if isMe(uid)
+        && day.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && request.resource.data.keys().hasOnly(['name', 'mode', 'score', 'speedBonus', 'total', 'correct', 'answered', 'timeMs', 'finishedAt', 'expiresAt'])
+        && request.resource.data.mode in ['FLAG_NAME', 'PICK_FLAG', 'CAPITAL', 'CONTINENT', 'LOCATE']
+        && validResult(request.resource.data);
+      allow delete: if isMe(uid);
+    }
+  }
+}

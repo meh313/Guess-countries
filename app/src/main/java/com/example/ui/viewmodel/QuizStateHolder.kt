@@ -9,6 +9,7 @@ import com.example.data.model.Geo
 import com.example.data.settings.ALL_CONTINENTS
 import com.example.data.settings.UserSettings
 import com.example.data.settings.goalHistory
+import com.example.online.ChallengeSpec
 import com.example.progress.Evidence
 import com.example.progress.PracticeStreak
 import com.example.progress.Rewards
@@ -177,6 +178,26 @@ class QuizStateHolder(
             questionStartedAt = clock(),
             startedAt = clock()
         )
+    }
+
+    /**
+     * Starts the quiz of a friend challenge: [spec]'s questions, the same for everyone who plays it, under the
+     * [QuizEngine.CHALLENGE] scope (hand-picked: nothing counts against the day's allowance of new countries). False
+     * when this catalog cannot ask them (none of the countries is known), and then nothing starts.
+     */
+    fun startChallenge(spec: ChallengeSpec): Boolean {
+        val questions = spec.questions(repository.allCountries)
+        if (questions.isEmpty()) return false
+        clearOutcome()
+        _session.value = QuizSession(
+            mode = spec.mode,
+            scope = QuizEngine.CHALLENGE,
+            questions = questions,
+            difficulty = spec.difficulty,
+            questionStartedAt = clock(),
+            startedAt = clock()
+        )
+        return true
     }
 
     /**

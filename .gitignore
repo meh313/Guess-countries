@@ -24,3 +24,6 @@ debug.keystore
 
 # Python tool caches
 __pycache__/
+
+# Firebase configuration for online play: the Release workflow writes it from a secret (see app/build.gradle.kts)
+app/google-services.json

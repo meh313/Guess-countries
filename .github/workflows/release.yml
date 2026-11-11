@@ -21,9 +21,10 @@ name: Release
 #   - Push a tag v<version>; it must match versionName, and the tagged commit must be on main.
 #
 # Secrets (Settings > Secrets and variables > Actions > Repository secrets):
-#   KEYSTORE_BASE64  the upload keystore (world-flags-upload.jks) encoded with base64
-#   STORE_PASSWORD   its store password
-#   KEY_PASSWORD     the password of the "upload" key inside it
+#   KEYSTORE_BASE64       the upload keystore (world-flags-upload.jks) encoded with base64
+#   STORE_PASSWORD        its store password
+#   KEY_PASSWORD          the password of the "upload" key inside it
+#   GOOGLE_SERVICES_JSON  the Firebase google-services.json of the app (optional; without it online play is off)
 #
 # versionCode is derived from the version as major*10000 + minor*100 + patch (1.6 -> 10600,
 # 1.6.1 -> 10601), so it always grows with the version and stays above the hand-numbered codes
@@ -148,6 +149,21 @@ jobs:
           yes | "$SDKMANAGER" --licenses > /dev/null || true
 
       - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6
+
+      # Online play (friend challenges, the leaderboard) needs the Firebase configuration of the app, which is not
+      # committed: the GOOGLE_SERVICES_JSON secret holds google-services.json (see firebase/README.md). Without it the
+      # release still builds, with online play reported as not available; the warning says so.
+      - name: Write the Firebase configuration
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -n "$GOOGLE_SERVICES_JSON" ]; then
+            printf '%s' "$GOOGLE_SERVICES_JSON" > app/google-services.json
+            python3 -c 'import json,sys; json.load(open("app/google-services.json"))' || { echo "::error::GOOGLE_SERVICES_JSON is not valid JSON."; exit 1; }
+            echo "Firebase configuration written."
+          else
+            echo "::warning::GOOGLE_SERVICES_JSON is not set: this release has online play switched off."
+          fi
 
       # Lint and the unit tests run again here: a release must not depend on remembering to look at CI first.
       - name: Lint, test and build the signed release APK and app bundle

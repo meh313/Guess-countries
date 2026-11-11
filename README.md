@@ -133,6 +133,14 @@ Settings > Export writes the same data to a file you keep; Import replaces every
 account and no analytics. The full statement is [`PRIVACY.md`](PRIVACY.md); the About screen's Privacy section links
 to it (*Full privacy statement*).
 
+Online play (Play with friends: friend challenges and the daily leaderboard, `online/`) is the one thing that talks
+to a server, and only once the player turns it on. It uses Firebase Anonymous Authentication and Cloud Firestore and
+sends a nickname drawn from a list plus the scores and times of the challenges played; `firebase/README.md` has the
+data layout, the security rules and the console steps, and `PRIVACY.md` the full wording. The build reads the Firebase
+configuration from `app/google-services.json` when the file is there (gitignored; the Release workflow writes it from
+the `GOOGLE_SERVICES_JSON` secret); without it the app says online play is not available in this build, which is how
+CI and the tests run.
+
 ## Build
 
 Requires JDK 21 and the Android SDK (compileSdk 37, targetSdk 36). The Gradle wrapper picks the right Gradle version.

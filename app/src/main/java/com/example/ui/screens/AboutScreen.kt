@@ -120,6 +120,13 @@ fun AboutScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                 text = stringResource(R.string.about_privacy_text),
                 style = MaterialTheme.typography.bodyMedium
             )
+            Text(
+                text = stringResource(R.string.about_privacy_online),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier
+                    .padding(top = 8.dp)
+                    .testTag("about_privacy_online")
+            )
             // The full statement lives next to the code. Like a detail sheet's source links: a 48dp-tall row that
             // hands the address to the browser, which needs no permission of this app's.
             Text(

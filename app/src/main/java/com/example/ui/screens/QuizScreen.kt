@@ -104,6 +104,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.R
 import com.example.data.model.TellApart
 import com.example.data.settings.TimerPace
+import com.example.online.ChallengeScoring
 import com.example.progress.Skill
 import com.example.progress.SkillMastery
 import com.example.quiz.QuizDifficulty
@@ -162,7 +163,9 @@ private val SETUP_SCOPES = listOf(QuizEngine.SCOPES.first(), QuizEngine.DUE, Qui
 @Composable
 fun QuizScreen(
     viewModel: CountryViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    /** Opens today's leaderboard from the score screen of the daily challenge. */
+    onOpenLeaderboard: () -> Unit = {}
 ) {
     val allCountries = viewModel.repository.allCountries
     // The running quiz lives in the ViewModel; the setup choices survive rotation via rememberSaveable.
@@ -531,17 +534,26 @@ fun QuizScreen(
         val streakOutcome by viewModel.finishOutcome.collectAsStateWithLifecycle()
         val streak by viewModel.streak.collectAsStateWithLifecycle()
         val reward by viewModel.finishReward.collectAsStateWithLifecycle()
+        // A friend challenge or the daily: the online standing under the rewards (see FriendsScreen.kt).
+        val onlineLines: (@Composable () -> Unit)? = if (active.scope == QuizEngine.DAILY || active.scope == QuizEngine.CHALLENGE) {
+            {
+                val speedBonus = ChallengeScoring.speedBonus(active.answers)
+                OnlineResultPanel(viewModel, active.scope, speedBonus, active.score + speedBonus, onOpenLeaderboard)
+            }
+        } else null
         QuizResultScreen(
             session = active,
             outcome = streakOutcome,
             streakDays = streak.current,
             countriesByCode = countriesByCode,
             reward = reward,
-            // The daily challenge is played once: a retry would earn its points again.
-            onRetry = if (active.scope == QuizEngine.DAILY) null else ({ viewModel.retryQuiz() }),
+            // The daily challenge is played once: a retry would earn its points again. So is a friend challenge:
+            // the result posted is the first run's.
+            onRetry = if (active.scope == QuizEngine.DAILY || active.scope == QuizEngine.CHALLENGE) null else ({ viewModel.retryQuiz() }),
             onPractiseMistakes = { viewModel.practiseMistakes() },
             onDone = { viewModel.endQuiz() },
-            modifier = modifier
+            modifier = modifier,
+            extra = onlineLines
         )
     } else {
         // ACTIVE QUIZ SCREEN

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="PluralsCandidate">
+    <string name="scope_challenge">Freunde-Challenge</string>
+
+    <string name="online_friends_title">Mit Freunden spielen</string>
+    <string name="home_friends_text">Schick einem Freund dieselben 10 Fragen und vergleicht euch, oder klettere in der Rangliste von heute.</string>
+    <string name="home_friends_challenge">Freund herausfordern</string>
+    <string name="home_friends_leaderboard">Rangliste</string>
+    <string name="online_off_title">Online-Spiel ist aus</string>
+    <string name="online_off_text">Challenges und die Rangliste brauchen eine Internetverbindung. Die App meldet dich anonym an und sendet einen Spitznamen, den sie für dich wählt, deine Quiz-Punkte und Zeiten, und sonst nichts. Bis du es einschaltest, wird nichts gesendet.</string>
+    <string name="online_turn_on">Online-Spiel einschalten</string>
+    <string name="online_consent_title">Online-Spiel einschalten?</string>
+    <string name="online_consent_text">World Flags legt für dich ein anonymes Konto bei Firebase (einem Google-Dienst) an und sendet: einen Spitznamen aus einer Liste (du kannst einen anderen ziehen), die Punkte, richtigen Antworten und Zeiten der Challenges und täglichen Challenges, die du spielst, und die Codes der Challenges, die du teilst. Keinen Namen, keine E-Mail-Adresse, keine Kontakte, keinen Standort. Du kannst es jederzeit in den Einstellungen ausschalten oder diese Daten löschen.</string>
+    <string name="online_consent_confirm">Einschalten</string>
+    <string name="online_consent_cancel">Jetzt nicht</string>
+    <string name="online_not_configured">Online-Spiel ist in dieser Version der App nicht verfügbar.</string>
+    <string name="online_offline">Keine Internetverbindung. Versuch es wieder, wenn du online bist.</string>
+    <string name="online_failed">Online ist etwas schiefgegangen. Versuch es gleich noch einmal.</string>
+    <string name="online_name_label">Du spielst als %1$s</string>
+    <string name="online_new_name">Neuer Name</string>
+    <string name="online_name_hint">Die Namen kommen aus einer Liste, so kann niemand etwas Verletzendes schreiben.</string>
+
+    <string name="online_new_challenge">Neue Challenge</string>
+    <string name="online_new_challenge_title">Wähle das Quiz</string>
+    <string name="online_new_challenge_text">Du spielst zuerst 10 Fragen, dann teilst du den Code: Deine Freunde bekommen dieselben Fragen und dieselben Antworten zur Auswahl.</string>
+    <string name="online_enter_code">Code eingeben</string>
+    <string name="online_enter_code_title">Einer Challenge beitreten</string>
+    <string name="online_code_field">Challenge-Code</string>
+    <string name="online_code_look_up">Nachsehen</string>
+    <string name="online_code_invalid">Ein Code hat 6 Buchstaben und Ziffern, wie %1$s.</string>
+    <string name="online_code_not_found">Keine Challenge hat diesen Code. Prüf ihn mit deinem Freund; Challenges verfallen nach %1$d Tagen.</string>
+    <string name="online_preview_from">%1$s fordert dich heraus</string>
+    <string name="online_mode_and_scope">%1$s · %2$s</string>
+    <string name="online_play_challenge">Diese Challenge spielen</string>
+    <string name="online_already_played">Die hast du schon gespielt</string>
+    <string name="online_your_challenges">Deine Challenges</string>
+    <string name="online_no_challenges">Noch keine Challenges. Starte eine und teile ihren Code, oder gib einen Code ein, den dir ein Freund geschickt hat.</string>
+    <string name="online_challenge_code">Code: %1$s</string>
+    <string name="online_share">Code teilen</string>
+    <string name="online_share_text">Ich habe %1$d Punkte in World Flags geholt. Schlag mich! Öffne die App, tippe auf Mit Freunden spielen und gib den Code %2$s ein</string>
+    <string name="online_waiting">Wartet auf einen Freund</string>
+    <string name="online_you_lead">Du führst</string>
+    <string name="online_behind">%1$s führt</string>
+    <string name="online_tied">Unentschieden</string>
+    <string name="online_not_played">Die hast du noch nicht gespielt</string>
+    <string name="online_made_by">Von %1$s</string>
+    <plurals name="online_players">
+        <item quantity="one">%1$d Spieler</item>
+        <item quantity="other">%1$d Spieler</item>
+    </plurals>
+    <string name="online_rank_row">%1$d. %2$s</string>
+    <string name="online_name_you">%1$s (du)</string>
+    <string name="online_time_seconds">%1$d s</string>
+    <string name="online_speed_bonus">Tempobonus +%1$d</string>
+    <string name="online_total">Challenge-Punkte: %1$d</string>
+    <string name="online_refresh">Aktualisieren</string>
+    <string name="online_loading">Lädt…</string>
+    <string name="online_posting">Deine Punkte werden gesendet…</string>
+    <string name="online_result_posted">Deine Punkte sind eingetragen. Teile den Code, damit deine Freunde dasselbe Quiz spielen.</string>
+    <string name="online_result_not_posted">Deine Punkte konnten nicht eingetragen werden. Prüf die Verbindung und öffne die Challenge auf dem Bildschirm Mit Freunden spielen, um es noch einmal zu versuchen.</string>
+
+    <string name="online_leaderboard_title">Rangliste von heute</string>
+    <string name="online_leaderboard_text">Alle, die die tägliche Challenge von heute beendet haben, beste Challenge-Punkte zuerst (Punkte plus Tempobonus).</string>
+    <string name="online_leaderboard_empty">Heute hat noch niemand Punkte eingetragen. Sei die oder der Erste!</string>
+    <string name="online_your_rank">Du bist heute Nr. %1$d von %2$d</string>
+    <string name="online_rank_unknown">Beende die Challenge von heute, um in die Rangliste zu kommen</string>
+    <string name="online_see_leaderboard">Rangliste ansehen</string>
+
+    <string name="settings_section_online">Online-Spiel</string>
+    <string name="settings_online_title">Online-Spiel</string>
+    <string name="settings_online_detail">Freunde-Challenges und die tägliche Rangliste. Sendet einen Spitznamen und deine Punkte an Firebase; sonst verlässt nichts das Gerät.</string>
+    <string name="settings_online_delete">Meine Online-Daten löschen</string>
+    <string name="settings_online_delete_title">Deine Online-Daten löschen?</string>
+    <string name="settings_online_delete_text">Dein Spitzname, die Challenges, die du erstellt hast, und alle Punkte, die du eingetragen hast, werden vom Server gelöscht, und das Online-Spiel wird ausgeschaltet. Dein Fortschritt auf diesem Handy bleibt, wie er ist.</string>
+    <string name="settings_online_delete_confirm">Löschen</string>
+    <string name="settings_online_deleted">Deine Online-Daten wurden gelöscht.</string>
+    <string name="about_privacy_online">Online-Spiel ist freiwillig und aus, bis du es einschaltest. Dann meldet es dich anonym bei Firebase (einem Google-Dienst) an und sendet einen Spitznamen aus einer Liste sowie die Punkte und Zeiten der Challenges, die du spielst. Einstellungen &gt; Online-Spiel schaltet es aus und löscht diese Daten.</string>
+</resources>

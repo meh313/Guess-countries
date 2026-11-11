@@ -85,7 +85,9 @@ fun QuizResultScreen(
     onDone: () -> Unit,
     modifier: Modifier = Modifier,
     /** What the quiz earned; null until the save is through. */
-    reward: Rewards.Reward? = null
+    reward: Rewards.Reward? = null,
+    /** Lines under the rewards (the online standing of a challenge or the daily); none by default. */
+    extra: (@Composable () -> Unit)? = null
 ) {
     val streakLine = when (outcome?.kind) {
         PracticeStreak.Kind.STARTED -> stringResource(R.string.streak_started)
@@ -107,7 +109,8 @@ fun QuizResultScreen(
         onRetry = onRetry,
         onPractiseMistakes = onPractiseMistakes,
         onDone = onDone,
-        modifier = modifier
+        modifier = modifier,
+        extra = extra
     )
 }
 
@@ -208,7 +211,8 @@ private fun ResultBody(
     onRetry: (() -> Unit)?,
     onPractiseMistakes: (() -> Unit)?,
     onDone: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    extra: (@Composable () -> Unit)? = null
 ) {
     BackHandler(onBack = onDone)
     val misses = content.misses
@@ -315,6 +319,7 @@ private fun ResultBody(
         }
 
         if (reward != null) RewardLines(reward)
+        extra?.invoke()
 
         Spacer(modifier = Modifier.height(20.dp))
 
