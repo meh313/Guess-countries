@@ -33,10 +33,11 @@ Private by design: no account, and your progress stays on your phone; export it 
 Works offline, in light and dark, with TalkBack, on phones and tablets.
 
 **What's new (3.4)**
-• The free version shows one short ad after every third quiz, never during a question, and none in your first two days.
-• Remove ads: one purchase, no more ads. Restore it on a new phone from Settings.
-• A 50/50 hint in the quiz: two wrong answers go, for half the points. Watch a short ad for it, or get it free with Remove ads.
-• Ad privacy options in Settings where the law gives you the choice.
+• One short ad after every third quiz, never during a question, and none in your first two days. Remove ads: one purchase, no more ads, for good.
+• A 50/50 hint in the quiz: two wrong answers go, for half the points. Watch an ad, or free with Remove ads.
+• Challenge a friend: share a 6-letter code and both play the same 10 questions.
+• Daily leaderboard: compare your daily challenge score with other players.
+• Online play is optional and off by default. No account needed.
 
 **Category:** Education. **Content rating:** Everyone (the IARC questionnaire: no violence, sexual content, language, controlled substances or gambling; the app shows ads, offers an in-app purchase, and shares the advertising id with Google). **Target audience (Play Console › App content):** 13 and over only; do not tick any age group under 13, so the Families policy does not apply. **Contains ads:** Yes. **In-app purchases:** Yes (`remove_ads`, one-time, $3.99 or the local equivalent).
 
