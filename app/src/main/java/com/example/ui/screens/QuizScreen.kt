@@ -62,6 +62,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.activity.compose.LocalActivity
+import com.example.monetization.HintOffer
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -112,6 +114,7 @@ import com.example.quiz.QuizMode
 import com.example.quiz.TypedAnswer
 import com.example.ui.sound.Sound
 import com.example.ui.sound.rememberSoundPlayer
+import com.example.ui.components.ELIMINATED_ALPHA
 import com.example.ui.components.FlagOptionGrid
 import com.example.ui.components.FlagView
 import com.example.ui.components.readingWidth
@@ -204,6 +207,15 @@ fun QuizScreen(
     // The answers' own pane on a short window (see the two-pane layout below).
     val optionsScrollState = rememberScrollState()
     var showQuitConfirm by rememberSaveable { mutableStateOf(false) }
+    // The ads of the free app: an interstitial on leaving the score screen when one is due, and the rewarded ad
+    // behind the 50/50 hint. Both need the activity to show over.
+    val activity = LocalActivity.current
+    val hintOffer by viewModel.hintOffer.collectAsStateWithLifecycle()
+    /** Runs [action], after the interstitial when one is due and loaded (see Monetization.showInterstitialIfDue). */
+    fun afterAdIfDue(action: () -> Unit) {
+        val host = activity
+        if (host == null) action() else viewModel.monetization.showInterstitialIfDue(host, action)
+    }
 
     val active = session
 
@@ -538,9 +550,9 @@ fun QuizScreen(
             countriesByCode = countriesByCode,
             reward = reward,
             // The daily challenge is played once: a retry would earn its points again.
-            onRetry = if (active.scope == QuizEngine.DAILY) null else ({ viewModel.retryQuiz() }),
-            onPractiseMistakes = { viewModel.practiseMistakes() },
-            onDone = { viewModel.endQuiz() },
+            onRetry = if (active.scope == QuizEngine.DAILY) null else ({ afterAdIfDue { viewModel.retryQuiz() } }),
+            onPractiseMistakes = { afterAdIfDue { viewModel.practiseMistakes() } },
+            onDone = { afterAdIfDue { viewModel.endQuiz() } },
             modifier = modifier
         )
     } else {
@@ -790,6 +802,30 @@ fun QuizScreen(
 
         // 4 Options Grid. [tileMaxWidth] caps the flag tiles where the answers have a pane of their own.
         val answers: @Composable (tileMaxWidth: Dp) -> Unit = { tileMaxWidth ->
+            // The 50/50 hint: two wrong options go, for half the points; free for a buyer of Remove ads, for a rewarded
+            // ad otherwise, and not offered when neither applies (offline, no ads on this device) or once used.
+            val hintText = when (hintOffer) {
+                HintOffer.FREE -> stringResource(R.string.quiz_hint_free)
+                HintOffer.WATCH_AD -> stringResource(R.string.quiz_hint_watch_ad)
+                HintOffer.NONE -> null
+            }
+            if (hintText != null && active.hintAvailable) {
+                TextButton(
+                    onClick = { viewModel.monetization.requestHint(activity) { viewModel.useQuizHint() } },
+                    modifier = Modifier.padding(bottom = 4.dp).testTag("quiz_hint_btn")
+                ) {
+                    Icon(Icons.Outlined.Lightbulb, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(hintText)
+                }
+            } else if (active.eliminated.isNotEmpty() && !active.hasAnswered) {
+                Text(
+                    text = stringResource(R.string.quiz_hint_used),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 8.dp).testTag("quiz_hint_used")
+                )
+            }
             if (mode.isTyped) {
                 TypedAnswerField(
                     questionKey = active.currentIndex,
@@ -812,13 +848,16 @@ fun QuizScreen(
                         viewModel.answerQuiz(index)
                         answerFeedback(index in q.acceptedIndices)
                     },
-                    tileMaxWidth = tileMaxWidth
+                    tileMaxWidth = tileMaxWidth,
+                    eliminated = active.eliminated
                 )
             } else Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 val correctAnswerDescription = stringResource(R.string.quiz_option_correct)
                 val wrongAnswerDescription = stringResource(R.string.quiz_option_incorrect)
+                val removedByHint = stringResource(R.string.quiz_option_removed)
                 q.options.forEachIndexed { index, optionText ->
                     val isSelected = active.selectedAnswerIndex == index
+                    val isEliminated = index in active.eliminated
                     // The catalog's answer, or an accepted alternative (a country on two continents) the player picked.
                     val isCorrect = index == q.correctAnswerIndex || (isSelected && index in q.acceptedIndices)
 
@@ -835,7 +874,8 @@ fun QuizScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(min = 48.dp)
-                            .clickable(enabled = !active.hasAnswered, role = Role.Button) {
+                            .alpha(if (isEliminated && !active.hasAnswered) ELIMINATED_ALPHA else 1f)
+                            .clickable(enabled = !active.hasAnswered && !isEliminated, role = Role.Button) {
                                 viewModel.answerQuiz(index)
                                 answerFeedback(isCorrect)
                             }
@@ -845,6 +885,8 @@ fun QuizScreen(
                                     stateDescription = correctAnswerDescription
                                 } else if (active.hasAnswered && isSelected) {
                                     stateDescription = wrongAnswerDescription
+                                } else if (isEliminated) {
+                                    stateDescription = removedByHint
                                 }
                             }
                             .testTag("quiz_option_$index"),

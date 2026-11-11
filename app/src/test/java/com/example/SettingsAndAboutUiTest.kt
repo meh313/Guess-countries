@@ -411,7 +411,7 @@ class SettingsAndAboutUiTest {
         rule.waitForIdle()
 
         rule.onNodeWithTag("about_privacy_link").performScrollTo()
-        rule.onNodeWithText("The app has no network permission", substring = true).assertExists()
+        rule.onNodeWithText("The free version shows ads from Google AdMob", substring = true).assertExists()
         rule.onNodeWithTag("about_privacy_link")
             .assertIsDisplayed()
             .assert(hasText("Full privacy statement"))

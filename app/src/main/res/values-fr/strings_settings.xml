@@ -44,7 +44,7 @@
 
     <!-- Paramètres : Données (export, import, réinitialisation) -->
     <string name="settings_section_data">Données</string>
-    <string name="settings_data_local">Tout reste sur cet appareil : il n\'y a pas de compte et l\'appli n\'a pas d\'accès réseau. La progression est incluse dans la sauvegarde Android de l\'appli.</string>
+    <string name="settings_data_local">Votre progression reste sur cet appareil : il n\'y a pas de compte, et seules les demandes de publicité de l\'appli gratuite passent par Internet. La progression est incluse dans la sauvegarde Android de l\'appli.</string>
     <string name="settings_export">Exporter</string>
     <string name="settings_import">Importer</string>
     <string name="settings_transfer_hint">Exporter écrit un fichier avec votre progression et vos paramètres ; Importer remplace tout par un tel fichier.</string>
@@ -78,6 +78,22 @@
     </plurals>
     <string name="settings_reset">Réinitialiser la progression</string>
 
+    <!-- Paramètres : publicités et achats -->
+    <string name="settings_section_ads">Publicités et achats</string>
+    <string name="settings_ads_intro">L\'appli gratuite affiche une courte publicité après chaque troisième quiz, jamais pendant une question ni les deux premiers jours. Les publicités viennent de Google AdMob, limitées à une classification tous publics, avec les catégories jeux d\'argent, alcool et rencontres bloquées ; la déclaration de confidentialité, sous À propos, dit ce qu\'elles reçoivent.</string>
+    <string name="settings_remove_ads_title">Supprimer les publicités</string>
+    <string name="settings_remove_ads_detail">Un seul paiement : plus de publicités, et l\'indice 50/50 du quiz est gratuit.</string>
+    <string name="settings_remove_ads_buy">Acheter</string>
+    <string name="settings_remove_ads_buy_price">Acheter · %1$s</string>
+    <string name="settings_restore_purchase">Restaurer l\'achat</string>
+    <string name="settings_store_unavailable">L\'achat passe par Google Play, que cet appareil ou cette installation n\'a pas.</string>
+    <string name="settings_purchase_owned">Publicités supprimées. Merci !</string>
+    <string name="settings_purchase_nothing_to_restore">Aucun achat « Supprimer les publicités » n\'a été trouvé sur ce compte Google.</string>
+    <string name="settings_purchase_pending">Votre commande attend son paiement ; les publicités disparaîtront dès que Google Play l\'aura confirmé.</string>
+    <string name="settings_purchase_unavailable">Google Play est injoignable. Réessayez plus tard.</string>
+    <string name="settings_purchase_failed">L\'achat n\'a pas abouti et rien n\'a été débité. Réessayez plus tard.</string>
+    <string name="settings_ads_removed">Publicités supprimées : merci de soutenir World Flags. L\'indice 50/50 du quiz est gratuit.</string>
+    <string name="settings_ad_privacy_options">Options de confidentialité des publicités</string>
     <!-- Paramètres : la ligne À propos -->
     <string name="settings_section_about">À propos</string>
     <string name="settings_about_title">À propos de World Flags</string>
@@ -114,7 +130,7 @@
     <string name="about_translations_title">Traductions</string>
     <string name="about_translations_text">Le français, l\'espagnol, l\'allemand et l\'arabe ont été traduits avec une aide automatique et vérifiés pour leur cohérence, pas par des locuteurs natifs. Les corrections sont les bienvenues sur GitHub.</string>
     <string name="about_privacy_title">Confidentialité</string>
-    <string name="about_privacy_text">L\'appli n\'a pas d\'autorisation réseau : rien de ce que vous faites ne quitte l\'appareil, et il n\'y a pas de compte. Votre progression est stockée dans la base de données de l\'appli et incluse dans la sauvegarde Android de l\'appli, elle vous suit donc sur un nouveau téléphone quand la sauvegarde est activée. Paramètres &gt; Réinitialiser la progression supprime tout.</string>
+    <string name="about_privacy_text">Rien de ce que vous faites dans l\'appli ne quitte l\'appareil, et il n\'y a pas de compte. La version gratuite affiche des publicités de Google AdMob, qui reçoit l\'identifiant publicitaire de votre appareil et les détails techniques qu\'une demande de publicité transporte ; l\'achat « Supprimer les publicités », via Google Play, met fin à ces demandes. Votre progression est stockée dans la base de données de l\'appli et incluse dans la sauvegarde Android de l\'appli, elle vous suit donc sur un nouveau téléphone quand la sauvegarde est activée. Paramètres &gt; Réinitialiser la progression supprime tout.</string>
     <!-- Une ligne de lien sous le texte : ouvre PRIVACY.md du dépôt dans le navigateur -->
     <string name="about_privacy_link">Déclaration de confidentialité complète</string>
 

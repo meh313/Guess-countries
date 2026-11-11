@@ -73,6 +73,12 @@
     <string name="quiz_option_correct">Richtige Antwort</string>
     <string name="quiz_option_incorrect">Deine Antwort, falsch</string>
 
+    <!-- Spiel: der 50/50-Tipp -->
+    <string name="quiz_hint_free">50/50-Tipp</string>
+    <string name="quiz_hint_watch_ad">50/50-Tipp · Anzeige ansehen</string>
+    <string name="quiz_hint_used">Zwei falsche Antworten entfernt: die Hälfte der Punkte für diese Frage</string>
+    <string name="quiz_option_removed">Durch den Tipp entfernt</string>
+
     <!-- Play: after the answer -->
     <string name="quiz_result_timeout">Zeit ist um! Die Antwort ist %1$s</string>
     <plurals name="quiz_result_correct">

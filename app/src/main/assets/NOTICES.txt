@@ -52,3 +52,12 @@ Licence: Apache License 2.0
 Copyright The Android Open Source Project; Copyright JetBrains s.r.o. and Kotlin Programming Language contributors
 https://www.apache.org/licenses/LICENSE-2.0
 The licence text is at that address.
+
+
+Google Mobile Ads SDK, User Messaging Platform and Google Play Billing Library
+------------------------------------------------------------------------------
+Used for: the ads of the free version, the consent form shown where the law asks for one, and the Remove ads purchase.
+Licence: Android Software Development Kit License Agreement
+Copyright Google LLC
+https://developer.android.com/studio/terms
+The licence text is at that address.

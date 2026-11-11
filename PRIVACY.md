@@ -2,9 +2,13 @@
 
 World Flags is a learning app that works entirely on your device.
 
-**No data leaves the device.** The app declares no network permission, so it cannot send anything anywhere. There is no account, no sign-in, no analytics, no advertising and no crash reporting.
+**Your progress never leaves the device.** There is no account, no sign-in, no analytics and no crash reporting. Nothing you learn, answer or set is sent anywhere.
 
-**What the app stores, and where.** Your progress (which flags and capitals you have reviewed, your quiz log with every answer, your bookmarks) lives in the app's own database on the device. A few settings (theme, reminder time, timer pace, daily goal, focus continent) live in the app's preferences. Both are included in Android's backup of the app when backup is switched on, so they move with you to a new phone through Google's or your device maker's backup service under that service's own terms.
+**Ads in the free version.** The free app shows one short full-screen ad after every third quiz (never during a question, and not in your first two days), and offers a 50/50 quiz hint in return for watching a rewarded ad when you choose to. The ads are served by Google AdMob. To request an ad, the Google Mobile Ads SDK sends Google your device's advertising ID (you can reset or delete it in Android's settings), your IP address, and technical details of the device and the app (model, Android version, language, screen size, app version). Google's handling of that data is described in [Google's privacy policy](https://policies.google.com/privacy) and [How Google uses information from sites or apps that use our services](https://policies.google.com/technologies/partner-sites). Where the law requires it (the European Economic Area, the United Kingdom, some US states), a consent form is shown before the first ad and your choice can be changed under Settings › Ads and purchases › Ad privacy options; if you decline, the ads you see are not personalised. The ad requests are limited to Google's general-audience ("G") content rating, and the gambling, alcohol, dating and similar categories are blocked in our AdMob settings. No ad network can guarantee that nothing unsuitable ever slips through; please report an ad from the ad's own report control, or to us.
+
+**Remove ads.** A one-time purchase through Google Play Billing removes the ads, makes the hint free, and with that ends the ad requests described above. Google processes the payment under its own terms; the app receives only the purchase token that says the item is owned, and keeps a copy of that answer on the device. Restore purchase asks Google Play again, for a new phone or after a refund.
+
+**What the app stores, and where.** Your progress (which flags and capitals you have reviewed, your quiz log with every answer, your bookmarks) lives in the app's own database on the device. A few settings (theme, reminder time, timer pace, daily goal, focus continent, whether Remove ads is owned, how many quizzes since the last ad, when the app first ran) live in the app's preferences. Both are included in Android's backup of the app when backup is switched on, so they move with you to a new phone through Google's or your device maker's backup service under that service's own terms.
 
 **Export and import are yours to run.** Settings › Export writes all of the above to a file you choose; nothing is sent until you share that file yourself. Import replaces everything with such a file.
 
@@ -14,6 +18,6 @@ World Flags is a learning app that works entirely on your device.
 
 **Deleting your data.** Settings › Reset progress deletes the database. Uninstalling the app removes the database and the preferences; Android's backup of the app is removed under the backup service's own rules.
 
-**Children.** The app collects no personal information from anyone, of any age.
+**Children.** The app is for players aged 13 and over and is not directed at children; it collects no personal information itself, and its ad requests are not tagged as child-directed.
 
 **Changes.** This statement is kept in the repository next to the code it describes; its history is the record of changes.

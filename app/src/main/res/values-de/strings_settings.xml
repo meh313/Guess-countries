@@ -43,7 +43,7 @@
 
     <!-- Settings: Data (export, import, reset) -->
     <string name="settings_section_data">Daten</string>
-    <string name="settings_data_local">Alles bleibt auf diesem Gerät: Es gibt kein Konto und die App hat keinen Netzwerkzugriff. Der Fortschritt ist in Androids eigener Sicherung der App enthalten.</string>
+    <string name="settings_data_local">Dein Fortschritt bleibt auf diesem Gerät: Es gibt kein Konto, und ins Internet gehen nur die Werbeanfragen der kostenlosen App. Der Fortschritt ist in Androids eigener Sicherung der App enthalten.</string>
     <string name="settings_export">Exportieren</string>
     <string name="settings_import">Importieren</string>
     <string name="settings_transfer_hint">Exportieren schreibt eine Datei mit deinem Fortschritt und deinen Einstellungen; Importieren ersetzt alles durch eine solche Datei.</string>
@@ -74,6 +74,22 @@
     </plurals>
     <string name="settings_reset">Fortschritt zurücksetzen</string>
 
+    <!-- Einstellungen: Werbung und Käufe -->
+    <string name="settings_section_ads">Werbung und Käufe</string>
+    <string name="settings_ads_intro">Die kostenlose App zeigt nach jedem dritten Quiz eine kurze Anzeige, nie während einer Frage und nicht in den ersten zwei Tagen. Die Anzeigen kommen von Google AdMob, beschränkt auf eine Einstufung für alle Altersgruppen, mit gesperrten Kategorien für Glücksspiel, Alkohol und Dating; die Datenschutzerklärung unter Info sagt, was sie erhalten.</string>
+    <string name="settings_remove_ads_title">Werbung entfernen</string>
+    <string name="settings_remove_ads_detail">Eine Zahlung: keine Werbung mehr, und der 50/50-Tipp im Quiz ist kostenlos.</string>
+    <string name="settings_remove_ads_buy">Kaufen</string>
+    <string name="settings_remove_ads_buy_price">Kaufen · %1$s</string>
+    <string name="settings_restore_purchase">Kauf wiederherstellen</string>
+    <string name="settings_store_unavailable">Zum Kaufen braucht es Google Play, das dieses Gerät oder diese Installation nicht hat.</string>
+    <string name="settings_purchase_owned">Werbung entfernt. Danke!</string>
+    <string name="settings_purchase_nothing_to_restore">Für dieses Google-Konto wurde kein Kauf von „Werbung entfernen“ gefunden.</string>
+    <string name="settings_purchase_pending">Deine Bestellung wartet auf die Zahlung; die Werbung verschwindet, sobald Google Play sie bestätigt.</string>
+    <string name="settings_purchase_unavailable">Google Play war nicht erreichbar. Versuche es später noch einmal.</string>
+    <string name="settings_purchase_failed">Der Kauf ist nicht zustande gekommen, und es wurde nichts abgebucht. Versuche es später noch einmal.</string>
+    <string name="settings_ads_removed">Werbung entfernt: danke, dass du World Flags unterstützt. Der 50/50-Tipp im Quiz ist kostenlos.</string>
+    <string name="settings_ad_privacy_options">Datenschutzoptionen für Werbung</string>
     <!-- Settings: About row -->
     <string name="settings_section_about">Info</string>
     <string name="settings_about_title">Über World Flags</string>
@@ -110,7 +126,7 @@
     <string name="about_translations_title">Übersetzungen</string>
     <string name="about_translations_text">Französisch, Spanisch, Deutsch und Arabisch wurden mit maschineller Hilfe übersetzt und auf Konsistenz geprüft, nicht von Muttersprachlern. Korrekturen sind auf GitHub willkommen.</string>
     <string name="about_privacy_title">Datenschutz</string>
-    <string name="about_privacy_text">Die App hat keine Netzwerkberechtigung: Nichts, was du tust, verlässt das Gerät, und es gibt kein Konto. Dein Fortschritt liegt in der eigenen Datenbank der App und ist in Androids Sicherung der App enthalten, sodass er bei aktiver Sicherung mit auf ein neues Handy wandert. Einstellungen &gt; Fortschritt zurücksetzen löscht alles davon.</string>
+    <string name="about_privacy_text">Nichts, was du in der App tust, verlässt das Gerät, und es gibt kein Konto. Die kostenlose Version zeigt Werbung von Google AdMob, das die Werbe-ID deines Geräts und die technischen Angaben einer Werbeanfrage erhält; der Kauf „Werbung entfernen“ über Google Play beendet diese Anfragen. Dein Fortschritt liegt in der eigenen Datenbank der App und ist in Androids Sicherung der App enthalten, sodass er bei aktiver Sicherung mit auf ein neues Handy wandert. Einstellungen &gt; Fortschritt zurücksetzen löscht alles davon.</string>
     <!-- A link row under the text: opens PRIVACY.md in the repository in the browser -->
     <string name="about_privacy_link">Vollständige Datenschutzerklärung</string>
 

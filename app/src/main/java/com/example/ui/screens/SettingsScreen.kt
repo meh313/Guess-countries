@@ -53,8 +53,12 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.activity.compose.LocalActivity
+import androidx.compose.material3.Button
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import com.example.monetization.PurchaseState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -435,6 +439,10 @@ fun SettingsScreen(
             }
         }
 
+        SettingsSection(stringResource(R.string.settings_section_ads)) {
+            AdsAndPurchases(viewModel)
+        }
+
         SettingsSection(stringResource(R.string.settings_section_about)) {
             Row(
                 modifier = Modifier
@@ -613,6 +621,100 @@ internal fun SpeechStatus(state: Speech.State, onInstall: () -> Unit) {
             shape = RoundedCornerShape(14.dp)
         ) {
             Text(stringResource(R.string.settings_speech_install), fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+/**
+ * The free app's ads and the one-time purchase that removes them: what the ads are and when they show, the Remove ads
+ * row with its price, Restore purchase, the store's answer to the last purchase or restore, and, where the law gives
+ * the player a say, the way back to the ad consent form. Once ads are bought away, one line says so.
+ */
+@Composable
+private fun AdsAndPurchases(viewModel: CountryViewModel) {
+    val monetization = viewModel.monetization
+    val adsRemoved by monetization.adsRemoved.collectAsStateWithLifecycle()
+    val price by monetization.removeAdsPrice.collectAsStateWithLifecycle()
+    val purchase by monetization.purchase.collectAsStateWithLifecycle()
+    val storeAvailable by monetization.storeAvailable.collectAsStateWithLifecycle()
+    val privacyOptions by monetization.privacyOptionsRequired.collectAsStateWithLifecycle()
+    val activity = LocalActivity.current
+    if (adsRemoved) {
+        Text(
+            text = stringResource(R.string.settings_ads_removed),
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.testTag("settings_ads_removed")
+        )
+    } else {
+        Text(
+            text = stringResource(R.string.settings_ads_intro),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = 12.dp)
+        )
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = stringResource(R.string.settings_remove_ads_title), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                Text(
+                    text = stringResource(R.string.settings_remove_ads_detail),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Button(
+                onClick = { activity?.let(monetization::buyRemoveAds) },
+                enabled = storeAvailable && purchase != PurchaseState.BUSY,
+                modifier = Modifier.testTag("settings_remove_ads_btn")
+            ) {
+                val shownPrice = price
+                Text(if (shownPrice != null) stringResource(R.string.settings_remove_ads_buy_price, shownPrice) else stringResource(R.string.settings_remove_ads_buy))
+            }
+        }
+        TextButton(
+            onClick = { monetization.restorePurchases() },
+            enabled = storeAvailable && purchase != PurchaseState.BUSY,
+            modifier = Modifier.testTag("settings_restore_purchase_btn")
+        ) {
+            Text(stringResource(R.string.settings_restore_purchase))
+        }
+        if (!storeAvailable) {
+            Text(
+                text = stringResource(R.string.settings_store_unavailable),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.testTag("settings_store_unavailable")
+            )
+        }
+    }
+    // The store's answer to the last purchase or restore; the busy state is a bar, the rest one sentence.
+    if (purchase == PurchaseState.BUSY) {
+        LinearProgressIndicator(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).testTag("settings_purchase_busy"))
+    } else {
+        val message = when (purchase) {
+            PurchaseState.OWNED -> if (adsRemoved) null else stringResource(R.string.settings_purchase_owned)
+            PurchaseState.NOTHING_TO_RESTORE -> stringResource(R.string.settings_purchase_nothing_to_restore)
+            PurchaseState.PENDING -> stringResource(R.string.settings_purchase_pending)
+            PurchaseState.UNAVAILABLE -> stringResource(R.string.settings_purchase_unavailable)
+            PurchaseState.FAILED -> stringResource(R.string.settings_purchase_failed)
+            PurchaseState.IDLE, PurchaseState.BUSY -> null
+        }
+        if (message != null) {
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodySmall,
+                color = if (purchase == PurchaseState.FAILED || purchase == PurchaseState.UNAVAILABLE) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp).testTag("settings_purchase_message")
+            )
+        }
+    }
+    if (privacyOptions) {
+        TextButton(
+            onClick = { activity?.let(monetization::showPrivacyOptions) },
+            modifier = Modifier.testTag("settings_ad_privacy_btn")
+        ) {
+            Text(stringResource(R.string.settings_ad_privacy_options))
         }
     }
 }
