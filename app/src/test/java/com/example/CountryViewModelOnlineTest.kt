@@ -21,6 +21,9 @@ import com.example.ui.viewmodel.OnlineStateHolder
 import com.example.ui.viewmodel.QuizStateHolder
 import java.util.TimeZone
 import kotlin.random.Random
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -77,6 +80,19 @@ class CountryViewModelOnlineTest {
 
     private fun settle() {
         repeat(5) { shadowOf(Looper.getMainLooper()).idle() }
+    }
+
+    /** Idles the main looper until [condition] holds: for work that waits on a Room query running on its own thread. */
+    private fun awaitCondition(what: String, condition: () -> Boolean) {
+        runBlocking {
+            withTimeout(10_000) {
+                while (!condition()) {
+                    shadowOf(Looper.getMainLooper()).idle()
+                    delay(25)
+                }
+            }
+        }
+        check(condition()) { "never happened: $what" }
     }
 
     /** Answers every question right, each after [perQuestionMs] on the clock. */
@@ -291,9 +307,9 @@ class CountryViewModelOnlineTest {
         settle()
 
         vm.deleteOnlineData()
-        settle()
+        // The deletion first reads the days played from the quiz log, a Room query on its own thread.
+        awaitCondition("online data deleted") { vm.onlineDeleted.value }
 
-        assertTrue(vm.onlineDeleted.value)
         assertEquals(listOf("uid-1"), server.deleted)
         assertNull(server.challenges[code])
         assertEquals(0, server.daily.values.sumOf { it.size })
