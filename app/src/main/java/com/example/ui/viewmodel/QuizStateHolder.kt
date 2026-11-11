@@ -242,6 +242,13 @@ class QuizStateHolder(
         record(session, correct = index in session.current.acceptedIndices)
     }
 
+    /** The 50/50 hint on the current question (see [QuizSession.useHint]); nothing happens when it is not available. */
+    fun useHint() {
+        val session = _session.value ?: return
+        val updated = session.useHint()
+        if (updated !== session) _session.value = updated
+    }
+
     /** A typed name for the current question (see [QuizSession.answerTyped]); nothing happens for a blank text. */
     fun answerTyped(text: String) {
         val session = _session.value ?: return
@@ -375,13 +382,14 @@ class QuizStateHolder(
     /**
      * A quiz answer: the evidence the mode gives (full for a flag, a capital or a place on the map among four, timed
      * for the modes on a clock, light for a continent pick), except a question asked again, whose answer was just
-     * shown and is light. The skill is the question's kind's ([SkillMastery.skillOf]): a map quiz writes location
-     * rows only, and so does the map question at the end of a Learn quiz.
+     * shown and is light, and one answered after the 50/50 hint, which said half of it. The skill is the question's
+     * kind's ([SkillMastery.skillOf]): a map quiz writes location rows only, and so does the map question at the end
+     * of a Learn quiz.
      */
     private fun record(session: QuizSession, correct: Boolean) {
         val question: QuizQuestion = session.current
         val mode = session.modeOf(question)
-        val evidence = if (question.light) Evidence.LIGHT else SkillMastery.evidenceOf(mode)
+        val evidence = if (question.light || session.eliminated.isNotEmpty()) Evidence.LIGHT else SkillMastery.evidenceOf(mode)
         progress.recordAnswer(question.targetCountry.code, SkillMastery.skillOf(mode), correct, evidence)
     }
 

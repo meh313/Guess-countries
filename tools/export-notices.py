@@ -40,6 +40,14 @@ LIBRARIES = [
         "url": "https://www.apache.org/licenses/LICENSE-2.0",
         "text": None,
     },
+    {
+        "name": "Google Mobile Ads SDK, User Messaging Platform and Google Play Billing Library",
+        "used_for": "the ads of the free version, the consent form shown where the law asks for one, and the Remove ads purchase.",
+        "licence": "Android Software Development Kit License Agreement",
+        "copyright": "Copyright Google LLC",
+        "url": "https://developer.android.com/studio/terms",
+        "text": None,
+    },
 ]
 
 LINK = re.compile(r"\[([^\]]+)\]\((https?://[^)\s]+)\)")

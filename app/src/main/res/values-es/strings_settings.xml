@@ -44,7 +44,7 @@
 
     <!-- Settings: Data (export, import, reset) -->
     <string name="settings_section_data">Datos</string>
-    <string name="settings_data_local">Todo se queda en este dispositivo: no hay cuenta y la app no tiene acceso a la red. El progreso se incluye en la copia de seguridad de Android de la app.</string>
+    <string name="settings_data_local">Tu progreso se queda en este dispositivo: no hay cuenta, y lo único que sale a Internet son las solicitudes de anuncios de la app gratuita. El progreso se incluye en la copia de seguridad de Android de la app.</string>
     <string name="settings_export">Exportar</string>
     <string name="settings_import">Importar</string>
     <string name="settings_transfer_hint">Exportar escribe un archivo con tu progreso y ajustes; Importar reemplaza todo con un archivo así.</string>
@@ -78,6 +78,22 @@
     </plurals>
     <string name="settings_reset">Restablecer el progreso</string>
 
+    <!-- Ajustes: anuncios y compras -->
+    <string name="settings_section_ads">Anuncios y compras</string>
+    <string name="settings_ads_intro">La app gratuita muestra un anuncio corto después de cada tercer quiz, nunca durante una pregunta ni en los dos primeros días. Los anuncios vienen de Google AdMob, limitados a una clasificación para todos los públicos y con las categorías de apuestas, alcohol y citas bloqueadas; la declaración de privacidad, en Acerca de, dice qué reciben.</string>
+    <string name="settings_remove_ads_title">Quitar anuncios</string>
+    <string name="settings_remove_ads_detail">Un solo pago: no más anuncios, y la pista 50/50 del quiz es gratis.</string>
+    <string name="settings_remove_ads_buy">Comprar</string>
+    <string name="settings_remove_ads_buy_price">Comprar · %1$s</string>
+    <string name="settings_restore_purchase">Restaurar compra</string>
+    <string name="settings_store_unavailable">Comprar requiere Google Play, que este dispositivo o esta instalación no tiene.</string>
+    <string name="settings_purchase_owned">Anuncios quitados. ¡Gracias!</string>
+    <string name="settings_purchase_nothing_to_restore">No se encontró ninguna compra de Quitar anuncios en esta cuenta de Google.</string>
+    <string name="settings_purchase_pending">Tu pedido espera el pago; los anuncios desaparecerán en cuanto Google Play lo confirme.</string>
+    <string name="settings_purchase_unavailable">No se pudo contactar con Google Play. Inténtalo más tarde.</string>
+    <string name="settings_purchase_failed">La compra no se completó y no se cobró nada. Inténtalo más tarde.</string>
+    <string name="settings_ads_removed">Anuncios quitados: gracias por apoyar World Flags. La pista 50/50 del quiz es gratis.</string>
+    <string name="settings_ad_privacy_options">Opciones de privacidad de los anuncios</string>
     <!-- Settings: About row -->
     <string name="settings_section_about">Acerca de</string>
     <string name="settings_about_title">Acerca de World Flags</string>
@@ -114,7 +130,7 @@
     <string name="about_translations_title">Traducciones</string>
     <string name="about_translations_text">El francés, el español, el alemán y el árabe se tradujeron con ayuda automática y se revisaron por coherencia, no por hablantes nativos. Las correcciones son bienvenidas en GitHub.</string>
     <string name="about_privacy_title">Privacidad</string>
-    <string name="about_privacy_text">La app no tiene permiso de red: nada de lo que haces sale del dispositivo y no hay cuenta. Tu progreso se guarda en la base de datos de la app y se incluye en la copia de seguridad de Android de la app, así que pasa contigo a un teléfono nuevo cuando la copia está activada. Ajustes &gt; Restablecer el progreso lo borra todo.</string>
+    <string name="about_privacy_text">Nada de lo que haces en la app sale del dispositivo y no hay cuenta. La versión gratuita muestra anuncios de Google AdMob, que recibe el identificador de publicidad de tu dispositivo y los datos técnicos que lleva una solicitud de anuncio; la compra Quitar anuncios, a través de Google Play, pone fin a esas solicitudes. Tu progreso se guarda en la base de datos de la app y se incluye en la copia de seguridad de Android de la app, así que pasa contigo a un teléfono nuevo cuando la copia está activada. Ajustes &gt; Restablecer el progreso lo borra todo.</string>
     <!-- A link row under the text: opens PRIVACY.md in the repository in the browser -->
     <string name="about_privacy_link">Declaración de privacidad completa</string>
 

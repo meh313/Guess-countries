@@ -311,6 +311,75 @@ class QuizSessionTest {
         assertEquals(9_000L, s.questionStartedAt)
     }
 
+    // --- The 50/50 hint ----------------------------------------------------------------------------------------------
+
+    @Test
+    fun theHint_takesAwayEveryWrongOptionButOne_andIsUsedOnce() {
+        val s = session()
+        assertTrue(s.hintAvailable)
+
+        val hinted = s.useHint()
+
+        val right = hinted.current.correctAnswerIndex
+        assertEquals(2, hinted.eliminated.size)
+        assertFalse(right in hinted.eliminated)
+        assertEquals(2, hinted.current.options.indices.count { it !in hinted.eliminated })
+        assertFalse("once per question", hinted.hintAvailable)
+        assertSame(hinted, hinted.useHint())
+        // A removed option can no longer be picked; the kept wrong one and the right one can.
+        val removed = hinted.eliminated.first()
+        assertSame(hinted, hinted.answer(removed))
+        assertTrue(hinted.answer(right).answers.single().correct)
+    }
+
+    @Test
+    fun aRightAnswerAfterTheHint_earnsHalfThePoints_andIsMarkedHinted() {
+        val s = session()
+        val right = s.current.correctAnswerIndex
+
+        val plain = s.answer(right)
+        val hinted = s.useHint().answer(right)
+
+        assertEquals(QuizEngine.pointsForCorrectAnswer(0), plain.score)
+        assertEquals(QuizEngine.pointsForCorrectAnswer(0) / 2, hinted.score)
+        assertEquals(1, hinted.correct)
+        assertEquals(1, hinted.streak)
+        assertTrue(hinted.answers.single().hinted)
+        assertFalse(plain.answers.single().hinted)
+        // The halved points never fall to nothing.
+        assertEquals(1, QuizEngine.pointsForCorrectAnswer(0, hinted = true).coerceAtMost(1))
+    }
+
+    @Test
+    fun theHint_isForgottenAtTheNextQuestion_andAfterAWrongAnswerTheStreakIsLost() {
+        val s = session().useHint()
+        val wrong = s.current.options.indices.first { it !in s.current.acceptedIndices && it !in s.eliminated }
+
+        val missed = s.answer(wrong)
+        assertEquals(0, missed.score)
+        assertEquals(0, missed.streak)
+        assertTrue(missed.answers.single().hinted)
+
+        val next = missed.next()
+        assertTrue(next.eliminated.isEmpty())
+        assertTrue(next.hintAvailable)
+    }
+
+    @Test
+    fun theHint_isNotOffered_forATypedName_inABlitz_orWithTooFewWrongOptions() {
+        assertFalse(session(mode = QuizMode.TYPE_NAME).hintAvailable)
+        assertFalse(session(mode = QuizMode.BLITZ).hintAvailable)
+        assertTrue(session(mode = QuizMode.SPEED_MATCH).hintAvailable)
+        val cy = allCountries.single { it.code == "CY" }
+        val twoOptions = QuizSession(QuizMode.CONTINENT, "Global", listOf(QuizQuestion(cy, "?", listOf("Asia", "Africa"), 0)))
+        assertFalse(twoOptions.hintAvailable)
+        assertSame(twoOptions, twoOptions.useHint())
+        // Cyprus: two accepted continents of four, so only two wrong ones; the hint keeps one, takes one.
+        val cyprus = QuizSession(QuizMode.CONTINENT, "Global", listOf(cyprus()))
+        assertTrue(cyprus.hintAvailable)
+        assertEquals(1, cyprus.useHint().eliminated.size)
+    }
+
     // --- Accepted alternatives, misses and re-asking ---------------------------------------------------------------
 
     /** A continent question about Cyprus: Asia is the catalog's answer, Europe counts too. */

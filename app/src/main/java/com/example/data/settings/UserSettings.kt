@@ -68,6 +68,15 @@ interface UserSettings {
 
     /** The language of the screens as a BCP 47 tag from [AppLanguage.CHOICES]; empty ([AppLanguage.SYSTEM]) follows the phone. */
     var language: String
+
+    /** True once Remove ads is bought: the store's answer, kept so no ad shows before it answers again. */
+    var adsRemoved: Boolean
+
+    /** How many quizzes finished since the last interstitial ad (or since the first run); see `AdPolicy`. */
+    var quizzesSinceAd: Int
+
+    /** When a version with ads first ran, in epoch millis (0 until then); no interstitial shows in the days after it. */
+    var firstRunAt: Long
 }
 
 /** The daily goal with the goals it replaced, by which the streak judges the days before each change; see [GoalHistory]. */
@@ -130,7 +139,10 @@ class InMemoryUserSettings(
     override var haptics: Boolean = true,
     override var language: String = AppLanguage.SYSTEM,
     override var learntToday: Int = 0,
-    override var goalChanges: String = ""
+    override var goalChanges: String = "",
+    override var adsRemoved: Boolean = false,
+    override var quizzesSinceAd: Int = 0,
+    override var firstRunAt: Long = 0L
 ) : UserSettings
 
 class PrefsUserSettings(context: Context) : UserSettings {
@@ -211,6 +223,18 @@ class PrefsUserSettings(context: Context) : UserSettings {
         get() = AppLanguage.sanitize(prefs.getString(KEY_LANGUAGE, null))
         set(value) = prefs.edit { putString(KEY_LANGUAGE, AppLanguage.sanitize(value)) }
 
+    override var adsRemoved: Boolean
+        get() = prefs.getBoolean(KEY_ADS_REMOVED, false)
+        set(value) = prefs.edit { putBoolean(KEY_ADS_REMOVED, value) }
+
+    override var quizzesSinceAd: Int
+        get() = prefs.getInt(KEY_QUIZZES_SINCE_AD, 0).coerceAtLeast(0)
+        set(value) = prefs.edit { putInt(KEY_QUIZZES_SINCE_AD, value.coerceAtLeast(0)) }
+
+    override var firstRunAt: Long
+        get() = prefs.getLong(KEY_FIRST_RUN_AT, 0L).coerceAtLeast(0L)
+        set(value) = prefs.edit { putLong(KEY_FIRST_RUN_AT, value.coerceAtLeast(0L)) }
+
     companion object {
         const val FILE = "settings"
         private const val KEY_DIFFICULTY = "quiz_difficulty"
@@ -231,5 +255,8 @@ class PrefsUserSettings(context: Context) : UserSettings {
         private const val KEY_SOUND_EFFECTS = "sound_effects"
         private const val KEY_HAPTICS = "haptics"
         private const val KEY_LANGUAGE = "language"
+        private const val KEY_ADS_REMOVED = "ads_removed"
+        private const val KEY_QUIZZES_SINCE_AD = "quizzes_since_ad"
+        private const val KEY_FIRST_RUN_AT = "first_run_at"
     }
 }

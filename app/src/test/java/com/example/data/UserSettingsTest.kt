@@ -125,6 +125,29 @@ class UserSettingsTest {
     }
 
     @Test
+    fun theAdSettings_startEmpty_andAreKeptForTheNextInstance() {
+        val settings = PrefsUserSettings(context)
+        assertEquals(false, settings.adsRemoved)
+        assertEquals(0, settings.quizzesSinceAd)
+        assertEquals(0L, settings.firstRunAt)
+        assertEquals(false, InMemoryUserSettings().adsRemoved)
+
+        settings.adsRemoved = true
+        settings.quizzesSinceAd = 2
+        settings.firstRunAt = 1_700_000_000_000L
+
+        val next = PrefsUserSettings(context)
+        assertEquals(true, next.adsRemoved)
+        assertEquals(2, next.quizzesSinceAd)
+        assertEquals(1_700_000_000_000L, next.firstRunAt)
+        // A count or a time below zero makes no sense and reads as none.
+        next.quizzesSinceAd = -3
+        next.firstRunAt = -1L
+        assertEquals(0, PrefsUserSettings(context).quizzesSinceAd)
+        assertEquals(0L, PrefsUserSettings(context).firstRunAt)
+    }
+
+    @Test
     fun unknownStoredLookOrPace_fallBackToTheDefaults() {
         context.getSharedPreferences(PrefsUserSettings.FILE, Context.MODE_PRIVATE)
             .edit().putString("theme_mode", "SEPIA").putString("timer_pace", "FRANTIC").commit()

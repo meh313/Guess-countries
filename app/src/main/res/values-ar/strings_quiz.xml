@@ -97,6 +97,12 @@
     <string name="quiz_option_correct">الإجابة الصحيحة</string>
     <string name="quiz_option_incorrect">إجابتك، خاطئة</string>
 
+    <!-- اللعب: تلميح ٥٠/٥٠ -->
+    <string name="quiz_hint_free">تلميح ٥٠/٥٠</string>
+    <string name="quiz_hint_watch_ad">تلميح ٥٠/٥٠ · شاهد إعلانًا</string>
+    <string name="quiz_hint_used">أُزيلت إجابتان خاطئتان: نصف النقاط لهذا السؤال</string>
+    <string name="quiz_option_removed">أزالها التلميح</string>
+
     <!-- Play: after the answer -->
     <string name="quiz_result_timeout">انتهى الوقت! الإجابة هي %1$s</string>
     <plurals name="quiz_result_correct">

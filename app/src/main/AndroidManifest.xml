@@ -6,11 +6,11 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- The reminder alarm does not survive a reboot; ReminderReceiver sets it again when the phone comes back up. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-    <!-- WorkManager declares these for network constraints and for expedited work below Android 12, which needs a
-         foreground service; the reminder has no constraints and is expedited only from Android 12 on, and the app has
-         no network access to speak of, so keep them out of the permission list. -->
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" tools:node="remove" />
+    <!-- WorkManager declares this for expedited work below Android 12, which needs a foreground service; the reminder
+         is expedited only from Android 12 on, so keep it out of the permission list. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" tools:node="remove" />
 
     <!-- Package visibility (API 30+): lets TextToSpeech discover installed speech engines. -->
@@ -19,6 +19,10 @@
             <action android:name="android.intent.action.TTS_SERVICE" />
         </intent>
     </queries>
+
+    <!-- The ads of the free app (Google AdMob) read the advertising id, which Android 13 and newer put behind this
+         permission; the Remove ads purchase ends the ad requests. -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
 
     <application
         android:allowBackup="true"
@@ -30,6 +34,17 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.WorldFlags">
+        <!-- Google AdMob: the app id (Google's test id unless the build is given the real one, see app/build.gradle.kts)
+             and the flags that keep the SDK's start-up and ad loading off the main thread. -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="${admobAppId}" />
+        <meta-data
+            android:name="com.google.android.gms.ads.flag.OPTIMIZE_INITIALIZATION"
+            android:value="true" />
+        <meta-data
+            android:name="com.google.android.gms.ads.flag.OPTIMIZE_AD_LOADING"
+            android:value="true" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
