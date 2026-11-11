@@ -66,6 +66,8 @@ import com.example.ui.screens.ExploreScreen
 import com.example.ui.screens.SettingsScreen
 import com.example.ui.screens.applyNightMode
 import com.example.ui.screens.FlashcardScreen
+import com.example.ui.screens.FriendsScreen
+import com.example.ui.screens.LeaderboardScreen
 import com.example.ui.screens.HomeScreen
 import com.example.ui.screens.LearnScreen
 import com.example.ui.screens.QuizScreen
@@ -91,6 +93,12 @@ sealed class Screen(val route: String, @StringRes val titleRes: Int, val icon: I
 
         /** The result screen of a logged quiz, opened from the Progress log; Back returns there. */
         const val REVIEW = "review"
+
+        /** Play with friends, opened over Home; Back returns there. */
+        const val FRIENDS = "friends"
+
+        /** Today's leaderboard, opened over Home, Friends or the Quiz tab; Back returns there. */
+        const val LEADERBOARD = "leaderboard"
     }
 }
 
@@ -204,8 +212,9 @@ fun MainAppScreen(
 
     fun isSelected(screen: Screen) = currentRoute == screen.route ||
         (screen == Screen.Stats && (currentRoute == Screen.SETTINGS || currentRoute == Screen.ABOUT || currentRoute == Screen.REVIEW)) ||
-        // Learn sits over whichever tab opened it: that tab stays selected.
-        (currentRoute == Screen.LEARN && navController.previousBackStackEntry?.destination?.route == screen.route)
+        // Learn, Friends and the leaderboard sit over whichever tab opened them: that tab stays selected.
+        (currentRoute != null && currentRoute in OVERLAYS && navController.previousBackStackEntry?.destination?.route == screen.route) ||
+        (currentRoute == Screen.LEADERBOARD && navController.previousBackStackEntry?.destination?.route == Screen.FRIENDS && screen == Screen.Home)
     fun open(screen: Screen) {
         when {
             currentRoute == screen.route -> Unit
@@ -221,6 +230,12 @@ fun MainAppScreen(
     /** Opens "Learn 5 new" over the current tab, like Settings over Progress; Back returns to the tab. */
     fun openLearn() {
         if (currentRoute != Screen.LEARN) navController.navigate(Screen.LEARN) { launchSingleTop = true }
+    }
+    fun openFriends() {
+        if (currentRoute != Screen.FRIENDS) navController.navigate(Screen.FRIENDS) { launchSingleTop = true }
+    }
+    fun openLeaderboard() {
+        if (currentRoute != Screen.LEADERBOARD) navController.navigate(Screen.LEADERBOARD) { launchSingleTop = true }
     }
     // A bar along the bottom on phones; on a window 600dp or wider (tablets, landscape phones with room) a rail
     // along the start edge, which leaves the height to the content.
@@ -286,7 +301,9 @@ fun MainAppScreen(
                         onOpenQuiz = { open(Screen.Quiz) },
                         onOpenFlashcards = { open(Screen.Flashcards) },
                         onLearn = { openLearn() },
-                        onOpenExplore = { open(Screen.Explore) }
+                        onOpenExplore = { open(Screen.Explore) },
+                        onOpenFriends = { openFriends() },
+                        onOpenLeaderboard = { openLeaderboard() }
                     )
                 }
                 composable(Screen.Explore.route) {
@@ -301,7 +318,7 @@ fun MainAppScreen(
                     FlashcardScreen(viewModel = viewModel, onLearn = { openLearn() })
                 }
                 composable(Screen.Quiz.route) {
-                    QuizScreen(viewModel = viewModel)
+                    QuizScreen(viewModel = viewModel, onOpenLeaderboard = { openLeaderboard() })
                 }
                 composable(Screen.Stats.route) {
                     StatsScreen(
@@ -340,6 +357,30 @@ fun MainAppScreen(
                 composable(Screen.ABOUT) {
                     AboutScreen(onBack = { navController.popBackStack() })
                 }
+                composable(Screen.FRIENDS) {
+                    FriendsScreen(
+                        viewModel = viewModel,
+                        onBack = { navController.popBackStack() },
+                        onOpenQuiz = {
+                            // The challenge is under way: leave Friends, so Home comes back plain, and play it.
+                            navController.popBackStack(Screen.FRIENDS, inclusive = true)
+                            open(Screen.Quiz)
+                        },
+                        onOpenLeaderboard = { openLeaderboard() }
+                    )
+                }
+                composable(Screen.LEADERBOARD) {
+                    LeaderboardScreen(
+                        viewModel = viewModel,
+                        onBack = { navController.popBackStack() },
+                        onPlayDaily = {
+                            // Like Home's Play today's challenge: the quiz under way, if any, is replaced.
+                            viewModel.startDailyChallenge()
+                            navController.popBackStack(Screen.LEADERBOARD, inclusive = true)
+                            open(Screen.Quiz)
+                        }
+                    )
+                }
                 composable(Screen.LEARN) {
                     LearnScreen(
                         viewModel = viewModel,
@@ -375,3 +416,6 @@ private fun TabLabel(title: String) {
 
 /** Windows at least this wide get the navigation rail instead of the bottom bar. */
 const val RAIL_MIN_WIDTH_DP = 600
+
+/** The screens that open over a tab and keep it selected (see MainAppScreen.isSelected). */
+private val OVERLAYS = setOf(Screen.LEARN, Screen.FRIENDS, Screen.LEADERBOARD)

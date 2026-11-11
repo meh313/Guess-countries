@@ -28,6 +28,10 @@ And it shows you how you are doing:
 • A Today card with your daily goal, a streak that follows it, an optional reminder, and a home-screen widget with what is due.
 • Progress by continent, what is coming up this week, the pairs you confuse most, and every past quiz you can open again.
 
+And, if you turn it on, play with friends:
+• **Friend challenges**: play 10 questions, share a 6-letter code, and your friends get the same questions and answers to pick from. A speed bonus rewards quick right answers; the ranking shows who leads.
+• **Today's leaderboard**: your place among everyone who played the daily challenge today. Online play is optional and anonymous: a nickname from a list, your scores and times, nothing else.
+
 Private by design: no account, and your progress stays on your phone; export it as a file whenever you like. The free version shows one short ad after every third quiz, never during a question; a one-time Remove ads purchase ends them.
 
 Works offline, in light and dark, with TalkBack, on phones and tablets.
@@ -42,6 +46,8 @@ Works offline, in light and dark, with TalkBack, on phones and tablets.
 **Category:** Education. **Content rating:** Everyone (the IARC questionnaire: no violence, sexual content, language, controlled substances or gambling; the app shows ads, offers an in-app purchase, and shares the advertising id with Google). **Target audience (Play Console › App content):** 13 and over only; do not tick any age group under 13, so the Families policy does not apply. **Contains ads:** Yes. **In-app purchases:** Yes (`remove_ads`, one-time, $3.99 or the local equivalent).
 
 **Data safety (Play Console › App content › Data safety):** Data is collected: Yes, by the Google Mobile Ads SDK. Declare *Device or other IDs* (the advertising id) and *App activity › App interactions* (which ads were seen and tapped), each collected and shared (with Google AdMob), for *Advertising or marketing*, not optional for free users (the Remove ads purchase ends it), not processed ephemerally; and *Diagnostics › Crash logs* and *Other app performance data* if Google's SDK data disclosure for the Mobile Ads SDK of the shipped version lists them (check developers.google.com/admob/android/privacy/play-data-disclosure, which says exactly what to tick). Data encrypted in transit: Yes. Users can request data deletion: Yes, with Settings › Reset progress for the app's own data and Android's advertising id controls for the id. Independent security review: No. The privacy policy URL is https://github.com/meh313/Guess-countries/blob/main/PRIVACY.md.
+
+**Data safety, online play (optional, off by default):** when the user turns it on, also declare *App activity › Other actions* (quiz scores and times posted to friend challenges and the daily leaderboard) and *Device or other IDs* (an anonymous Firebase user id), collected, not shared, for *App functionality*, optional. Users can request data deletion: Settings › Online play › Delete my online data removes everything from the server. See `firebase/README.md` step 9 for the form.
 
 **Ads (Play Console › App content › Ads):** Yes, the app contains ads. **Government apps / News / COVID:** No. **Financial features:** No.
 

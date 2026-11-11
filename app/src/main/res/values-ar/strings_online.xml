@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="PluralsCandidate">
+    <string name="scope_challenge">تحدي الأصدقاء</string>
+
+    <string name="online_friends_title">اللعب مع الأصدقاء</string>
+    <string name="home_friends_text">أرسل إلى صديق الأسئلة العشر نفسها وقارنا نتيجتيكما، أو تقدّم في ترتيب اليوم.</string>
+    <string name="home_friends_challenge">تحدِّ صديقًا</string>
+    <string name="home_friends_leaderboard">الترتيب</string>
+    <string name="online_off_title">اللعب عبر الإنترنت متوقف</string>
+    <string name="online_off_text">تحتاج التحديات والترتيب إلى اتصال بالإنترنت. يسجّلك التطبيق دخولًا دون اسم ويرسل لقبًا يختاره لك، ونتائجك وأوقاتك في الاختبارات، ولا شيء غير ذلك. لا يُرسَل شيء حتى تفعّله.</string>
+    <string name="online_turn_on">تفعيل اللعب عبر الإنترنت</string>
+    <string name="online_consent_title">هل تريد تفعيل اللعب عبر الإنترنت؟</string>
+    <string name="online_consent_text">سينشئ World Flags لك حسابًا دون اسم على Firebase (خدمة من Google) ويرسل: لقبًا مختارًا من قائمة (يمكنك سحب لقب آخر)، ونتائج التحديات والتحديات اليومية التي تلعبها وإجاباتها الصحيحة وأوقاتها، ورموز التحديات التي تشاركها. لا اسم ولا بريد إلكتروني ولا جهات اتصال ولا موقع. يمكنك إيقافه أو حذف هذه البيانات من الإعدادات في أي وقت.</string>
+    <string name="online_consent_confirm">تفعيل</string>
+    <string name="online_consent_cancel">ليس الآن</string>
+    <string name="online_not_configured">اللعب عبر الإنترنت غير متاح في هذه النسخة من التطبيق.</string>
+    <string name="online_offline">لا اتصال بالإنترنت. حاول مرة أخرى عندما تكون متصلًا.</string>
+    <string name="online_failed">حدث خطأ ما عبر الإنترنت. حاول مرة أخرى بعد قليل.</string>
+    <string name="online_name_label">تلعب باسم %1$s</string>
+    <string name="online_new_name">اسم جديد</string>
+    <string name="online_name_hint">تُختار الأسماء من قائمة، فلا يستطيع أحد كتابة ما يجرح.</string>
+
+    <string name="online_new_challenge">تحدٍّ جديد</string>
+    <string name="online_new_challenge_title">اختر الاختبار</string>
+    <string name="online_new_challenge_text">تلعب عشرة أسئلة أولًا، ثم تشارك الرمز: يحصل أصدقاؤك على الأسئلة نفسها والخيارات نفسها.</string>
+    <string name="online_enter_code">إدخال رمز</string>
+    <string name="online_enter_code_title">الانضمام إلى تحدٍّ</string>
+    <string name="online_code_field">رمز التحدي</string>
+    <string name="online_code_look_up">بحث</string>
+    <string name="online_code_invalid">الرمز ستة أحرف وأرقام، مثل %1$s.</string>
+    <string name="online_code_not_found">لا تحدي بهذا الرمز. تأكد منه مع صديقك؛ تنتهي صلاحية التحديات بعد %1$d يومًا.</string>
+    <string name="online_preview_from">%1$s يتحداك</string>
+    <string name="online_mode_and_scope">%1$s · %2$s</string>
+    <string name="online_play_challenge">العب هذا التحدي</string>
+    <string name="online_already_played">لعبت هذا التحدي من قبل</string>
+    <string name="online_your_challenges">تحدياتك</string>
+    <string name="online_no_challenges">لا تحديات بعد. ابدأ واحدًا وشارك رمزه، أو أدخل رمزًا أرسله إليك صديق.</string>
+    <string name="online_challenge_code">الرمز %1$s</string>
+    <string name="online_share">مشاركة الرمز</string>
+    <string name="online_share_text">سجّلت %1$d نقطة في World Flags. تغلّب عليّ! افتح التطبيق، واضغط «اللعب مع الأصدقاء»، وأدخل الرمز %2$s</string>
+    <string name="online_waiting">في انتظار أن يلعب صديق</string>
+    <string name="online_you_lead">أنت في المقدمة</string>
+    <string name="online_behind">%1$s في المقدمة</string>
+    <string name="online_tied">تعادل</string>
+    <string name="online_not_played">لم تلعب هذا التحدي بعد</string>
+    <string name="online_made_by">من %1$s</string>
+    <plurals name="online_players">
+        <item quantity="zero">لا لاعبين</item>
+        <item quantity="one">لاعب واحد</item>
+        <item quantity="two">لاعبان</item>
+        <item quantity="few">%1$d لاعبين</item>
+        <item quantity="many">%1$d لاعبًا</item>
+        <item quantity="other">%1$d لاعب</item>
+    </plurals>
+    <string name="online_rank_row">%1$d. %2$s</string>
+    <string name="online_name_you">%1$s (أنت)</string>
+    <string name="online_time_seconds">%1$d ث</string>
+    <string name="online_speed_bonus">مكافأة السرعة +%1$d</string>
+    <string name="online_total">نتيجة التحدي: %1$d</string>
+    <string name="online_refresh">تحديث</string>
+    <string name="online_loading">جارٍ التحميل…</string>
+    <string name="online_posting">جارٍ إرسال نتيجتك…</string>
+    <string name="online_result_posted">نُشرت نتيجتك. شارك الرمز ليلعب أصدقاؤك الاختبار نفسه.</string>
+    <string name="online_result_not_posted">لم يمكن نشر نتيجتك. تحقق من الاتصال وافتح التحدي في شاشة «اللعب مع الأصدقاء» للمحاولة مرة أخرى.</string>
+
+    <string name="online_leaderboard_title">ترتيب اليوم</string>
+    <string name="online_leaderboard_text">كل من أنهى تحدي اليوم، والأفضل نتيجةً أولًا (النقاط مع مكافأة السرعة).</string>
+    <string name="online_leaderboard_empty">لم ينشر أحد نتيجة اليوم بعد. كن الأول!</string>
+    <string name="online_your_rank">ترتيبك اليوم %1$d من %2$d</string>
+    <string name="online_rank_unknown">أنهِ تحدي اليوم لتدخل الترتيب</string>
+    <string name="online_see_leaderboard">عرض الترتيب</string>
+
+    <string name="settings_section_online">اللعب عبر الإنترنت</string>
+    <string name="settings_online_title">اللعب عبر الإنترنت</string>
+    <string name="settings_online_detail">تحديات الأصدقاء وترتيب اليوم. يرسل لقبًا ونتائجك إلى Firebase؛ ولا يخرج شيء آخر من الجهاز.</string>
+    <string name="settings_online_delete">حذف بياناتي عبر الإنترنت</string>
+    <string name="settings_online_delete_title">هل تريد حذف بياناتك عبر الإنترنت؟</string>
+    <string name="settings_online_delete_text">يُحذف من الخادم لقبك والتحديات التي أنشأتها وكل نتيجة نشرتها، ويتوقف اللعب عبر الإنترنت. يبقى تقدمك على هذا الهاتف كما هو.</string>
+    <string name="settings_online_delete_confirm">حذف</string>
+    <string name="settings_online_deleted">حُذفت بياناتك عبر الإنترنت.</string>
+    <string name="about_privacy_online">اللعب عبر الإنترنت اختياري ومتوقف حتى تفعّله. عندها يسجّلك دخولًا دون اسم إلى Firebase (خدمة من Google) ويرسل لقبًا مختارًا من قائمة ونتائج وأوقات التحديات التي تلعبها. الإعدادات &gt; اللعب عبر الإنترنت يوقفه ويحذف تلك البيانات.</string>
+</resources>

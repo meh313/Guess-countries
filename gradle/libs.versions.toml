@@ -26,6 +26,8 @@ playServicesAds = "25.5.0"
 userMessagingPlatform = "3.2.0"
 billing = "8.3.0"
 glance = "1.2.0"
+firebaseBom = "35.1.0"
+kotlinxCoroutinesPlayServices = "1.11.0"
 
 
 [libraries]
@@ -66,6 +68,10 @@ billing = { group = "com.android.billingclient", name = "billing", version.ref =
 androidx-glance-appwidget = { group = "androidx.glance", name = "glance-appwidget", version.ref = "glance" }
 androidx-glance-material3 = { group = "androidx.glance", name = "glance-material3", version.ref = "glance" }
 androidx-glance-appwidget-testing = { group = "androidx.glance", name = "glance-appwidget-testing", version.ref = "glance" }
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
+firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
+firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore" }
+kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version.ref = "kotlinxCoroutinesPlayServices" }
 
 
 [plugins]

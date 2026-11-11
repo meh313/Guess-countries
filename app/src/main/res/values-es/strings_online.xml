@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="PluralsCandidate">
+    <string name="scope_challenge">Reto entre amigos</string>
+
+    <string name="online_friends_title">Jugar con amigos</string>
+    <string name="home_friends_text">Manda a un amigo las mismas 10 preguntas y comparad, o sube en la clasificación de hoy.</string>
+    <string name="home_friends_challenge">Retar a un amigo</string>
+    <string name="home_friends_leaderboard">Clasificación</string>
+    <string name="online_off_title">El juego en línea está desactivado</string>
+    <string name="online_off_text">Los retos y la clasificación necesitan conexión a Internet. La aplicación te conecta de forma anónima y envía un apodo que elige por ti, tus puntuaciones y tus tiempos, y nada más. No se envía nada hasta que lo actives.</string>
+    <string name="online_turn_on">Activar el juego en línea</string>
+    <string name="online_consent_title">¿Activar el juego en línea?</string>
+    <string name="online_consent_text">World Flags creará para ti una cuenta anónima en Firebase (un servicio de Google) y enviará: un apodo sacado de una lista (puedes sacar otro), las puntuaciones, aciertos y tiempos de los retos y retos diarios que juegues, y los códigos de los retos que compartas. Ni nombre, ni correo, ni contactos, ni ubicación. Puedes desactivarlo, o borrar estos datos, en Ajustes en cualquier momento.</string>
+    <string name="online_consent_confirm">Activar</string>
+    <string name="online_consent_cancel">Ahora no</string>
+    <string name="online_not_configured">El juego en línea no está disponible en esta versión de la aplicación.</string>
+    <string name="online_offline">Sin conexión a Internet. Vuelve a intentarlo cuando estés en línea.</string>
+    <string name="online_failed">Algo ha fallado en línea. Vuelve a intentarlo en un momento.</string>
+    <string name="online_name_label">Juegas como %1$s</string>
+    <string name="online_new_name">Nuevo nombre</string>
+    <string name="online_name_hint">Los nombres se sacan de una lista, así nadie puede escribir nada hiriente.</string>
+
+    <string name="online_new_challenge">Nuevo reto</string>
+    <string name="online_new_challenge_title">Elige el quiz</string>
+    <string name="online_new_challenge_text">Primero juegas 10 preguntas y luego compartes el código: tus amigos reciben las mismas preguntas y las mismas opciones.</string>
+    <string name="online_enter_code">Introducir un código</string>
+    <string name="online_enter_code_title">Unirse a un reto</string>
+    <string name="online_code_field">Código del reto</string>
+    <string name="online_code_look_up">Buscar</string>
+    <string name="online_code_invalid">Un código tiene 6 letras y cifras, como %1$s.</string>
+    <string name="online_code_not_found">Ningún reto tiene ese código. Compruébalo con tu amigo; los retos caducan a los %1$d días.</string>
+    <string name="online_preview_from">%1$s te reta</string>
+    <string name="online_mode_and_scope">%1$s · %2$s</string>
+    <string name="online_play_challenge">Jugar este reto</string>
+    <string name="online_already_played">Ya has jugado este</string>
+    <string name="online_your_challenges">Tus retos</string>
+    <string name="online_no_challenges">Aún no hay retos. Empieza uno y comparte su código, o introduce un código que te haya mandado un amigo.</string>
+    <string name="online_challenge_code">Código %1$s</string>
+    <string name="online_share">Compartir el código</string>
+    <string name="online_share_text">He hecho %1$d puntos en World Flags. ¡Supérame! Abre la aplicación, toca Jugar con amigos e introduce el código %2$s</string>
+    <string name="online_waiting">Esperando a que juegue un amigo</string>
+    <string name="online_you_lead">Vas en cabeza</string>
+    <string name="online_behind">%1$s va en cabeza</string>
+    <string name="online_tied">Empate</string>
+    <string name="online_not_played">Aún no has jugado este</string>
+    <string name="online_made_by">De %1$s</string>
+    <plurals name="online_players">
+        <item quantity="one">%1$d jugador</item>
+        <item quantity="many">%1$d jugadores</item>
+        <item quantity="other">%1$d jugadores</item>
+    </plurals>
+    <string name="online_rank_row">%1$d. %2$s</string>
+    <string name="online_name_you">%1$s (tú)</string>
+    <string name="online_time_seconds">%1$d s</string>
+    <string name="online_speed_bonus">Bonus de rapidez +%1$d</string>
+    <string name="online_total">Puntuación del reto: %1$d</string>
+    <string name="online_refresh">Actualizar</string>
+    <string name="online_loading">Cargando…</string>
+    <string name="online_posting">Enviando tu puntuación…</string>
+    <string name="online_result_posted">Tu puntuación está publicada. Comparte el código para que tus amigos jueguen el mismo quiz.</string>
+    <string name="online_result_not_posted">No se ha podido publicar tu puntuación. Comprueba la conexión y abre el reto en la pantalla Jugar con amigos para volver a intentarlo.</string>
+
+    <string name="online_leaderboard_title">Clasificación de hoy</string>
+    <string name="online_leaderboard_text">Todos los que han terminado el reto diario de hoy, mejor puntuación de reto primero (puntos más bonus de rapidez).</string>
+    <string name="online_leaderboard_empty">Nadie ha publicado una puntuación hoy todavía. ¡Sé el primero!</string>
+    <string name="online_your_rank">Eres el n.º %1$d de %2$d hoy</string>
+    <string name="online_rank_unknown">Termina el reto de hoy para entrar en la clasificación</string>
+    <string name="online_see_leaderboard">Ver la clasificación</string>
+
+    <string name="settings_section_online">Juego en línea</string>
+    <string name="settings_online_title">Juego en línea</string>
+    <string name="settings_online_detail">Retos entre amigos y clasificación diaria. Envía un apodo y tus puntuaciones a Firebase; nada más sale del dispositivo.</string>
+    <string name="settings_online_delete">Borrar mis datos en línea</string>
+    <string name="settings_online_delete_title">¿Borrar tus datos en línea?</string>
+    <string name="settings_online_delete_text">Tu apodo, los retos que creaste y cada puntuación que publicaste se borran del servidor, y el juego en línea se desactiva. Tu progreso en este teléfono se queda como está.</string>
+    <string name="settings_online_delete_confirm">Borrar</string>
+    <string name="settings_online_deleted">Tus datos en línea se han borrado.</string>
+    <string name="about_privacy_online">El juego en línea es opcional y está desactivado hasta que lo actives. Entonces te conecta de forma anónima a Firebase (un servicio de Google) y envía un apodo sacado de una lista y las puntuaciones y tiempos de los retos que juegues. Ajustes &gt; Juego en línea lo desactiva y borra esos datos.</string>
+</resources>
